@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SoCheers — Making more happen.</title>
+<meta name="description" content="SoCheers — an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="spotlight" aria-hidden="true"></div>
+<div class="cursor-ring" aria-hidden="true"></div>
+<div class="cursor" aria-hidden="true"><span class="cursor__label"></span></div>
+<div class="progress" aria-hidden="true"><span class="progress__bar"></span></div>
+
+<!-- Preloader -->
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="loader__inner">
+    <div class="loader__word">SOCHEERS</div>
+    <div class="loader__count"><span id="loaderCount">0</span><i>%</i></div>
+    <div class="loader__tag">MAKING MORE HAPPEN</div>
+  </div>
+  <div class="loader__sheet"></div>
+</div>
+
+<!-- Section rail -->
+<aside class="rail" aria-hidden="true">
+  <span class="rail__item is-active" data-rail="0"><i>01</i><em>Index</em></span>
+  <span class="rail__item" data-rail="1"><i>02</i><em>Who</em></span>
+  <span class="rail__item" data-rail="2"><i>03</i><em>What</em></span>
+  <span class="rail__item" data-rail="3"><i>04</i><em>Brands</em></span>
+  <span class="rail__item" data-rail="4"><i>05</i><em>Work</em></span>
+  <span class="rail__item" data-rail="5"><i>06</i><em>Awards</em></span>
+  <span class="rail__item" data-rail="6"><i>07</i><em>Contact</em></span>
+</aside>
+
+<!-- Nav -->
+<header class="nav" id="nav">
+  <a href="#top" class="nav__logo" data-cursor="Top" data-magnetic>SOCHEERS</a>
+  <nav class="nav__links">
+    <a href="#who" data-roll>Who</a>
+    <a href="#what" data-roll>What</a>
+    <a href="#work" data-roll>Work</a>
+    <a href="#awards" data-roll>Awards</a>
+  </nav>
+  <a href="#contact" class="nav__cta" data-magnetic data-cursor="Say hi">
+    <span>Start a project</span>
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </a>
+</header>
+
+<main id="top">
+
+  <!-- ============================ 1 · HERO ============================
+       The artwork is the hero. Its own inner window expands to full
+       screen, then the deck stacks on top — all in one pinned sequence. -->
+  <section class="hero" data-hero data-sec="0">
+    <div class="hero__pin" data-hero-pin>
+
+      <!-- the SOC▢HEERS artwork, full bleed -->
+      <div class="hero__frame" data-frame>
+        <img src="assets/socheers-frame-n-T4ylIx.jpg" alt="SoCheers" data-frame-img />
+      </div>
+
+      <!-- the artwork's own window, lifted out so it can grow.
+           At rest it is pixel-identical to the artwork behind it; it cross-fades
+           to the black-and-white team photo on the way to full screen. -->
+      <div class="hero__stage" data-hero-stage>
+        <img class="hero__stage-crop" src="assets/socheers-frame-n-T4ylIx.jpg" alt="" aria-hidden="true" data-stage-crop />
+        <img class="hero__stage-img" src="assets/team-group-D203M1bi.jpg" alt="The SoCheers team" data-stage-img />
+        <div class="pixgrid" data-pixgrid data-cols="22" data-rows="8"></div>
+      </div>
+
+      <!-- images that stack on top once it's full screen -->
+      <div class="hero__deck" data-deck>
+        <article class="scard" data-scard data-tilt>
+          <div class="scard__img"><img src="assets/arri-camera-DX29MVBW.jpg" alt="" /></div>
+          <div class="scard__meta"><span>02</span><em>Production · films that land</em></div>
+        </article>
+        <article class="scard" data-scard data-tilt>
+          <div class="scard__img"><img src="assets/brain-DH7sqVir.jpg" alt="" /></div>
+          <div class="scard__meta"><span>03</span><em>Strategy · the thinking bit</em></div>
+        </article>
+        <article class="scard" data-scard data-tilt>
+          <div class="scard__img"><img src="assets/war-mask-7z_N0Huv.jpg" alt="" /></div>
+          <div class="scard__meta"><span>04</span><em>Creative · occasionally unhinged</em></div>
+        </article>
+        <article class="scard" data-scard data-tilt>
+          <div class="scard__img"><img src="assets/photoshop-face-BOtm4GGN.jpg" alt="" /></div>
+          <div class="scard__meta"><span>05</span><em>Craft · down to the pixel</em></div>
+        </article>
+      </div>
+
+      <span class="hero__count" data-hero-count><b data-deck-num>01</b> / 05</span>
+
+      <div class="hero__scroll" data-hero-cue>
+        <span>SCROLL</span>
+        <span class="hero__scroll-line"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 3 · WHO WE ARE ============================ -->
+  <section class="sec who" id="who" data-section data-sec="1">
+    <div class="wrap">
+      <span class="tag" data-reveal>WHO WE ARE</span>
+      <div class="who__grid">
+        <p class="who__statement" data-split>We are SoCheers — an independent, integrated creative agency. We build brands, campaigns and culture for the brands that want to <em>lead their categories</em>, not chase them.</p>
+        <div class="who__stats">
+          <div class="stat" data-reveal data-cursor="200+">
+            <div class="stat__num"><span data-count="200">0</span><i>+</i></div>
+            <div class="stat__label">People</div>
+          </div>
+          <div class="stat" data-reveal data-cursor="12+">
+            <div class="stat__num"><span data-count="12">0</span><i>+</i></div>
+            <div class="stat__label">Years</div>
+          </div>
+          <div class="stat" data-reveal data-cursor="30+">
+            <div class="stat__num"><span data-count="30">0</span><i>+</i></div>
+            <div class="stat__label">Categories</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="who__band">
+        <div class="who__bandline" data-clip>
+          <span data-roll>MUMBAI</span>
+          <span class="who__bandimg"><img src="assets/team-group-D203M1bi.jpg" alt="" /></span>
+          <span data-roll>DELHI</span>
+          <span class="who__bandimg"><img src="assets/arri-camera-DX29MVBW.jpg" alt="" /></span>
+          <span data-roll>BENGALURU</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 4 · WHAT WE DO ============================ -->
+  <section class="sec what" id="what" data-section data-sec="2">
+    <div class="wrap">
+      <span class="tag" data-reveal>WHAT WE DO</span>
+      <h2 class="sec__title" data-split>Content that moves your most critical audiences.</h2>
+
+      <div class="wcards">
+        <article class="wcard" data-clip data-tilt data-cursor="Strategy">
+          <div class="wcard__img"><img src="assets/brain-DH7sqVir.jpg" alt="" /></div>
+          <div class="wcard__body">
+            <span class="wcard__idx">01 · Bucket</span>
+            <h3 class="wcard__name" data-roll>Strategy</h3>
+            <ul class="wcard__list">
+              <li>Brand Strategy</li><li>Comms Planning</li><li>Research &amp; Insights</li><li>Media Strategy</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="wcard" data-clip data-tilt data-cursor="Creativity">
+          <div class="wcard__img"><img src="assets/war-mask-7z_N0Huv.jpg" alt="" /></div>
+          <div class="wcard__body">
+            <span class="wcard__idx">02 · Bucket</span>
+            <h3 class="wcard__name" data-roll>Creativity</h3>
+            <ul class="wcard__list">
+              <li>Creative &amp; Art Direction</li><li>Social &amp; Content</li><li>Design &amp; Identity</li><li>Influencer &amp; Community</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="wcard" data-clip data-tilt data-cursor="Production">
+          <div class="wcard__img"><img src="assets/arri-camera-DX29MVBW.jpg" alt="" /></div>
+          <div class="wcard__body">
+            <span class="wcard__idx">03 · Bucket</span>
+            <h3 class="wcard__name" data-roll>Production</h3>
+            <ul class="wcard__list">
+              <li>Films &amp; Production</li><li>Photography</li><li>CGI &amp; AI</li><li>Post &amp; Edit</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 5 · CLIENT LOGOS ============================ -->
+  <section class="sec clients" data-section data-sec="3">
+    <div class="wrap">
+      <span class="tag" data-reveal>WHO DO WE DO IT WITH</span>
+      <h2 class="sec__title" data-split>Brands you like consuming the most.</h2>
+    </div>
+    <div class="clients__rows">
+      <div class="cmarquee" aria-hidden="true">
+        <div class="cmarquee__track" data-marquee="left">
+          <span>Netflix</span><span class="s">✦</span><span>JioHotstar</span><span class="s">✦</span><span>TCS</span><span class="s">✦</span><span>Pantaloons</span><span class="s">✦</span><span>Raymond</span><span class="s">✦</span><span>Superdry</span><span class="s">✦</span><span>ITC</span><span class="s">✦</span><span>Sunfeast Yippee!</span><span class="s">✦</span><span>Nykaa Pro</span><span class="s">✦</span><span>Schweppes</span><span class="s">✦</span><span>Universal Pictures</span><span class="s">✦</span><span>Sony LIV</span><span class="s">✦</span>
+          <span>Netflix</span><span class="s">✦</span><span>JioHotstar</span><span class="s">✦</span><span>TCS</span><span class="s">✦</span><span>Pantaloons</span><span class="s">✦</span><span>Raymond</span><span class="s">✦</span><span>Superdry</span><span class="s">✦</span><span>ITC</span><span class="s">✦</span><span>Sunfeast Yippee!</span><span class="s">✦</span><span>Nykaa Pro</span><span class="s">✦</span><span>Schweppes</span><span class="s">✦</span><span>Universal Pictures</span><span class="s">✦</span><span>Sony LIV</span><span class="s">✦</span>
+        </div>
+      </div>
+      <div class="cmarquee" aria-hidden="true">
+        <div class="cmarquee__track" data-marquee="right">
+          <span>Audi</span><span class="s">✦</span><span>YES Bank</span><span class="s">✦</span><span>Bingo!</span><span class="s">✦</span><span>Carlton</span><span class="s">✦</span><span>Broadway</span><span class="s">✦</span><span>Dabur</span><span class="s">✦</span><span>Haldiram's</span><span class="s">✦</span><span>Chandon</span><span class="s">✦</span><span>Glenmorangie</span><span class="s">✦</span><span>ASUS</span><span class="s">✦</span><span>IndusInd</span><span class="s">✦</span><span>boAt</span><span class="s">✦</span>
+          <span>Audi</span><span class="s">✦</span><span>YES Bank</span><span class="s">✦</span><span>Bingo!</span><span class="s">✦</span><span>Carlton</span><span class="s">✦</span><span>Broadway</span><span class="s">✦</span><span>Dabur</span><span class="s">✦</span><span>Haldiram's</span><span class="s">✦</span><span>Chandon</span><span class="s">✦</span><span>Glenmorangie</span><span class="s">✦</span><span>ASUS</span><span class="s">✦</span><span>IndusInd</span><span class="s">✦</span><span>boAt</span><span class="s">✦</span>
+        </div>
+      </div>
+      <div class="cmarquee" aria-hidden="true">
+        <div class="cmarquee__track" data-marquee="left">
+          <span>Havmor</span><span class="s">✦</span><span>Belgian Waffle</span><span class="s">✦</span><span>Zurich Kotak</span><span class="s">✦</span><span>BHIM</span><span class="s">✦</span><span>Lupin</span><span class="s">✦</span><span>Reliance General</span><span class="s">✦</span><span>Croma</span><span class="s">✦</span><span>Nykaa</span><span class="s">✦</span><span>Schweppes</span><span class="s">✦</span><span>ITC</span><span class="s">✦</span>
+          <span>Havmor</span><span class="s">✦</span><span>Belgian Waffle</span><span class="s">✦</span><span>Zurich Kotak</span><span class="s">✦</span><span>BHIM</span><span class="s">✦</span><span>Lupin</span><span class="s">✦</span><span>Reliance General</span><span class="s">✦</span><span>Croma</span><span class="s">✦</span><span>Nykaa</span><span class="s">✦</span><span>Schweppes</span><span class="s">✦</span><span>ITC</span><span class="s">✦</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 6 · FEATURED WORK ============================ -->
+  <section class="sec work" id="work" data-section data-sec="4">
+    <div class="wrap">
+      <span class="tag" data-reveal>FEATURED WORK</span>
+      <h2 class="sec__title" data-split>Some pieces you might've come across.</h2>
+
+      <div class="tiles">
+        <a href="#contact" class="tile" data-tile data-tilt data-cursor="View">
+          <div class="tile__img"><img src="assets/war-mask-7z_N0Huv.jpg" alt="BFSI" /></div>
+          <div class="pixgrid tile__grid" data-pixgrid data-cols="7" data-rows="5"></div>
+          <div class="tile__meta"><span class="tile__idx">01</span><span class="tile__name" data-roll>BFSI</span><span class="tile__go">VIEW →</span></div>
+        </a>
+        <a href="#contact" class="tile" data-tile data-tilt data-cursor="View">
+          <div class="tile__img"><img src="assets/boot-phone-BJcXYlVw.jpg" alt="FMCG" /></div>
+          <div class="pixgrid tile__grid" data-pixgrid data-cols="7" data-rows="5"></div>
+          <div class="tile__meta"><span class="tile__idx">02</span><span class="tile__name" data-roll>FMCG</span><span class="tile__go">VIEW →</span></div>
+        </a>
+        <a href="#contact" class="tile" data-tile data-tilt data-cursor="View">
+          <div class="tile__img"><img src="assets/photoshop-face-BOtm4GGN.jpg" alt="Fashion and Beauty" /></div>
+          <div class="pixgrid tile__grid" data-pixgrid data-cols="7" data-rows="5"></div>
+          <div class="tile__meta"><span class="tile__idx">03</span><span class="tile__name" data-roll>Fashion &amp; Beauty</span><span class="tile__go">VIEW →</span></div>
+        </a>
+        <a href="#contact" class="tile" data-tile data-tilt data-cursor="View">
+          <div class="tile__img"><img src="assets/brain-DH7sqVir.jpg" alt="Entertainment" /></div>
+          <div class="pixgrid tile__grid" data-pixgrid data-cols="7" data-rows="5"></div>
+          <div class="tile__meta"><span class="tile__idx">04</span><span class="tile__name" data-roll>Entertainment</span><span class="tile__go">VIEW →</span></div>
+        </a>
+        <a href="#contact" class="tile" data-tile data-tilt data-cursor="View">
+          <div class="tile__img"><img src="assets/arri-camera-DX29MVBW.jpg" alt="Lifestyle" /></div>
+          <div class="pixgrid tile__grid" data-pixgrid data-cols="7" data-rows="5"></div>
+          <div class="tile__meta"><span class="tile__idx">05</span><span class="tile__name" data-roll>Lifestyle</span><span class="tile__go">VIEW →</span></div>
+        </a>
+        <a href="#contact" class="tile" data-tile data-tilt data-cursor="View">
+          <div class="tile__img"><img src="assets/socheers-frame-n-T4ylIx.jpg" alt="B2B" /></div>
+          <div class="pixgrid tile__grid" data-pixgrid data-cols="7" data-rows="5"></div>
+          <div class="tile__meta"><span class="tile__idx">06</span><span class="tile__name" data-roll>B2B</span><span class="tile__go">VIEW →</span></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 7 · AWARDS ============================ -->
+  <section class="sec awards" id="awards" data-section data-sec="5">
+    <div class="wrap">
+      <span class="tag" data-reveal>RECOGNITION</span>
+      <h2 class="awards__title" data-split>The room noticed.</h2>
+    </div>
+    <div class="awards__marquee" aria-hidden="true">
+      <div class="awards__track" data-marquee="left">
+        <span>THE DRUM GLOBAL</span><span class="star">✦</span>
+        <span>CLIO ENTERTAINMENT</span><span class="star">✦</span>
+        <span>WEBBY AWARDS</span><span class="star">✦</span>
+        <span>CAMPAIGN SOUTH ASIA</span><span class="star">✦</span>
+        <span>MMA SMARTIES</span><span class="star">✦</span>
+        <span>SPIKES ASIA</span><span class="star">✦</span>
+        <span>THE DRUM GLOBAL</span><span class="star">✦</span>
+        <span>CLIO ENTERTAINMENT</span><span class="star">✦</span>
+        <span>WEBBY AWARDS</span><span class="star">✦</span>
+        <span>CAMPAIGN SOUTH ASIA</span><span class="star">✦</span>
+        <span>MMA SMARTIES</span><span class="star">✦</span>
+        <span>SPIKES ASIA</span><span class="star">✦</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 8 · CLOSING CTA ============================ -->
+  <section class="sec contact" id="contact" data-section data-sec="6">
+    <div class="grid-lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <div class="contact__inner">
+      <span class="tag" data-reveal>LET'S TALK</span>
+      <h2 class="contact__title" data-split>Brief us. Or&nbsp;just say hi.</h2>
+      <a href="mailto:hello@socheers.com" class="contact__cta" data-magnetic data-cursor="Let's go">
+        <span>Start a project</span>
+        <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <div class="contact__foot">
+        <span>SOCHEERS · EST. 2013</span>
+        <span>MUMBAI · DELHI · BENGALURU</span>
+        <span>MAKING MORE HAPPEN</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.14/dist/lenis.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
