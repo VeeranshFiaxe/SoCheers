@@ -1,5 +1,5 @@
 /* ============================================================
-   SoCheers — Making more happen.  (home / landing)
+   SoCheers - Making more happen.  (home / landing)
    Structure: client doc · Look: Lovable showcase
    Motion: Cardboard Spaceship · Craft: Locomotive / Paul K /
    Omnicom / Lando / Lacoste
@@ -15,6 +15,10 @@
   --line:      rgba(241,236,225,.1);
   --accent:    #2fe589;
   --accent:    oklch(0.86 0.22 152);
+  /* wipe-bar tiers. Long copy gets a near-neutral block, short copy gets the
+     hot accent, so a 5-line paragraph does not strobe green line by line. */
+  --accent-off: oklch(0.62 0.13 152);
+  --wipe-tint:  #2a2b2e;
 
   /* the --font-* variables come from next/font/google in app/layout.tsx */
   --f-display: var(--font-display), "Familjen Grotesk", sans-serif;
@@ -66,7 +70,11 @@ em{ font-style:italic; }
    ROLL-OVER TEXT  (built by JS from [data-roll])
    ============================================================ */
 [data-roll]{ display:inline-block; overflow:hidden; vertical-align:bottom; }
-.roll__in{ display:block; position:relative; transition:transform .55s var(--ease); }
+/* Same descender problem as .wipe: the mask would cut the g and y in
+   "Strategy". Padding the inner track grows the clip box downward, and
+   because the second copy is positioned at top:100% of that same track it
+   still lands exactly at the fold, so the roll distance stays correct. */
+.roll__in{ display:block; position:relative; padding-bottom:.16em; transition:transform .55s var(--ease); }
 .roll__in > span{ display:block; }
 .roll__in > span:last-child{ position:absolute; top:100%; left:0; width:100%; color:var(--accent); }
 [data-roll]:hover .roll__in,
@@ -83,7 +91,7 @@ em{ font-style:italic; }
   grid-template-columns:repeat(var(--cols,20), 1fr);
   grid-template-rows:repeat(var(--rows,8), 1fr);
 }
-/* default cleared — covering grids are set to 1 in JS, so a script-less
+/* default cleared - covering grids are set to 1 in JS, so a script-less
    or reduced-motion load still shows the artwork */
 .pixgrid > i{ display:block; background:var(--bg); opacity:0; will-change:opacity; }
 
@@ -121,6 +129,9 @@ em{ font-style:italic; }
   width:38px; height:38px; border-radius:50%; border:1px solid rgba(241,236,225,.35);
   transform:translate(-50%,-50%); mix-blend-mode:difference;
   transition:width .4s var(--ease), height .4s var(--ease), opacity .3s, border-color .3s;
+  /* the ring's transform is driven every frame by the inertia read-out in
+     lib/motion.ts, so it is worth promoting */
+  will-change:transform;
 }
 .cursor-ring.is-active{ width:0; height:0; opacity:0; }
 @media (hover:none){ .cursor,.cursor-ring{ display:none; } }
@@ -128,7 +139,7 @@ em{ font-style:italic; }
 .progress{ position:fixed; top:0; left:0; width:100%; height:2px; z-index:9997; }
 .progress__bar{ display:block; height:100%; width:0%; background:var(--accent); box-shadow:0 0 12px var(--accent); }
 
-/* hidden until the hero pin (window expand + image stack) is done —
+/* hidden until the hero pin (window expand + image stack) is done -
    `is-visible` is toggled in lib/motion.ts */
 .rail{
   position:fixed; right:calc(var(--pad) * .42); top:50%; transform:translateY(-50%);
@@ -163,7 +174,7 @@ em{ font-style:italic; }
 }
 .nav.is-hidden{ transform:translateY(-120%); }
 .nav__logo{ font-family:var(--f-display); font-weight:700; font-size:21px; letter-spacing:-.01em; }
-/* centred on the artwork's window, not on the viewport — --hero-cx is the
+/* centred on the artwork's window, not on the viewport - --hero-cx is the
    window centre's offset from the viewport centre, set in lib/motion.ts */
 .nav__links{
   display:flex; gap:30px;
@@ -185,7 +196,7 @@ em{ font-style:italic; }
 @media (max-width:860px){ .nav__links{ display:none; } }
 
 /* ============================================================
-   1 · HERO — artwork window expands, then the deck stacks
+   1 · HERO - artwork window expands, then the deck stacks
    ============================================================ */
 .hero{ position:relative; height:100vh; }
 .hero__pin{ position:relative; height:100vh; width:100%; overflow:hidden; background:#000; }
@@ -266,16 +277,47 @@ em{ font-style:italic; }
 .stat__num i{ color:var(--accent); font-style:normal; }
 .stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
 
-.who__band{ margin-top:clamp(60px,9vh,110px); }
-.who__bandline{
-  display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:clamp(10px,1.6vw,26px);
-  font-family:var(--f-display); font-weight:700; letter-spacing:-.02em;
-  font-size:clamp(28px,6vw,86px); line-height:1;
+.who__band{
+  position:relative; isolation:isolate;
+  margin-top:clamp(60px,9vh,110px);
+  /* The landmarks fill a fixed fraction of the canvas, so the canvas has to
+     be tall for them to read at any size. This padding IS their stage. */
+  padding:clamp(70px,13vh,150px) 0;
 }
+/* WebGL landmark scene behind the city names (components/BandField.tsx).
+   width/height MUST be explicit: a canvas is a replaced element, so
+   `inset` with `width:auto` resolves to the canvas's INTRINSIC size (its
+   width attribute), which the resize handler then writes to, growing the
+   box, refiring the observer, and running away. */
+.band__field{
+  position:absolute; top:0; left:0; z-index:0;
+  width:100%; height:100%; display:block;
+  pointer-events:none;
+}
+/* One row, three columns, no wrapping. The images moved out of the text flow
+   and sit above or below each name instead, which is what lets the row stay on
+   a single line at full display size and gives each landmark its own lane. */
+.who__bandline{
+  position:relative; z-index:1;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:clamp(20px,4vw,70px);
+  font-family:var(--f-display); font-weight:700; letter-spacing:-.02em;
+  font-size:clamp(26px,5.2vw,80px); line-height:1;
+}
+.who__city{
+  display:flex; flex-direction:column; align-items:center;
+  gap:clamp(12px,1.8vw,26px);
+}
+/* the middle city hangs its image below, so the row reads as a rhythm
+   rather than three identical stacks */
+.who__city.is-low{ flex-direction:column-reverse; }
 .who__bandimg{
-  display:inline-block; flex:none;
-  width:clamp(70px,10vw,150px); height:clamp(40px,5.4vw,80px);
+  display:block; flex:none;
+  width:clamp(88px,11vw,168px); height:clamp(52px,6.2vw,96px);
   border-radius:10px; overflow:hidden;
+}
+@media (max-width:760px){
+  .who__bandline{ flex-direction:column; gap:40px; }
 }
 .who__bandimg img{ filter:grayscale(.3); transition:filter .5s, transform .8s var(--ease); }
 .who__bandimg:hover img{ filter:grayscale(0); transform:scale(1.12); }
@@ -375,6 +417,39 @@ em{ font-style:italic; }
 .contact__cta:hover svg{ transform:translateX(6px); }
 .contact__foot{ margin-top:54px; display:flex; gap:30px; flex-wrap:wrap; justify-content:center; font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
 
-/* reveal defaults */
+/* ============================================================
+   BLOCK-WIPE TEXT REVEAL  ([data-split], built by JS per line)
+   A solid accent bar sweeps across the line, then retracts off the
+   other edge and the type is standing there in its wake.
+   ============================================================ */
+[data-split]{ visibility:hidden; }
+
+/* Splitting text into per-line spans wrecks it for screen readers, so the
+   real sentence is kept as one visually-hidden copy and the split tree is
+   marked decorative. Borrowed from landonorris.com, which pairs an
+   aria-hidden split container with a separate screen-reader node. */
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0;
+}
+
+.wipe{
+  display:block; position:relative; overflow:hidden;
+  /* Descender room. The display type sets at leading 1.0, so the ink on
+     g j p q y falls outside the line box and the mask cuts it off. Extend
+     the clip below the baseline, then pull the next line back up by the
+     same amount so the vertical rhythm is untouched. */
+  padding-bottom:.2em;
+  margin-bottom:-.2em;
+}
+.wipe__bar{
+  position:absolute; inset:0; z-index:2;
+  /* tier is set per element in JS via --wipe-bar */
+  background:var(--wipe-bar, var(--accent));
+  transform:scaleX(0); transform-origin:left center;
+  will-change:transform;
+}
 .split-line{ display:block; }
+
+.no-js [data-split]{ visibility:visible !important; }
 .no-js [data-split],.no-js [data-reveal],.no-js [data-clip]{ opacity:1 !important; transform:none !important; clip-path:none !important; }

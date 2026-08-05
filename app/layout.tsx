@@ -25,9 +25,9 @@ const mono = DM_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SoCheers — Making more happen.",
+  title: "SoCheers. Making more happen.",
   description:
-    "SoCheers — an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",
+    "SoCheers is an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

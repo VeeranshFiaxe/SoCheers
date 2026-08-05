@@ -27,12 +27,20 @@ export const NAV_LINKS = [
   { href: "#awards", label: "Awards" },
 ];
 
-/* hero — the images that stack once the window is full screen */
+/* hero - the images that stack once the window is full screen */
 export const DECK = [
   { src: IMG.camera, idx: "02", label: "Production · films that land" },
   { src: IMG.brain, idx: "03", label: "Strategy · the thinking bit" },
   { src: IMG.warMask, idx: "04", label: "Creative · occasionally unhinged" },
   { src: IMG.photoshop, idx: "05", label: "Craft · down to the pixel" },
+];
+
+/* One image per city, stacked over/under the name rather than inline, so the
+   row stays on one line and each landmark gets its own column of space. */
+export const CITIES = [
+  { name: "MUMBAI", img: IMG.team, low: false },
+  { name: "DELHI", img: IMG.camera, low: true },
+  { name: "BENGALURU", img: IMG.brain, low: false },
 ];
 
 export const STATS = [

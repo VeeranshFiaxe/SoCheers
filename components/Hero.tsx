@@ -2,7 +2,7 @@ import { DECK, IMG } from "@/lib/content";
 import PixGrid from "./PixGrid";
 
 /* The artwork is the hero. Its own inner window expands to full screen,
-   then the deck stacks on top — all in one pinned sequence (lib/motion.ts). */
+   then the deck stacks on top - all in one pinned sequence (lib/motion.ts). */
 export default function Hero() {
   return (
     <section className="hero" data-hero data-sec="0">

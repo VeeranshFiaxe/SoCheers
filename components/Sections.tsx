@@ -1,5 +1,6 @@
 import { Fragment } from "react";
-import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS, TILES } from "@/lib/content";
+import { AWARDS, BUCKETS, CITIES, CLIENT_ROWS, IMG, STATS, TILES } from "@/lib/content";
+import BandField from "./BandField";
 import PixGrid from "./PixGrid";
 import RollText from "./Roll";
 
@@ -10,7 +11,7 @@ export function Who() {
         <span className="tag" data-reveal>WHO WE ARE</span>
         <div className="who__grid">
           <p className="who__statement" data-split>
-            We are SoCheers — an independent, integrated creative agency. We build
+            We are SoCheers: an independent, integrated creative agency. We build
             brands, campaigns and culture for the brands that want to{" "}
             <em>lead their categories</em>, not chase them.
           </p>
@@ -28,12 +29,14 @@ export function Who() {
         </div>
 
         <div className="who__band">
+          <BandField />
           <div className="who__bandline" data-clip>
-            <span data-roll><RollText>MUMBAI</RollText></span>
-            <span className="who__bandimg"><img src={IMG.team} alt="" /></span>
-            <span data-roll><RollText>DELHI</RollText></span>
-            <span className="who__bandimg"><img src={IMG.camera} alt="" /></span>
-            <span data-roll><RollText>BENGALURU</RollText></span>
+            {CITIES.map((c) => (
+              <div className={c.low ? "who__city is-low" : "who__city"} key={c.name}>
+                <span className="who__bandimg"><img src={c.img} alt="" /></span>
+                <span data-roll><RollText>{c.name}</RollText></span>
+              </div>
+            ))}
           </div>
         </div>
       </div>

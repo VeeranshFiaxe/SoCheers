@@ -1,9 +1,9 @@
 /* ============================================================
-   SoCheers — animation engine
+   SoCheers - animation engine
    GSAP + ScrollTrigger + SplitText + Lenis
 
    Ported from the static build. Same behaviour, but everything it
-   creates is tracked so initSite() can hand back a teardown — React
+   creates is tracked so initSite() can hand back a teardown - React
    StrictMode mounts effects twice in dev and Fast Refresh re-runs
    them, so leaking tickers or ScrollTriggers here would compound.
 
@@ -34,6 +34,7 @@ export function initSite(): () => void {
   const tickers: gsap.TickerCallback[] = [];
   const addTicker = (fn: gsap.TickerCallback) => { gsap.ticker.add(fn); tickers.push(fn); };
   const splits: SplitText[] = [];
+  const observers: IntersectionObserver[] = [];
   let lenis: Lenis | null = null;
 
   const ctx = gsap.context(() => {
@@ -122,7 +123,7 @@ export function initSite(): () => void {
        while the artwork pushes in and dissolves.
        Phase 2: more images stack on top of it. One pin, one continuous scroll. */
     const FRAME = { w: 1914, h: 1073 };          // artwork natural size
-    // measured window (pixel scan of the artwork: x 771–1147, y 351–728), as a fraction of it
+    // measured window (pixel scan of the artwork: x 771-1147, y 351-728), as a fraction of it
     const WIN = { l: 0.4028, t: 0.3271, w: 0.197, h: 0.3523 };
     // the same crowd shot, full size. The artwork's window is its centred square
     // (correlation-matched at 1:1), so this is the region that must line up.
@@ -151,7 +152,7 @@ export function initSite(): () => void {
       };
 
       // Blow an image up around a named region of itself so that region exactly
-      // fills the stage — uniform scale, window centre on stage centre, growing to
+      // fills the stage - uniform scale, window centre on stage centre, growing to
       // cover if the stage ever gets taller than the region. Run over both layers
       // it puts the artwork's window and the photo on identical framing, so the
       // crop is seamless with the artwork at rest and the cross-fade never ghosts.
@@ -213,37 +214,67 @@ export function initSite(): () => void {
       gsap.set(photo, { autoAlpha: 0 });
 
       const pad = (n: number) => String(n).padStart(2, "0");
-      const EXPAND = 0.34;                  // window finishes filling the screen here
-      const per = (1 - EXPAND - 0.02) / cards.length;
 
-      gsap.set(cards, { yPercent: 125, rotate: (i: number) => (i % 2 ? 9 : -9), autoAlpha: 0 });
+      /* Timeline shape, as fractions of the pin:
+           0 ──────── EXPAND ── +HOLD0 ── [ card segment ] × n ──────── 1
+         and each card segment is  enter → grow to full screen → hold.  */
+      const EXPAND = 0.34;                        // window finishes filling the screen here
+      const HOLD0 = 0.07;                         // the photo holds full screen before card 1
+      const SEG = (1 - EXPAND - HOLD0) / cards.length;
+      const ENTER = SEG * 0.34;                   // slides up onto the pile
+      const GROW = SEG * 0.30;                    // takes over the screen
+      // the remaining SEG * 0.36 is the hold - no tween, just timeline space
+
+      // The cards animate width/height to full screen, so their resting size has
+      // to be a number we own. Measure what CSS gives them (the clamp + the
+      // narrow-viewport override), with inline sizes cleared so we read the
+      // stylesheet, not the last frame we set.
+      const base: { w: number; h: number }[] = [];
+      const measureCards = () => {
+        cards.forEach((c, i) => {
+          const w = c.style.width, h = c.style.height;
+          c.style.width = ""; c.style.height = "";
+          base[i] = { w: c.offsetWidth, h: c.offsetHeight };
+          c.style.width = w; c.style.height = h;
+        });
+      };
+      measureCards();
+      on(window, "resize", measureCards);
+
+      gsap.set(cards, {
+        yPercent: 125, rotate: (i: number) => (i % 2 ? 9 : -9), autoAlpha: 0,
+        width: (i: number) => base[i].w, height: (i: number) => base[i].h,
+      });
+
+      const layers: HTMLElement[] = [stage, ...cards];
+      // progress at which each layer becomes the one on top, for the counter
+      const layerAt = [EXPAND, ...cards.map((_, i) => EXPAND + HOLD0 + i * SEG)];
 
       // Anything keyed to the hero pin has to hang off *this* trigger. A second
       // ScrollTrigger with the same trigger/start created afterwards measures the
       // hero from inside the pin-spacer, so its "top top" resolves to the end of
       // the pin instead of the start, and it never fires in the right place.
       const rail = document.querySelector<HTMLElement>(".rail");
-      let layers: HTMLElement[] = [];
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: hero, start: "top top", end: "+=600%",
+          trigger: hero, start: "top top", end: "+=750%",
           pin: true, scrub: 1, invalidateOnRefresh: true,
           // the rail stays out of the way until the window expand *and* the
-          // image stack are done — they share this one pin
+          // image stack are done - they share this one pin
           onLeave: () => rail?.classList.add("is-visible"),
           onEnterBack: () => rail?.classList.remove("is-visible"),
           // counter tracks the pile in both directions
           onUpdate: (self) => {
-            if (!num || !layers.length) return;
-            const p = (self.progress - EXPAND) / (1 - EXPAND);
-            const idx = gsap.utils.clamp(1, layers.length, Math.floor(p * layers.length) + 1);
+            if (!num) return;
+            let idx = 1;
+            layerAt.forEach((t, n) => { if (self.progress >= t) idx = n + 1; });
             num.textContent = pad(idx);
           },
         },
       });
 
-      /* — phase 1 · the window opens up —
+      /* - phase 1 · the window opens up -
          The window starts as the artwork's own picture and grows; the black-and-white
          photo fades up inside it partway through, so it lands full screen. */
       tl.fromTo(stage,
@@ -258,50 +289,130 @@ export function initSite(): () => void {
       tl.to("[data-hero-cue]", { autoAlpha: 0, duration: 0.04 }, 0.02);
       tl.to("[data-hero-count]", { autoAlpha: 1, duration: 0.05 }, EXPAND * 0.8);
 
-      /* — phase 2 · images stack on top — */
-      layers = [stage, ...cards];
+      /* - phase 2 · each image stacks on top, then takes over the screen -
+         enter (slides up onto the pile) → grow (fills the screen) → hold. */
       cards.forEach((card, i) => {
-        const at = EXPAND + 0.02 + i * per;
+        const at = EXPAND + HOLD0 + i * SEG;
+
+        // slides up onto the pile, still card-sized and tilted
         tl.to(card, {
           yPercent: 0, rotate: (i - (cards.length - 1) / 2) * 2.4, autoAlpha: 1,
-          duration: per, ease: "power3.out",
+          duration: ENTER, ease: "power3.out",
         }, at);
-        // push everything already in the pile back
+
+        // everything already in the pile drops back behind it
         for (let j = 0; j <= i; j++) {
           const depth = i + 1 - j;
           tl.to(layers[j], {
             scale: 1 - depth * 0.04,
             filter: `brightness(${Math.max(0.32, 1 - depth * 0.2)})`,
-            duration: per, ease: "power3.out",
+            duration: ENTER, ease: "power3.out",
           }, at);
         }
+
+        // then it fills the screen and sits there for the rest of the segment.
+        // fromTo (not to) so scrubbing back and refreshing on resize both land
+        // on the measured resting size rather than whatever the last frame was.
+        tl.fromTo(card,
+          { width: () => base[i].w, height: () => base[i].h, borderRadius: 18 },
+          { width: () => pin.offsetWidth, height: () => pin.offsetHeight,
+            borderRadius: 0, rotate: 0,
+            duration: GROW, ease: "power2.inOut", immediateRender: false },
+          at + ENTER);
       });
 
     }
 
-    /* -------------------------------------------------- SplitText lines */
+    /* -------------------------------------------------- SplitText lines
+       Block wipe, line by line: a solid accent bar sweeps across the line,
+       then retracts off the far edge, uncovering the type it was hiding.
+       Reads as the headline being printed onto the page on arrival, which
+       is why it earns its place: it marks where each section begins.
+
+       The reveal is pure transform (the bar's scaleX). The type itself is
+       only ever toggled instantly, at the frame the bar has it fully
+       covered, so nothing expensive animates. */
     function initSplits() {
       document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
         const build = () => {
           if (ac.signal.aborted) return;
+          // reduced motion: no mask at all, so nothing can clip a descender
           if (prefersReduced) { gsap.set(el, { autoAlpha: 1 }); return; }
+
+          // the real sentence, captured before it gets cut into line spans
+          const sentence = (el.textContent || "").replace(/\s+/g, " ").trim();
+
+          // reveal first: the element is visibility:hidden in CSS so the type
+          // never flashes before the wipe, which means nothing below may throw
+          // and leave it hidden forever
+          gsap.set(el, { autoAlpha: 1 });
+
           const split = new SplitText(el, { type: "lines", linesClass: "split-line" });
           splits.push(split);
-          gsap.set(el, { autoAlpha: 1 });
-          gsap.set(split.lines, { yPercent: 115 });
-          split.lines.forEach((l) => {
-            const wrap = document.createElement("span");
-            wrap.style.display = "block";
-            wrap.style.overflow = "hidden";
-            l.parentNode?.insertBefore(wrap, l);
-            wrap.appendChild(l);
+
+          const bars: HTMLElement[] = [];
+          split.lines.forEach((line) => {
+            const mask = document.createElement("span");
+            mask.className = "wipe";
+            // the split tree is presentation; the sr copy below carries the text
+            mask.setAttribute("aria-hidden", "true");
+            line.parentNode?.insertBefore(mask, line);
+            mask.appendChild(line);
+
+            const bar = document.createElement("span");
+            bar.className = "wipe__bar";
+            mask.appendChild(bar);
+            bars.push(bar);
           });
-          gsap.to(split.lines, {
-            yPercent: 0, duration: 0.95, ease: "power4.out", stagger: 0.07,
-            scrollTrigger: { trigger: el, start: "top 84%" },
+
+          // One readable copy for assistive tech. It lives inside the original
+          // element so the heading keeps its role and its accessible name comes
+          // from real text, rather than aria-label on a split-up container.
+          if (sentence) {
+            const sr = document.createElement("span");
+            sr.className = "sr-only";
+            sr.textContent = sentence;
+            el.insertBefore(sr, el.firstChild);
+          }
+
+          // Bar colour is tiered by how much text it crosses. A hot accent bar
+          // is right for a two-word title and awful across a five-line
+          // paragraph, where it strobes; long copy gets a near-neutral block.
+          const n = split.lines.length;
+          const tier = n <= 2 ? "var(--accent)" : n <= 4 ? "var(--accent-off)" : "var(--wipe-tint)";
+          el.style.setProperty("--wipe-bar", tier);
+
+          // Sweep direction, per element. Default is left-to-right; opt an
+          // element out with data-wipe="left" to break up a long page.
+          const leftward = el.getAttribute("data-wipe") === "left";
+          const growFrom = leftward ? "right center" : "left center";
+          const shrinkTo = leftward ? "left center" : "right center";
+          // negative bottom keeps the descender room the mask just bought us
+          const hidden = leftward ? "inset(0% 0% -0.3em 100%)" : "inset(0% 100% -0.3em 0%)";
+          const shown = "inset(0% 0% -0.3em 0%)";
+
+          gsap.set(split.lines, { clipPath: hidden });
+          gsap.set(bars, { transformOrigin: growFrom });
+
+          const COVER = 0.3, UNCOVER = 0.5, STEP = 0.075;
+          const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 84%" } });
+          bars.forEach((bar, i) => {
+            const at = i * STEP;
+            // 1 · the bar sweeps in until the line is fully covered
+            tl.to(bar, { scaleX: 1, duration: COVER, ease: "power2.inOut" }, at);
+            // 2 · it retracts off the far edge while the type wipes open in
+            //     lockstep behind it, so the bar reads as depositing the text
+            //     rather than uncovering something that was already sitting there
+            tl.set(bar, { transformOrigin: shrinkTo }, at + COVER);
+            tl.to(bar, { scaleX: 0, duration: UNCOVER, ease: "power3.inOut" }, at + COVER);
+            tl.to(split.lines[i], {
+              clipPath: shown, duration: UNCOVER, ease: "power3.inOut",
+            }, at + COVER);
           });
         };
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(build);
+        // build on both settle paths: a rejected fonts.ready must not strand
+        // the text behind visibility:hidden
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(build, build);
         else build();
       });
     }
@@ -413,10 +524,41 @@ export function initSite(): () => void {
       const rxTo = ring && gsap.quickTo(ring, "x", { duration: 0.75, ease: "power3" });
       const ryTo = ring && gsap.quickTo(ring, "y", { duration: 0.75, ease: "power3" });
 
+      let mx = 0, my = 0;
       on(window, "mousemove", ((e: MouseEvent) => {
-        xTo(e.clientX); yTo(e.clientY);
-        if (rxTo && ryTo) { rxTo(e.clientX); ryTo(e.clientY); }
+        mx = e.clientX; my = e.clientY;
+        xTo(mx); yTo(my);
+        if (rxTo && ryTo) { rxTo(mx); ryTo(my); }
       }) as EventListener);
+
+      /* Inertia read-out.
+         The ring already lags the pointer by design. The gap between where it
+         has got to and where the pointer actually is IS the velocity vector, so
+         rather than throwing it away, use it: stretch the ring along the
+         direction of travel and squash it across, and point it that way. The
+         ring goes back to a circle the moment you stop, for free. */
+      if (ring && !prefersReduced) {
+        const STRETCH_AT = 190;   // px of lag that counts as "full tilt"
+        let press = 1;
+        const setRing = gsap.quickSetter(ring, "css") as (v: object) => void;
+
+        on(window, "mousedown", () => { press = 0.82; });
+        on(window, "mouseup", () => { press = 1; });
+
+        addTicker(() => {
+          const rx = gsap.getProperty(ring, "x") as number;
+          const ry = gsap.getProperty(ring, "y") as number;
+          const dx = mx - rx, dy = my - ry;
+          const lag = Math.min(Math.hypot(dx, dy) / STRETCH_AT, 1);
+          // ease the response so small jitters near the pointer do nothing
+          const k = lag * lag;
+          setRing({
+            rotate: `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`,
+            scaleX: (1 + k * 0.6) * press,
+            scaleY: (1 - k * 0.34) * press,
+          });
+        });
+      }
 
       document.querySelectorAll<HTMLElement>("[data-cursor]").forEach((el) => {
         on(el, "mouseenter", () => {
@@ -448,24 +590,75 @@ export function initSite(): () => void {
     /* -------------------------------------------------- 3D tilt + inner parallax */
     function initTilt() {
       if (!canHover || prefersReduced) return;
-      document.querySelectorAll<HTMLElement>("[data-tilt]").forEach((el) => {
-        const img = el.querySelector("img");
-        const rX = gsap.quickTo(el, "rotationX", { duration: 0.7, ease: "power3" });
-        const rY = gsap.quickTo(el, "rotationY", { duration: 0.7, ease: "power3" });
-        const tZ = gsap.quickTo(el, "z", { duration: 0.7, ease: "power3" });
-        const iX = img && gsap.quickTo(img, "xPercent", { duration: 0.9, ease: "power3" });
-        const iY = img && gsap.quickTo(img, "yPercent", { duration: 0.9, ease: "power3" });
+      const els = gsap.utils.toArray<HTMLElement>("[data-tilt]");
+      if (!els.length) return;
 
-        on(el, "mousemove", ((e: MouseEvent) => {
-          const r = el.getBoundingClientRect();
-          const px = (e.clientX - r.left) / r.width - 0.5;
-          const py = (e.clientY - r.top) / r.height - 0.5;
-          rX(-py * 11); rY(px * 13); tZ(34);
-          if (iX && iY) { iX(px * -5); iY(py * -5); }
-        }) as EventListener);
-        on(el, "mouseleave", () => {
-          rX(0); rY(0); tZ(0);
-          if (iX && iY) { iX(0); iY(0); }
+      // The tilt used to fire only on mousemove *over* the element, so you never
+      // saw it until you were already on it. Now the cursor pulls from a
+      // distance: a faint lean as it approaches, full strength once it's on.
+      // quickTo's easing smooths the step at the edge, so there's no pop.
+      const REACH = 700;      // px beyond the element's edge that still pulls
+      const AMBIENT = 0.3;    // share of the full tilt while merely approaching
+
+      type Tilt = {
+        el: HTMLElement; hover: boolean; onScreen: boolean;
+        rX: gsap.QuickToFunc; rY: gsap.QuickToFunc; tZ: gsap.QuickToFunc;
+        iX: gsap.QuickToFunc | null; iY: gsap.QuickToFunc | null;
+      };
+
+      const items = new Map<Element, Tilt>();
+      els.forEach((el) => {
+        const img = el.querySelector("img");
+        items.set(el, {
+          el, hover: false, onScreen: false,
+          rX: gsap.quickTo(el, "rotationX", { duration: 0.8, ease: "power3" }),
+          rY: gsap.quickTo(el, "rotationY", { duration: 0.8, ease: "power3" }),
+          tZ: gsap.quickTo(el, "z", { duration: 0.8, ease: "power3" }),
+          iX: img ? gsap.quickTo(img, "xPercent", { duration: 1, ease: "power3" }) : null,
+          iY: img ? gsap.quickTo(img, "yPercent", { duration: 1, ease: "power3" }) : null,
+        });
+        on(el, "mouseenter", () => { const it = items.get(el); if (it) it.hover = true; });
+        on(el, "mouseleave", () => { const it = items.get(el); if (it) it.hover = false; });
+      });
+
+      // only what's on screen is worth measuring each frame
+      const io = new IntersectionObserver(
+        (entries) => entries.forEach((e) => {
+          const it = items.get(e.target);
+          if (it) it.onScreen = e.isIntersecting;
+        }),
+        { rootMargin: "25%" },
+      );
+      els.forEach((el) => io.observe(el));
+      observers.push(io);
+
+      // driven off the ticker, not mousemove: during the hero pin the cards move
+      // under a stationary cursor, and a mousemove-only tilt would go stale
+      let mx = 0, my = 0, live = false;
+      on(window, "mousemove", ((e: MouseEvent) => {
+        mx = e.clientX; my = e.clientY; live = true;
+      }) as EventListener);
+
+      const clamp = gsap.utils.clamp(-0.5, 0.5);
+      addTicker(() => {
+        if (!live) return;
+        items.forEach((it) => {
+          if (!it.onScreen) return;
+          const r = it.el.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          const px = clamp((mx - cx) / r.width);
+          const py = clamp((my - cy) / r.height);
+          // how far outside the box the cursor is, 0 while it's over it
+          const out = Math.hypot(
+            Math.max(0, Math.abs(mx - cx) - r.width / 2),
+            Math.max(0, Math.abs(my - cy) - r.height / 2),
+          );
+          const s = it.hover ? 1 : AMBIENT * Math.max(0, 1 - out / REACH);
+          it.rX(-py * 11 * s);
+          it.rY(px * 13 * s);
+          it.tZ(34 * s);
+          if (it.iX && it.iY) { it.iX(px * -5 * s); it.iY(py * -5 * s); }
         });
       });
     }
@@ -536,6 +729,7 @@ export function initSite(): () => void {
   return () => {
     ac.abort();
     tickers.forEach((fn) => gsap.ticker.remove(fn));
+    observers.forEach((o) => o.disconnect());
     splits.forEach((s) => s.revert());
     lenis?.destroy();
     lenis = null;
