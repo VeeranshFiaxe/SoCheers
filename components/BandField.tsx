@@ -314,10 +314,19 @@ export default function BandField() {
       words.forEach((wEl, i) => {
         if (i > 2) return;
         const r = wEl.getBoundingClientRect();
-        offsets[i] = [
-          ((r.left + r.width / 2 - cr.left) / cr.width) * 2 - 1,
-          -(((r.top + r.height / 2 - cr.top) / cr.height) * 2 - 1),
-        ];
+        const x = ((r.left + r.width / 2 - cr.left) / cr.width) * 2 - 1;
+        const yRaw = -(((r.top + r.height / 2 - cr.top) / cr.height) * 2 - 1);
+        // Vertical placement is damped, not tracked 1:1 like x. .who__city
+        // puts the image above the word for Mumbai/Bengaluru and below it
+        // for Delhi (.is-low), so the word itself sits off-centre by a
+        // different amount for each city. Anchoring the model exactly to
+        // the word carried that asymmetry into the landmark's vertical
+        // room: the two cities whose word sits low were left almost no
+        // clearance before the canvas's bottom edge, which is why they
+        // clipped while Delhi (word pushed up) never did. Damping keeps
+        // a little of that stagger, which reads as intentional rhythm,
+        // without spending the frustum's vertical margin on it.
+        offsets[i] = [x, yRaw * 0.35];
       });
     };
 

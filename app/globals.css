@@ -267,12 +267,22 @@ em{ font-style:italic; }
 .who__statement{
   font-family:var(--f-display); font-weight:400;
   font-size:clamp(24px,3.1vw,46px); line-height:1.16; letter-spacing:-.01em;
+  /* Same rule + padding as .stat, so both columns of the grid start with an
+     identical box and line up exactly. Aligning them by eye does not hold:
+     this sets at leading 1.16 (cap sits below its box top) while .stat__num
+     sets at .88 (cap sits above), and the gap between those shifts whenever
+     the webfont swaps. Matching the structure is stable, nudging is not. */
+  border-top:1px solid var(--line); padding-top:16px;
 }
 .who__statement em{ color:var(--accent); }
-.who__stats{ display:flex; flex-direction:column; gap:26px; padding-top:6px; }
+/* Sized so the three stats, stacked, land at roughly the statement's own
+   height. At the old 92px cap with 26px gaps they ran a good 200px past
+   the last line of body text, which is what made the right column look
+   like it kept going after the left one had stopped. */
+.who__stats{ display:flex; flex-direction:column; gap:16px; }
 .stat{ border-top:1px solid var(--line); padding-top:16px; transition:border-color .4s, transform .5s var(--ease); }
 .stat:hover{ border-color:var(--accent); transform:translateX(8px); }
-.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(48px,6vw,92px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
+.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(40px,4.4vw,64px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--accent); }
 .stat__num i{ color:var(--accent); font-style:normal; }
 .stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
@@ -285,13 +295,23 @@ em{ font-style:italic; }
   padding:clamp(70px,13vh,150px) 0;
 }
 /* WebGL landmark scene behind the city names (components/BandField.tsx).
-   width/height MUST be explicit: a canvas is a replaced element, so
-   `inset` with `width:auto` resolves to the canvas's INTRINSIC size (its
-   width attribute), which the resize handler then writes to, growing the
-   box, refiring the observer, and running away. */
+   width/height MUST be an explicit percentage, never `auto`: a canvas is a
+   replaced element, so `inset` with `width:auto` resolves to the canvas's
+   INTRINSIC size (its width attribute), which the resize handler then
+   writes to, growing the box, refiring the observer, and running away.
+   Percentages don't have that problem - they resolve against the
+   containing block, not the canvas's own drawing buffer.
+
+   The canvas bleeds past .who__band on both sides on purpose: the outer
+   two cities (Mumbai, Bengaluru) sit right at the row's edges under
+   space-between, so a canvas that stopped exactly at the row gave their
+   landmarks no room before the clip plane and cut them off. BandField.tsx
+   reads each city's screen position off the CANVAS's own rect, so widening
+   the canvas automatically pulls both outer landmarks in from the edge -
+   nothing in the component needs to know the bleed amount. */
 .band__field{
-  position:absolute; top:0; left:0; z-index:0;
-  width:100%; height:100%; display:block;
+  position:absolute; top:0; left:-14%; z-index:0;
+  width:128%; height:100%; display:block;
   pointer-events:none;
 }
 /* One row, three columns, no wrapping. The images moved out of the text flow

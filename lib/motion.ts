@@ -218,7 +218,7 @@ export function initSite(): () => void {
       /* Timeline shape, as fractions of the pin:
            0 ──────── EXPAND ── +HOLD0 ── [ card segment ] × n ──────── 1
          and each card segment is  enter → grow to full screen → hold.  */
-      const EXPAND = 0.34;                        // window finishes filling the screen here
+      const EXPAND = 0.22;                        // window finishes filling the screen here
       const HOLD0 = 0.07;                         // the photo holds full screen before card 1
       const SEG = (1 - EXPAND - HOLD0) / cards.length;
       const ENTER = SEG * 0.34;                   // slides up onto the pile
@@ -277,12 +277,14 @@ export function initSite(): () => void {
       /* - phase 1 · the window opens up -
          The window starts as the artwork's own picture and grows; the black-and-white
          photo fades up inside it partway through, so it lands full screen. */
+      // power2.out, not inOut: an eased-in start meant the first stretch of
+      // scroll showed almost no growth, compounding the long-runway feel
       tl.fromTo(stage,
         { x: () => box().left, y: () => box().top, width: () => box().w, height: () => box().h },
         { x: 0, y: 0, width: () => pin.offsetWidth, height: () => pin.offsetHeight,
-          duration: EXPAND, ease: "power2.inOut", onUpdate: fitCrop }, 0);
+          duration: EXPAND, ease: "power2.out", onUpdate: fitCrop }, 0);
       // the artwork pushes toward the viewer and dissolves as its window takes over
-      tl.to("[data-frame-img]", { scale: 1.45, duration: EXPAND, ease: "power2.inOut" }, 0);
+      tl.to("[data-frame-img]", { scale: 1.45, duration: EXPAND, ease: "power2.out" }, 0);
       tl.to(photo, { autoAlpha: 1, duration: EXPAND * 0.42, ease: "power1.inOut" }, EXPAND * 0.22);
       tl.to(crop, { autoAlpha: 0, duration: EXPAND * 0.14 }, EXPAND * 0.64);
       tl.to(frame, { autoAlpha: 0, duration: EXPAND * 0.6, ease: "power2.in" }, EXPAND * 0.35);

@@ -13,7 +13,7 @@ export function Who() {
           <p className="who__statement" data-split>
             We are SoCheers: an independent, integrated creative agency. We build
             brands, campaigns and culture for the brands that want to{" "}
-            <em>lead their categories</em>, not chase them.
+            <em>lead their categories</em>not chase them.
           </p>
           <div className="who__stats">
             {STATS.map((s) => (
