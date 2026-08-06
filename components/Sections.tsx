@@ -1,6 +1,5 @@
 import { Fragment } from "react";
-import { AWARDS, BUCKETS, CITIES, CLIENT_ROWS, IMG, STATS, TILES } from "@/lib/content";
-import BandField from "./BandField";
+import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS, TILES } from "@/lib/content";
 import PixGrid from "./PixGrid";
 import RollText from "./Roll";
 
@@ -10,33 +9,27 @@ export function Who() {
       <div className="wrap">
         <span className="tag" data-reveal>WHO WE ARE</span>
         <div className="who__grid">
-          <p className="who__statement" data-split>
-            We are SoCheers: an independent, integrated creative agency. We build
-            brands, campaigns and culture for the brands that want to{" "}
-            <em>lead their categories</em>not chase them.
-          </p>
-          <div className="who__stats">
-            {STATS.map((s) => (
-              <div className="stat" key={s.label} data-reveal data-cursor={`${s.count}+`}>
-                <div className="stat__num">
-                  <span data-count={s.count}>0</span>
-                  <i>+</i>
+          <div className="who__copy">
+            <p className="who__statement" data-split>
+              We are SoCheers: an independent, integrated creative agency. We build
+              brands, campaigns and culture for the brands that want to{" "}
+              <em>lead their categories</em> not chase them.
+            </p>
+            <div className="who__stats">
+              {STATS.map((s) => (
+                <div className="stat" key={s.label} data-reveal data-cursor={`${s.count}+`}>
+                  <div className="stat__num">
+                    <span data-count={s.count}>0</span>
+                    <i>+</i>
+                  </div>
+                  <div className="stat__label">{s.label}</div>
                 </div>
-                <div className="stat__label">{s.label}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-        <div className="who__band">
-          <BandField />
-          <div className="who__bandline" data-clip>
-            {CITIES.map((c) => (
-              <div className={c.low ? "who__city is-low" : "who__city"} key={c.name}>
-                <span className="who__bandimg"><img src={c.img} alt="" /></span>
-                <span data-roll><RollText>{c.name}</RollText></span>
-              </div>
-            ))}
+          <div className="who__photo" data-clip data-tilt>
+            <img src={IMG.culture} alt="The SoCheers team, off the clock" />
           </div>
         </div>
       </div>
@@ -48,7 +41,7 @@ export function What() {
   return (
     <section className="sec what" id="what" data-section data-sec="2">
       <div className="wrap">
-        <span className="tag" data-reveal>WHAT WE DO</span>
+        <span className="tag" data-reveal>HOW THE WORK COMES TOGETHER</span>
         <h2 className="sec__title" data-split>
           Content that moves your most critical audiences.
         </h2>

@@ -22,7 +22,7 @@ export function Loader() {
   return (
     <div className="loader" id="loader" aria-hidden="true">
       <div className="loader__inner">
-        <div className="loader__word">SOCHEERS</div>
+        <div className="loader__word">SO<i>CHEERS</i></div>
         <div className="loader__count">
           <span id="loaderCount">0</span>
           <i>%</i>

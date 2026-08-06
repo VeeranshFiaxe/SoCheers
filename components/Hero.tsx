@@ -1,8 +1,9 @@
-import { DECK, IMG } from "@/lib/content";
+import { IMG, MEANING } from "@/lib/content";
 import PixGrid from "./PixGrid";
 
-/* The artwork is the hero. Its own inner window expands to full screen,
-   then the deck stacks on top - all in one pinned sequence (lib/motion.ts). */
+/* The artwork is the hero. Its own inner window expands to full screen into
+   the team photo, and then - still in the same pin - the name gets defined
+   over that photo (lib/motion.ts). */
 export default function Hero() {
   return (
     <section className="hero" data-hero data-sec="0">
@@ -10,6 +11,7 @@ export default function Hero() {
         {/* the SOC▢HEERS artwork, full bleed */}
         <div className="hero__frame" data-frame>
           <img src={IMG.frame} alt="SoCheers" data-frame-img />
+          <span className="hero__greet">Hi! We Are</span>
         </div>
 
         {/* The artwork's own window, lifted out so it can grow. At rest it is
@@ -32,24 +34,50 @@ export default function Hero() {
           <PixGrid cols={22} rows={8} />
         </div>
 
-        {/* images that stack on top once it's full screen */}
-        <div className="hero__deck" data-deck>
-          {DECK.map((card) => (
-            <article className="scard" key={card.idx} data-scard data-tilt>
-              <div className="scard__img">
-                <img src={card.src} alt="" />
-              </div>
-              <div className="scard__meta">
-                <span>{card.idx}</span>
-                <em>{card.label}</em>
-              </div>
-            </article>
-          ))}
-        </div>
+        {/* The dictionary entry, set over the photo once it is full screen.
+            Same pin, so the crowd shot you just watched arrive is the page
+            this gets written onto. */}
+        <div className="meaning" data-meaning>
+          <div className="meaning__veil" data-meaning-veil aria-hidden="true" />
 
-        <span className="hero__count" data-hero-count>
-          <b data-deck-num>01</b> / 0{DECK.length + 1}
-        </span>
+          <span className="meaning__side" data-meaning-side aria-hidden="true">
+            MAKING MORE HAPPEN
+          </span>
+
+          <div className="meaning__inner">
+            <div className="meaning__head">
+              <h2 className="meaning__word" data-meaning-word>
+                {MEANING.word}
+              </h2>
+              <button
+                type="button"
+                className="meaning__say"
+                data-meaning-say
+                data-cursor="Say it"
+                aria-label={`Hear ${MEANING.word} pronounced`}
+              >
+                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 9.5v5h3.2L12 18.6V5.4L7.2 9.5H4z" />
+                  <path className="meaning__wave meaning__wave--1" d="M15.2 9.4a3.6 3.6 0 0 1 0 5.2" />
+                  <path className="meaning__wave meaning__wave--2" d="M17.9 6.9a7.2 7.2 0 0 1 0 10.2" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="meaning__phon" data-meaning-meta>{MEANING.phonetic}</p>
+            <p className="meaning__pos" data-meaning-meta><em>{MEANING.pos}</em></p>
+            <span className="meaning__rule" data-meaning-rule aria-hidden="true" />
+
+            <ol className="meaning__senses">
+              {MEANING.senses.map((s, i) => (
+                <li className="meaning__sense" key={s} data-meaning-sense>
+                  <span className="meaning__num">{i + 1}</span>
+                  <span className="meaning__text">{s}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
 
         <div className="hero__scroll" data-hero-cue>
           <span>SCROLL</span>

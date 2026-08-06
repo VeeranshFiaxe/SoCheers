@@ -24,6 +24,8 @@
   --f-display: var(--font-display), "Familjen Grotesk", sans-serif;
   --f-body:    var(--font-body), "DM Sans", sans-serif;
   --f-mono:    var(--font-mono), "DM Mono", ui-monospace, monospace;
+  --f-playful: var(--font-playful), "Caveat", cursive;
+  --f-loader:  var(--font-loader), "Bricolage Grotesque", var(--f-display);
 
   --ease: cubic-bezier(.22,1,.36,1);
   --pad: clamp(20px, 5vw, 84px);
@@ -157,7 +159,8 @@ em{ font-style:italic; }
 
 .loader{ position:fixed; inset:0; z-index:9990; background:var(--bg); display:grid; place-items:center; }
 .loader__inner{ text-align:center; position:relative; z-index:2; }
-.loader__word{ font-family:var(--f-display); font-weight:700; letter-spacing:-.02em; font-size:clamp(40px,9vw,120px); line-height:1; }
+.loader__word{ font-family:var(--f-loader); font-weight:800; letter-spacing:-.04em; font-size:clamp(40px,9vw,120px); line-height:1; }
+.loader__word i{ font-style:italic; color:var(--accent); font-weight:800; }
 .loader__count{ font-family:var(--f-mono); font-size:14px; color:var(--accent); margin-top:14px; letter-spacing:.2em; }
 .loader__count i{ opacity:.6; font-style:normal; }
 .loader__tag{ font-family:var(--f-mono); font-size:10px; letter-spacing:.4em; color:var(--muted); margin-top:8px; }
@@ -205,31 +208,31 @@ em{ font-style:italic; }
 .hero__frame{ position:absolute; inset:0; z-index:1; will-change:transform,opacity; }
 .hero__frame img{ width:100%; height:100%; object-fit:cover; }
 
+.hero__greet{
+  position:absolute; top:20%; left:50%; transform:translate(-50%,-50%) rotate(-3deg);
+  z-index:2; pointer-events:none;
+  font-family:var(--f-playful); font-weight:700; font-style:normal;
+  font-size:clamp(22px,2.8vw,40px); color:#bfe3ff; letter-spacing:.01em;
+  text-shadow:0 2px 18px rgba(47,160,232,.5);
+}
+@media (max-width:640px){ .hero__greet{ top:11%; } }
+
 /* the photo that lives inside the artwork's window */
 .hero__stage{
   position:absolute; z-index:2; overflow:hidden; border-radius:0;
   top:0; left:0; width:120px; height:60px;
-  will-change:width,height,transform;
+  will-change:width,height,transform,filter;
+  /* An explicit identity filter, not `none`. GSAP reads the components it is
+     about to animate off the computed value, and every one missing from
+     `none` reads as 0 - which would flash the photo to black at the start of
+     the dim in phase 2. */
+  filter:brightness(1) saturate(1);
 }
 /* Both layers are sized/offset in JS onto the same framing, so the artwork's
    window and the black-and-white photo sit pixel-on-pixel at every size and the
    cross-fade between them is invisible. */
 .hero__stage-crop,
 .hero__stage-img{ position:absolute; top:0; left:0; max-width:none; }
-
-/* images stacking on top once it is full screen */
-.hero__deck{
-  position:absolute; inset:0; z-index:3;
-  display:grid; place-items:center; perspective:1500px; pointer-events:none;
-}
-.hero__deck .scard{ pointer-events:auto; }
-
-.hero__count{
-  position:absolute; left:var(--pad); bottom:9vh; z-index:5;
-  font-family:var(--f-mono); font-size:12px; letter-spacing:.24em; color:var(--muted);
-  opacity:0;
-}
-.hero__count b{ color:var(--accent); font-weight:400; }
 
 .hero__scroll{
   position:absolute; left:50%; bottom:26px; z-index:8; transform:translateX(-50%);
@@ -240,109 +243,158 @@ em{ font-style:italic; }
 .hero__scroll-line::after{ content:""; position:absolute; top:-50%; left:0; width:100%; height:50%; background:var(--accent); animation:scrolldn 1.8s var(--ease) infinite; }
 @keyframes scrolldn{ to{ top:100%; } }
 
-/* ---------- stacking cards (used inside the hero deck) ---------- */
-.scard{
-  position:absolute;
-  width:clamp(280px,58vw,900px); aspect-ratio:16/10;
-  border-radius:18px; overflow:hidden; border:1px solid rgba(241,236,225,.16);
-  box-shadow:0 50px 110px rgba(0,0,0,.7);
-  transform-style:preserve-3d; will-change:transform;
+/* ============================================================
+   2 · THE MEANING - a dictionary entry, written over the crowd shot
+   Not its own section: it is a layer inside the hero pin, so the photo the
+   hero just opened into stays put underneath and the definition reads as an
+   annotation on that moment rather than a new slide. Motion: lib/motion.ts,
+   initHero phase 2.
+   ============================================================ */
+.meaning{
+  position:absolute; inset:0; z-index:4;
+  display:flex; align-items:center;
+  pointer-events:none;                 /* only the speaker takes the pointer */
+  visibility:hidden;                   /* motion.ts reveals it; no flash on load */
 }
-.scard__img{ position:absolute; inset:0; }
-.scard__img::after{ content:""; position:absolute; inset:0; background:linear-gradient(to top, rgba(6,6,7,.85), transparent 55%); }
-.scard__img img{ transform:scale(1.05); }
-.scard__meta{
-  position:absolute; left:0; bottom:0; z-index:2; width:100%;
-  display:flex; align-items:baseline; gap:12px; padding:22px 24px;
-  font-family:var(--f-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+/* Weighted to the left, where the type sits, and thin on the right so the
+   crowd stays legible - the photo is meant to still read as the photo. The
+   two layers multiply, so these stay low: .82 over .55 is already ~.92. */
+.meaning__veil{
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(100deg, rgba(6,6,7,.82) 0%, rgba(6,6,7,.55) 48%, rgba(6,6,7,.12) 100%),
+    linear-gradient(to bottom, rgba(6,6,7,.45) 0%, transparent 30% 78%, rgba(6,6,7,.6) 100%);
 }
-.scard__meta span{ color:var(--accent); }
-.scard__meta em{ font-style:normal; color:var(--cream); }
-@media (max-width:860px){ .scard{ width:min(86vw,520px); } }
+
+/* "MAKING MORE HAPPEN", set reading downwards on the right edge */
+.meaning__side{
+  position:absolute; right:calc(var(--pad) * .55); top:50%; z-index:3;
+  writing-mode:vertical-rl; text-orientation:mixed;
+  translate:0 -50%;                    /* not transform: GSAP owns y here */
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.55em;
+  text-transform:uppercase; color:rgba(241,236,225,.42);
+  white-space:nowrap; pointer-events:none;
+}
+.meaning__side::after{
+  content:""; display:block; width:1px; height:64px; margin:18px auto 0;
+  background:linear-gradient(to bottom, rgba(241,236,225,.35), transparent);
+}
+
+.meaning__inner{
+  position:relative; z-index:4;
+  max-width:var(--maxw); margin:0 auto; width:100%;
+  padding:0 max(var(--pad), 6vw);
+}
+
+/* the headword + the speaker */
+.meaning__head{ display:flex; align-items:flex-start; gap:clamp(12px,1.4vw,22px); }
+/* The entry has one screen and cannot scroll - it lives inside the hero pin.
+   So every size below is capped against viewport height as well as width,
+   otherwise a short landscape window pushes the last sense off the bottom. */
+.meaning__word{
+  font-family:var(--f-playful); font-weight:700;
+  font-size:clamp(52px, min(10.5vw, 17vh), 168px); line-height:.9; letter-spacing:-.01em;
+  color:var(--cream);
+}
+.meaning__say{
+  flex:none; margin-top:clamp(10px,1.6vw,26px); pointer-events:auto;
+  width:38px; height:38px; border-radius:50%;
+  display:grid; place-items:center;
+  background:transparent; color:var(--accent);
+  border:1px solid rgba(47,229,137,.32);
+  cursor:none; transition:background .35s var(--ease), border-color .35s var(--ease), scale .35s var(--ease);
+}
+@media (hover:none){ .meaning__say{ cursor:pointer; } }
+/* `scale`, not `transform`: GSAP owns this element's transform for the
+   pop-in, so the hover has to ride the standalone property to compose. */
+.meaning__say:hover, .meaning__say.is-saying{
+  background:rgba(47,229,137,.13); border-color:rgba(47,229,137,.75); scale:1.08;
+}
+.meaning__say:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+/* the two arcs sit dim until the word is actually spoken */
+.meaning__wave{ opacity:.35; transition:opacity .3s; }
+.meaning__say:hover .meaning__wave{ opacity:.7; }
+.meaning__say.is-saying .meaning__wave{ opacity:1; }
+
+.meaning__phon{
+  margin-top:14px;
+  font-family:var(--f-mono); font-size:clamp(12px,1.15vw,15px);
+  letter-spacing:.2em; color:var(--accent);
+}
+.meaning__pos{
+  margin-top:8px;
+  font-family:var(--f-display); font-size:clamp(15px,1.5vw,20px); color:var(--muted);
+}
+.meaning__pos em{ font-style:italic; }
+/* its own element rather than a border, so it can draw itself on arrival */
+.meaning__rule{
+  display:block; margin-top:22px; height:1px;
+  width:min(560px,52vw); max-width:100%;
+  background:linear-gradient(to right, rgba(241,236,225,.28), rgba(241,236,225,.05));
+}
+
+/* the senses */
+.meaning__senses{ list-style:none; margin-top:clamp(26px,4vh,44px); }
+.meaning__sense{
+  display:flex; align-items:baseline; gap:clamp(14px,1.5vw,26px);
+  padding:clamp(9px,1.4vh,15px) 0;
+}
+.meaning__num{
+  flex:none; width:1.6em;
+  font-family:var(--f-mono); font-size:clamp(10px,.95vw,12px);
+  letter-spacing:.14em; color:var(--accent); opacity:.65;
+}
+.meaning__text{
+  font-family:var(--f-display); font-weight:600;
+  font-size:clamp(26px, min(4.6vw, 7.2vh), 64px); line-height:1.02; letter-spacing:-.025em;
+  color:var(--cream);
+}
+@media (max-width:860px){
+  .meaning__side{ right:10px; font-size:9px; letter-spacing:.42em; }
+  .meaning__pos{ max-width:none; }
+  .meaning__veil{ background:linear-gradient(to bottom, rgba(6,6,7,.9), rgba(6,6,7,.82)); }
+}
 
 /* ============================================================
    3 · WHO WE ARE
    ============================================================ */
-.who__grid{ margin-top:56px; display:grid; grid-template-columns:1.55fr 1fr; gap:70px; align-items:start; }
+.who__grid{ margin-top:56px; display:grid; grid-template-columns:1.3fr 1fr; gap:70px; align-items:center; }
+.who__copy{ display:flex; flex-direction:column; }
 .who__statement{
   font-family:var(--f-display); font-weight:400;
   font-size:clamp(24px,3.1vw,46px); line-height:1.16; letter-spacing:-.01em;
-  /* Same rule + padding as .stat, so both columns of the grid start with an
-     identical box and line up exactly. Aligning them by eye does not hold:
-     this sets at leading 1.16 (cap sits below its box top) while .stat__num
-     sets at .88 (cap sits above), and the gap between those shifts whenever
-     the webfont swaps. Matching the structure is stable, nudging is not. */
   border-top:1px solid var(--line); padding-top:16px;
 }
 .who__statement em{ color:var(--accent); }
-/* Sized so the three stats, stacked, land at roughly the statement's own
-   height. At the old 92px cap with 26px gaps they ran a good 200px past
-   the last line of body text, which is what made the right column look
-   like it kept going after the left one had stopped. */
-.who__stats{ display:flex; flex-direction:column; gap:16px; }
+
+/* Stats run in a row under the write-up, not stacked in their own column -
+   they read as a strip of evidence under the claim, not a separate block. */
+.who__stats{
+  display:flex; gap:clamp(28px,4vw,56px);
+  margin-top:clamp(36px,5vh,56px);
+}
 .stat{ border-top:1px solid var(--line); padding-top:16px; transition:border-color .4s, transform .5s var(--ease); }
-.stat:hover{ border-color:var(--accent); transform:translateX(8px); }
-.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(40px,4.4vw,64px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
+.stat:hover{ border-color:var(--accent); transform:translateY(-4px); }
+.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,3.6vw,56px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--accent); }
 .stat__num i{ color:var(--accent); font-style:normal; }
 .stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
 
-.who__band{
-  position:relative; isolation:isolate;
-  margin-top:clamp(60px,9vh,110px);
-  /* The landmarks fill a fixed fraction of the canvas, so the canvas has to
-     be tall for them to read at any size. This padding IS their stage. */
-  padding:clamp(70px,13vh,150px) 0;
+/* the photo that fills the space the stats used to occupy */
+.who__photo{
+  position:relative; align-self:stretch;
+  min-height:340px; border-radius:20px; overflow:hidden;
+  border:1px solid rgba(241,236,225,.12);
 }
-/* WebGL landmark scene behind the city names (components/BandField.tsx).
-   width/height MUST be an explicit percentage, never `auto`: a canvas is a
-   replaced element, so `inset` with `width:auto` resolves to the canvas's
-   INTRINSIC size (its width attribute), which the resize handler then
-   writes to, growing the box, refiring the observer, and running away.
-   Percentages don't have that problem - they resolve against the
-   containing block, not the canvas's own drawing buffer.
+.who__photo img{ filter:grayscale(.25) contrast(1.04); transition:filter .6s, transform .8s var(--ease); }
+.who__photo:hover img{ filter:grayscale(0); transform:scale(1.05); }
 
-   The canvas bleeds past .who__band on both sides on purpose: the outer
-   two cities (Mumbai, Bengaluru) sit right at the row's edges under
-   space-between, so a canvas that stopped exactly at the row gave their
-   landmarks no room before the clip plane and cut them off. BandField.tsx
-   reads each city's screen position off the CANVAS's own rect, so widening
-   the canvas automatically pulls both outer landmarks in from the edge -
-   nothing in the component needs to know the bleed amount. */
-.band__field{
-  position:absolute; top:0; left:-14%; z-index:0;
-  width:128%; height:100%; display:block;
-  pointer-events:none;
+@media (max-width:860px){
+  .who__grid{ grid-template-columns:1fr; gap:36px; }
+  .who__stats{ flex-wrap:wrap; gap:22px 40px; }
+  .stat{ flex:1; min-width:100px; }
+  .who__photo{ min-height:260px; }
 }
-/* One row, three columns, no wrapping. The images moved out of the text flow
-   and sit above or below each name instead, which is what lets the row stay on
-   a single line at full display size and gives each landmark its own lane. */
-.who__bandline{
-  position:relative; z-index:1;
-  display:flex; align-items:center; justify-content:space-between;
-  gap:clamp(20px,4vw,70px);
-  font-family:var(--f-display); font-weight:700; letter-spacing:-.02em;
-  font-size:clamp(26px,5.2vw,80px); line-height:1;
-}
-.who__city{
-  display:flex; flex-direction:column; align-items:center;
-  gap:clamp(12px,1.8vw,26px);
-}
-/* the middle city hangs its image below, so the row reads as a rhythm
-   rather than three identical stacks */
-.who__city.is-low{ flex-direction:column-reverse; }
-.who__bandimg{
-  display:block; flex:none;
-  width:clamp(88px,11vw,168px); height:clamp(52px,6.2vw,96px);
-  border-radius:10px; overflow:hidden;
-}
-@media (max-width:760px){
-  .who__bandline{ flex-direction:column; gap:40px; }
-}
-.who__bandimg img{ filter:grayscale(.3); transition:filter .5s, transform .8s var(--ease); }
-.who__bandimg:hover img{ filter:grayscale(0); transform:scale(1.12); }
-
-@media (max-width:860px){ .who__grid{ grid-template-columns:1fr; gap:44px; } .who__stats{ flex-direction:row; flex-wrap:wrap; gap:22px 40px; } .stat{ flex:1; min-width:120px; } }
 
 /* ============================================================
    4 · WHAT WE DO

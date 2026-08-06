@@ -137,8 +137,7 @@ export function initSite(): () => void {
       const stage = document.querySelector<HTMLElement>("[data-hero-stage]");
       const crop = document.querySelector<HTMLElement>("[data-stage-crop]");
       const photo = document.querySelector<HTMLElement>("[data-stage-img]");
-      const cards = gsap.utils.toArray<HTMLElement>("[data-scard]");
-      const num = document.querySelector<HTMLElement>("[data-deck-num]");
+      const entry = document.querySelector<HTMLElement>("[data-meaning]");
       if (!hero || !pin || !frame || !stage) return;
 
       // Where the artwork's window lands on screen. The artwork is object-fit:cover,
@@ -196,7 +195,8 @@ export function initSite(): () => void {
         gsap.set(frame, { autoAlpha: 0 });
         gsap.set(crop, { autoAlpha: 0 });
         gsap.set(photo, { autoAlpha: 1 });
-        gsap.set(cards, { autoAlpha: 0 });
+        // the entry is simply there, already written
+        gsap.set(entry, { autoAlpha: 1 });
         // no pin here, so gate the rail on the hero itself
         const reducedRail = document.querySelector<HTMLElement>(".rail");
         if (reducedRail) {
@@ -213,42 +213,15 @@ export function initSite(): () => void {
       on(window, "resize", seat);
       gsap.set(photo, { autoAlpha: 0 });
 
-      const pad = (n: number) => String(n).padStart(2, "0");
-
       /* Timeline shape, as fractions of the pin:
-           0 ──────── EXPAND ── +HOLD0 ── [ card segment ] × n ──────── 1
-         and each card segment is  enter → grow to full screen → hold.  */
-      const EXPAND = 0.22;                        // window finishes filling the screen here
-      const HOLD0 = 0.07;                         // the photo holds full screen before card 1
-      const SEG = (1 - EXPAND - HOLD0) / cards.length;
-      const ENTER = SEG * 0.34;                   // slides up onto the pile
-      const GROW = SEG * 0.30;                    // takes over the screen
-      // the remaining SEG * 0.36 is the hold - no tween, just timeline space
+           0 ──── EXPAND ──── +HOLD0 ──── ENTRY (the definition) ──── hold ──── 1 */
+      const EXPAND = 0.30;                        // window finishes filling the screen here
+      const HOLD0 = 0.08;                         // the photo holds, undisturbed, before the type
+      const ENTRY = 0.44;                         // the entry writes itself in
+      const AT = EXPAND + HOLD0;                  // where the entry starts
+      // the remaining ~0.18 is the hold on the finished entry before the pin releases
 
-      // The cards animate width/height to full screen, so their resting size has
-      // to be a number we own. Measure what CSS gives them (the clamp + the
-      // narrow-viewport override), with inline sizes cleared so we read the
-      // stylesheet, not the last frame we set.
-      const base: { w: number; h: number }[] = [];
-      const measureCards = () => {
-        cards.forEach((c, i) => {
-          const w = c.style.width, h = c.style.height;
-          c.style.width = ""; c.style.height = "";
-          base[i] = { w: c.offsetWidth, h: c.offsetHeight };
-          c.style.width = w; c.style.height = h;
-        });
-      };
-      measureCards();
-      on(window, "resize", measureCards);
-
-      gsap.set(cards, {
-        yPercent: 125, rotate: (i: number) => (i % 2 ? 9 : -9), autoAlpha: 0,
-        width: (i: number) => base[i].w, height: (i: number) => base[i].h,
-      });
-
-      const layers: HTMLElement[] = [stage, ...cards];
-      // progress at which each layer becomes the one on top, for the counter
-      const layerAt = [EXPAND, ...cards.map((_, i) => EXPAND + HOLD0 + i * SEG)];
+      gsap.set(entry, { autoAlpha: 1 });
 
       // Anything keyed to the hero pin has to hang off *this* trigger. A second
       // ScrollTrigger with the same trigger/start created afterwards measures the
@@ -258,19 +231,12 @@ export function initSite(): () => void {
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: hero, start: "top top", end: "+=750%",
+          trigger: hero, start: "top top", end: "+=420%",
           pin: true, scrub: 1, invalidateOnRefresh: true,
           // the rail stays out of the way until the window expand *and* the
-          // image stack are done - they share this one pin
+          // definition are done - they share this one pin
           onLeave: () => rail?.classList.add("is-visible"),
           onEnterBack: () => rail?.classList.remove("is-visible"),
-          // counter tracks the pile in both directions
-          onUpdate: (self) => {
-            if (!num) return;
-            let idx = 1;
-            layerAt.forEach((t, n) => { if (self.progress >= t) idx = n + 1; });
-            num.textContent = pad(idx);
-          },
         },
       });
 
@@ -289,40 +255,56 @@ export function initSite(): () => void {
       tl.to(crop, { autoAlpha: 0, duration: EXPAND * 0.14 }, EXPAND * 0.64);
       tl.to(frame, { autoAlpha: 0, duration: EXPAND * 0.6, ease: "power2.in" }, EXPAND * 0.35);
       tl.to("[data-hero-cue]", { autoAlpha: 0, duration: 0.04 }, 0.02);
-      tl.to("[data-hero-count]", { autoAlpha: 1, duration: 0.05 }, EXPAND * 0.8);
 
-      /* - phase 2 · each image stacks on top, then takes over the screen -
-         enter (slides up onto the pile) → grow (fills the screen) → hold. */
-      cards.forEach((card, i) => {
-        const at = EXPAND + HOLD0 + i * SEG;
+      /* - phase 2 · the name gets defined, over the photo -
+         The photo does not go anywhere. It settles back a touch and dims under
+         a scrim so the type has something to sit on, then the entry arrives in
+         reading order: headword, phonetics, part of speech, then each sense.
+         Offsets below are fractions of ENTRY, so retiming the phase is one
+         number. */
+      const E = (f: number) => AT + ENTRY * f;
 
-        // slides up onto the pile, still card-sized and tilted
-        tl.to(card, {
-          yPercent: 0, rotate: (i - (cards.length - 1) / 2) * 2.4, autoAlpha: 1,
-          duration: ENTER, ease: "power3.out",
-        }, at);
+      /* The photo eases back and dims - it becomes the page, not the subject.
+         fromTo with an explicit starting filter, never to(): from a computed
+         `filter:none` GSAP reads every missing component as 0, not 1, so a
+         plain to() ramps brightness 0 → .5 and the screen goes black first. */
+      tl.fromTo(stage,
+        { scale: 1, filter: "brightness(1) saturate(1)" },
+        { scale: 1.05, filter: "brightness(.55) saturate(.7)",
+          duration: ENTRY * 0.4, ease: "power1.inOut" }, AT);
+      tl.fromTo("[data-meaning-veil]",
+        { autoAlpha: 0 },
+        { autoAlpha: 1, duration: ENTRY * 0.4, ease: "power1.inOut" }, AT);
 
-        // everything already in the pile drops back behind it
-        for (let j = 0; j <= i; j++) {
-          const depth = i + 1 - j;
-          tl.to(layers[j], {
-            scale: 1 - depth * 0.04,
-            filter: `brightness(${Math.max(0.32, 1 - depth * 0.2)})`,
-            duration: ENTER, ease: "power3.out",
-          }, at);
-        }
+      // "MAKING MORE HAPPEN" draws down its edge
+      tl.fromTo("[data-meaning-side]",
+        { autoAlpha: 0, y: -34 },
+        { autoAlpha: 1, y: 0, duration: ENTRY * 0.3, ease: "power2.out" }, E(0.1));
 
-        // then it fills the screen and sits there for the rest of the segment.
-        // fromTo (not to) so scrubbing back and refreshing on resize both land
-        // on the measured resting size rather than whatever the last frame was.
-        tl.fromTo(card,
-          { width: () => base[i].w, height: () => base[i].h, borderRadius: 18 },
-          { width: () => pin.offsetWidth, height: () => pin.offsetHeight,
-            borderRadius: 0, rotate: 0,
-            duration: GROW, ease: "power2.inOut", immediateRender: false },
-          at + ENTER);
-      });
+      // the headword drops in and settles out of a tilt
+      tl.fromTo("[data-meaning-word]",
+        { autoAlpha: 0, yPercent: 34, rotate: -3.5, scale: 0.94 },
+        { autoAlpha: 1, yPercent: 0, rotate: 0, scale: 1,
+          duration: ENTRY * 0.4, ease: "power3.out" }, E(0.12));
+      tl.fromTo("[data-meaning-say]",
+        { autoAlpha: 0, scale: 0.3 },
+        { autoAlpha: 1, scale: 1, duration: ENTRY * 0.22, ease: "back.out(2.4)" }, E(0.34));
 
+      // phonetics and part of speech
+      tl.fromTo("[data-meaning-meta]",
+        { autoAlpha: 0, y: 16 },
+        { autoAlpha: 1, y: 0, duration: ENTRY * 0.22, stagger: ENTRY * 0.05, ease: "power2.out" },
+        E(0.34));
+
+      // the rule draws itself, then the senses land on it one at a time
+      tl.fromTo("[data-meaning-rule]",
+        { scaleX: 0 },
+        { scaleX: 1, transformOrigin: "left center", duration: ENTRY * 0.28, ease: "power3.inOut" },
+        E(0.44));
+      tl.fromTo("[data-meaning-sense]",
+        { autoAlpha: 0, x: -34 },
+        { autoAlpha: 1, x: 0, duration: ENTRY * 0.28, stagger: ENTRY * 0.12, ease: "power3.out" },
+        E(0.54));
     }
 
     /* -------------------------------------------------- SplitText lines
@@ -696,6 +678,33 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- the meaning entry
+       The reveal itself is part of the hero pin (see initHero, phase 2), since
+       the entry is written over the hero's own photo. All that is left here is
+       the speaker: speechSynthesis, so there is no audio asset to ship, and it
+       takes itself off the page on engines that lack it. */
+    function initMeaning() {
+      const say = document.querySelector<HTMLButtonElement>("[data-meaning-say]");
+      if (!say) return;
+
+      const synth = typeof window !== "undefined" ? window.speechSynthesis : undefined;
+      if (!synth) { say.hidden = true; return; }
+
+      on(say, "click", () => {
+        synth.cancel();                           // re-taps restart, never queue
+        const u = new SpeechSynthesisUtterance("So Cheers");
+        u.rate = 0.92; u.pitch = 1.05;
+        const off = () => say.classList.remove("is-saying");
+        u.onend = off; u.onerror = off;
+        say.classList.add("is-saying");
+        // a ring of accent pushed outward: the visual for the sound
+        gsap.fromTo(say,
+          { boxShadow: "0 0 0 0 rgba(47,229,137,.5)" },
+          { boxShadow: "0 0 0 18px rgba(47,229,137,0)", duration: 0.9, ease: "power2.out" });
+        synth.speak(u);
+      });
+    }
+
     /* -------------------------------------------------- boot */
     document.documentElement.classList.remove("no-js");
 
@@ -707,6 +716,7 @@ export function initSite(): () => void {
     initMagnetic();
 
     initHero();
+    initMeaning();
     initSplits();
     initReveals();
     initTiles();

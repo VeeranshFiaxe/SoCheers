@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Familjen_Grotesk, DM_Sans, DM_Mono } from "next/font/google";
+import { Familjen_Grotesk, DM_Sans, DM_Mono, Caveat, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 
 const display = Familjen_Grotesk({
@@ -7,6 +7,20 @@ const display = Familjen_Grotesk({
   weight: ["400", "500", "600", "700"],
   style: ["normal", "italic"],
   variable: "--font-display",
+  display: "swap",
+});
+
+const playful = Caveat({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-playful",
+  display: "swap",
+});
+
+const loaderFont = Bricolage_Grotesque({
+  subsets: ["latin"],
+  weight: ["800"],
+  variable: "--font-loader",
   display: "swap",
 });
 
@@ -34,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`no-js ${display.variable} ${body.variable} ${mono.variable}`}
+      className={`no-js ${display.variable} ${body.variable} ${mono.variable} ${playful.variable} ${loaderFont.variable}`}
     >
       <body>{children}</body>
     </html>

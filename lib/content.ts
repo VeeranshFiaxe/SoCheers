@@ -2,12 +2,13 @@
 
 export const IMG = {
   frame: "/assets/socheers-frame-n-T4ylIx.jpg",
-  team: "/assets/team-group-D203M1bi.jpg",
+  team: "/assets/team-group-hires.jpg",
   camera: "/assets/arri-camera-DX29MVBW.jpg",
   brain: "/assets/brain-DH7sqVir.jpg",
   warMask: "/assets/war-mask-7z_N0Huv.jpg",
   photoshop: "/assets/photoshop-face-BOtm4GGN.jpg",
   bootPhone: "/assets/boot-phone-BJcXYlVw.jpg",
+  culture: "/assets/who-culture.jpg",
 } as const;
 
 export const RAIL = [
@@ -27,21 +28,14 @@ export const NAV_LINKS = [
   { href: "#awards", label: "Awards" },
 ];
 
-/* hero - the images that stack once the window is full screen */
-export const DECK = [
-  { src: IMG.camera, idx: "02", label: "Production · films that land" },
-  { src: IMG.brain, idx: "03", label: "Strategy · the thinking bit" },
-  { src: IMG.warMask, idx: "04", label: "Creative · occasionally unhinged" },
-  { src: IMG.photoshop, idx: "05", label: "Craft · down to the pixel" },
-];
+/* the dictionary entry, written over the photo at the end of the hero pin */
+export const MEANING = {
+  word: "SoCheers",
+  phonetic: "/soh-cheers/",
+  pos: "noun.",
+  senses: ["A toast.", "An email sign-off.", "An agency."],
+} as const;
 
-/* One image per city, stacked over/under the name rather than inline, so the
-   row stays on one line and each landmark gets its own column of space. */
-export const CITIES = [
-  { name: "MUMBAI", img: IMG.team, low: false },
-  { name: "DELHI", img: IMG.camera, low: true },
-  { name: "BENGALURU", img: IMG.brain, low: false },
-];
 
 export const STATS = [
   { count: 200, label: "People" },
