@@ -9,6 +9,10 @@ export const IMG = {
   photoshop: "/assets/photoshop-face-BOtm4GGN.jpg",
   bootPhone: "/assets/boot-phone-BJcXYlVw.jpg",
   culture: "/assets/who-we-are.png",
+  workBfsi: "/assets/work-bfsi.png",
+  workEntertainment: "/assets/work-entertainment.png",
+  workLifestyle: "/assets/work-lifestyle.jpg",
+  workB2b: "/assets/work-b2b.png",
 } as const;
 
 export const RAIL = [
@@ -21,11 +25,14 @@ export const RAIL = [
   "Contact",
 ];
 
+/* A bare "#..." is an on-page anchor; anything else is a real route.
+   components/Chrome.tsx rewrites the hashes when the nav is on a sub-page. */
 export const NAV_LINKS = [
   { href: "#who", label: "Who" },
   { href: "#what", label: "What" },
   { href: "#work", label: "Work" },
   { href: "#awards", label: "Awards" },
+  { href: "/about", label: "About" },
 ];
 
 /* the dictionary entry, written over the photo at the end of the hero pin */
@@ -95,12 +102,12 @@ export const CLIENT_ROWS: { dir: "left" | "right"; names: string[] }[] = [
 ];
 
 export const TILES = [
-  { idx: "01", name: "BFSI", img: IMG.warMask },
+  { idx: "01", name: "BFSI", img: IMG.workBfsi },
   { idx: "02", name: "FMCG", img: IMG.bootPhone },
   { idx: "03", name: "Fashion & Beauty", img: IMG.photoshop },
-  { idx: "04", name: "Entertainment", img: IMG.brain },
-  { idx: "05", name: "Lifestyle", img: IMG.camera },
-  { idx: "06", name: "B2B", img: IMG.frame },
+  { idx: "04", name: "Entertainment", img: IMG.workEntertainment },
+  { idx: "05", name: "Lifestyle", img: IMG.workLifestyle },
+  { idx: "06", name: "B2B", img: IMG.workB2b },
 ];
 
 export const AWARDS = [

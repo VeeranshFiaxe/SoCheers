@@ -51,20 +51,32 @@ export function Rail() {
   );
 }
 
-export function Nav() {
+/* `variant` only rewrites where the links point. On the home page they stay
+   bare hashes so Lenis picks them up and scrolls smoothly (it only binds
+   a[href^="#"]); on a sub-page the same labels have to leave the page, so
+   they become root-relative and the browser handles them normally. */
+export function Nav({ variant = "home" }: { variant?: "home" | "sub" }) {
+  const sub = variant === "sub";
+  const to = (hash: string) => (sub ? `/${hash}` : hash);
+
   return (
     <header className="nav" id="nav">
-      <a href="#top" className="nav__logo" data-cursor="Top" data-magnetic>
+      <a href={sub ? "/" : "#top"} className="nav__logo" data-cursor="Top" data-magnetic>
         SOCHEERS
       </a>
       <nav className="nav__links">
         {NAV_LINKS.map((l) => (
-          <a key={l.href} href={l.href} data-roll>
+          <a
+            key={l.href}
+            href={l.href.startsWith("#") ? to(l.href) : l.href}
+            data-roll
+            aria-current={sub && l.href === "/about" ? "page" : undefined}
+          >
             <RollText>{l.label}</RollText>
           </a>
         ))}
       </nav>
-      <a href="#contact" className="nav__cta" data-magnetic data-cursor="Say hi">
+      <a href={to("#contact")} className="nav__cta" data-magnetic data-cursor="Say hi">
         <span>Start a project</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M5 12h14M13 6l6 6-6 6" />
