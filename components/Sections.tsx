@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS, TILES } from "@/lib/content";
 import PixGrid from "./PixGrid";
 import RollText from "./Roll";
+import Splash from "./Splash";
 
 export function Who() {
   return (
@@ -11,8 +12,7 @@ export function Who() {
         <div className="who__grid">
           <div className="who__copy">
             <p className="who__statement" data-split>
-              We are SoCheers: an independent, integrated creative agency. We build
-              brands, campaigns and culture for the brands that want to{" "}
+              We are SoCheers: an independent, integrated creative agency. We build brands, campaigns and culture for the brands that want to{" "}
               <em>lead their categories</em> not chase them.
             </p>
             <div className="who__stats">
@@ -28,8 +28,11 @@ export function Who() {
             </div>
           </div>
 
-          <div className="who__photo" data-clip data-tilt>
-            <img src={IMG.culture} alt="The SoCheers team, off the clock" />
+          <div className="who__photo" data-tilt>
+            <span className="who__splash" data-splash aria-hidden="true">
+              <Splash />
+            </span>
+            <img src={IMG.culture} alt="The SoCheers team, off the clock" data-clip />
           </div>
         </div>
       </div>
@@ -41,9 +44,9 @@ export function What() {
   return (
     <section className="sec what" id="what" data-section data-sec="2">
       <div className="wrap">
-        <span className="tag" data-reveal>HOW THE WORK COMES TOGETHER</span>
+        <span className="tag" data-reveal>WHAT WE DO</span>
         <h2 className="sec__title" data-split>
-          Content that moves your most critical audiences.
+          How the work comes together.
         </h2>
 
         <div className="wcards">

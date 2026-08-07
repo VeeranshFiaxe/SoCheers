@@ -231,7 +231,7 @@ export function initSite(): () => void {
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: hero, start: "top top", end: "+=420%",
+          trigger: hero, start: "top top", end: "+=260%",
           pin: true, scrub: 1, invalidateOnRefresh: true,
           // the rail stays out of the way until the window expand *and* the
           // definition are done - they share this one pin
@@ -647,6 +647,84 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- paint splash
+       The splash behind the WHO WE ARE cutout leans toward the cursor. The
+       pull is quadratic in proximity, so from across the section it barely
+       registers and only really commits once you are near it - a linear
+       falloff made the whole section feel twitchy.
+
+       Two things keep it from ever snapping: quickTo carries the actual
+       easing (the splash always lags the pointer), and the travel is capped
+       by the distance itself, so as the cursor arrives on top of it the
+       target collapses to zero instead of thrashing around a singularity.
+
+       Only the wrapper moves. The SVG's turbulence filters are expensive to
+       rasterise and this way they are rasterised once, then composited. */
+    function initSplash() {
+      const els = gsap.utils.toArray<HTMLElement>("[data-splash]");
+      if (!els.length) return;
+
+      // it still wants to arrive on scroll, even if it will never chase
+      els.forEach((el) => {
+        gsap.fromTo(el, { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 1.1, ease: "power2.out",
+            scrollTrigger: { trigger: el, start: "top 88%" } });
+      });
+      if (!canHover || prefersReduced) return;
+
+      const REACH = 900;      // px from centre at which the cursor starts to register
+      const MAX_PULL = 34;    // px of travel at full commitment
+
+      type Item = {
+        el: HTMLElement; onScreen: boolean;
+        xTo: gsap.QuickToFunc; yTo: gsap.QuickToFunc; rTo: gsap.QuickToFunc;
+      };
+
+      const items = new Map<Element, Item>();
+      els.forEach((el) => {
+        items.set(el, {
+          el, onScreen: false,
+          xTo: gsap.quickTo(el, "x", { duration: 1.05, ease: "power3" }),
+          yTo: gsap.quickTo(el, "y", { duration: 1.05, ease: "power3" }),
+          rTo: gsap.quickTo(el, "rotation", { duration: 1.4, ease: "power3" }),
+        });
+      });
+
+      const io = new IntersectionObserver(
+        (entries) => entries.forEach((e) => {
+          const it = items.get(e.target);
+          if (it) it.onScreen = e.isIntersecting;
+        }),
+        { rootMargin: "30%" },
+      );
+      els.forEach((el) => io.observe(el));
+      observers.push(io);
+
+      // ticker rather than mousemove: the section scrolls under a still cursor
+      let mx = 0, my = 0, live = false;
+      on(window, "mousemove", ((e: MouseEvent) => {
+        mx = e.clientX; my = e.clientY; live = true;
+      }) as EventListener);
+
+      addTicker(() => {
+        if (!live) return;
+        items.forEach((it) => {
+          if (!it.onScreen) return;
+          const r = it.el.getBoundingClientRect();
+          if (!r.width || !r.height) return;
+          const dx = mx - (r.left + r.width / 2);
+          const dy = my - (r.top + r.height / 2);
+          const dist = Math.hypot(dx, dy) || 1;
+          const prox = 1 - Math.min(dist / REACH, 1);
+          const k = prox * prox;                        // indifferent until it is close
+          const pull = Math.min(dist, MAX_PULL) * k;    // never overshoots the pointer
+          it.xTo((dx / dist) * pull);
+          it.yTo((dy / dist) * pull);
+          it.rTo((dx / dist) * k * 3);                  // a few degrees of lean, no more
+        });
+      });
+    }
+
     /* -------------------------------------------------- magnetic */
     function initMagnetic() {
       if (!canHover) return;
@@ -713,6 +791,7 @@ export function initSite(): () => void {
     initCursor();
     initSpotlight();
     initTilt();
+    initSplash();
     initMagnetic();
 
     initHero();

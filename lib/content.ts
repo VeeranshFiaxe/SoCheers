@@ -8,7 +8,7 @@ export const IMG = {
   warMask: "/assets/war-mask-7z_N0Huv.jpg",
   photoshop: "/assets/photoshop-face-BOtm4GGN.jpg",
   bootPhone: "/assets/boot-phone-BJcXYlVw.jpg",
-  culture: "/assets/who-culture.jpg",
+  culture: "/assets/who-we-are.png",
 } as const;
 
 export const RAIL = [

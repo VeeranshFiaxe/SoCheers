@@ -358,7 +358,7 @@ em{ font-style:italic; }
 /* ============================================================
    3 · WHO WE ARE
    ============================================================ */
-.who__grid{ margin-top:56px; display:grid; grid-template-columns:1.3fr 1fr; gap:70px; align-items:center; }
+.who__grid{ margin-top:56px; display:grid; grid-template-columns:1.35fr 0.85fr; gap:70px; align-items:flex-start; }
 .who__copy{ display:flex; flex-direction:column; }
 .who__statement{
   font-family:var(--f-display); font-weight:400;
@@ -370,30 +370,55 @@ em{ font-style:italic; }
 /* Stats run in a row under the write-up, not stacked in their own column -
    they read as a strip of evidence under the claim, not a separate block. */
 .who__stats{
-  display:flex; gap:clamp(28px,4vw,56px);
+  display:flex; justify-content:flex-start; gap:clamp(48px,4.5vw,90px);
   margin-top:clamp(36px,5vh,56px);
 }
-.stat{ border-top:1px solid var(--line); padding-top:16px; transition:border-color .4s, transform .5s var(--ease); }
+.stat{ flex:0 0 auto; text-align:center; border-top:1px solid var(--line); padding-top:16px; transition:border-color .4s, transform .5s var(--ease); }
 .stat:hover{ border-color:var(--accent); transform:translateY(-4px); }
-.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,3.6vw,56px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
+.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(38px,4vw,62px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--accent); }
 .stat__num i{ color:var(--accent); font-style:normal; }
 .stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
 
-/* the photo that fills the space the stats used to occupy */
+/* The cutout stands on its own - no frame, no card. What holds it to the
+   page is the paint splash behind it (components/Splash.tsx), which is
+   allowed to bleed past the box on every side, so nothing here clips. */
+/* Sized explicitly, not stretched to the column: it is meant to bleed past
+   its own grid track into the quiet space on the right, while the text
+   column next to it keeps the width it already had. */
 .who__photo{
-  position:relative; align-self:stretch;
-  min-height:340px; border-radius:20px; overflow:hidden;
-  border:1px solid rgba(241,236,225,.12);
+  position:relative; align-self:center; margin-left:24px;
+  width:clamp(440px, 38vw, 610px); height:clamp(344px, 28.5vw, 420px);
 }
-.who__photo img{ filter:grayscale(.25) contrast(1.04); transition:filter .6s, transform .8s var(--ease); }
-.who__photo:hover img{ filter:grayscale(0); transform:scale(1.05); }
+.who__photo img{
+  position:relative; z-index:1;
+  object-fit:contain; object-position:center bottom;
+}
+
+/* The splash sits behind and larger than the cutout. Sized by insets rather
+   than a centring translate, because lib/motion.ts owns this element's
+   transform - it drags it toward the cursor. */
+.who__splash{
+  position:absolute; z-index:0; pointer-events:none;
+  left:-46%; right:-46%; top:-38%; bottom:-20%;
+  will-change:transform;
+}
+.who__splash .splash{ width:100%; height:100%; display:block; overflow:visible; }
+
+/* pigment, dark where the brush dragged to bright where it pressed */
+.who__splash{
+  --sp-deep:   #06180d;
+  --sp-dark:   #0f5c33;
+  --sp-mid:    oklch(0.62 0.16 152);
+  --sp-bright: var(--accent);
+  --sp-pale:   #e2f9c9;
+}
 
 @media (max-width:860px){
   .who__grid{ grid-template-columns:1fr; gap:36px; }
   .who__stats{ flex-wrap:wrap; gap:22px 40px; }
   .stat{ flex:1; min-width:100px; }
-  .who__photo{ min-height:260px; }
+  .who__photo{ width:100%; height:min(70vw,340px); align-self:auto; }
 }
 
 /* ============================================================
