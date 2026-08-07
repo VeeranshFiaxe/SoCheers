@@ -664,11 +664,22 @@ export function initSite(): () => void {
       const els = gsap.utils.toArray<HTMLElement>("[data-splash]");
       if (!els.length) return;
 
-      // it still wants to arrive on scroll, even if it will never chase
+      // It mists into the frame - blur and scale settling out along with the
+      // fade, rather than a flat cut to visible - on the same beat as the
+      // cutout next to it. Triggering off the cutout image itself (the
+      // sibling initReveals already wires up via data-clip) rather than off
+      // the splash's own box or its parent: the splash's box is inset well
+      // past the photo's edges, so using itself would fire early, and even
+      // the shared parent is one extra layout read that can drift a frame
+      // out of step. Sharing the exact element the image reveal triggers
+      // off guarantees the same "top 86%" crossing fires both at once.
       els.forEach((el) => {
-        gsap.fromTo(el, { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 1.1, ease: "power2.out",
-            scrollTrigger: { trigger: el, start: "top 88%" } });
+        const photo = el.closest<HTMLElement>("[data-tilt]");
+        const trigger = photo?.querySelector<HTMLElement>("[data-clip]") || el.parentElement || el;
+        gsap.fromTo(el,
+          { autoAlpha: 0, scale: 0.92, filter: "blur(18px)" },
+          { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: 1.3, ease: "power3.out",
+            scrollTrigger: { trigger, start: "top 86%" } });
       });
       if (!canHover || prefersReduced) return;
 
