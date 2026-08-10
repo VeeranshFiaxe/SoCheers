@@ -125,6 +125,62 @@ export function Contact() {
       <div className="contact__inner">
         <h2 className="contact__title" data-split data-wipe="down">Brief us. Or&nbsp;just say hi.</h2>
         <ContactModal />
+
+        <div className="contact__emails">
+          <a href="mailto:hello@socheers.net" className="contact__email" data-magnetic data-cursor="Email">
+            <span className="contact__email-label">Bring us a brief</span>
+            <span className="contact__email-addr">hello@socheers.net</span>
+          </a>
+          <a href="mailto:careers@socheers.net" className="contact__email" data-magnetic data-cursor="Email">
+            <span className="contact__email-label">Bring us your best work</span>
+            <span className="contact__email-addr">careers@socheers.net</span>
+          </a>
+        </div>
+
+        <div className="contact__social" data-reveal>
+          <a
+            href="https://www.instagram.com/thesocheers/"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="SoCheers on Instagram"
+            data-magnetic
+            data-cursor="Follow"
+          >
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5.5" />
+              <circle cx="12" cy="12" r="4.2" />
+              <circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none" />
+            </svg>
+          </a>
+          <a
+            href="https://in.linkedin.com/company/socheers"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="SoCheers on LinkedIn"
+            data-magnetic
+            data-cursor="Follow"
+          >
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
+              <rect x="2" y="9" width="4" height="12" />
+              <circle cx="4" cy="4" r="2" />
+            </svg>
+          </a>
+          <a
+            href="https://www.youtube.com/@ThisIsSoCheers"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="SoCheers on YouTube"
+            data-magnetic
+            data-cursor="Follow"
+          >
+            <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 8.5a3 3 0 0 0-2.1-2.1C18.1 6 12 6 12 6s-6.1 0-7.9.4A3 3 0 0 0 2 8.5 31 31 0 0 0 1.6 13a31 31 0 0 0 .4 4.5A3 3 0 0 0 4.1 19.6C5.9 20 12 20 12 20s6.1 0 7.9-.4a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .4-4.5 31 31 0 0 0-.4-4.5z" />
+              <path d="M10 10.2v5.6l5-2.8-5-2.8z" fill="currentColor" stroke="none" />
+            </svg>
+          </a>
+        </div>
+
         <div className="contact__foot">
           <span>SOCHEERS · EST. 2013</span>
           <span>MUMBAI · DELHI</span>
