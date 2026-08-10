@@ -44,6 +44,10 @@ export const FOUNDERS = [
     name: "Siddharth Devnani",
     role: "Co-Founder & Chief Operating Officer",
     img: ABOUT_IMG.founderSid,
+    /* this portrait leaves far more headroom above the scalp than Mehul's
+       does - a shared object-position put the two heads at noticeably
+       different heights, so each photo carries its own crop instead */
+    imgPos: "center 97%",
     bio: [
       "Siddharth started SoCheers in 2013 on a simple conviction - creative ambition only scales when the business under it is built properly. Over the last decade he has shaped the agency's commercial, media and technology capabilities, taking it from a social-first startup to one of India's largest independent creative agencies.",
       "A background in engineering, operations and e-commerce meant he always built for scale: the Media and Analytics practice, the Digital Intelligence & Analytics division, and the automation running underneath both. Today he leads business operations, financial planning, media and technology.",
@@ -54,6 +58,7 @@ export const FOUNDERS = [
     name: "Mehul Gupta",
     role: "Co-Founder & Chief Executive Officer",
     img: ABOUT_IMG.founderMehul,
+    imgPos: "center 0%",
     bio: [
       "Mehul co-founded SoCheers on a bet - that brands would need partners who treated digital as the medium itself, not as an extension of advertising. Under his leadership the people-first instinct the agency started with has become the culture the whole team runs on.",
       "An MBA in Technology Management from NMIMS and early stints across advertising and digital commerce gave him a first-hand read on brand building, servicing and growth. Today he leads creative and business direction, and stays close to every major partnership and pitch.",

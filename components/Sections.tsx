@@ -2,17 +2,25 @@ import { Fragment } from "react";
 import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS } from "@/lib/content";
 import ContactModal from "./ContactModal";
 import RollText from "./Roll";
+import SandWall from "./SandWall";
 import Splash from "./Splash";
 
 export function Who() {
   return (
-    <section className="sec who" id="who" data-section data-sec="1">
+    <section className="sec who no-border" id="who" data-section data-sec="1">
+      {/* the same crowd shot the hero pin ends on, so the wall opens as
+          that photo carrying on past its own bottom edge */}
+      <SandWall img={IMG.team} />
       <div className="wrap">
         <span className="tag" data-reveal>WHO WE ARE</span>
         <div className="who__grid">
           <div className="who__copy">
-            <p className="who__statement" data-split>
-              We are SoCheers - an independent, integrated creative agency. We <em>build brands consumers fall for</em>. We make content people can&apos;t help but share.
+            <p className="who__lede" data-split>
+              We are <span className="who__brand">SoCheers</span> - an independent, integrated creative agency.
+            </p>
+            <p className="who__pitch" data-split>
+              We build brands consumers fall for. We make content people can&apos;t help but{" "}
+              <span className="who__share">share.</span>
             </p>
             <div className="who__stats">
               {STATS.map((s) => (
@@ -28,7 +36,17 @@ export function Who() {
           </div>
 
           <div className="who__photo" data-tilt>
-            <span className="who__splash" data-splash aria-hidden="true">
+            {/* Chases the pointer harder than the site default: a wider
+                reach, a much longer throw and a gentler falloff, so it is
+                reacting well before the cursor is on top of it. */}
+            <span
+              className="who__splash"
+              data-splash
+              data-splash-reach="1150"
+              data-splash-pull="110"
+              data-splash-bite="1.35"
+              aria-hidden="true"
+            >
               <Splash />
             </span>
             <img src={IMG.culture} alt="The SoCheers team, off the clock" data-clip />
@@ -122,6 +140,19 @@ export function Contact() {
   return (
     <section className="sec contact" id="contact" data-section data-sec="5">
       <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>
+
+      {/* The two mascots that fill what would otherwise be dead space either
+          side of the centred copy - bled off their own edge of the section
+          rather than framed, so they read as characters leaning in from
+          off-screen instead of a pair of product shots. data-tilt gives
+          them the same cursor-reactive lean the WHO WE ARE photo has. */}
+      <div className="contact__cast contact__cast--left" data-tilt aria-hidden="true">
+        <img src={IMG.footerLeft} alt="" data-clip />
+      </div>
+      <div className="contact__cast contact__cast--right" data-tilt aria-hidden="true">
+        <img src={IMG.footerRight} alt="" data-clip />
+      </div>
+
       <div className="contact__inner">
         <h2 className="contact__title" data-split data-wipe="down">Brief us. Or&nbsp;just say hi.</h2>
         <ContactModal />

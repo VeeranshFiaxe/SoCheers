@@ -56,7 +56,7 @@ export function AboutFounders() {
           {FOUNDERS.map((f) => (
             <article className="founder" key={f.name}>
               <div className="founder__photo" data-clip>
-                <img src={f.img} alt={f.name} />
+                <img src={f.img} alt={f.name} style={{ objectPosition: f.imgPos }} />
               </div>
               <div className="founder__body">
                 <span className="founder__idx" data-reveal>{f.idx}</span>
@@ -164,6 +164,10 @@ export function AboutDrives() {
 export function AboutSpace() {
   return (
     <section className="ab-space" data-sec="5">
+      <div className="ab-space__veil" data-ab-pixveil aria-hidden="true">
+        <PixGrid cols={24} rows={10} className="ab-space__pix" />
+      </div>
+
       <div className="wrap">
         <h2 className="ab-space__title" data-split>The space.</h2>
         <p className="ab-space__copy" data-reveal>{SPACE_COPY}</p>
@@ -177,7 +181,9 @@ export function AboutSpace() {
         <div className="spacegrid">
           {SPACE_SHOTS.map((s, i) => (
             <figure className="spacegrid__tile" key={s} data-clip>
-              <img src={s} alt={`SoCheers office, frame ${i + 1}`} />
+              <div className="spacegrid__inner">
+                <img src={s} alt={`SoCheers office, frame ${i + 1}`} />
+              </div>
             </figure>
           ))}
         </div>

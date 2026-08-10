@@ -2,17 +2,22 @@
 
 export const IMG = {
   frame: "/assets/socheers-frame-n-T4ylIx.jpg",
-  team: "/assets/team-group-hires.jpg",
+  /* 7680x4320. The hero blows this up past 1.7x the viewport width, so the
+     3840 cut went soft on any hi-dpi screen; same framing, twice the pixels,
+     which is what keeps the sand wall's crop of it lining up. */
+  team: "/assets/team-group-uhd.jpg",
   camera: "/assets/arri-camera-DX29MVBW.jpg",
   brain: "/assets/brain-DH7sqVir.jpg",
   warMask: "/assets/war-mask-7z_N0Huv.jpg",
   photoshop: "/assets/photoshop-face-BOtm4GGN.jpg",
   bootPhone: "/assets/boot-phone-BJcXYlVw.jpg",
-  culture: "/assets/who-we-are.png",
+  culture: "/assets/SC Website Revamp/01. Home/WWA 4.0.png",
   workBfsi: "/assets/work-bfsi.png",
   workEntertainment: "/assets/work-entertainment.png",
   workLifestyle: "/assets/work-lifestyle.jpg",
   workB2b: "/assets/work-b2b.png",
+  footerLeft: "/assets/SC Website Revamp/01. Home/footer left.png",
+  footerRight: "/assets/SC Website Revamp/01. Home/footer right.png",
 } as const;
 
 export const RAIL = [

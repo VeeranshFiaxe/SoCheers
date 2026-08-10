@@ -194,22 +194,27 @@ export function initAbout(): () => void {
         { "--perf-x": "-192px", ease: "none", scrollTrigger: st });
     });
 
-    /* -------------------------------------------------- pixel veil
-       Black tiles sit over the white "drives" section and fall away as
-       you scroll in - a bold dissolve instead of the old soft gradient.
-       Random stagger so it crumbles as pixels, not as flat horizontal bars. */
-    const veil = document.querySelector<HTMLElement>("[data-ab-pixveil]");
-    if (veil) {
+    /* -------------------------------------------------- pixel veils
+       Tiles sit over the top of a section and fall away as you scroll in -
+       a bold dissolve instead of a soft gradient. Two of these on the page
+       now: black tiles opening the white "drives" section, and white tiles
+       (about.css recolours the mirror) opening "the space" straight after -
+       same mechanic, run in reverse, so the hand-off out of the light
+       section reads as one move rather than two different transitions.
+       Random stagger so each crumbles as pixels, not as flat horizontal bars. */
+    document.querySelectorAll<HTMLElement>("[data-ab-pixveil]").forEach((veil) => {
       const host = veil.querySelector<HTMLElement>("[data-pixgrid]");
       const tiles = host
         ? (Array.from(host.querySelectorAll("i")) as HTMLElement[])
         : [];
       const cols = parseInt(host?.dataset.cols || "24", 10);
+      const section = veil.closest("section");
 
-      if (tiles.length) {
-        // Bias the order: lower tiles drop first so white punches upward into
-        // the black, and the top edge stays locked to the dark section above
-        // until the end. Noise keeps it from reading as a flat wipe.
+      if (tiles.length && section) {
+        // Bias the order: lower tiles drop first so the section beneath
+        // punches upward into the veil, and the top edge stays locked to
+        // whatever sits above until the end. Noise keeps it from reading
+        // as a flat wipe.
         const ranked = tiles
           .map((el, i) => {
             const row = Math.floor(i / cols);
@@ -222,7 +227,7 @@ export function initAbout(): () => void {
         gsap.set(ranked, { opacity: 1, y: 0, force3D: true });
 
         const st = {
-          trigger: ".ab-drives",
+          trigger: section,
           start: "top 85%",
           end: "top 10%",
           scrub: 0.4,
@@ -244,7 +249,7 @@ export function initAbout(): () => void {
           scrollTrigger: st,
         });
       }
-    }
+    });
 
     /* -------------------------------------------------- the crowd
        Rises a little slower than the page so the light section keeps

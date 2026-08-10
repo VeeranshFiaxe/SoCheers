@@ -314,14 +314,15 @@ export function initSite(): () => void {
     }
 
     /* -------------------------------------------------- SplitText lines
-       Block wipe, line by line: a solid accent bar sweeps across the line,
-       then retracts off the far edge, uncovering the type it was hiding.
-       Reads as the headline being printed onto the page on arrival, which
-       is why it earns its place: it marks where each section begins.
+       Line by line, each one masked by its own overflow:hidden wrapper and
+       rising up into frame as it fades in - no bar, no hard clip-path
+       sweep. The mask is what keeps it classy rather than a plain fade: the
+       line still arrives from behind a fixed edge, so it reads as type
+       being set into place, just without the sweep across it that a solid
+       block reads as an effect rather than typography.
 
-       The reveal is pure transform (the bar's scaleX). The type itself is
-       only ever toggled instantly, at the frame the bar has it fully
-       covered, so nothing expensive animates. */
+       Pure transform + opacity, no clip-path at all, so there is nothing
+       here for the GPU to rasterise every frame beyond a compositor layer. */
     function initSplits() {
       document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
         const build = () => {
@@ -340,19 +341,18 @@ export function initSite(): () => void {
           const split = new SplitText(el, { type: "lines", linesClass: "split-line" });
           splits.push(split);
 
-          const bars: HTMLElement[] = [];
+          // Each line gets its own overflow:hidden mask so it can rise up
+          // from behind a fixed edge instead of just fading in place - the
+          // mask is what keeps this reading as typography arriving, not a
+          // generic fade. No bar, no clip-path animation: the wrapper's
+          // static overflow:hidden does the clipping for free.
           split.lines.forEach((line) => {
             const mask = document.createElement("span");
-            mask.className = "wipe";
+            mask.className = "line-mask";
             // the split tree is presentation; the sr copy below carries the text
             mask.setAttribute("aria-hidden", "true");
             line.parentNode?.insertBefore(mask, line);
             mask.appendChild(line);
-
-            const bar = document.createElement("span");
-            bar.className = "wipe__bar";
-            mask.appendChild(bar);
-            bars.push(bar);
           });
 
           // One readable copy for assistive tech. It lives inside the original
@@ -365,46 +365,19 @@ export function initSite(): () => void {
             el.insertBefore(sr, el.firstChild);
           }
 
-          // Bar colour is tiered by how much text it crosses. A hot accent bar
-          // is right for a two-word title and awful across a five-line
-          // paragraph, where it strobes; long copy gets a near-neutral block.
-          const n = split.lines.length;
-          const tier = n <= 2 ? "var(--accent)" : n <= 4 ? "var(--accent-off)" : "var(--wipe-tint)";
-          el.style.setProperty("--wipe-bar", tier);
+          // data-wipe="down" is the one spot on the site that wants the
+          // entrance reversed (the contact title, dropping onto the page
+          // rather than rising onto it); everything else rises.
+          const fromAbove = el.getAttribute("data-wipe") === "down";
 
-          // Sweep direction, per element. Default is left-to-right; opt an
-          // element out with data-wipe="left" to break up a long page, or
-          // data-wipe="down" for a vertical top-to-bottom block wipe.
-          const dir = el.getAttribute("data-wipe");
-          const vertical = dir === "down";
-          const leftward = dir === "left";
-          const axis = vertical ? "Y" : "X";
-          const growFrom = vertical ? "center top" : leftward ? "right center" : "left center";
-          const shrinkTo = vertical ? "center bottom" : leftward ? "left center" : "right center";
-          // negative bottom keeps the descender room the mask just bought us
-          const hidden = vertical
-            ? "inset(0% 0% 100% 0%)"
-            : leftward ? "inset(0% 0% -0.3em 100%)" : "inset(0% 100% -0.3em 0%)";
-          const shown = "inset(0% 0% -0.3em 0%)";
+          gsap.set(split.lines, { yPercent: fromAbove ? -120 : 120, autoAlpha: 0 });
 
-          gsap.set(split.lines, { clipPath: hidden });
-          gsap.set(bars, { transformOrigin: growFrom, scaleX: 1, scaleY: 1 });
-
-          const COVER = 0.3, UNCOVER = 0.5, STEP = 0.075;
+          const STEP = 0.08;
           const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 84%" } });
-          bars.forEach((bar, i) => {
-            const at = i * STEP;
-            // 1 · the bar sweeps in until the line is fully covered
-            tl.fromTo(bar, { [`scale${axis}`]: 0 }, { [`scale${axis}`]: 1, duration: COVER, ease: "power2.inOut" }, at);
-            // 2 · it retracts off the far edge while the type wipes open in
-            //     lockstep behind it, so the bar reads as depositing the text
-            //     rather than uncovering something that was already sitting there
-            tl.set(bar, { transformOrigin: shrinkTo }, at + COVER);
-            tl.to(bar, { [`scale${axis}`]: 0, duration: UNCOVER, ease: "power3.inOut" }, at + COVER);
-            tl.to(split.lines[i], {
-              clipPath: shown, duration: UNCOVER, ease: "power3.inOut",
-            }, at + COVER);
-          });
+          tl.to(split.lines, {
+            yPercent: 0, autoAlpha: 1,
+            duration: 0.95, ease: "power3.out", stagger: STEP,
+          }, 0);
         };
         // build on both settle paths: a rejected fonts.ready must not strand
         // the text behind visibility:hidden
@@ -413,7 +386,122 @@ export function initSite(): () => void {
       });
     }
 
-    /* -------------------------------------------------- reveals + clip wipes */
+    /* -------------------------------------------------- sand wall
+       The slab over a section gives way grain by grain and pours off the
+       bottom of the screen, so the section underneath is uncovered rather
+       than cut to. Scrubbed, not fired: the sand answers the wheel, which
+       is what sells it as weight falling instead of an effect playing.
+
+       The wall erodes from the bottom up - the grains at the base slip out
+       first and the ones above follow into the gap - with a per-grain
+       offset on top, so the eroding edge stays ragged instead of marching
+       row by row. */
+    function initSandWall() {
+      document.querySelectorAll<HTMLElement>("[data-sand]").forEach((host) => {
+        const grains = Array.from(host.querySelectorAll<HTMLElement>("i"));
+        const section = host.parentElement;
+        if (!grains.length || !section) return;
+        // no reduced-motion version of this: a wall that cannot fall is a
+        // wall that hides the section, so it just is not there
+        if (prefersReduced) { host.remove(); return; }
+
+        const cols = parseInt(host.dataset.cols || "56", 10);
+        const rows = parseInt(host.dataset.rows || "30", 10);
+        const band = parseInt(host.dataset.band || "8", 10);
+        const src = host.dataset.img;
+
+        /* The top band carries on the hero photo, cut across the grains, so
+           the wall opens as the picture above it running past its own edge -
+           and when it goes, the picture is what disintegrates.
+
+           Not a fresh crop of the same file: the hero's framing is rebuilt
+           here exactly. At the end of the pin the stage is the whole
+           viewport and the photo is fitted through PWIN, settled back at
+           STAGE_REST - and that framing leaves around a quarter of a screen
+           of real photo below the cut, which is what the band shows. Pixel
+           maths, so it runs after layout rather than in CSS. */
+        const heroPin = document.querySelector<HTMLElement>("[data-hero-pin]");
+        const STAGE_REST = 1.05;        // where initHero's phase 2 leaves it
+
+        /* The hero also leaves the photo under two darkeners: a
+           brightness(.55) on the stage - which is exactly black at .45 - and
+           the meaning veil, whose 100deg pass runs .82 → .55 → .12 across
+           and whose downward pass is at .6 by the bottom edge. Matching that
+           at row 0 is what keeps the band from arriving brighter than the
+           thing it is supposed to be continuing. */
+        const veilAcross = (fx: number) => (fx <= 0.48
+          ? 0.82 + (0.55 - 0.82) * (fx / 0.48)
+          : 0.55 + (0.12 - 0.55) * ((fx - 0.48) / 0.52));
+        const atCut = (fx: number) => 1 - 0.55 * 0.4 * (1 - veilAcross(fx));
+
+        const paintBand = () => {
+          if (!src) return;
+          const w = host.offsetWidth, h = host.offsetHeight;
+          if (!w || !h) return;
+          const sh = heroPin ? heroPin.offsetHeight : window.innerHeight;
+          const tw = w / cols, th = h / rows;
+
+          // initHero's fit(), replayed for the stage at full screen, then the
+          // settle - which scales about the stage's own centre, so it falls
+          // out of the same centring maths once the size carries it
+          let cw = w / PWIN.w, ch = cw * (PHOTO.h / PHOTO.w);
+          if (ch * PWIN.h < sh) { const k = sh / (ch * PWIN.h); cw *= k; ch *= k; }
+          cw *= STAGE_REST; ch *= STAGE_REST;
+          const px = w / 2 - (PWIN.l + PWIN.w / 2) * cw;
+          const py = sh / 2 - (PWIN.t + PWIN.h / 2) * ch;
+
+          // the wall's top edge is the hero's bottom edge, so the photo sits
+          // this far above the band
+          const ox = px, oy = py - sh;
+
+          grains.forEach((g, i) => {
+            const r = Math.floor(i / cols);
+            if (r >= band) return;
+            const c = i % cols;
+            g.style.backgroundImage = `url("${src}")`;
+            g.style.backgroundSize = `${cw.toFixed(1)}px ${ch.toFixed(1)}px`;
+            g.style.backgroundPosition =
+              `${(ox - c * tw).toFixed(1)}px ${(oy - r * th).toFixed(1)}px`;
+            // picks up where the hero's darkness left off, then sinks into
+            // the page's own black - the band gets no bottom edge of its own
+            const base = atCut(cols > 1 ? c / (cols - 1) : 0);
+            const a = base + (1 - base) * ((r + 1) / band);
+            g.style.boxShadow = `inset 0 0 0 999px rgba(11,11,12,${a.toFixed(3)})`;
+          });
+        };
+
+        if (src) {
+          paintBand();
+          on(window, "resize", paintBand);
+        }
+
+        /* One tween across every grain, not one per grain: at this grain
+           count a timeline of individual tweens is enough per-frame overhead
+           to be felt on a scrub. The stagger callback carries the same shape
+           the timeline offsets used to. */
+        const seed = grains.map(() => Math.random());
+        gsap.to(grains, {
+          // far enough to clear the wall's own overflow box; they have faded
+          // out long before they get there
+          yPercent: (i: number) => 620 + seed[i] * 680,
+          xPercent: (i: number) => (seed[(i * 7 + 3) % seed.length] - 0.5) * 70,
+          scale: 0.5,
+          opacity: 0,
+          duration: 0.5,
+          ease: "power2.in",                // gravity, not a fade
+          stagger: (i: number) => {
+            const lead = rows > 1 ? (rows - 1 - Math.floor(i / cols)) / (rows - 1) : 0;
+            return lead * 0.55 + seed[i] * 0.4;
+          },
+          scrollTrigger: {
+            trigger: section, start: "top 90%", end: "top 20%",
+            scrub: 0.8, invalidateOnRefresh: true,
+          },
+        });
+      });
+    }
+
+    /* -------------------------------------------------- reveals */
     function initReveals() {
       document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
         gsap.fromTo(el, { y: 26, autoAlpha: 0 },
@@ -421,10 +509,15 @@ export function initSite(): () => void {
             scrollTrigger: { trigger: el, start: "top 88%" } });
       });
       if (prefersReduced) return;
+      // Images settle in on a soft fade + scale rather than a hard-edged
+      // clip-path wipe: no travelling mask edge to draw attention to
+      // itself, just the photo easing up to full size and opacity as it
+      // arrives, which reads as considered rather than as an effect firing.
       document.querySelectorAll<HTMLElement>("[data-clip]").forEach((el, i) => {
         gsap.fromTo(el,
-          { clipPath: "inset(0% 0% 100% 0%)", y: 34 },
-          { clipPath: "inset(0% 0% 0% 0%)", y: 0, duration: 1.15, ease: "power3.inOut", delay: (i % 3) * 0.08,
+          { autoAlpha: 0, y: 22, scale: 1.04, filter: "blur(6px)" },
+          { autoAlpha: 1, y: 0, scale: 1, filter: "blur(0px)",
+            duration: 1.2, ease: "power2.out", delay: (i % 3) * 0.08,
             scrollTrigger: { trigger: el, start: "top 86%" } });
       });
     }
@@ -695,11 +788,22 @@ export function initSite(): () => void {
       });
       if (!canHover || prefersReduced) return;
 
+      // Defaults, overridable per element with data-splash-reach / -pull /
+      // -bite, because the two splashes on the site want different manners:
+      // the about page's pour is a background that should barely stir, the
+      // WHO WE ARE splatter is meant to visibly chase the pointer.
       const REACH = 900;      // px from centre at which the cursor starts to register
       const MAX_PULL = 34;    // px of travel at full commitment
+      const BITE = 2;         // falloff exponent: higher = indifferent for longer
+
+      const num = (el: HTMLElement, key: string, fallback: number) => {
+        const v = parseFloat(el.dataset[key] ?? "");
+        return Number.isFinite(v) ? v : fallback;
+      };
 
       type Item = {
         el: HTMLElement; onScreen: boolean;
+        reach: number; pull: number; bite: number;
         xTo: gsap.QuickToFunc; yTo: gsap.QuickToFunc; rTo: gsap.QuickToFunc;
       };
 
@@ -707,6 +811,9 @@ export function initSite(): () => void {
       els.forEach((el) => {
         items.set(el, {
           el, onScreen: false,
+          reach: num(el, "splashReach", REACH),
+          pull: num(el, "splashPull", MAX_PULL),
+          bite: num(el, "splashBite", BITE),
           xTo: gsap.quickTo(el, "x", { duration: 1.05, ease: "power3" }),
           yTo: gsap.quickTo(el, "y", { duration: 1.05, ease: "power3" }),
           rTo: gsap.quickTo(el, "rotation", { duration: 1.4, ease: "power3" }),
@@ -738,9 +845,9 @@ export function initSite(): () => void {
           const dx = mx - (r.left + r.width / 2);
           const dy = my - (r.top + r.height / 2);
           const dist = Math.hypot(dx, dy) || 1;
-          const prox = 1 - Math.min(dist / REACH, 1);
-          const k = prox * prox;                        // indifferent until it is close
-          const pull = Math.min(dist, MAX_PULL) * k;    // never overshoots the pointer
+          const prox = 1 - Math.min(dist / it.reach, 1);
+          const k = Math.pow(prox, it.bite);            // indifferent until it is close
+          const pull = Math.min(dist, it.pull) * k;     // never overshoots the pointer
           it.xTo((dx / dist) * pull);
           it.yTo((dy / dist) * pull);
           it.rTo((dx / dist) * k * 3);                  // a few degrees of lean, no more
@@ -819,6 +926,7 @@ export function initSite(): () => void {
 
     initHero();
     initMeaning();
+    initSandWall();
     initSplits();
     initReveals();
     initTiles();
