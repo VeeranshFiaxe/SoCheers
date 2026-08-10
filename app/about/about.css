@@ -46,34 +46,36 @@
 
 /* ---------- the hero type ---------- */
 .abh{ position:relative; z-index:3; width:100%; }
-.abh__copy{ max-width:min(52%,660px); will-change:transform; }
+.abh__copy{ max-width:min(52%,660px); }
 .abh__eyebrow{ display:inline-flex; }
 .abh__title{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(46px,6.6vw,116px); line-height:.92; letter-spacing:-.035em;
   margin-top:clamp(14px,2vh,24px);
+  /* set explicitly rather than left to inheritance - this line was going
+     invisible while staying fully selectable, the signature of a
+     compositing paint bug rather than a layout one, and the previous
+     version stacked overflow:hidden with several nested will-change
+     transforms right where it happened. Simpler wins: a plain fade+rise
+     instead of a clipped lift, and one fewer thing for the GPU to get
+     wrong. */
+  color:var(--cream);
 }
-/* Each line is its own overflow mask so the entrance can lift the words up
-   out of nothing. The padding/negative-margin pair buys descender room
-   without touching the vertical rhythm - same trick as .wipe in globals. */
-.abh__line{ display:block; overflow:hidden; padding-bottom:.1em; margin-bottom:-.1em; }
-.abh__line > i{ display:block; font-style:normal; will-change:transform; }
+.abh__line{ display:block; padding-bottom:.1em; margin-bottom:-.1em; }
+.abh__line > i{ display:block; font-style:normal; }
 
-/* Start states, set here rather than left to GSAP's first frame. There is
-   no loader on this page to hide behind, so anything the entrance moves
-   has to be out of position from the very first paint - otherwise the type
-   renders in place, then snaps away the moment hydration lands.
-
-   Deliberately not gated on .no-js: that class is present until JS boots,
-   so gating would reintroduce the exact flash this avoids. The copy is
-   still in the DOM for crawlers, and the page is GSAP-driven throughout. */
-.abh__line > i{ transform:translateY(110%); }
+/* Start states, set here rather than left to GSAP's first frame - see the
+   .abh__title note above for why the old version changed. Not gated on
+   .no-js: that class is present until JS boots, so gating would
+   reintroduce the flash this avoids. Copy is still in the DOM for
+   crawlers, and the page is GSAP-driven throughout. */
+.abh__line > i{ opacity:0; transform:translateY(28px); }
 .abh__eyebrow,
 .abh__sub span,
 .abh__cta{ opacity:0; }
 
 @media (prefers-reduced-motion:reduce){
-  .abh__line > i{ transform:none; }
+  .abh__line > i{ opacity:1; transform:none; }
   .abh__eyebrow, .abh__sub span, .abh__cta{ opacity:1; }
   .abh__grad{ animation:none; }
 }

@@ -1,6 +1,6 @@
 import { Loader, Nav, Overlays, Rail } from "@/components/Chrome";
 import Hero from "@/components/Hero";
-import { Awards, Clients, Contact, What, Who, Work } from "@/components/Sections";
+import { Awards, Clients, Contact, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
 
 export default function Home() {
@@ -16,7 +16,6 @@ export default function Home() {
         <Who />
         <What />
         <Clients />
-        <Work />
         <Awards />
         <Contact />
       </main>

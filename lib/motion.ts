@@ -305,6 +305,12 @@ export function initSite(): () => void {
         { autoAlpha: 0, x: -34 },
         { autoAlpha: 1, x: 0, duration: ENTRY * 0.28, stagger: ENTRY * 0.12, ease: "power3.out" },
         E(0.54));
+
+      // the closing note, once every sense has landed
+      tl.fromTo("[data-meaning-note]",
+        { autoAlpha: 0, y: 10 },
+        { autoAlpha: 1, y: 0, duration: ENTRY * 0.2, ease: "power2.out" },
+        E(1.1));
     }
 
     /* -------------------------------------------------- SplitText lines
@@ -367,28 +373,34 @@ export function initSite(): () => void {
           el.style.setProperty("--wipe-bar", tier);
 
           // Sweep direction, per element. Default is left-to-right; opt an
-          // element out with data-wipe="left" to break up a long page.
-          const leftward = el.getAttribute("data-wipe") === "left";
-          const growFrom = leftward ? "right center" : "left center";
-          const shrinkTo = leftward ? "left center" : "right center";
+          // element out with data-wipe="left" to break up a long page, or
+          // data-wipe="down" for a vertical top-to-bottom block wipe.
+          const dir = el.getAttribute("data-wipe");
+          const vertical = dir === "down";
+          const leftward = dir === "left";
+          const axis = vertical ? "Y" : "X";
+          const growFrom = vertical ? "center top" : leftward ? "right center" : "left center";
+          const shrinkTo = vertical ? "center bottom" : leftward ? "left center" : "right center";
           // negative bottom keeps the descender room the mask just bought us
-          const hidden = leftward ? "inset(0% 0% -0.3em 100%)" : "inset(0% 100% -0.3em 0%)";
+          const hidden = vertical
+            ? "inset(0% 0% 100% 0%)"
+            : leftward ? "inset(0% 0% -0.3em 100%)" : "inset(0% 100% -0.3em 0%)";
           const shown = "inset(0% 0% -0.3em 0%)";
 
           gsap.set(split.lines, { clipPath: hidden });
-          gsap.set(bars, { transformOrigin: growFrom });
+          gsap.set(bars, { transformOrigin: growFrom, scaleX: 1, scaleY: 1 });
 
           const COVER = 0.3, UNCOVER = 0.5, STEP = 0.075;
           const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 84%" } });
           bars.forEach((bar, i) => {
             const at = i * STEP;
             // 1 · the bar sweeps in until the line is fully covered
-            tl.to(bar, { scaleX: 1, duration: COVER, ease: "power2.inOut" }, at);
+            tl.fromTo(bar, { [`scale${axis}`]: 0 }, { [`scale${axis}`]: 1, duration: COVER, ease: "power2.inOut" }, at);
             // 2 · it retracts off the far edge while the type wipes open in
             //     lockstep behind it, so the bar reads as depositing the text
             //     rather than uncovering something that was already sitting there
             tl.set(bar, { transformOrigin: shrinkTo }, at + COVER);
-            tl.to(bar, { scaleX: 0, duration: UNCOVER, ease: "power3.inOut" }, at + COVER);
+            tl.to(bar, { [`scale${axis}`]: 0, duration: UNCOVER, ease: "power3.inOut" }, at + COVER);
             tl.to(split.lines[i], {
               clipPath: shown, duration: UNCOVER, ease: "power3.inOut",
             }, at + COVER);

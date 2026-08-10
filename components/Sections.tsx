@@ -1,6 +1,6 @@
 import { Fragment } from "react";
-import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS, TILES } from "@/lib/content";
-import PixGrid from "./PixGrid";
+import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS } from "@/lib/content";
+import ContactModal from "./ContactModal";
 import RollText from "./Roll";
 import Splash from "./Splash";
 
@@ -12,8 +12,7 @@ export function Who() {
         <div className="who__grid">
           <div className="who__copy">
             <p className="who__statement" data-split>
-              We are SoCheers: an independent, integrated creative agency. We build brands, campaigns and culture for the brands that want to{" "}
-              <em>lead their categories</em> not chase them.
+              We are SoCheers - an independent, integrated creative agency. We <em>build brands consumers fall for</em>. We make content people can&apos;t help but share.
             </p>
             <div className="who__stats">
               {STATS.map((s) => (
@@ -96,41 +95,9 @@ export function Clients() {
   );
 }
 
-export function Work() {
-  return (
-    <section className="sec work" id="work" data-section data-sec="4">
-      <div className="wrap">
-        <span className="tag" data-reveal>FEATURED WORK</span>
-        <h2 className="sec__title" data-split>Some pieces you might&rsquo;ve come across.</h2>
-
-        <div className="tiles">
-          {TILES.map((t) => (
-            <a
-              href="#contact"
-              className="tile"
-              key={t.idx}
-              data-tile
-              data-tilt
-              data-cursor="View"
-            >
-              <div className="tile__img"><img src={t.img} alt={t.name} /></div>
-              <PixGrid cols={7} rows={5} className="tile__grid" />
-              <div className="tile__meta">
-                <span className="tile__idx">{t.idx}</span>
-                <span className="tile__name" data-roll><RollText>{t.name}</RollText></span>
-                <span className="tile__go">VIEW →</span>
-              </div>
-            </a>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 export function Awards() {
   return (
-    <section className="sec awards" id="awards" data-section data-sec="5">
+    <section className="sec awards" id="awards" data-section data-sec="4">
       <div className="wrap">
         <span className="tag" data-reveal>RECOGNITION</span>
         <h2 className="awards__title" data-split>The room noticed.</h2>
@@ -153,25 +120,14 @@ export function Awards() {
 
 export function Contact() {
   return (
-    <section className="sec contact" id="contact" data-section data-sec="6">
+    <section className="sec contact" id="contact" data-section data-sec="5">
       <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>
       <div className="contact__inner">
-        <span className="tag" data-reveal>LET&rsquo;S TALK</span>
-        <h2 className="contact__title" data-split>Brief us. Or&nbsp;just say hi.</h2>
-        <a
-          href="mailto:hello@socheers.com"
-          className="contact__cta"
-          data-magnetic
-          data-cursor="Let's go"
-        >
-          <span>Start a project</span>
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </a>
+        <h2 className="contact__title" data-split data-wipe="down">Brief us. Or&nbsp;just say hi.</h2>
+        <ContactModal />
         <div className="contact__foot">
           <span>SOCHEERS · EST. 2013</span>
-          <span>MUMBAI · DELHI · BENGALURU</span>
+          <span>MUMBAI · DELHI</span>
           <span>MAKING MORE HAPPEN</span>
         </div>
       </div>

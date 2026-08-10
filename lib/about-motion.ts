@@ -32,21 +32,24 @@ export function initAbout(): () => void {
        around at different depths. */
     const heroCopy = document.querySelector<HTMLElement>(".abh__copy");
     if (heroCopy) {
-      /* · entrance · The masked lines come up out of nothing, then the
-         supporting copy follows. Nothing is scroll-triggered here - the
-         hero is already in view on load, so it just plays. */
+      /* · entrance · The lines fade and rise in, then the supporting copy
+         follows. Nothing is scroll-triggered here - the hero is already in
+         view on load, so it just plays.
+
+         Was a clipped mask-lift (overflow:hidden + yPercent). Swapped for
+         a plain fade+rise, same technique as the sub/CTA lines right below
+         it, after that version went invisible-but-selectable in testing -
+         see the .abh__title comment in about.css for why. */
       if (prefersReduced) {
         gsap.set("[data-hero-line], [data-hero-eyebrow], [data-hero-sub], [data-hero-cta]",
-          { autoAlpha: 1, y: 0, yPercent: 0 });
+          { autoAlpha: 1, y: 0 });
       } else {
         const tl = gsap.timeline({ delay: 0.15, defaults: { ease: "power3.out" } });
         tl.fromTo("[data-hero-eyebrow]",
           { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.7 }, 0);
-        // 110%, not 100%: the descenders hang below the box and a flat 100
-        // leaves their tips showing above the mask before the lift starts
         tl.fromTo("[data-hero-line]",
-          { yPercent: 110, rotate: 2.5 },
-          { yPercent: 0, rotate: 0, duration: 1.05, stagger: 0.09 }, 0.12);
+          { autoAlpha: 0, y: 28 },
+          { autoAlpha: 1, y: 0, duration: 0.85, stagger: 0.09 }, 0.12);
         tl.fromTo("[data-hero-sub]",
           { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08 }, 0.75);
         tl.fromTo("[data-hero-cta]",

@@ -20,7 +20,6 @@ export const RAIL = [
   "Who",
   "What",
   "Brands",
-  "Work",
   "Awards",
   "Contact",
 ];
@@ -30,7 +29,6 @@ export const RAIL = [
 export const NAV_LINKS = [
   { href: "#who", label: "Who" },
   { href: "#what", label: "What" },
-  { href: "#work", label: "Work" },
   { href: "#awards", label: "Awards" },
   { href: "/about", label: "About" },
 ];
@@ -41,6 +39,7 @@ export const MEANING = {
   phonetic: "/soh-cheers/",
   pos: "noun.",
   senses: ["A toast.", "An email sign-off.", "An agency."],
+  note: "(Not necessarily in that order.)",
 } as const;
 
 
@@ -55,24 +54,39 @@ export const BUCKETS = [
     idx: "01",
     name: "Strategy",
     img: IMG.brain,
-    items: ["Brand Strategy", "Comms Planning", "Research & Insights", "Media Strategy"],
+    items: [
+      "Brand Positioning",
+      "Digital Strategy",
+      "Content Planning",
+      "Insights & Journey Mapping",
+      "Communications Planning",
+      "Media Planning",
+    ],
   },
   {
     idx: "02",
     name: "Creativity",
     img: IMG.warMask,
     items: [
-      "Creative & Art Direction",
-      "Social & Content",
-      "Design & Identity",
-      "Influencer & Community",
+      "Integrated Campaigns",
+      "Creative & Content Development",
+      "Copywriting",
+      "Branding & Merchandising",
+      "Tactical Execution",
     ],
   },
   {
     idx: "03",
     name: "Production",
     img: IMG.camera,
-    items: ["Films & Production", "Photography", "CGI & AI", "Post & Edit"],
+    items: [
+      "TVC & DVC",
+      "Digital Production",
+      "Social Content",
+      "Photography",
+      "Audio & Mixing",
+      "Motion + 3D",
+    ],
   },
 ];
 

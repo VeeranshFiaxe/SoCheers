@@ -76,6 +76,8 @@ export default function Hero() {
                 </li>
               ))}
             </ol>
+
+            <p className="meaning__note" data-meaning-note>{MEANING.note}</p>
           </div>
         </div>
 
