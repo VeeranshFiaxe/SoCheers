@@ -20,6 +20,34 @@ export const IMG = {
   footerRight: "/assets/SC Website Revamp/01. Home/footer right.png",
 } as const;
 
+/* ------------------------------------------------------------------
+   The overture's walls, front to back - the images the bulb reveals and
+   then knocks down, one behind the other, before the last one turns out
+   to be the hero itself.
+
+   Order is a story, not a shuffle: people first (who), then the tools and
+   the craft, then the thinking, then back out to the room full of people.
+   The falls get faster as it goes (see lib/overture-motion.ts), so the
+   later entries are only on screen for a few frames - they read as texture
+   rather than as pictures, which is why the loudest, highest-contrast
+   images are deliberately at the back.
+
+   Every file here is preloaded before the sequence starts and the 0-100%
+   counter is that preload, so keep this list small and keep the files
+   light - nothing here is above ~450KB. */
+export const OVERTURE_WALLS = [
+  { img: "/assets/about/crowd.jpg", label: "The room" },
+  { img: IMG.camera, label: "Production" },
+  { img: IMG.warMask, label: "Creativity" },
+  { img: IMG.photoshop, label: "Craft" },
+  { img: IMG.brain, label: "Strategy" },
+  { img: IMG.bootPhone, label: "Content" },
+  { img: "/assets/who-culture.jpg", label: "Us" },
+] as const;
+
+/* the wall that does not fall */
+export const OVERTURE_FINAL = IMG.frame;
+
 export const RAIL = [
   "Index",
   "Who",

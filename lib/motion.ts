@@ -15,6 +15,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import Lenis from "lenis";
+import { OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -23,6 +24,13 @@ type Grid = { tiles: HTMLElement[]; cols: number; rows: number };
 export function initSite(): () => void {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canHover = window.matchMedia("(hover:hover)").matches;
+  /* Asked once, synchronously, and answered identically over in
+     components/Overture.tsx - see lib/overture.ts for why it has to be a
+     pure function rather than a look at the DOM. When it is true this file
+     does not run the preloader or the hero's own intro: the overture owns
+     the screen until it says otherwise, and its camera move *is* the
+     intro. */
+  const overture = shouldRunOverture();
 
   const ac = new AbortController();
   const on = <K extends keyof WindowEventMap>(
@@ -74,12 +82,46 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- the overture
+       While the opening sequence has the screen the page underneath it must
+       not move: it is sitting at the top with the hero at rest, which is
+       exactly the frame the overture hands back to. Bound to events rather
+       than done once, because the docked bulb can take the screen again at
+       any point (see OVERTURE_REPLAY in lib/overture.ts). */
+    function initOvertureBridge() {
+      const html = document.documentElement;
+      const lock = () => {
+        html.classList.add("is-overture");
+        lenis?.stop();
+        window.scrollTo(0, 0);
+      };
+      const release = () => {
+        html.classList.remove("is-overture");
+        lenis?.start();
+        // the lock changed the document height, so every trigger measured
+        // during it is wrong
+        ScrollTrigger.refresh();
+      };
+      on(document, OVERTURE_START, lock);
+      on(document, OVERTURE_DONE, release);
+      if (overture) {
+        // a reload mid-page would otherwise restore the scroll under the
+        // sequence and hand back to the wrong part of the site
+        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+        lock();
+      }
+    }
+
     /* -------------------------------------------------- preloader */
     function runLoader() {
       const loader = document.getElementById("loader");
       const countEl = document.getElementById("loaderCount");
       if (!loader) return;
       if (prefersReduced) { loader.style.display = "none"; return; }
+      // The overture runs its own count, over its own black, and the hero
+      // arrives already pushed in at the end of its camera move - so both
+      // this and heroIntro() would be a second, contradictory opening.
+      if (overture) { loader.style.display = "none"; return; }
 
       let done = false;
       const finish = () => {
@@ -106,8 +148,9 @@ export function initSite(): () => void {
       const g = host && grids.get(host);
 
       const tl = gsap.timeline({ onComplete: () => ScrollTrigger.refresh() });
-      // the window crop is the same artwork, so it has to ride the same push-in
-      tl.from("[data-frame-img], [data-stage-crop]", { scale: 1.12, autoAlpha: 0, duration: 1.6, ease: "power3.out" }, 0);
+      // the stage photo sits inside the same window as the artwork, so it
+      // rides the same push-in
+      tl.from("[data-frame-img], [data-stage-img]", { scale: 1.12, autoAlpha: 0, duration: 1.6, ease: "power3.out" }, 0);
       if (g) {
         tl.set(g.tiles, { opacity: 1 }, 0);
         tl.to(g.tiles, {
@@ -125,20 +168,55 @@ export function initSite(): () => void {
     const FRAME = { w: 1914, h: 1073 };          // artwork natural size
     // measured window (pixel scan of the artwork: x 771-1147, y 351-728), as a fraction of it
     const WIN = { l: 0.4028, t: 0.3271, w: 0.197, h: 0.3523 };
-    // the same crowd shot, full size. The artwork's window is its centred square
-    // (correlation-matched at 1:1), so this is the region that must line up.
+    // the same crowd shot, full size. The uncropped frame - not a square
+    // slice of it - is what the stage grows into, so the photo is stretched
+    // no further than object-fit:contain would stretch it and never needs
+    // to be blown up past a sane size.
     const PHOTO = { w: 1919, h: 1079 };
-    const PWIN = { l: 0.2189, t: 0, w: 0.5623, h: 1 };
+    const PWIN = { l: 0, t: 0, w: 1, h: 1 };
+
+    // Where the grown window ends up: contained within the viewport at the
+    // photo's own aspect ratio (a landscape rectangle, not a square) so
+    // covering it is close to 1:1 scale, never full-bleed. The margin left
+    // on the constraining side is where the blurred backdrop shows through.
+    const CONTAIN_MARGIN = 0.94;
+    function containedBox(bw: number, bh: number) {
+      const aspect = PHOTO.w / PHOTO.h;
+      let h = bh * CONTAIN_MARGIN, w = h * aspect;
+      if (w > bw * CONTAIN_MARGIN) { w = bw * CONTAIN_MARGIN; h = w / aspect; }
+      return { left: (bw - w) / 2, top: (bh - h) / 2, w, h };
+    }
+
+    // where phase 2 leaves the stage: scaled about its own centre, dimmed
+    const STAGE_REST = 1.05;
+    const STAGE_DIM = 0.55;             // the brightness() phase 2 settles on
+
+    /* .hero__stage-vignette, evaluated in JS - the black-alpha of the edge
+       fade at a point (u,v) inside the stage box, so a fallen-apart grain
+       can be painted with the same darkening the real layer had. Two
+       gradients, composited the way the browser composites them. */
+    function vignetteAt(u: number, v: number) {
+      // linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%)
+      const edge = (t: number) => (t < 0.2 ? 1 - t / 0.2 : t > 0.8 ? (t - 0.8) / 0.2 : 0);
+      // radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%),
+      // farthest-corner, so the corner of the box is r = 1
+      const r = Math.hypot((u - 0.5) * 2, (v - 0.5) * 2) / Math.SQRT2;
+      const rad = r <= 0.78 ? 0 : Math.min(1, (r - 0.78) / 0.22) * 0.6;
+      return 1 - (1 - edge(u)) * (1 - rad);
+    }
 
     function initHero() {
       const hero = document.querySelector<HTMLElement>("[data-hero]");
       const pin = document.querySelector<HTMLElement>("[data-hero-pin]");
       const frame = document.querySelector<HTMLElement>("[data-frame]");
+      const backdrop = document.querySelector<HTMLElement>("[data-hero-backdrop]");
       const stage = document.querySelector<HTMLElement>("[data-hero-stage]");
-      const crop = document.querySelector<HTMLElement>("[data-stage-crop]");
       const photo = document.querySelector<HTMLElement>("[data-stage-img]");
+      const tint = document.querySelector<HTMLElement>("[data-stage-tint]");
+      const vignette = document.querySelector<HTMLElement>("[data-stage-vignette]");
       const entry = document.querySelector<HTMLElement>("[data-meaning]");
       if (!hero || !pin || !frame || !stage) return;
+      const boxEnd = () => containedBox(pin.offsetWidth, pin.offsetHeight);
 
       // Where the artwork's window lands on screen. The artwork is object-fit:cover,
       // so mirror that maths to find the window's real rendered rect.
@@ -150,11 +228,11 @@ export function initSite(): () => void {
         return { left: ox + rw * WIN.l, top: oy + rh * WIN.t, w: rw * WIN.w, h: rh * WIN.h };
       };
 
-      // Blow an image up around a named region of itself so that region exactly
+      // Blow the photo up around a named region of itself so that region exactly
       // fills the stage - uniform scale, window centre on stage centre, growing to
-      // cover if the stage ever gets taller than the region. Run over both layers
-      // it puts the artwork's window and the photo on identical framing, so the
-      // crop is seamless with the artwork at rest and the cross-fade never ghosts.
+      // cover if the stage ever gets taller than the region. At rest that region
+      // is the artwork's window (PWIN below tracks it 1:1 as the stage grows),
+      // so the photo sits seamlessly inside the artwork before it ever moves.
       const fit = (el: HTMLElement | null, nat: { w: number; h: number }, win: typeof WIN) => {
         if (!el) return;
         const sw = stage.offsetWidth, sh = stage.offsetHeight;
@@ -166,7 +244,7 @@ export function initSite(): () => void {
           y: sh / 2 - (win.t + win.h / 2) * ch,
         });
       };
-      const fitCrop = () => { fit(crop, FRAME, WIN); fit(photo, PHOTO, PWIN); };
+      const fitCrop = () => { fit(photo, PHOTO, PWIN); };
 
       // publish where the window's centre sits relative to the viewport centre,
       // so the nav links can sit exactly above it (the window is not quite
@@ -185,16 +263,19 @@ export function initSite(): () => void {
       };
 
       if (prefersReduced) {
-        // no scroll sequence: park the photo full screen and keep it fitted
+        // no scroll sequence: park the photo contained (not full-bleed) and keep it fitted
         const still = () => {
-          gsap.set(stage, { x: 0, y: 0, width: pin.offsetWidth, height: pin.offsetHeight });
+          const b = boxEnd();
+          gsap.set(stage, { x: b.left, y: b.top, width: b.w, height: b.h });
           fitCrop();
         };
         still();
         on(window, "resize", still);
         gsap.set(frame, { autoAlpha: 0 });
-        gsap.set(crop, { autoAlpha: 0 });
         gsap.set(photo, { autoAlpha: 1 });
+        gsap.set(tint, { autoAlpha: 0 });
+        gsap.set(backdrop, { autoAlpha: 1 });
+        gsap.set(vignette, { autoAlpha: 1 });   // already at rest, so already expanded
         // the entry is simply there, already written
         gsap.set(entry, { autoAlpha: 1 });
         // no pin here, so gate the rail on the hero itself
@@ -209,14 +290,24 @@ export function initSite(): () => void {
         return;
       }
 
+      // one-off: paints the correct pre-scroll frame before the scrubbed
+      // timeline below has rendered anything. Not bound to resize - once
+      // that timeline exists, ScrollTrigger's own resize -> refresh (below,
+      // invalidateOnRefresh:true) is what has to own re-seating the stage,
+      // because it re-renders at the *actual* current scroll progress. A
+      // plain resize -> seat() binding would instead force the tiny
+      // pre-scroll box every time, even deep into the pin, and leave it
+      // stuck there (outside the scrub) until the next scroll event - the
+      // frozen-small-box-top-left glitch on a mid-hero reload.
       seat();
-      on(window, "resize", seat);
-      gsap.set(photo, { autoAlpha: 0 });
+      gsap.set(tint, { autoAlpha: 1 });
+      gsap.set(backdrop, { autoAlpha: 0 });
+      gsap.set(vignette, { autoAlpha: 0 });
 
       /* Timeline shape, as fractions of the pin:
            0 ──── EXPAND ──── +HOLD0 ──── ENTRY (the definition) ──── hold ──── 1 */
       const EXPAND = 0.30;                        // window finishes filling the screen here
-      const HOLD0 = 0.08;                         // the photo holds, undisturbed, before the type
+      const HOLD0 = 0.03;                         // the photo holds, undisturbed, before the type
       const ENTRY = 0.44;                         // the entry writes itself in
       const AT = EXPAND + HOLD0;                  // where the entry starts
       // the remaining ~0.18 is the hold on the finished entry before the pin releases
@@ -231,7 +322,7 @@ export function initSite(): () => void {
 
       const tl = gsap.timeline({
         scrollTrigger: {
-          trigger: hero, start: "top top", end: "+=260%",
+          trigger: hero, start: "top top", end: "+=240%",
           pin: true, scrub: 1, invalidateOnRefresh: true,
           // the rail stays out of the way until the window expand *and* the
           // definition are done - they share this one pin
@@ -241,20 +332,25 @@ export function initSite(): () => void {
       });
 
       /* - phase 1 · the window opens up -
-         The window starts as the artwork's own picture and grows; the black-and-white
-         photo fades up inside it partway through, so it lands full screen. */
+         The window is the photo itself the whole time - it starts blue-tinted
+         to read as the artwork's own window, then the tint fades off as the
+         window grows, so there is nothing to cross-fade and no seam. */
       // power2.out, not inOut: an eased-in start meant the first stretch of
       // scroll showed almost no growth, compounding the long-runway feel
       tl.fromTo(stage,
         { x: () => box().left, y: () => box().top, width: () => box().w, height: () => box().h },
-        { x: 0, y: 0, width: () => pin.offsetWidth, height: () => pin.offsetHeight,
+        { x: () => boxEnd().left, y: () => boxEnd().top, width: () => boxEnd().w, height: () => boxEnd().h,
           duration: EXPAND, ease: "power2.out", onUpdate: fitCrop }, 0);
       // the artwork pushes toward the viewer and dissolves as its window takes over
       tl.to("[data-frame-img]", { scale: 1.45, duration: EXPAND, ease: "power2.out" }, 0);
-      tl.to(photo, { autoAlpha: 1, duration: EXPAND * 0.42, ease: "power1.inOut" }, EXPAND * 0.22);
-      tl.to(crop, { autoAlpha: 0, duration: EXPAND * 0.14 }, EXPAND * 0.64);
+      tl.to(tint, { autoAlpha: 0, duration: EXPAND * 0.75, ease: "power1.inOut" }, EXPAND * 0.1);
+      // the blurred backdrop arrives on the same beat, so the letterboxed
+      // margin never reads as an empty gap once the photo takes over
+      tl.to(backdrop, { autoAlpha: 1, duration: EXPAND * 0.42, ease: "power1.inOut" }, EXPAND * 0.22);
       tl.to(frame, { autoAlpha: 0, duration: EXPAND * 0.6, ease: "power2.in" }, EXPAND * 0.35);
       tl.to("[data-hero-cue]", { autoAlpha: 0, duration: 0.04 }, 0.02);
+      // only once the stage is done growing - the small window never gets it
+      tl.to(vignette, { autoAlpha: 1, duration: EXPAND * 0.25, ease: "power1.out" }, EXPAND * 0.8);
 
       /* - phase 2 · the name gets defined, over the photo -
          The photo does not go anywhere. It settles back a touch and dims under
@@ -311,6 +407,130 @@ export function initSite(): () => void {
         { autoAlpha: 0, y: 10 },
         { autoAlpha: 1, y: 0, duration: ENTRY * 0.2, ease: "power2.out" },
         E(1.1));
+
+      /* - phase 3 · the frame gives way -
+         The whole hero comes apart from the bottom up and WHO WE ARE is
+         behind it. Not a slab laid over the next section: .who is pulled up
+         a screen (globals.css), so for the last 100vh of this pin it is
+         already sitting under the hero waiting, and what the grains uncover
+         is the real section arriving rather than black.
+
+         The timeline runs 0 → ~1 for everything above; the pin got 100vh
+         longer for this, so the phase is that 100vh expressed in the same
+         units - which puts its start exactly where .who's top reaches the
+         bottom of the viewport. */
+      const CRUMBLE = 100 / 260;
+      crumble(tl, 1, CRUMBLE, pin, boxEnd, [backdrop, stage]);
+    }
+
+    /* -------------------------------------------------- the hero crumbling
+       The hero's last frame, rebuilt as grains so it can fall apart.
+
+       Every grain is painted to match what is under it - the sharp photo
+       inside the stage's rectangle, carrying the same vignette and dim the
+       real layer has; flat black outside it, same as the backdrop - so
+       handing over from the real layers to the grid moves nothing on
+       screen. Then the
+       grid pours off the bottom of the pin, bottom row first, the ones
+       above following into the gap, with a per-grain offset so the eroding
+       edge stays ragged instead of marching row by row. */
+    function crumble(
+      tl: gsap.core.Timeline,
+      at: number,
+      dur: number,
+      pin: HTMLElement,
+      boxEnd: () => { left: number; top: number; w: number; h: number },
+      hide: (HTMLElement | null)[],
+    ) {
+      const host = document.querySelector<HTMLElement>("[data-crumble]");
+      const photo = document.querySelector<HTMLImageElement>("[data-stage-img]");
+      if (!host || !photo) return;
+      const grains = Array.from(host.querySelectorAll<HTMLElement>("i"));
+      if (!grains.length) return;
+
+      const cols = parseInt(host.dataset.cols || "48", 10);
+      const rows = parseInt(host.dataset.rows || "27", 10);
+      const src = photo.getAttribute("src") || "";
+
+      const paint = () => {
+        const pw = pin.offsetWidth, ph = pin.offsetHeight;
+        if (!pw || !ph) return;
+        const tw = pw / cols, th = ph / rows;
+
+        // the stage's resting rectangle: the contained box, scaled about its
+        // own centre by the settle phase 2 applies
+        const b = boxEnd();
+        const bw = b.w * STAGE_REST, bh = b.h * STAGE_REST;
+        const bl = b.left + b.w / 2 - bw / 2, bt = b.top + b.h / 2 - bh / 2;
+
+        // initHero's fit(), replayed for that rectangle
+        let iw = bw / PWIN.w, ih = iw * (PHOTO.h / PHOTO.w);
+        if (ih * PWIN.h < bh) { const k = bh / (ih * PWIN.h); iw *= k; ih *= k; }
+        const ix = bl + bw / 2 - (PWIN.l + PWIN.w / 2) * iw;
+        const iy = bt + bh / 2 - (PWIN.t + PWIN.h / 2) * ih;
+
+        grains.forEach((g, i) => {
+          const c = i % cols, r = Math.floor(i / cols);
+          const u = ((c + 0.5) * tw - bl) / bw;
+          const v = ((r + 0.5) * th - bt) / bh;
+          if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
+            g.style.backgroundColor = "";
+            g.style.backgroundImage = `url("${src}")`;
+            g.style.backgroundSize = `${iw.toFixed(1)}px ${ih.toFixed(1)}px`;
+            g.style.backgroundPosition =
+              `${(ix - c * tw).toFixed(1)}px ${(iy - r * th).toFixed(1)}px`;
+            // the vignette, then the stage's brightness over it - one black
+            // overlay that comes to the same place as the two stacked
+            const a = 1 - STAGE_DIM * (1 - vignetteAt(u, v));
+            g.style.boxShadow = `inset 0 0 0 999px rgba(0,0,0,${a.toFixed(3)})`;
+          } else {
+            g.style.backgroundImage = "";
+            g.style.boxShadow = "";
+            g.style.backgroundColor = "#000";     // matches the flat-black backdrop
+          }
+        });
+      };
+
+      paint();
+      on(window, "resize", paint);
+
+      /* The handover. The grid is a copy of the two layers under it, so
+         swapping them is invisible - and the pin's own black has to go with
+         them, otherwise the grains would fall to reveal the pin rather than
+         the section behind it. gsap.set inside a timeline is reversible, so
+         scrubbing back up puts all of it straight again. */
+      tl.set(host, { autoAlpha: 1 }, at);
+      tl.set(hide.filter(Boolean), { autoAlpha: 0 }, at);
+      tl.set(pin, { backgroundColor: "transparent" }, at);
+
+      /* The type goes with the frame rather than surviving it - it was
+         written on the picture, so it falls when the picture does. The veil
+         has to clear too, or the section coming up behind reads dimmed. */
+      tl.to(".meaning__inner, [data-meaning-side]",
+        { yPercent: 42, autoAlpha: 0, duration: dur * 0.34, ease: "power2.in" }, at);
+      tl.to("[data-meaning-veil]",
+        { autoAlpha: 0, duration: dur * 0.42, ease: "power1.in" }, at + dur * 0.1);
+
+      /* One tween across every grain, not one per grain: at this count a
+         timeline of individual tweens is enough per-frame overhead to be
+         felt on a scrub. The fall and the stagger together have to span
+         exactly `dur`, so both are scaled off the shape's own total. */
+      const seed = grains.map(() => Math.random());
+      const K = dur / 1.45;               // the shape below runs .5 + .95
+      tl.to(grains, {
+        // far enough to clear the pin's overflow box; they have faded out
+        // long before they get there
+        yPercent: (i: number) => 620 + seed[i] * 680,
+        xPercent: (i: number) => (seed[(i * 7 + 3) % seed.length] - 0.5) * 70,
+        scale: 0.5,
+        opacity: 0,
+        duration: 0.5 * K,
+        ease: "power2.in",                // gravity, not a fade
+        stagger: (i: number) => {
+          const lead = rows > 1 ? (rows - 1 - Math.floor(i / cols)) / (rows - 1) : 0;
+          return (lead * 0.55 + seed[i] * 0.4) * K;
+        },
+      }, at);
     }
 
     /* -------------------------------------------------- SplitText lines
@@ -383,121 +603,6 @@ export function initSite(): () => void {
         // the text behind visibility:hidden
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(build, build);
         else build();
-      });
-    }
-
-    /* -------------------------------------------------- sand wall
-       The slab over a section gives way grain by grain and pours off the
-       bottom of the screen, so the section underneath is uncovered rather
-       than cut to. Scrubbed, not fired: the sand answers the wheel, which
-       is what sells it as weight falling instead of an effect playing.
-
-       The wall erodes from the bottom up - the grains at the base slip out
-       first and the ones above follow into the gap - with a per-grain
-       offset on top, so the eroding edge stays ragged instead of marching
-       row by row. */
-    function initSandWall() {
-      document.querySelectorAll<HTMLElement>("[data-sand]").forEach((host) => {
-        const grains = Array.from(host.querySelectorAll<HTMLElement>("i"));
-        const section = host.parentElement;
-        if (!grains.length || !section) return;
-        // no reduced-motion version of this: a wall that cannot fall is a
-        // wall that hides the section, so it just is not there
-        if (prefersReduced) { host.remove(); return; }
-
-        const cols = parseInt(host.dataset.cols || "56", 10);
-        const rows = parseInt(host.dataset.rows || "30", 10);
-        const band = parseInt(host.dataset.band || "8", 10);
-        const src = host.dataset.img;
-
-        /* The top band carries on the hero photo, cut across the grains, so
-           the wall opens as the picture above it running past its own edge -
-           and when it goes, the picture is what disintegrates.
-
-           Not a fresh crop of the same file: the hero's framing is rebuilt
-           here exactly. At the end of the pin the stage is the whole
-           viewport and the photo is fitted through PWIN, settled back at
-           STAGE_REST - and that framing leaves around a quarter of a screen
-           of real photo below the cut, which is what the band shows. Pixel
-           maths, so it runs after layout rather than in CSS. */
-        const heroPin = document.querySelector<HTMLElement>("[data-hero-pin]");
-        const STAGE_REST = 1.05;        // where initHero's phase 2 leaves it
-
-        /* The hero also leaves the photo under two darkeners: a
-           brightness(.55) on the stage - which is exactly black at .45 - and
-           the meaning veil, whose 100deg pass runs .82 → .55 → .12 across
-           and whose downward pass is at .6 by the bottom edge. Matching that
-           at row 0 is what keeps the band from arriving brighter than the
-           thing it is supposed to be continuing. */
-        const veilAcross = (fx: number) => (fx <= 0.48
-          ? 0.82 + (0.55 - 0.82) * (fx / 0.48)
-          : 0.55 + (0.12 - 0.55) * ((fx - 0.48) / 0.52));
-        const atCut = (fx: number) => 1 - 0.55 * 0.4 * (1 - veilAcross(fx));
-
-        const paintBand = () => {
-          if (!src) return;
-          const w = host.offsetWidth, h = host.offsetHeight;
-          if (!w || !h) return;
-          const sh = heroPin ? heroPin.offsetHeight : window.innerHeight;
-          const tw = w / cols, th = h / rows;
-
-          // initHero's fit(), replayed for the stage at full screen, then the
-          // settle - which scales about the stage's own centre, so it falls
-          // out of the same centring maths once the size carries it
-          let cw = w / PWIN.w, ch = cw * (PHOTO.h / PHOTO.w);
-          if (ch * PWIN.h < sh) { const k = sh / (ch * PWIN.h); cw *= k; ch *= k; }
-          cw *= STAGE_REST; ch *= STAGE_REST;
-          const px = w / 2 - (PWIN.l + PWIN.w / 2) * cw;
-          const py = sh / 2 - (PWIN.t + PWIN.h / 2) * ch;
-
-          // the wall's top edge is the hero's bottom edge, so the photo sits
-          // this far above the band
-          const ox = px, oy = py - sh;
-
-          grains.forEach((g, i) => {
-            const r = Math.floor(i / cols);
-            if (r >= band) return;
-            const c = i % cols;
-            g.style.backgroundImage = `url("${src}")`;
-            g.style.backgroundSize = `${cw.toFixed(1)}px ${ch.toFixed(1)}px`;
-            g.style.backgroundPosition =
-              `${(ox - c * tw).toFixed(1)}px ${(oy - r * th).toFixed(1)}px`;
-            // picks up where the hero's darkness left off, then sinks into
-            // the page's own black - the band gets no bottom edge of its own
-            const base = atCut(cols > 1 ? c / (cols - 1) : 0);
-            const a = base + (1 - base) * ((r + 1) / band);
-            g.style.boxShadow = `inset 0 0 0 999px rgba(11,11,12,${a.toFixed(3)})`;
-          });
-        };
-
-        if (src) {
-          paintBand();
-          on(window, "resize", paintBand);
-        }
-
-        /* One tween across every grain, not one per grain: at this grain
-           count a timeline of individual tweens is enough per-frame overhead
-           to be felt on a scrub. The stagger callback carries the same shape
-           the timeline offsets used to. */
-        const seed = grains.map(() => Math.random());
-        gsap.to(grains, {
-          // far enough to clear the wall's own overflow box; they have faded
-          // out long before they get there
-          yPercent: (i: number) => 620 + seed[i] * 680,
-          xPercent: (i: number) => (seed[(i * 7 + 3) % seed.length] - 0.5) * 70,
-          scale: 0.5,
-          opacity: 0,
-          duration: 0.5,
-          ease: "power2.in",                // gravity, not a fade
-          stagger: (i: number) => {
-            const lead = rows > 1 ? (rows - 1 - Math.floor(i / cols)) / (rows - 1) : 0;
-            return lead * 0.55 + seed[i] * 0.4;
-          },
-          scrollTrigger: {
-            trigger: section, start: "top 90%", end: "top 20%",
-            scrub: 0.8, invalidateOnRefresh: true,
-          },
-        });
       });
     }
 
@@ -814,9 +919,9 @@ export function initSite(): () => void {
           reach: num(el, "splashReach", REACH),
           pull: num(el, "splashPull", MAX_PULL),
           bite: num(el, "splashBite", BITE),
-          xTo: gsap.quickTo(el, "x", { duration: 1.05, ease: "power3" }),
-          yTo: gsap.quickTo(el, "y", { duration: 1.05, ease: "power3" }),
-          rTo: gsap.quickTo(el, "rotation", { duration: 1.4, ease: "power3" }),
+          xTo: gsap.quickTo(el, "x", { duration: 1.6, ease: "power2" }),
+          yTo: gsap.quickTo(el, "y", { duration: 1.6, ease: "power2" }),
+          rTo: gsap.quickTo(el, "rotation", { duration: 1.9, ease: "power2" }),
         });
       });
 
@@ -918,6 +1023,7 @@ export function initSite(): () => void {
 
     readGrids();
     initLenis();
+    initOvertureBridge();               // must follow initLenis: it stops it
     initCursor();
     initSpotlight();
     initTilt();
@@ -926,7 +1032,6 @@ export function initSite(): () => void {
 
     initHero();
     initMeaning();
-    initSandWall();
     initSplits();
     initReveals();
     initTiles();

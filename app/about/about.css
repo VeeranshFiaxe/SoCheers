@@ -154,6 +154,53 @@
   50%    { transform:scaleX(1);  opacity:1 }
 }
 
+/* ============================================================
+   THE PANEL STACK
+
+   Every section past the opener is a card. Each one carries its own
+   opaque background, a rounded top edge, and a shadow cast upward, and
+   each is pulled up by exactly its own corner radius so that edge lands
+   over the panel behind it. Scrolling then reads as one card sliding up
+   to cover the last rather than a background colour changing underfoot -
+   which is what lets this page walk black to white without ever needing
+   a veil, a wipe or a gradient seam to hide the change.
+
+   Order matters twice over: the backgrounds step one shade lighter per
+   panel, and the z-index steps up to match, so a later card is always
+   the one on top. lib/about-motion.ts adds the depth - the covered
+   card's contents sink and dim as the next one arrives.
+   ============================================================ */
+.ab-stack{ position:relative; z-index:1; --panel-r:clamp(18px,2.4vw,40px); }
+.ab-panel{
+  position:relative;
+  border-radius:var(--panel-r) var(--panel-r) 0 0;
+  /* the corner is only a corner if what is inside it gets clipped */
+  overflow:hidden;
+  /* cast upward, onto the card being covered - this is most of what sells
+     the two as separate planes rather than two flat colour fields */
+  box-shadow:0 -30px 64px rgba(0,0,0,.5);
+}
+/* Each panel but the first eats its own radius, so the round edge sits on
+   the previous card instead of leaving a sliver of the page behind it. */
+.ab-panel + .ab-panel{ margin-top:calc(var(--panel-r) * -1); }
+
+/* The ramp. Five steps out of black, crossing to cream at "what drives
+   us" - the section that was always designed light - and finishing white
+   under the office grid. */
+.ab-intro   { background:#0b0b0c; z-index:1; }
+.ab-founders{ background:#141418; z-index:2; }
+.ab-people  { background:#24242a; z-index:3; }
+.ab-drives  { background:#f4f2ec; z-index:4; }
+.ab-space   { background:#fff;    z-index:5; }
+
+/* The contents, not the card. GSAP scrubs this as the next panel climbs
+   over it, so the covered card recedes instead of just being hidden. */
+.ab-panel > .wrap{ will-change:transform; }
+
+@media (prefers-reduced-motion:reduce){
+  .ab-panel > .wrap{ will-change:auto; transform:none !important; opacity:1 !important; }
+}
+
 /* ---------- 2 · the intro line + the team artwork ---------- */
 .ab-intro{ padding:clamp(96px,18vh,190px) 0; }
 .ab-intro__grid{
@@ -162,15 +209,21 @@
   perspective:1400px;   /* depth for the [data-tilt] lean on the visual */
 }
 .ab-intro__line{
-  font-family:var(--f-display); font-weight:400;
+  font-family:var(--f-display); font-weight:600;
   font-size:clamp(24px,3vw,46px); line-height:1.16; letter-spacing:-.015em;
 }
-.ab-intro__line em{ color:var(--accent); }
+.ab-intro__line em{
+  color:var(--accent); display:block; margin-top:.12em;
+  font-weight:400; font-style:italic; text-wrap:balance;
+}
 
 /* Three layers, back to front: burst, cutout, bulbs. The box is sized by
    the artwork's own ratio so the bulb percentages keep their relationship
    to the figures at every width. */
-.ab-intro__visual{ position:relative; aspect-ratio:1536/1024; transform-style:preserve-3d; }
+.ab-intro__visual{
+  position:relative; aspect-ratio:1024/1536; transform-style:preserve-3d;
+  width:70%; margin-inline:auto;
+}
 .ab-intro__art{
   position:relative; z-index:1;
   object-fit:contain; height:100%;
@@ -207,24 +260,37 @@
 @media (max-width:1100px){ .bulbs{ --bulb-k:.8; } }
 
 /* ---------- 3 · the founders ---------- */
-.ab-founders{ padding:clamp(60px,9vh,110px) 0 0; }
-/* Columns sized to their content (capped by .founder's own max-width)
-   rather than 1fr each: two equal-fr tracks on a wide screen left each
-   card pinned to its track's start, with the gap between them stretching
-   out of proportion and the pair reading as pushed apart rather than
-   centred. justify-content centres that content-sized pair as a group. */
-.founders{
-  margin-top:clamp(38px,6vh,64px);
-  display:grid; grid-template-columns:repeat(2,max-content);
-  justify-content:center; gap:clamp(34px,4.5vw,76px);
+/* One screen, like .ab-people: centred in the viewport height rather than
+   stacked by padding, so the section's size tracks whatever room is
+   actually available instead of a fixed guess that only fits on tall
+   monitors. */
+.ab-founders{
+  min-height:100svh; display:flex; flex-direction:column; justify-content:center;
+  padding:clamp(56px,8vh,96px) 0;
 }
-.founder{ max-width:clamp(300px,30vw,420px); }
+.founders{
+  margin-top:clamp(22px,3.6vh,40px);
+  display:grid; grid-template-columns:repeat(2,max-content);
+  justify-content:center; gap:clamp(28px,4vw,64px);
+}
+/* Just the photo at rest - name, role and bio all live in .founder__reveal
+   now, off to whichever side that founder sits on, and only show up on
+   hover/focus. Bigger than the plain-card version: with the bio gone, the
+   photo is the only thing carrying the section, so it can afford the
+   size. */
+.founder{ position:relative; max-width:clamp(280px,24vw,400px); }
 .founder__photo{
   position:relative; overflow:hidden; aspect-ratio:4/5;
   background:var(--panel); border:1px solid var(--line);
 }
-/* The supplied portraits sit on a teal seamless. Desaturating lets them
-   belong to this page, and the colour comes back on hover as a reward. */
+/* The supplied portraits sit on a teal seamless, shot loosely enough that
+   cover (which only trims top/bottom at this ratio) leaves flat colour
+   showing on both sides of the subject. A uniform scale would trim that
+   off, but both heads sit close to the top of the frame already (that's
+   the tight crop .founder__photo's aspect-ratio needs to match their
+   heights - see about-content.ts) and a centred zoom eats into the top
+   margin fastest of all, cutting into hair before it meaningfully
+   narrows the sides. Left uncropped rather than clipping either head. */
 .founder__photo img{
   /* object-position is set per-founder inline (lib/about-content.ts) so
      both heads land at the same height in frame despite the two source
@@ -232,46 +298,91 @@
   filter:grayscale(1) contrast(1.06) brightness(.92);
   transition:filter .7s var(--ease), transform .9s var(--ease);
 }
-.founder:hover .founder__photo img{
+.founder:hover .founder__photo img,
+.founder:focus-within .founder__photo img{
   filter:grayscale(0) contrast(1) brightness(1); transform:scale(1.04);
 }
-.founder__body{ padding-top:26px; }
-.founder__idx{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; color:var(--accent); }
+
+/* The reveal. Anchored beside the photo but starting its slide from much
+   further out - close to the section's own edge - so the motion reads as
+   the text arriving from off-screen, not just nudging out from behind
+   the image. Centred on the photo vertically (not pinned to its top) so
+   a bio that runs longer than the photo is tall overflows evenly on both
+   sides instead of spilling out past one edge - that symmetry, plus the
+   opaque card behind it, is what keeps a tall paragraph from reading as
+   a layout bug. .ab-panel's overflow:hidden clips it if a narrow
+   viewport leaves no room to fully show. */
+.founder__reveal{
+  position:absolute; top:50%; z-index:2;
+  width:clamp(260px,22vw,360px);
+  padding:clamp(24px,2.2vw,32px);
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  text-align:center;
+  background:var(--bg); border:1px solid var(--line);
+  box-shadow:0 30px 70px rgba(0,0,0,.55);
+  opacity:0; pointer-events:none; will-change:transform, opacity;
+  transition:transform .65s var(--ease), opacity .5s var(--ease);
+}
+.founder--left .founder__reveal{
+  right:calc(100% + 1px); transform:translate(-180px,-50%);
+}
+.founder--right .founder__reveal{
+  left:calc(100% + 1px); transform:translate(180px,-50%);
+}
+.founder:hover .founder__reveal,
+.founder:focus-within .founder__reveal{
+  opacity:1; transform:translate(0,-50%); pointer-events:auto;
+}
 .founder__name{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(26px,2.9vw,46px); line-height:1.02; letter-spacing:-.02em; margin-top:10px;
+  font-size:clamp(22px,2.1vw,34px); line-height:1.04; letter-spacing:-.02em;
 }
 .founder__role{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--muted); margin-top:12px; padding-bottom:22px; border-bottom:1px solid var(--line);
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--muted); margin-top:8px; padding-bottom:14px; border-bottom:1px solid var(--line);
 }
 .founder__bio{
-  font-size:clamp(14px,1.05vw,16.5px); line-height:1.72; color:var(--muted); margin-top:20px;
+  font-family:var(--f-body); font-weight:300;
+  font-size:clamp(13px,.9vw,14.5px); line-height:1.58; color:var(--muted); margin-top:12px;
 }
 
-.ab-ticker{
-  margin-top:clamp(70px,11vh,130px); overflow:hidden;
-  border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:22px 0;
+@media (max-width:860px){
+  /* No hover on touch, and no off-screen room either once the pair
+     stacks to one column - so the panel just docks under the photo,
+     always open, the way the card used to work before the reveal. */
+  .founder__reveal{
+    position:static; width:auto; height:auto; opacity:1; pointer-events:auto;
+    transform:none; padding:0; margin-top:16px;
+    background:none; border:none; box-shadow:none;
+  }
 }
-.ab-ticker__track{ display:flex; align-items:center; gap:38px; width:max-content; white-space:nowrap; }
-.ab-ticker__track span{
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(22px,3vw,46px); letter-spacing:-.01em; text-transform:uppercase; color:var(--faint);
-}
-.ab-ticker__track .s{ color:var(--accent); font-size:.42em; }
 
 /* ---------- 4 · if you ask our people ---------- */
 /* Tightened deliberately: this section is meant to read in one screen, not
    scroll through, so every gap here is smaller than its siblings' rather
    than sharing their clamps. */
-.ab-people{ padding:clamp(56px,8vh,96px) 0; min-height:100svh; display:flex; flex-direction:column; justify-content:center; }
+.ab-people{
+  padding:clamp(56px,8vh,96px) 0; min-height:100svh; display:flex; flex-direction:column; justify-content:center;
+}
 .ab-people__top{
   margin-top:clamp(22px,3vh,36px);
-  display:grid; grid-template-columns:1fr 1.05fr; gap:clamp(28px,3.6vw,56px); align-items:center;
+  display:grid; grid-template-columns:1fr 1.05fr; gap:clamp(28px,3.6vw,56px); align-items:start;
 }
+.ab-people__copy{ display:flex; flex-direction:column; gap:clamp(24px,3.4vh,36px); }
 .ab-people__title{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(30px,4.4vw,62px); line-height:1.0; letter-spacing:-.028em; max-width:12ch;
+}
+
+/* The single unified statement - purpose, then belief, read as one thought
+   rather than two boxes competing for the same width. */
+.ab-people__note{
+  max-width:46ch;
+  font-size:clamp(15px,1.15vw,18.5px); line-height:1.72; color:var(--muted);
+}
+.ab-people__note-label{
+  display:block; font-family:var(--f-mono); font-size:11px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--accent); margin-bottom:14px;
 }
 
 /* The film gate. Perforations are a repeating gradient whose position is
@@ -290,68 +401,28 @@
 /* Wider than its window on purpose: that overhang is the pan's travel. */
 .filmstrip__win img{ width:120%; max-width:none; will-change:transform; }
 
-.ab-people__blocks{
-  margin-top:clamp(22px,3.6vh,40px);
-  display:grid; grid-template-columns:repeat(2,1fr); gap:clamp(18px,2vw,28px);
-}
-.pblock{
-  border:1px solid var(--line); padding:clamp(16px,1.8vw,24px);
-  transition:border-color .5s var(--ease);
-}
-.pblock:hover{ border-color:color-mix(in srgb, var(--accent) 45%, transparent); }
-.pblock p{ font-size:clamp(14px,1.12vw,17.5px); line-height:1.68; color:var(--muted); }
-.pblock--why{ border-style:dashed; border-color:color-mix(in srgb, var(--accent) 55%, transparent); }
-.pblock__label{
-  display:block; font-family:var(--f-mono); font-size:11px; letter-spacing:.22em;
-  text-transform:uppercase; color:var(--accent); margin-bottom:14px;
-}
-
-/* ---------- 5 · what drives us (the one light section) ----------
-   Top join is a hard pixel veil (see .ab-drives__veil) - black tiles sit on
-   the white and fall off as you scroll in. Bottom still soft-bleeds back
-   into black under the crowd so section 6 can pick up clean. */
-.ab-drives{
-  position:relative; background:#fff;
-  padding:clamp(170px,25vh,280px) 0 0;
-}
-.ab-drives::after{
-  content:""; position:absolute; left:0; right:0; bottom:0;
-  height:clamp(190px,28vh,340px); z-index:2; pointer-events:none;
-  background:linear-gradient(to top, var(--bg) 0%, rgba(11,11,12,0) 100%);
-}
+/* ---------- 5 · what drives us (where the page turns light) ----------
+   The panel's own top edge is the whole transition now, so this section
+   needs no veil and no bleed of its own - just the room to breathe under
+   the rounded corner it arrives on. */
+.ab-drives{ padding:clamp(120px,18vh,200px) 0 0; }
 .ab-drives__inner{ position:relative; z-index:2; }
 
-/* Chunk of black pixels covering the top of the white section. Overflow
-   clips the fall so tiles drop into the white and vanish at the band edge
-   rather than raining onto the title. Hard #0b0b0c - .is-light remaps
-   --cream but not this join colour. */
-.ab-drives__veil{
-  position:absolute; top:0; left:0; right:0; z-index:3;
-  height:clamp(160px,26vh,300px);
-  overflow:hidden; pointer-events:none;
-}
-.ab-drives__pix{ inset:0; z-index:1; }
-.ab-drives__pix > i{
-  background:#0b0b0c;
-  opacity:1;
-  will-change:transform, opacity;
-}
-@media (prefers-reduced-motion: reduce){
-  .ab-drives__veil{ display:none; }
-}
-
 /* Flip the theme by re-pointing the variables rather than restating colours
-   on every child - everything below inherits the light palette for free. */
+   on every child - everything below inherits the light palette for free.
+   --panel is remapped too: the office grid sits on it, and a dark tile
+   backing under a white card reads as a hole. */
 .is-light{
   --cream:#0b0b0c;
   --muted:rgba(11,11,12,.62);
   --line:rgba(11,11,12,.16);
   --faint:rgba(11,11,12,.09);
+  --panel:rgba(11,11,12,.06);
   --accent:oklch(0.55 0.17 152);
   color:var(--cream);
 }
 .ab-drives__title{
-  font-family:var(--f-display); font-weight:700; font-style:italic;
+  font-family:var(--f-display); font-weight:700;
   font-size:clamp(28px,3.6vw,54px); letter-spacing:-.02em; text-transform:uppercase;
   text-align:center;
 }
@@ -372,9 +443,9 @@
 .driver__head i{ font-style:normal; }
 .driver p{ font-size:clamp(13px,1vw,15.5px); line-height:1.6; color:var(--muted); }
 
-/* The crowd is masked at both ends: the top edge melts into the white it is
-   already sitting on, and the bottom dissolves under ::after into the black
-   that section 6 opens on. */
+/* The crowd is masked at both ends so it melts into the cream it sits on
+   rather than ending on a cut edge - top and bottom both, since the panel
+   below now arrives over it on its own rounded edge. */
 .ab-drives__art{
   position:relative; z-index:1; margin-top:clamp(44px,7vh,86px);
   /* the crowd's heads sit almost flush with the top edge of the source
@@ -387,26 +458,10 @@
 .ab-drives__art img{ height:auto; will-change:transform; }
 
 /* ---------- 6 · the space ---------- */
-.ab-space{ position:relative; background:var(--bg); padding:clamp(40px,7vh,90px) 0 clamp(90px,14vh,160px); }
-
-/* The same pixel-fall as .ab-drives__veil, mirrored: white tiles sit over
-   this section's black opening and fall away as you scroll in, so the
-   hand-off out of the light section reads as the same mechanic running in
-   reverse rather than a plain fade. */
-.ab-space__veil{
-  position:absolute; top:0; left:0; right:0; z-index:3;
-  height:clamp(140px,20vh,240px);
-  overflow:hidden; pointer-events:none;
-}
-.ab-space__pix{ inset:0; z-index:1; }
-.ab-space__pix > i{
-  background:#fff;
-  opacity:1;
-  will-change:transform, opacity;
-}
-@media (prefers-reduced-motion: reduce){
-  .ab-space__veil{ display:none; }
-}
+/* The last and lightest card in the stack: plain white, so the office grid
+   reads as photographs on paper and the page finishes as far from the
+   opener's black as it started from white. */
+.ab-space{ position:relative; padding:clamp(96px,15vh,170px) 0 clamp(90px,14vh,160px); }
 .ab-space__title{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(46px,9vw,142px); line-height:.9; letter-spacing:-.035em; text-transform:uppercase;
@@ -471,6 +526,7 @@
 
 /* ---------- the way onward ---------- */
 .ab-end{
+  position:relative; z-index:5; background:#fff;
   border-top:1px solid var(--line); padding:34px var(--pad);
   display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
 }
@@ -496,10 +552,8 @@
   .ab-intro__line{ max-width:none; }
   .founders{ grid-template-columns:1fr; gap:52px; }
   .ab-people__top{ grid-template-columns:1fr; }
-  .ab-people__blocks{ grid-template-columns:1fr; }
   .drivers{ grid-template-columns:1fr; }
-  .ab-drives{ padding-top:clamp(120px,19vh,180px); }
-  .ab-drives__veil{ height:clamp(120px,20vh,200px); }
+  .ab-drives{ padding-top:clamp(96px,15vh,150px); }
   .spacegrid{
     grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(4,1fr);
     grid-template-areas:none;

@@ -1,4 +1,5 @@
 import { IMG, MEANING } from "@/lib/content";
+import HeroCrumble from "./HeroCrumble";
 import PixGrid from "./PixGrid";
 
 /* The artwork is the hero. Its own inner window expands to full screen into
@@ -14,25 +15,41 @@ export default function Hero() {
           <span className="hero__greet">Hi! We Are</span>
         </div>
 
+        {/* Flat black, sitting behind the contained stage. The stage never
+            grows past the photo's own resolution - it stays letterboxed -
+            and this fills the margin around it instead of stretching the
+            photo edge to edge. */}
+        <div className="hero__backdrop" data-hero-backdrop aria-hidden="true" />
+
         {/* The artwork's own window, lifted out so it can grow. At rest it is
             pixel-identical to the artwork behind it; it cross-fades to the
-            black-and-white team photo on the way to full screen. */}
+            black-and-white team photo on the way to full screen (contained,
+            not full-bleed - see hero__backdrop above for the margin). */}
         <div className="hero__stage" data-hero-stage>
-          <img
-            className="hero__stage-crop"
-            src={IMG.frame}
-            alt=""
-            aria-hidden="true"
-            data-stage-crop
-          />
           <img
             className="hero__stage-img"
             src={IMG.team}
             alt="The SoCheers team"
             data-stage-img
           />
+          {/* The same photo, tinted blue to match the artwork's window at
+              rest - one continuous image instead of a second layer cross-
+              fading in, so growing into the full photo never jumps. Fades
+              out as the stage expands (motion.ts). */}
+          <div className="hero__stage-tint" data-stage-tint aria-hidden="true" />
           <PixGrid cols={22} rows={8} />
+
+          {/* Hidden while the window is still small and growing; motion.ts
+              fades it in only once the stage has finished expanding, so the
+              small square never gets it - just a light bleed at the screen's
+              own edges once the photo is full size. */}
+          <div className="hero__stage-vignette" data-stage-vignette aria-hidden="true" />
         </div>
+
+        {/* The same frame again, as grains. Hidden until the last phase of the
+            pin, when it takes over from the two layers above and falls away
+            bottom-first to uncover WHO WE ARE. */}
+        <HeroCrumble />
 
         {/* The dictionary entry, set over the photo once it is full screen.
             Same pin, so the crowd shot you just watched arrive is the page

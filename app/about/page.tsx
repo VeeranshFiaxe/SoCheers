@@ -25,12 +25,19 @@ export default function About() {
 
       <main id="top">
         <AboutHero />
-        <AboutIntro />
-        <AboutFounders />
-        <AboutPeople />
-        <AboutDrives />
-        <AboutSpace />
-        <AboutEnd />
+
+        {/* Everything past the opener is a card in one stack: each panel
+            rides up over the one before it on a rounded top edge, and each
+            sits a shade lighter, so the page walks from black to white as
+            one continuous move rather than switching theme at a seam. */}
+        <div className="ab-stack">
+          <AboutIntro />
+          <AboutFounders />
+          <AboutPeople />
+          <AboutDrives />
+          <AboutSpace />
+          <AboutEnd />
+        </div>
       </main>
 
       <AboutMotion />

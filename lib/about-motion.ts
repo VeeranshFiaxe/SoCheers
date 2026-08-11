@@ -194,61 +194,40 @@ export function initAbout(): () => void {
         { "--perf-x": "-192px", ease: "none", scrollTrigger: st });
     });
 
-    /* -------------------------------------------------- pixel veils
-       Tiles sit over the top of a section and fall away as you scroll in -
-       a bold dissolve instead of a soft gradient. Two of these on the page
-       now: black tiles opening the white "drives" section, and white tiles
-       (about.css recolours the mirror) opening "the space" straight after -
-       same mechanic, run in reverse, so the hand-off out of the light
-       section reads as one move rather than two different transitions.
-       Random stagger so each crumbles as pixels, not as flat horizontal bars. */
-    document.querySelectorAll<HTMLElement>("[data-ab-pixveil]").forEach((veil) => {
-      const host = veil.querySelector<HTMLElement>("[data-pixgrid]");
-      const tiles = host
-        ? (Array.from(host.querySelectorAll("i")) as HTMLElement[])
-        : [];
-      const cols = parseInt(host?.dataset.cols || "24", 10);
-      const section = veil.closest("section");
+    /* -------------------------------------------------- the panel stack
+       about.css stacks every section past the opener as a card, each one a
+       shade lighter and each pulled up onto the last by its own corner
+       radius. That alone gives the overlap; this gives it depth.
 
-      if (tiles.length && section) {
-        // Bias the order: lower tiles drop first so the section beneath
-        // punches upward into the veil, and the top edge stays locked to
-        // whatever sits above until the end. Noise keeps it from reading
-        // as a flat wipe.
-        const ranked = tiles
-          .map((el, i) => {
-            const row = Math.floor(i / cols);
-            const noise = ((i * 17) % 10) / 10;
-            return { el, score: -row + noise * 2.8 };
-          })
-          .sort((a, b) => a.score - b.score)
-          .map((t) => t.el);
+       The move is on the card being *covered*, not the one arriving. As
+       the next panel climbs over it, the outgoing card's contents drift up
+       a little, shrink a little and dim - so it reads as sinking away
+       under the new one rather than simply being hidden behind it. The
+       panel box itself never moves: it is the thing holding the colour and
+       the rounded edge, and translating it would open a gap.
 
-        gsap.set(ranked, { opacity: 1, y: 0, force3D: true });
+       Scrubbed from the moment the panel's foot reaches the bottom of the
+       viewport (the point the next card starts to show) to the moment it
+       leaves the top, so the recede tracks the cover exactly. */
+    gsap.utils.toArray<HTMLElement>("[data-panel]").forEach((panel, i, all) => {
+      // the last card is never covered by anything, so it never recedes
+      if (i === all.length - 1) return;
 
-        const st = {
-          trigger: section,
-          start: "top 85%",
-          end: "top 10%",
-          scrub: 0.4,
-          invalidateOnRefresh: true,
-        } as const;
+      const inner = panel.querySelector<HTMLElement>(":scope > .wrap");
+      if (!inner) return;
 
-        // Fall is continuous; opacity snaps so tiles pop off as hard pixels
-        // instead of melting into grey.
-        gsap.to(ranked, {
-          y: (i) => 64 + (i % 9) * 16,
-          ease: "none",
-          stagger: { each: 0.0045, from: "start" },
-          scrollTrigger: st,
+      gsap.fromTo(inner,
+        { y: 0, scale: 1, autoAlpha: 1 },
+        {
+          y: -64, scale: 0.94, autoAlpha: 0.35, ease: "none",
+          scrollTrigger: {
+            trigger: panel,
+            start: "bottom bottom",
+            end: "bottom top",
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+          },
         });
-        gsap.to(ranked, {
-          opacity: 0,
-          ease: "steps(1)",
-          stagger: { each: 0.0045, from: "start" },
-          scrollTrigger: st,
-        });
-      }
     });
 
     /* -------------------------------------------------- the crowd

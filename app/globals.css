@@ -86,24 +86,28 @@ em{ font-style:italic; }
 .who__bandline span[data-roll]:hover .roll__in{ transform:translateY(-100%); }
 
 /* ============================================================
-   SAND WALL  (built by components/SandWall.tsx, poured by motion.ts)
-   A surface of near-black grains covering a section. It sits at the
-   page's own background value, so before it moves it reads as unbroken
-   dark - then it erodes from the bottom and the section is behind it.
+   HERO CRUMBLE  (built by components/HeroCrumble.tsx, poured by motion.ts)
+   The hero's own last frame, rebuilt grain by grain so it can fall apart.
+   Lives inside the hero pin; motion.ts paints every grain to match the
+   layers under it, then pours it off from the bottom row upwards while
+   WHO WE ARE rides up behind the pin.
    ============================================================ */
-.sandwall{
-  position:absolute; inset:0; z-index:6; pointer-events:none; overflow:hidden;
+.hero__crumble{
+  position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden;
+  visibility:hidden;                   /* motion.ts swaps it in at the crumble */
   display:grid;
-  grid-template-columns:repeat(var(--cols,30), 1fr);
-  grid-template-rows:repeat(var(--rows,16), 1fr);
+  grid-template-columns:repeat(var(--cols,48), 1fr);
+  grid-template-rows:repeat(var(--rows,27), 1fr);
 }
-/* Four near-identical darks. Static, so nothing repaints per frame; the
-   spread is what makes the falling grains legible against the page.
-   The top rows get the hero photo painted over this in motion.ts. */
-.sandwall > i{ display:block; background:#0b0b0c no-repeat; }
-.sandwall > i.s1{ background-color:#0f0f11; }
-.sandwall > i.s2{ background-color:#131316; }
-.sandwall > i.s3{ background-color:#0d1210; }   /* the faintest green in the black */
+/* Four near-identical darks, only ever seen where the paint has nothing to
+   say. Static, so nothing repaints per frame; the spread is what keeps the
+   falling grains legible against the section behind them. */
+/* No will-change here: at this grain count promoting every tile to its own
+   layer costs far more than it buys, and GSAP only needs them for one phase. */
+.hero__crumble > i{ display:block; background:#0b0b0c no-repeat; }
+.hero__crumble > i.s1{ background-color:#0f0f11; }
+.hero__crumble > i.s2{ background-color:#131316; }
+.hero__crumble > i.s3{ background-color:#0d1210; }   /* the faintest green in the black */
 
 /* ============================================================
    PIXEL GRID  (Paul Kalkbrenner)
@@ -222,7 +226,10 @@ em{ font-style:italic; }
 /* ============================================================
    1 · HERO - artwork window expands, then the deck stacks
    ============================================================ */
-.hero{ position:relative; height:100vh; }
+/* Stacked above WHO WE ARE: the last stretch of the pin has that section
+   already scrolled up underneath this one, waiting to be uncovered by the
+   crumble (see .who's negative margin). */
+.hero{ position:relative; height:100vh; z-index:5; }
 .hero__pin{ position:relative; height:100vh; width:100%; overflow:hidden; background:#000; }
 
 /* the SOC▢HEERS artwork, full bleed */
@@ -238,9 +245,19 @@ em{ font-style:italic; }
 }
 @media (max-width:640px){ .hero__greet{ top:11%; } }
 
+/* Flat black, filling the margin around the contained stage so the edges
+   never read as an empty gap. Was a blurred duplicate of the photo; plain
+   black reads as intentional letterboxing, where the blur read as a second,
+   dimmer photo sitting next to the real one. */
+.hero__backdrop{
+  position:absolute; inset:0; z-index:2; overflow:hidden; pointer-events:none;
+  visibility:hidden;
+  background:#000;
+}
+
 /* the photo that lives inside the artwork's window */
 .hero__stage{
-  position:absolute; z-index:2; overflow:hidden; border-radius:0;
+  position:absolute; z-index:3; overflow:hidden; border-radius:0;
   top:0; left:0; width:120px; height:60px;
   will-change:width,height,transform,filter;
   /* An explicit identity filter, not `none`. GSAP reads the components it is
@@ -249,11 +266,40 @@ em{ font-style:italic; }
      the dim in phase 2. */
   filter:brightness(1) saturate(1);
 }
-/* Both layers are sized/offset in JS onto the same framing, so the artwork's
-   window and the black-and-white photo sit pixel-on-pixel at every size and the
-   cross-fade between them is invisible. */
-.hero__stage-crop,
+/* Sized/offset in JS to sit exactly inside the artwork's window at rest,
+   then re-fit as the stage grows - see fit() in motion.ts. */
 .hero__stage-img{ position:absolute; top:0; left:0; max-width:none; }
+
+/* A faint blue colour-wash over the photo, matching the artwork's own window
+   at rest - weighted to the edges and near-clear at the centre, like a
+   vignette, rather than an even flat wash. mix-blend-mode:color keeps the
+   photo's luminance (so it still reads as the photo, not a flat tint) and
+   only swaps in the hue - motion.ts fades it out as the stage expands, so
+   what was one image the whole time just loses its tint rather than being
+   swapped for a different one. */
+.hero__stage-tint{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse at center,
+    rgba(28,140,224,.12) 0%, rgba(28,140,224,.22) 55%, rgba(13,79,166,.4) 100%);
+  mix-blend-mode:color;
+}
+
+/* A fade at the stage's own edges into the black behind it - left and right
+   in particular, since a wide contained rectangle so often lands with
+   little or no letterboxed margin of its own, and without this the photo
+   just stops at the screen's edge. The linear passes carry that: a real
+   run from solid black down to nothing, wide enough to read as a blend
+   rather than a line. The radial on top just rounds the corners off to
+   match. GSAP fades this whole layer in once the stage has finished
+   expanding (autoAlpha, not opacity - see lib/motion.ts), so the small
+   square window never carries it. */
+.hero__stage-vignette{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  visibility:hidden;
+  background:
+    linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%),
+    radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%);
+}
 
 .hero__scroll{
   position:absolute; left:50%; bottom:26px; z-index:8; transform:translateX(-50%);
@@ -272,7 +318,7 @@ em{ font-style:italic; }
    initHero phase 2.
    ============================================================ */
 .meaning{
-  position:absolute; inset:0; z-index:4;
+  position:absolute; inset:0; z-index:5;   /* above the crumble grid, so the type falls with it */
   display:flex; align-items:center;
   pointer-events:none;                 /* only the speaker takes the pointer */
   visibility:hidden;                   /* motion.ts reveals it; no flash on load */
@@ -316,6 +362,9 @@ em{ font-style:italic; }
   font-family:var(--f-playful); font-weight:700;
   font-size:clamp(52px, min(10.5vw, 17vh), 168px); line-height:.9; letter-spacing:-.01em;
   color:var(--cream);
+  /* the script face carries real left-side bearing before the "S" starts -
+     without this the word sits visibly right of /soh-cheers/ below it */
+  margin-left:-0.14em;
 }
 .meaning__say{
   flex:none; margin-top:clamp(10px,1.6vw,26px); pointer-events:auto;
@@ -357,13 +406,13 @@ em{ font-style:italic; }
 /* the senses */
 .meaning__senses{ list-style:none; margin-top:clamp(26px,4vh,44px); }
 .meaning__sense{
-  display:flex; align-items:baseline; gap:clamp(14px,1.5vw,26px);
+  display:flex; align-items:center; gap:clamp(14px,1.5vw,26px);
   padding:clamp(9px,1.4vh,15px) 0;
 }
 .meaning__num{
   flex:none; width:1.6em;
-  font-family:var(--f-mono); font-size:clamp(10px,.95vw,12px);
-  letter-spacing:.14em; color:var(--accent); opacity:.65;
+  font-family:var(--f-playful); font-size:clamp(20px,1.8vw,26px);
+  letter-spacing:.02em; color:var(--accent); opacity:.65;
 }
 .meaning__text{
   font-family:var(--f-display); font-weight:600;
@@ -372,7 +421,7 @@ em{ font-style:italic; }
 }
 .meaning__note{
   margin-top:clamp(14px,2vh,22px);
-  font-family:var(--f-mono); font-size:clamp(11px,1vw,13px);
+  font-family:var(--f-mono); font-size:clamp(14px,1.3vw,17px);
   letter-spacing:.08em; font-style:italic; color:var(--muted); opacity:.7;
 }
 @media (max-width:860px){
@@ -384,6 +433,18 @@ em{ font-style:italic; }
 /* ============================================================
    3 · WHO WE ARE
    ============================================================ */
+/* Pulled up by one screen so it is already sitting under the hero pin for
+   the last 100vh of it - which is exactly the stretch the crumble runs
+   over, so the falling grains uncover this rather than black. The pin
+   spacer is 100vh + the trigger's end offset, so at pin release this
+   section's top lands precisely at the top of the viewport and the handoff
+   costs no jump. Only when the pin actually exists: with reduced motion
+   there is no pin, and the section would simply cover the hero. */
+@media (prefers-reduced-motion: no-preference){
+  .who{ margin-top:-100vh; }
+}
+.who{ position:relative; z-index:0; }
+
 .who__grid{ margin-top:56px; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.02fr); gap:clamp(24px,3vw,56px); align-items:center; }
 .who__copy{ display:flex; flex-direction:column; }
 
@@ -403,20 +464,8 @@ em{ font-style:italic; }
   font-weight:400; font-style:italic; color:var(--accent);
   margin-top:.12em;
 }
-/* Rough brush stroke under "share." - a clipped oval so it reads handmade
-   rather than a flat text-decoration underline. */
 .who__share{
-  position:relative; display:inline-block;
   text-decoration:none;
-}
-.who__share::after{
-  content:""; position:absolute;
-  left:-4%; right:-6%; bottom:.02em;
-  height:.08em;
-  background:var(--accent);
-  border-radius:40% 60% 50% 50% / 70% 40% 60% 40%;
-  transform:rotate(-2deg) skewX(-6deg);
-  opacity:.95; pointer-events:none;
 }
 
 /* Stats as a ruled strip under the claim - one top rule across the column,
@@ -680,14 +729,14 @@ em{ font-style:italic; }
    8 · CLOSING CTA
    ============================================================ */
 .contact{
-  position:relative; padding:clamp(80px,13vh,150px) 0; overflow:hidden; text-align:center;
+  position:relative; padding:clamp(72px,11vh,130px) 0 clamp(76px,11.5vh,136px); overflow:hidden; text-align:center;
   /* The two source images are not the same shape - "footer left" is a
      tall 2:3 cutout, "footer right" is a wide 3:2 one. Sizing both off one
      shared height (the old approach) made the wide one visibly bigger,
      since at equal height its width comes out 2.25x the tall one's - so
      the right side gets its own, smaller height budget here to land at a
      comparable footprint instead of a matching number. */
-  --cast-h:clamp(230px, 26vw, 420px);
+  --cast-h:clamp(250px, 29vw, 460px);
   --cast-h-right:calc(var(--cast-h) * .72);
   /* Clearance the copy column reserves on each side - based on whichever
      side renders wider, which is the right one (3:2 at .72 height still
@@ -695,7 +744,7 @@ em{ font-style:italic; }
   --cast-w:calc(var(--cast-h-right) * 1.5);
 }
 .contact__inner{
-  position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:22px;
+  position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:16px;
   /* A light reservation, not a hard clearance: the mascots are anchored to
      the bottom of the section (below) rather than centred on it, so they
      no longer sit at the same height as the title - this padding only
@@ -711,7 +760,7 @@ em{ font-style:italic; }
    off-screen rather than stopping at a hard border - the same move as the
    WHO WE ARE splash's mask, just mirrored per side. */
 .contact__cast{
-  position:absolute; bottom:clamp(0px, 3vh, 34px); z-index:1; pointer-events:none;
+  position:absolute; bottom:clamp(16px, 6vh, 60px); z-index:1; pointer-events:none;
   width:auto;
 }
 .contact__cast--left{
@@ -721,8 +770,10 @@ em{ font-style:italic; }
   mask-image:linear-gradient(to left, #000 70%, transparent 100%);
 }
 .contact__cast--right{
-  aspect-ratio:3 / 2; height:var(--cast-h-right);
+  aspect-ratio:3 / 2; height:calc(var(--cast-h-right) * 1.22);
+  bottom:calc(clamp(16px, 6vh, 60px) + 5vh);
   right:clamp(-60px, -3vw, 0px);
+  filter:brightness(.94);
   -webkit-mask-image:linear-gradient(to right, #000 70%, transparent 100%);
   mask-image:linear-gradient(to right, #000 70%, transparent 100%);
 }
@@ -739,9 +790,9 @@ em{ font-style:italic; }
   .contact{ --cast-w:0px; }
   .contact__cast{ display:none; }
 }
-.contact__title{ font-family:var(--f-display); font-weight:700; font-size:clamp(44px,9vw,150px); line-height:.9; letter-spacing:-.03em; text-wrap:balance; }
+.contact__title{ font-family:var(--f-display); font-weight:700; font-size:clamp(36px,6.2vw,96px); line-height:.9; letter-spacing:-.03em; text-wrap:balance; }
 .contact__cta{
-  margin-top:20px; display:inline-flex; align-items:center; gap:16px;
+  margin-top:60px; display:inline-flex; align-items:center; gap:16px;
   font-family:var(--f-display); font-weight:600; font-size:clamp(20px,2.4vw,34px);
   background:var(--accent); color:#04140b; border:none; border-radius:60px; padding:20px 44px; position:relative; overflow:hidden;
 }
@@ -750,7 +801,7 @@ em{ font-style:italic; }
 .contact__cta:hover::before{ transform:translateY(0); }
 .contact__cta:hover svg{ transform:translateX(6px); }
 .contact__emails{
-  margin-top:clamp(40px,6vh,64px); display:flex; gap:clamp(28px,5vw,64px); flex-wrap:wrap; justify-content:center;
+  margin-top:60px; display:flex; gap:clamp(28px,5vw,64px); flex-wrap:wrap; justify-content:center;
 }
 .contact__email{ display:flex; flex-direction:column; align-items:center; gap:6px; }
 .contact__email-label{
@@ -762,7 +813,7 @@ em{ font-style:italic; }
 }
 .contact__email:hover .contact__email-addr{ color:var(--accent); }
 
-.contact__social{ margin-top:34px; display:flex; gap:16px; justify-content:center; }
+.contact__social{ margin-top:32px; display:flex; gap:16px; justify-content:center; }
 .contact__social a{
   width:42px; height:42px; border-radius:50%; display:grid; place-items:center;
   border:1px solid var(--line); color:var(--muted);
@@ -770,7 +821,7 @@ em{ font-style:italic; }
 }
 .contact__social a:hover{ color:var(--accent); border-color:rgba(47,229,137,.5); transform:translateY(-3px); }
 
-.contact__foot{ margin-top:44px; display:flex; gap:30px; flex-wrap:wrap; justify-content:center; font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+.contact__foot{ margin-top:24px; display:flex; gap:30px; flex-wrap:wrap; justify-content:center; font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
 .contact__cta{ cursor:none; }
 @media (hover:none){ .contact__cta{ cursor:pointer; } }
 .cmodal__close,
@@ -900,3 +951,229 @@ em{ font-style:italic; }
 
 .no-js [data-split]{ visibility:visible !important; }
 .no-js [data-split],.no-js [data-reveal],.no-js [data-clip]{ opacity:1 !important; transform:none !important; clip-path:none !important; }
+
+/* ============================================================
+   THE OVERTURE  (components/Overture.tsx, run by lib/overture-motion.ts)
+
+   A dark room with a bulb in it and a stack of walls behind that, played
+   once per tab before the site is handed over. Three ideas carry the whole
+   block:
+
+     · --lit is the light in the room, 0 to 1, animated on .overture and
+       inherited by everything under it. Nothing here has an "on" class -
+       the wall brightness, the glass, the filament bloom and the glow all
+       read that one number, so the ignition stutter is a single property
+       being set eight times rather than eight things kept in step;
+     · every wall is a viewport-sized element pushed back in Z, so the one
+       that ends at translateZ(0) is pixel-identical to .hero__frame and the
+       hand-off is geometry rather than a match-move;
+     · the bulb is three nested wrappers with one transform each (dock,
+       swing, turn) so none of the three ever fights the other two.
+
+   Sits above the site's own loader and below the grain and the cursor, so
+   the film texture and the pointer stay continuous across the hand-off.
+   ============================================================ */
+.overture{
+  position:fixed; inset:0; z-index:9991; overflow:hidden;
+  background:#000;
+  --lit:0;
+  /* the switch's pilot light, pulsed on its own so it can breathe while
+     the room is still at --lit:0 */
+  --pilot:.35;
+}
+/* No JS, reduced motion, or a tab that has already seen it: the attribute
+   stays on and none of this ever exists. lib/overture.ts owns that call;
+   components/Overture.tsx takes the attribute off when the answer is yes. */
+.overture[data-idle]{ display:none; }
+/* Handed over. The layer stays for the docked bulb and stops taking
+   pointers for everything else. */
+.overture.is-done{ pointer-events:none; background:transparent !important; }
+
+/* ---- the room ---- */
+.ovt__stage{
+  position:absolute; inset:0;
+  perspective:1400px;                /* GAP in overture-motion.ts is set against this */
+  perspective-origin:50% 47%;
+}
+.ovt__dolly{ position:absolute; inset:0; transform-style:preserve-3d; }
+
+/* Viewport-sized, every one of them. This is the load-bearing rule of the
+   whole sequence: a wall is only ever moved in Z, never resized, so "the
+   camera has arrived" and "this is exactly the hero" are the same state. */
+.ovt__wall{ position:absolute; inset:0; transform-style:preserve-3d; }
+
+/* the panel itself, hinged along its bottom edge */
+.ovt__slab{
+  position:absolute; inset:0;
+  transform-style:preserve-3d;
+  transform-origin:50% 100%;
+  --lit-floor:0;                     /* raised at the finale, where the hero
+                                        stops being lit and simply *is* */
+  backface-visibility:hidden;
+}
+/* The picture, dark until the bulb says otherwise. The filter is on the img
+   and on nothing above it, on purpose: a filter anywhere higher up would
+   flatten the preserve-3d chain and the whole room would collapse to 2D. */
+.ovt__face{
+  position:absolute; inset:0;
+  width:100%; height:100%; object-fit:cover;
+  filter:
+    brightness(calc(5% + max(var(--lit), var(--lit-floor)) * 95%))
+    saturate(calc(22% + max(var(--lit), var(--lit-floor)) * 78%))
+    contrast(calc(114% - max(var(--lit), var(--lit-floor)) * 14%));
+}
+/* The sliver of edge that swings into view as the slab tips toward you -
+   a panel with no thickness reads as a projection, not an object. */
+.ovt__edge{
+  position:absolute; left:0; right:0; top:0; height:16px;
+  transform-origin:50% 0%; transform:rotateX(90deg);
+  background:linear-gradient(to bottom, #46433c, #16161a);
+  opacity:calc(.25 + var(--lit) * .75);
+}
+/* the falloff of the bulb's light across the panel's own face */
+.ovt__shade{
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(ellipse 62% 58% at 50% 44%, rgba(255,196,120,.16) 0%, rgba(0,0,0,0) 58%),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 42%, rgba(0,0,0,.75) 100%);
+  opacity:calc(1 - var(--lit-floor));
+}
+.ovt__label{
+  position:absolute; left:26px; bottom:22px;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.34em;
+  text-transform:uppercase; color:rgba(255,255,255,.72);
+  text-shadow:0 1px 12px rgba(0,0,0,.9);
+  opacity:calc(var(--lit) * .9);
+}
+/* the hero wall is the site, not an exhibit - no caption, no edge */
+.ovt__slab[data-final] .ovt__label,
+.ovt__slab[data-final] .ovt__edge{ display:none; }
+
+/* what comes up off the floor when one lands */
+.ovt__dust{
+  position:absolute; left:-10%; right:-10%; bottom:0; height:26vh;
+  transform-origin:50% 100%; opacity:0; pointer-events:none;
+  background:linear-gradient(to top,
+    rgba(214,196,168,.5) 0%, rgba(196,180,156,.2) 35%, rgba(0,0,0,0) 100%);
+  filter:blur(22px);
+}
+
+.ovt__vignette{
+  position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:radial-gradient(ellipse 78% 70% at 50% 46%,
+    rgba(0,0,0,0) 30%, rgba(0,0,0,.72) 78%, #000 100%);
+}
+.ovt__flash{
+  position:absolute; inset:0; z-index:3; pointer-events:none;
+  background:#fff9ec; opacity:0; mix-blend-mode:screen;
+}
+
+/* ---- the bulb ----
+   rig  = where it hangs, and at the end where it docks
+   sway = the pendulum, pivoting at the top of the screen
+   lamp = the few degrees it turns toward your cursor */
+.ovt__rig{
+  position:absolute; top:0; left:50%; width:220px; margin-left:-110px; height:100%;
+  z-index:4; pointer-events:none;
+}
+.ovt__sway{
+  position:absolute; top:0; left:0; width:220px;
+  transform-origin:50% 0%;
+  display:flex; flex-direction:column; align-items:center;
+  perspective:900px;                 /* so the lamp inside can actually turn */
+}
+.ovt__cord{
+  width:2px; height:calc(50vh - 152px); flex:none;
+  background:linear-gradient(to right, #0d0d0f, #4a463f 45%, #0a0a0b);
+}
+.ovt__lamp{
+  position:relative; width:220px; height:300px; flex:none;
+  background:none; border:0; padding:0; cursor:none;
+  pointer-events:auto;
+  transform-style:preserve-3d;
+}
+@media (hover:none){ .ovt__lamp{ cursor:pointer; } }
+.ovt__lamp:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:8px; }
+.ovt__svg{ display:block; width:100%; height:100%; overflow:visible; }
+
+/* the glass and the filament, hot. Both read --lit directly, which is what
+   makes the ignition stutter a single property change. */
+.ovt__lit{ opacity:var(--lit); }
+.ovt__wire{ opacity:calc(1 - var(--lit) * .55); }
+
+/* the halo tight around the envelope */
+.ovt__bloom{
+  position:absolute; left:50%; top:152px; width:340px; height:340px;
+  margin:-170px 0 0 -170px; pointer-events:none;
+  background:radial-gradient(circle closest-side,
+    rgba(255,236,196,.55) 0%, rgba(255,190,110,.28) 34%, rgba(255,150,60,0) 72%);
+  mix-blend-mode:screen; opacity:var(--lit);
+}
+/* and the light it throws into the room. Inside .ovt__sway, so it swings
+   with the bulb - the light in the room moves when the bulb does. */
+.ovt__glow{
+  position:absolute; left:50%; top:50vh; width:130vmax; height:130vmax;
+  margin-left:-65vmax; margin-top:-65vmax; pointer-events:none; z-index:-1;
+  background:radial-gradient(circle closest-side,
+    rgba(255,214,152,.40) 0%, rgba(255,178,96,.17) 15%,
+    rgba(255,150,60,.06) 33%, rgba(255,140,50,0) 62%);
+  mix-blend-mode:screen; opacity:var(--lit);
+}
+
+/* ---- the switch ---- */
+.ovt__switch{
+  position:absolute; z-index:5;
+  left:calc(50% + clamp(160px, 21vw, 330px));
+  top:calc(50vh + 30px);
+  width:76px; padding:0; border:0; background:none; cursor:none;
+  pointer-events:auto;
+  filter:drop-shadow(0 18px 30px rgba(0,0,0,.8));
+}
+@media (hover:none){ .ovt__switch{ cursor:pointer; } }
+.ovt__switch:focus-visible{ outline:2px solid var(--accent); outline-offset:8px; border-radius:10px; }
+.ovt__switch svg{ display:block; width:100%; height:auto; }
+/* The pilot is the only lit thing in the room until you press it, which
+   makes it the only affordance there is. It breathes rather than blinks. */
+.ovt__pilot{
+  fill:var(--accent);
+  opacity:var(--pilot);
+  filter:drop-shadow(0 0 calc(4px + var(--pilot) * 9px) var(--accent));
+}
+.ovt__hint{
+  display:block; margin-top:16px;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.28em;
+  text-transform:uppercase; color:rgba(241,236,225,.5); white-space:nowrap;
+  opacity:var(--pilot);
+}
+@media (max-width:820px){
+  /* below the bulb rather than beside it - at this width there is no room
+     to its right that is not already under the glass */
+  .ovt__switch{ left:50%; margin-left:-38px; top:calc(50vh + 186px); }
+}
+
+/* ---- the loading screen ----
+   Deliberately identical to .loader in components/Chrome.tsx: this one
+   stands in for it while the overture runs (lib/motion.ts hides that one),
+   and the two have to be indistinguishable or the swap would show. */
+.ovt__loader{ z-index:6; }
+
+.ovt__skip{
+  position:absolute; right:var(--pad); bottom:34px; z-index:7;
+  padding:9px 2px; border:0; background:none; cursor:none;
+  pointer-events:auto; opacity:0;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.28em;
+  text-transform:uppercase; color:rgba(241,236,225,.42);
+  transition:color .35s var(--ease);
+}
+@media (hover:none){ .ovt__skip{ cursor:pointer; } }
+.ovt__skip:hover{ color:var(--cream); }
+.ovt__skip:focus-visible{ outline:2px solid var(--accent); outline-offset:4px; }
+
+/* ---- while it runs, the site holds still ---- */
+html.is-overture{ overflow:hidden; }
+html.is-overture body{ touch-action:none; }
+/* the page's own furniture stays out of the room */
+html.is-overture .nav,
+html.is-overture .progress,
+html.is-overture .hero__scroll{ opacity:0 !important; pointer-events:none; }
+.nav,.progress,.hero__scroll{ transition:opacity .7s var(--ease); }

@@ -8,7 +8,7 @@ export const ABOUT_IMG = {
      AboutHero.tsx sets live type over it. */
   opening: "/assets/about/about-hero.webp",
   /* the team-at-work cutout that sits beside the intro line */
-  visual: "/assets/about/about-visual.png",
+  visual: "/assets/about/abt%20vis.png",
   founderSid: "/assets/about/founder-sid.jpg",
   founderMehul: "/assets/about/founder-mehul.jpg",
   people: "/assets/about/people.jpg",
@@ -40,41 +40,35 @@ export const ABOUT_INTRO = {
    matched in length so the two columns sit level. */
 export const FOUNDERS = [
   {
-    idx: "01",
     name: "Siddharth Devnani",
     role: "Co-Founder & Chief Operating Officer",
     img: ABOUT_IMG.founderSid,
     /* this portrait leaves far more headroom above the scalp than Mehul's
        does - a shared object-position put the two heads at noticeably
-       different heights, so each photo carries its own crop instead */
-    imgPos: "center 97%",
+       different heights, so each photo carries its own crop instead. Both
+       values are solved against the same target (the head sitting the
+       same fraction down the frame), not eyeballed independently - see
+       .founder__photo in about.css for the crop math they assume. */
+    imgPos: "center 95%",
     bio: [
-      "Siddharth started SoCheers in 2013 on a simple conviction - creative ambition only scales when the business under it is built properly. Over the last decade he has shaped the agency's commercial, media and technology capabilities, taking it from a social-first startup to one of India's largest independent creative agencies.",
-      "A background in engineering, operations and e-commerce meant he always built for scale: the Media and Analytics practice, the Digital Intelligence & Analytics division, and the automation running underneath both. Today he leads business operations, financial planning, media and technology.",
+      "Siddharth co-founded SoCheers in 2013, convinced that creative ambition only scales when the business under it is built properly. Over a decade, he grew it into one of India's largest independent creative agencies.",
+      "His engineering background shaped the Media and Analytics practice and Digital Intelligence and Analytics division. He leads operations, finance, media and tech.",
     ],
   },
   {
-    idx: "02",
     name: "Mehul Gupta",
     role: "Co-Founder & Chief Executive Officer",
     img: ABOUT_IMG.founderMehul,
-    imgPos: "center 0%",
+    imgPos: "center 5%",
     bio: [
-      "Mehul co-founded SoCheers on a bet - that brands would need partners who treated digital as the medium itself, not as an extension of advertising. Under his leadership the people-first instinct the agency started with has become the culture the whole team runs on.",
-      "An MBA in Technology Management from NMIMS and early stints across advertising and digital commerce gave him a first-hand read on brand building, servicing and growth. Today he leads creative and business direction, and stays close to every major partnership and pitch.",
+      "Mehul co-founded SoCheers on a bet: that brands would need partners who treat digital as the medium itself, not just as an extension of advertising. His people-first leadership is now the culture the whole team runs on.",
+      "An MBA in Technology Management from NMIMS, he leads creative and business direction, staying close to every major partnership and pitch.",
     ],
   },
 ];
 
-/* PLACEHOLDER ticker copy - the client flagged the strip as decorative with
-   content still to be decided. */
-export const ABOUT_TICKER = [
-  "STRATEGY", "CREATIVE", "FILM", "ANIMATION", "MEDIA",
-  "ANALYTICS", "CONTENT", "TECHNOLOGY", "RESEARCH", "PRODUCTION",
-];
-
 export const BELIEF =
-  "We believe growth comes from staying curious, embracing discomfort, and surrounding ourselves with people who push us to think bigger — including the brands we partner with.";
+  "We believe growth comes from staying curious, embracing discomfort, and surrounding ourselves with people who push us to think bigger, including the brands we partner with.";
 
 export const WHY_WE_EXIST =
   "SoCheers exists to shape the future of brands by creating work that delivers long-term value, where creativity and strategy come together to solve real business problems.";

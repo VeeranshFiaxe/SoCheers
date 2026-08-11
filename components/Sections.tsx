@@ -2,15 +2,14 @@ import { Fragment } from "react";
 import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS } from "@/lib/content";
 import ContactModal from "./ContactModal";
 import RollText from "./Roll";
-import SandWall from "./SandWall";
 import Splash from "./Splash";
 
 export function Who() {
+  /* No wall of its own any more: this section slides up *behind* the pinned
+     hero (see .who's negative margin in globals.css) and the hero's own last
+     frame crumbles off it - components/HeroCrumble.tsx. */
   return (
     <section className="sec who no-border" id="who" data-section data-sec="1">
-      {/* the same crowd shot the hero pin ends on, so the wall opens as
-          that photo carrying on past its own bottom edge */}
-      <SandWall img={IMG.team} />
       <div className="wrap">
         <span className="tag" data-reveal>WHO WE ARE</span>
         <div className="who__grid">
