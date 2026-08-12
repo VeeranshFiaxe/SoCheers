@@ -68,7 +68,11 @@ export function What() {
         <div className="wcards">
           {BUCKETS.map((b) => (
             <article className="wcard" key={b.idx} data-clip data-tilt data-cursor={b.name}>
-              <div className="wcard__img"><img src={b.img} alt="" /></div>
+              <div className="wcard__img">
+                {b.images.map((src, i) => (
+                  <img key={src} src={src} alt="" className={i === 0 ? "is-active" : undefined} />
+                ))}
+              </div>
               <div className="wcard__body">
                 <span className="wcard__idx">{b.idx} · Bucket</span>
                 <h3 className="wcard__name" data-roll><RollText>{b.name}</RollText></h3>

@@ -1,4 +1,3 @@
-import { ABOUT_IMG, HERO } from "@/lib/about-content";
 
 /* Drifting colour thrown off the illustration. Every hue is sampled from
    the artwork itself - electric blue, magenta, teal, violet, amber - so the
@@ -57,62 +56,20 @@ export default function AboutHero() {
         {/* nested so the scroll parallax (outer) and the cursor depth
             (inner) never write to the same transform */}
         <div className="ab-open__mediaIn" data-hero-depth="0.32">
-          <img src={ABOUT_IMG.opening} alt="" />
+          <video
+            src="https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
         </div>
       </div>
 
-      {/* left-to-right scrim: guarantees the type holds once a narrow
-          viewport crops the artwork's empty navy away and the portrait
-          slides in under the copy */}
-      <span className="ab-open__scrim" aria-hidden="true" />
       {/* bottom fade, so section 2 picks up on flat --bg with no seam */}
       <span className="ab-open__veil" aria-hidden="true" />
 
       <Orbs />
-
-      <div className="wrap abh">
-        {/* no data-hero-depth here: this element also carries the
-            entrance timeline and, previously, a scroll-scrub fade - two
-            independent tweens both landing on it was fragile, so the copy
-            now stays put and only the artwork/orbs answer the cursor */}
-        <div className="abh__copy">
-          <span className="tag abh__eyebrow" data-hero-eyebrow>{HERO.eyebrow}</span>
-
-          <h1 className="abh__title">
-            {HERO.lines.map((l) => (
-              <span className="abh__line" key={l}>
-                <i data-hero-line>{l}</i>
-              </span>
-            ))}
-            <span className="abh__line">
-              <i data-hero-line>
-                <em className="abh__grad">{HERO.accent}</em>
-              </i>
-            </span>
-          </h1>
-
-          <p className="abh__sub">
-            {HERO.sub.map((s) => (
-              <span key={s} data-hero-sub>{s}</span>
-            ))}
-          </p>
-
-          <a
-            href="/#contact"
-            className="abh__cta"
-            data-hero-cta
-            data-magnetic
-            data-cursor="Let's talk"
-          >
-            <span className="abh__cta-ring">
-              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </span>
-            <span className="abh__cta-label">{HERO.cta}</span>
-          </a>
-        </div>
-      </div>
 
       <div className="ab-open__cue" aria-hidden="true">
         <span>SCROLL</span>

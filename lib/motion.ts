@@ -43,6 +43,7 @@ export function initSite(): () => void {
   const addTicker = (fn: gsap.TickerCallback) => { gsap.ticker.add(fn); tickers.push(fn); };
   const splits: SplitText[] = [];
   const observers: IntersectionObserver[] = [];
+  const intervals: number[] = [];
   let lenis: Lenis | null = null;
 
   const ctx = gsap.context(() => {
@@ -795,16 +796,22 @@ export function initSite(): () => void {
       const AMBIENT = 0.3;    // share of the full tilt while merely approaching
 
       type Tilt = {
-        el: HTMLElement; hover: boolean; onScreen: boolean;
+        el: HTMLElement; hover: boolean; onScreen: boolean; ambient: boolean;
         rX: gsap.QuickToFunc; rY: gsap.QuickToFunc; tZ: gsap.QuickToFunc;
         iX: gsap.QuickToFunc | null; iY: gsap.QuickToFunc | null;
       };
 
       const items = new Map<Element, Tilt>();
       els.forEach((el) => {
-        const img = el.querySelector("img");
+        // wcards already animate their own image swap on hover (see
+        // initWCardCycle) - stacking the inner xPercent/yPercent parallax on
+        // top of that crossfade read as a shake, so they skip it. They also
+        // skip the ambient at-a-distance lean: three cards sit well within
+        // the 700px reach, so hovering one used to visibly tilt its neighbours.
+        const isWCard = el.classList.contains("wcard");
+        const img = isWCard ? null : el.querySelector("img");
         items.set(el, {
-          el, hover: false, onScreen: false,
+          el, hover: false, onScreen: false, ambient: !isWCard,
           rX: gsap.quickTo(el, "rotationX", { duration: 0.8, ease: "power3" }),
           rY: gsap.quickTo(el, "rotationY", { duration: 0.8, ease: "power3" }),
           tZ: gsap.quickTo(el, "z", { duration: 0.8, ease: "power3" }),
@@ -848,11 +855,44 @@ export function initSite(): () => void {
             Math.max(0, Math.abs(mx - cx) - r.width / 2),
             Math.max(0, Math.abs(my - cy) - r.height / 2),
           );
-          const s = it.hover ? 1 : AMBIENT * Math.max(0, 1 - out / REACH);
+          const s = it.hover ? 1 : (it.ambient ? AMBIENT * Math.max(0, 1 - out / REACH) : 0);
           it.rX(-py * 11 * s);
           it.rY(px * 13 * s);
           it.tZ(34 * s);
           if (it.iX && it.iY) { it.iX(px * -5 * s); it.iY(py * -5 * s); }
+        });
+      });
+    }
+
+    /* -------------------------------------------------- wcard hover cycle
+       Each WHAT WE DO card stacks its cover plus nine extra frames (see
+       BUCKETS in lib/content.ts). On hover, flip through them fast with a
+       quick crossfade (see .wcard__img img.is-active in globals.css);
+       on leave, settle back on the cover. */
+    function initWCardCycle() {
+      if (!canHover || prefersReduced) return;
+      document.querySelectorAll<HTMLElement>(".wcard").forEach((card) => {
+        const imgs = Array.from(card.querySelectorAll<HTMLImageElement>(".wcard__img img"));
+        if (imgs.length < 2) return;
+
+        let i = 0;
+        let timer: number | null = null;
+        const show = (n: number) => {
+          imgs.forEach((img, j) => img.classList.toggle("is-active", j === n));
+        };
+
+        on(card, "mouseenter", () => {
+          if (timer) return;
+          timer = window.setInterval(() => {
+            i = (i + 1) % imgs.length;
+            show(i);
+          }, 420);
+          intervals.push(timer);
+        });
+        on(card, "mouseleave", () => {
+          if (timer) { window.clearInterval(timer); timer = null; }
+          i = 0;
+          show(0);
         });
       });
     }
@@ -1035,6 +1075,7 @@ export function initSite(): () => void {
     initSplits();
     initReveals();
     initTiles();
+    initWCardCycle();
     initCounters();
     initRail();
     initNav();
@@ -1057,6 +1098,7 @@ export function initSite(): () => void {
     ac.abort();
     tickers.forEach((fn) => gsap.ticker.remove(fn));
     observers.forEach((o) => o.disconnect());
+    intervals.forEach((id) => window.clearInterval(id));
     splits.forEach((s) => s.revert());
     lenis?.destroy();
     lenis = null;

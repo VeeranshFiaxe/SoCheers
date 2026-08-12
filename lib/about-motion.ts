@@ -26,88 +26,60 @@ export function initAbout(): () => void {
 
   const ctx = gsap.context(() => {
     /* -------------------------------------------------- the hero
-       Three separate jobs, kept on three separate elements so none of them
-       ever write to the same transform: the entrance lifts the type, the
-       colour field drifts on its own, and the cursor pushes whole layers
-       around at different depths. */
-    const heroCopy = document.querySelector<HTMLElement>(".abh__copy");
-    if (heroCopy) {
-      /* · entrance · The lines fade and rise in, then the supporting copy
-         follows. Nothing is scroll-triggered here - the hero is already in
-         view on load, so it just plays.
-
-         Was a clipped mask-lift (overflow:hidden + yPercent). Swapped for
-         a plain fade+rise, same technique as the sub/CTA lines right below
-         it, after that version went invisible-but-selectable in testing -
-         see the .abh__title comment in about.css for why. */
-      if (prefersReduced) {
-        gsap.set("[data-hero-line], [data-hero-eyebrow], [data-hero-sub], [data-hero-cta]",
-          { autoAlpha: 1, y: 0 });
-      } else {
-        const tl = gsap.timeline({ delay: 0.15, defaults: { ease: "power3.out" } });
-        tl.fromTo("[data-hero-eyebrow]",
-          { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.7 }, 0);
-        tl.fromTo("[data-hero-line]",
-          { autoAlpha: 0, y: 28 },
-          { autoAlpha: 1, y: 0, duration: 0.85, stagger: 0.09 }, 0.12);
-        tl.fromTo("[data-hero-sub]",
-          { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08 }, 0.75);
-        tl.fromTo("[data-hero-cta]",
-          { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.7 }, 0.95);
-      }
-
-      if (!prefersReduced) {
-        /* · the colour field drifts · Each orb wanders on its own loop, on
-           an index-derived path so no two ever sync up. This rides the
-           inner <b>; the outer <i> is left free for the cursor. */
-        gsap.utils.toArray<HTMLElement>("[data-hero-drift]").forEach((b, i) => {
-          gsap.to(b, {
-            x: `random(-26, 26)`, y: `random(-30, 30)`,
-            duration: 7 + (i % 5) * 1.6,
-            repeat: -1, yoyo: true, ease: "sine.inOut",
-            delay: (i * 0.7) % 3.5,
-          });
+       The video plays on its own; this just runs the colour field - drift
+       on its own, and the cursor pushing whole layers around at different
+       depths. */
+    if (!prefersReduced) {
+      /* · the colour field drifts · Each orb wanders on its own loop, on
+         an index-derived path so no two ever sync up. This rides the
+         inner <b>; the outer <i> is left free for the cursor. */
+      gsap.utils.toArray<HTMLElement>("[data-hero-drift]").forEach((b, i) => {
+        gsap.to(b, {
+          x: `random(-26, 26)`, y: `random(-30, 30)`,
+          duration: 7 + (i % 5) * 1.6,
+          repeat: -1, yoyo: true, ease: "sine.inOut",
+          delay: (i * 0.7) % 3.5,
         });
+      });
 
-        /* · cursor depth · One ticker for every layer that declares a
-           depth. Driven off the ticker rather than mousemove because the
-           hero also moves under a still cursor while scrolling, and a
-           mousemove-only read would go stale mid-scroll. Negative depths
-           lean against the pointer, which is what separates the type
-           plane from the artwork behind it. */
-        if (canHover) {
-          type Layer = { d: number; xTo: gsap.QuickToFunc; yTo: gsap.QuickToFunc };
-          const layers: Layer[] = gsap.utils
-            .toArray<HTMLElement>("[data-hero-depth]")
-            .map((el) => ({
-              d: parseFloat(el.dataset.heroDepth || "0"),
-              xTo: gsap.quickTo(el, "x", { duration: 1.1, ease: "power3" }),
-              yTo: gsap.quickTo(el, "y", { duration: 1.1, ease: "power3" }),
-            }));
+      /* · cursor depth · One ticker for every layer that declares a
+         depth. Driven off the ticker rather than mousemove because the
+         hero also moves under a still cursor while scrolling, and a
+         mousemove-only read would go stale mid-scroll. Negative depths
+         lean against the pointer, which is what separates the type
+         plane from the artwork behind it. */
+      if (canHover) {
+        type Layer = { d: number; xTo: gsap.QuickToFunc; yTo: gsap.QuickToFunc };
+        const layers: Layer[] = gsap.utils
+          .toArray<HTMLElement>("[data-hero-depth]")
+          .map((el) => ({
+            d: parseFloat(el.dataset.heroDepth || "0"),
+            xTo: gsap.quickTo(el, "x", { duration: 1.1, ease: "power3" }),
+            yTo: gsap.quickTo(el, "y", { duration: 1.1, ease: "power3" }),
+          }));
 
-          if (layers.length) {
-            const MAX = 30;                 // px of travel at full depth
-            let mx = 0, my = 0, live = false, onScreen = true;
-            window.addEventListener("mousemove", (e: MouseEvent) => {
-              mx = e.clientX; my = e.clientY; live = true;
-            }, { signal: ac.signal });
+        if (layers.length) {
+          const MAX = 30;                 // px of travel at full depth
+          let mx = 0, my = 0, live = false, onScreen = true;
+          window.addEventListener("mousemove", (e: MouseEvent) => {
+            mx = e.clientX; my = e.clientY; live = true;
+          }, { signal: ac.signal });
 
-            ScrollTrigger.create({
-              trigger: ".ab-open", start: "top bottom", end: "bottom top",
-              onToggle: (self) => { onScreen = self.isActive; },
+          ScrollTrigger.create({
+            trigger: ".ab-open", start: "top bottom", end: "bottom top",
+            onToggle: (self) => { onScreen = self.isActive; },
+          });
+
+          addTicker(() => {
+            if (!live || !onScreen) return;
+            // -1..1 from the viewport centre
+            const nx = (mx / window.innerWidth) * 2 - 1;
+            const ny = (my / window.innerHeight) * 2 - 1;
+            layers.forEach((l) => {
+              l.xTo(nx * MAX * l.d);
+              l.yTo(ny * MAX * l.d * 0.7);
             });
-
-            addTicker(() => {
-              if (!live || !onScreen) return;
-              // -1..1 from the viewport centre
-              const nx = (mx / window.innerWidth) * 2 - 1;
-              const ny = (my / window.innerHeight) * 2 - 1;
-              layers.forEach((l) => {
-                l.xTo(nx * MAX * l.d);
-                l.yTo(ny * MAX * l.d * 0.7);
-              });
-            });
-          }
+          });
         }
       }
     }

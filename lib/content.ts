@@ -55,6 +55,9 @@ export const OVERTURE_SFX = {
   pull: "/assets/SC Website Revamp/Sound effects/String Pull.mp3",
   on: "/assets/SC Website Revamp/Sound effects/Light On.mp3",
   fall: "/assets/SC Website Revamp/Sound effects/Wall Fall.mp3",
+  /* the finale's camera push into the standing hero wall - see finale()
+     in lib/overture-motion.ts */
+  expand: "/assets/SC Website Revamp/Sound effects/logo expand.mp3",
 } as const;
 
 export const RAIL = [
@@ -92,11 +95,29 @@ export const STATS = [
   { count: 30, label: "Categories" },
 ];
 
+/* Per-bucket hover reels for the WHAT WE DO cards - the first frame in each
+   is the existing cover (untouched), the rest are the "2..10" pass the
+   client dropped into the same folder. Cycled on hover, see initWCardCycle()
+   in lib/motion.ts. */
+const HOME_DIR = "/assets/SC Website Revamp/01. Home";
+
 export const BUCKETS = [
   {
     idx: "01",
     name: "Strategy",
     img: IMG.brain,
+    images: [
+      IMG.brain,
+      `${HOME_DIR}/Strategy 2.png`,
+      `${HOME_DIR}/Strategy 3.jpg`,
+      `${HOME_DIR}/Strategy 4.jpg`,
+      `${HOME_DIR}/Strategy 5.jpg`,
+      `${HOME_DIR}/Strategy 6.jpg`,
+      `${HOME_DIR}/Strategy 7.png`,
+      `${HOME_DIR}/Strategy 8.jpg`,
+      `${HOME_DIR}/Strategy 9.jpg`,
+      `${HOME_DIR}/Strategy 10.jpg`,
+    ],
     items: [
       "Brand Positioning",
       "Digital Strategy",
@@ -110,6 +131,18 @@ export const BUCKETS = [
     idx: "02",
     name: "Creativity",
     img: IMG.warMask,
+    images: [
+      IMG.warMask,
+      `${HOME_DIR}/Creativity 2.jpg`,
+      `${HOME_DIR}/Creativity 3.png`,
+      `${HOME_DIR}/Creativity 4.jpg`,
+      `${HOME_DIR}/creativity 5.jpg`,
+      `${HOME_DIR}/creativity 6.jpg`,
+      `${HOME_DIR}/creativity 7.jpg`,
+      `${HOME_DIR}/creativity 8.jpg`,
+      `${HOME_DIR}/creativity 9.jpg`,
+      `${HOME_DIR}/creativity 10.jpg`,
+    ],
     items: [
       "Integrated Campaigns",
       "Creative & Content Development",
@@ -122,6 +155,18 @@ export const BUCKETS = [
     idx: "03",
     name: "Production",
     img: IMG.camera,
+    images: [
+      IMG.camera,
+      `${HOME_DIR}/Production 2.jpg`,
+      `${HOME_DIR}/Production 3.jpg`,
+      `${HOME_DIR}/Production 4.jpg`,
+      `${HOME_DIR}/Production 5.png`,
+      `${HOME_DIR}/Production 6.jpg`,
+      `${HOME_DIR}/Production 7.jpg`,
+      `${HOME_DIR}/Production 8.jpg`,
+      `${HOME_DIR}/Production 9.jpg`,
+      `${HOME_DIR}/Production 10.jpg`,
+    ],
     items: [
       "TVC & DVC",
       "Digital Production",

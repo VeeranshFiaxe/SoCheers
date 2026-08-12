@@ -90,7 +90,10 @@ function dockTarget() {
   return { cx: 66, cy: 40, h: 46 };
 }
 
-export function initOverture(root: HTMLElement): () => void {
+export function initOverture(
+  root: HTMLElement,
+  opts: { instant?: boolean } = {},
+): () => void {
   const ac = new AbortController();
   const tickers: gsap.TickerCallback[] = [];
   const timers: number[] = [];
@@ -118,6 +121,7 @@ export function initOverture(root: HTMLElement): () => void {
     pull: new Audio(OVERTURE_SFX.pull),
     on: new Audio(OVERTURE_SFX.on),
     fall: new Audio(OVERTURE_SFX.fall),
+    expand: new Audio(OVERTURE_SFX.expand),
   };
   Object.values(clips).forEach((a) => { a.preload = "auto"; a.volume = 0.85; });
   const sfx = (name: keyof typeof clips) => {
@@ -622,6 +626,8 @@ export function initOverture(root: HTMLElement): () => void {
       /* it stops being a lamp lighting a room and becomes a light on a page */
       tl.to(root, { "--lit": 0.55, duration: 1.2, ease: "power2.inOut" }, 0);
 
+      tl.add(() => sfx("expand"), 0);
+
       /* the run at the wall */
       tl.to(cam, {
         z: walls.length * GAP,
@@ -638,7 +644,7 @@ export function initOverture(root: HTMLElement): () => void {
     }
 
     /* ---------------------------------------------------- the hand-off */
-    function handOff() {
+    function handOff(instant: boolean) {
       if (handedOff) return;
       handedOff = true;
       markOvertureSeen();
@@ -653,24 +659,34 @@ export function initOverture(root: HTMLElement): () => void {
         document.dispatchEvent(new CustomEvent(OVERTURE_REPLAY));
       });
 
-      const tl = line();
-      tl.to([stage, vignette, flash], { autoAlpha: 0, duration: 0.6, ease: "power2.inOut" }, 0);
-      tl.to(root, { backgroundColor: "rgba(0,0,0,0)", duration: 0.6, ease: "power2.inOut" }, 0);
-      tl.add(() => {
-        /* the page is clickable again from here; the bulb is the only thing
-           in this layer that still takes a pointer */
+      const finish = () => {
         root.classList.add("is-done");
         gsap.set([pull, skip], { display: "none" });
         document.dispatchEvent(new CustomEvent(OVERTURE_DONE));
-      }, 0.2);
+      };
+
+      if (instant) {
+        /* nothing to fade from - a tween here would be a black flash on
+           every repeat visit, not a transition */
+        gsap.set([stage, vignette, flash], { autoAlpha: 0 });
+        gsap.set(root, { backgroundColor: "rgba(0,0,0,0)" });
+        finish();
+        return;
+      }
+
+      const tl = line();
+      tl.to([stage, vignette, flash], { autoAlpha: 0, duration: 0.6, ease: "power2.inOut" }, 0);
+      tl.to(root, { backgroundColor: "rgba(0,0,0,0)", duration: 0.6, ease: "power2.inOut" }, 0);
+      tl.add(finish, 0.2);
     }
 
     /* ---------------------------------------------------- skipping out
        Not a fast-forward - a cut. Everything in flight dies, the room is
        set to its last frame, and the hand-off runs on its own - but the
-       mark still ends up docked, because skipping the show is not a
+       mark still ends up docked, because skipping the show (or never
+       running it at all - see the `instant` branch below) is not a
        reason to skip having a logo. */
-    function bail() {
+    function bail(instant = false) {
       if (handedOff) return;
       running.forEach((tl) => tl.kill());
       running.length = 0;
@@ -697,15 +713,22 @@ export function initOverture(root: HTMLElement): () => void {
       gsap.set([pull, skip], { autoAlpha: 0 });
       cam.z = walls.length * GAP;
       pushCam();
-      handOff();
+      handOff(instant);
     }
-    on(skip, "click", bail);
+    on(skip, "click", () => bail(false));
     on(window, "keydown", ((e: KeyboardEvent) => {
-      if (e.key === "Escape") bail();
+      if (e.key === "Escape") bail(false);
     }) as EventListener);
 
-    /* ---------------------------------------------------- run it */
-    boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(finale); }))));
+    /* ---------------------------------------------------- run it
+       A tab that has already seen the show, or asked for reduced motion,
+       does not get the room at all - just the mark, already docked,
+       already the logo, with nothing having moved to get there. */
+    if (opts.instant) {
+      bail(true);
+    } else {
+      boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(finale); }))));
+    }
   }, root);
 
   /* -------------------------------------------------- teardown

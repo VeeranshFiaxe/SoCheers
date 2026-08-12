@@ -360,14 +360,15 @@ export default function Overture() {
     const replay = () => setRun((n) => n + 1);
     document.addEventListener(OVERTURE_REPLAY, replay);
 
-    /* First mount only: reduced motion, or a tab that has already seen it,
-       and the whole thing stays behind data-idle and never costs anything. */
-    if (run === 0 && !shouldRunOverture()) {
-      return () => document.removeEventListener(OVERTURE_REPLAY, replay);
-    }
+    /* First mount only: reduced motion, or a tab that has already seen the
+       show. Either way the mark still has to end up docked in the corner -
+       it is the site's logo now, not just a one-time flourish - so this
+       is not a reason to skip the engine entirely, only a reason to ask it
+       to jump straight to the end state with nothing animated. */
+    const instant = run === 0 && !shouldRunOverture();
 
     root.removeAttribute("data-idle");
-    const teardown = initOverture(root);
+    const teardown = initOverture(root, { instant });
 
     return () => {
       document.removeEventListener(OVERTURE_REPLAY, replay);
