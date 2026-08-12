@@ -184,8 +184,16 @@ em{ font-style:italic; }
 
 .loader{ position:fixed; inset:0; z-index:9990; background:var(--bg); display:grid; place-items:center; }
 .loader__inner{ text-align:center; position:relative; z-index:2; }
-.loader__word{ font-family:var(--f-loader); font-weight:800; letter-spacing:-.04em; font-size:clamp(40px,9vw,120px); line-height:1; }
-.loader__word i{ font-style:italic; color:var(--accent); font-weight:800; }
+/* The mark itself rather than the name set in a typeface: this is the same
+   logo (components/SoCheersLockup.tsx, geometry in lib/logo-paths.ts) that
+   the overture then hangs from a ceiling and switches on, so the loading
+   screen and the bulb are one object seen twice. */
+.loader__mark{
+  display:block; width:clamp(150px,20vw,250px); height:auto; margin:0 auto;
+  aspect-ratio:344 / 346;             /* matches LOCKUP_VIEWBOX */
+  color:var(--cream);
+}
+.sc-mark__blob{ fill:#ffcb0c; }
 .loader__count{ font-family:var(--f-mono); font-size:14px; color:var(--accent); margin-top:14px; letter-spacing:.2em; }
 .loader__count i{ opacity:.6; font-style:normal; }
 .loader__tag{ font-family:var(--f-mono); font-size:10px; letter-spacing:.4em; color:var(--muted); margin-top:8px; }
@@ -977,10 +985,22 @@ em{ font-style:italic; }
   position:fixed; inset:0; z-index:9991; overflow:hidden;
   background:#000;
   --lit:0;
-  /* the switch's pilot light, pulsed on its own so it can breathe while
-     the room is still at --lit:0 */
+  /* the guide's own light, pulsed separately so it can breathe while the
+     room is still at --lit:0, and the engine's yes/no on showing it */
   --pilot:.35;
+  --guide:0;
+
+  /* One number sizes the mark. Its SVG is authored in a 400-wide space
+     (lib/logo-paths.ts) and the halo below is that space scaled by this,
+     so nothing in the fixture needs measuring in JS. */
+  --lamp-w:400px;
+  --u:calc(var(--lamp-w) / 400);      /* one authored unit, in pixels */
 }
+@media (max-width:1100px){ .overture{ --lamp-w:340px; } }
+@media (max-height:760px){ .overture{ --lamp-w:320px; } }
+/* min(), not a flat vw: at 700 exactly, 62vw is bigger than the desktop
+   size and the mark would grow as the screen shrank */
+@media (max-width:700px){ .overture{ --lamp-w:min(250px, 62vw); } }
 /* No JS, reduced motion, or a tab that has already seen it: the attribute
    stays on and none of this ever exists. lib/overture.ts owns that call;
    components/Overture.tsx takes the attribute off when the answer is yes. */
@@ -1068,26 +1088,29 @@ em{ font-style:italic; }
   background:#fff9ec; opacity:0; mix-blend-mode:screen;
 }
 
-/* ---- the bulb ----
-   rig  = where it hangs, and at the end where it docks
-   sway = the pendulum, pivoting at the top of the screen
-   lamp = the few degrees it turns toward your cursor */
+/* ---- the logo, standing ----
+   rig  = the fixture as a whole, and at the end where it docks
+   sway = the settle it does when the rope is pulled
+   lamp = the few degrees it turns toward your cursor
+
+   The mark is not hung from anything. Its base is at the bottom, so a
+   flex into the top of it would be the logo upside down; it stands in
+   the middle of the room and the pull cord is a separate fitting beside
+   it. That is also what makes the layout trivial: the lamp's viewBox is
+   centred on the glass (lib/logo-paths.ts), so centring the element in
+   the rig puts the centre of the bulb on the centre of the screen, and
+   every other position in here is measured from that. */
 .ovt__rig{
-  position:absolute; top:0; left:50%; width:220px; margin-left:-110px; height:100%;
-  z-index:4; pointer-events:none;
+  position:absolute; inset:0; z-index:4; pointer-events:none;
+  display:grid; place-items:center;
 }
 .ovt__sway{
-  position:absolute; top:0; left:0; width:220px;
-  transform-origin:50% 0%;
-  display:flex; flex-direction:column; align-items:center;
-  perspective:900px;                 /* so the lamp inside can actually turn */
-}
-.ovt__cord{
-  width:2px; height:calc(50vh - 152px); flex:none;
-  background:linear-gradient(to right, #0d0d0f, #4a463f 45%, #0a0a0b);
+  position:relative; width:var(--lamp-w);
+  perspective:1000px;                /* so the lamp inside can actually turn */
 }
 .ovt__lamp{
-  position:relative; width:220px; height:300px; flex:none;
+  position:relative; display:block;
+  width:var(--lamp-w); height:calc(var(--lamp-w) * 464 / 400);
   background:none; border:0; padding:0; cursor:none;
   pointer-events:auto;
   transform-style:preserve-3d;
@@ -1096,23 +1119,24 @@ em{ font-style:italic; }
 .ovt__lamp:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:8px; }
 .ovt__svg{ display:block; width:100%; height:100%; overflow:visible; }
 
-/* the glass and the filament, hot. Both read --lit directly, which is what
-   makes the ignition stutter a single property change. */
+/* everything inside the glass that only exists when it is alight. Reads
+   --lit directly, which is what makes the ignition stutter a single
+   property being set eight times rather than eight things kept in step. */
 .ovt__lit{ opacity:var(--lit); }
-.ovt__wire{ opacity:calc(1 - var(--lit) * .55); }
 
-/* the halo tight around the envelope */
+/* the halo tight around the envelope. Centred on the lamp box, which is
+   centred on the glass, so it needs no offsets of its own. */
 .ovt__bloom{
-  position:absolute; left:50%; top:152px; width:340px; height:340px;
-  margin:-170px 0 0 -170px; pointer-events:none;
+  position:absolute; left:50%; top:50%;
+  width:calc(440 * var(--u)); height:calc(440 * var(--u));
+  margin:calc(-220 * var(--u)) 0 0 calc(-220 * var(--u)); pointer-events:none;
   background:radial-gradient(circle closest-side,
-    rgba(255,236,196,.55) 0%, rgba(255,190,110,.28) 34%, rgba(255,150,60,0) 72%);
+    rgba(255,236,196,.5) 0%, rgba(255,190,110,.26) 36%, rgba(255,150,60,0) 74%);
   mix-blend-mode:screen; opacity:var(--lit);
 }
-/* and the light it throws into the room. Inside .ovt__sway, so it swings
-   with the bulb - the light in the room moves when the bulb does. */
+/* and the light it throws into the room */
 .ovt__glow{
-  position:absolute; left:50%; top:50vh; width:130vmax; height:130vmax;
+  position:absolute; left:50%; top:50%; width:130vmax; height:130vmax;
   margin-left:-65vmax; margin-top:-65vmax; pointer-events:none; z-index:-1;
   background:radial-gradient(circle closest-side,
     rgba(255,214,152,.40) 0%, rgba(255,178,96,.17) 15%,
@@ -1120,35 +1144,75 @@ em{ font-style:italic; }
   mix-blend-mode:screen; opacity:var(--lit);
 }
 
-/* ---- the switch ---- */
-.ovt__switch{
-  position:absolute; z-index:5;
-  left:calc(50% + clamp(160px, 21vw, 330px));
-  top:calc(50vh + 30px);
-  width:76px; padding:0; border:0; background:none; cursor:none;
-  pointer-events:auto;
-  filter:drop-shadow(0 18px 30px rgba(0,0,0,.8));
+/* ---- the pull rope ----
+   A cord from the ceiling, off to one side of the mark. Unlike the lamp
+   this is sized in plain screen pixels: initOverture gives the SVG a
+   viewBox matching this box exactly, so the rope's own geometry and the
+   drag distances in lib/logo-paths.ts are the same units your hand is
+   moving in.
+
+   Only the cord and the knob take a pointer - the rest of the box is
+   mostly nothing, and it sits over the middle of the screen. */
+/* The height is where the knob ends up: the cord runs to 48vh and the
+   last 52px of the box is the knob and its tuft, which puts the knob at
+   about the height of the middle of the bulb. */
+.ovt__pull{
+  position:absolute; top:0; z-index:5;
+  left:calc(50% + clamp(140px, 17vw, 300px));
+  width:220px; margin-left:-110px; height:calc(48vh + 52px);
+  padding:0; border:0; background:none; cursor:none;
+  pointer-events:none; touch-action:none;
 }
-@media (hover:none){ .ovt__switch{ cursor:pointer; } }
-.ovt__switch:focus-visible{ outline:2px solid var(--accent); outline-offset:8px; border-radius:10px; }
-.ovt__switch svg{ display:block; width:100%; height:auto; }
-/* The pilot is the only lit thing in the room until you press it, which
-   makes it the only affordance there is. It breathes rather than blinks. */
-.ovt__pilot{
-  fill:var(--accent);
-  opacity:var(--pilot);
-  filter:drop-shadow(0 0 calc(4px + var(--pilot) * 9px) var(--accent));
+.ovt__rope-svg{ display:block; width:100%; height:100%; overflow:visible; }
+.ovt__pull [data-ovt-rope-hit],
+.ovt__pull [data-ovt-bead]{ pointer-events:all; }
+@media (hover:none){ .ovt__pull{ cursor:pointer; } }
+.ovt__pull:focus-visible{ outline:2px solid var(--accent); outline-offset:4px; border-radius:10px; }
+
+/* the cord, in three flat strokes, and the twist laid over it. All of
+   them pick up the bulb once it is on - a rope in front of a light
+   source has to. */
+.ovt__rope-bed{ stroke:#241d14; stroke-width:5.2; stroke-linecap:round; }
+.ovt__rope{ stroke:#6f5f45; stroke-width:3.6; stroke-linecap:round; }
+.ovt__rope-twist{
+  stroke:rgba(206,183,141,.55);
+  stroke-width:3; stroke-linecap:round;
+  stroke-dasharray:2.5 5.5;
 }
-.ovt__hint{
-  display:block; margin-top:16px;
+.ovt__rope-bed, .ovt__rope, .ovt__rope-twist, .ovt__bead{
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.75))
+         drop-shadow(0 0 calc(var(--lit) * 8px) rgba(255,198,110,.5));
+}
+
+/* below this the mark is small enough that the cord would be crowding
+   it, so the cord comes in and the fixture gives way */
+@media (max-width:700px){
+  .ovt__pull{ left:calc(50% + 36vw); height:calc(44vh + 52px); }
+}
+
+/* ---- the nudge ----
+   Under the knob's rest position. Hidden until the room has been left
+   alone long enough for it to be help rather than instruction. */
+.ovt__guide{
+  position:absolute; z-index:6; pointer-events:none;
+  /* --guide is the engine's yes/no, --pilot is the breath it takes once
+     it is up: two authors, one opacity, neither having to know the other */
+  opacity:calc(var(--guide) * var(--pilot));
+  left:calc(50% + clamp(140px, 17vw, 300px));
+  top:calc(48vh + 78px);
+  transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:9px;
   font-family:var(--f-mono); font-size:10px; letter-spacing:.28em;
-  text-transform:uppercase; color:rgba(241,236,225,.5); white-space:nowrap;
-  opacity:var(--pilot);
+  text-transform:uppercase; color:rgba(241,236,225,.62); white-space:nowrap;
+  text-shadow:0 2px 14px rgba(0,0,0,.9);
 }
-@media (max-width:820px){
-  /* below the bulb rather than beside it - at this width there is no room
-     to its right that is not already under the glass */
-  .ovt__switch{ left:50%; margin-left:-38px; top:calc(50vh + 186px); }
+@media (max-width:700px){
+  .ovt__guide{ left:calc(50% + 36vw); top:calc(44vh + 78px); }
+}
+/* a tick pointing back up at the knob, so the words have a referent */
+.ovt__guide i{
+  display:block; width:1px; height:22px;
+  background:linear-gradient(to top, rgba(241,236,225,.5), rgba(241,236,225,0));
 }
 
 /* ---- the loading screen ----

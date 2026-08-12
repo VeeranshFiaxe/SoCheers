@@ -1,5 +1,6 @@
 import { NAV_LINKS, RAIL } from "@/lib/content";
 import RollText from "./Roll";
+import SoCheersLockup from "./SoCheersLockup";
 
 /* fixed overlays: grain, spotlight, cursor, scroll progress */
 export function Overlays() {
@@ -22,7 +23,7 @@ export function Loader() {
   return (
     <div className="loader" id="loader" aria-hidden="true">
       <div className="loader__inner">
-        <div className="loader__word">SO<i>CHEERS</i></div>
+        <SoCheersLockup className="loader__mark" />
         <div className="loader__count">
           <span id="loaderCount">0</span>
           <i>%</i>

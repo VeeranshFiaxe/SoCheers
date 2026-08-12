@@ -4,14 +4,15 @@
 
    The story, in order:
 
-     0-100    the site loads, and the counter is the real preload of every
-              image the sequence is about to need - nothing here is allowed
-              to arrive late and pop
+     0-100    the site loads under the SoCheers mark, and the counter is
+              the real preload of every image the sequence is about to
+              need - nothing here is allowed to arrive late and pop
      dark     the loader goes and the screen is genuinely black for a beat
-     bulb     a pendant drops in, swings on a real pendulum, turns toward
-              the cursor, and waits for you
-     on       the switch is flipped, the filament stutters and catches, and
-              the light finds a wall
+     bulb     the mark itself drops in on a flex - the logo *is* the bulb,
+              its O is the glass - swings on a real pendulum, turns toward
+              the cursor, and waits for you with a rope hanging off it
+     on       the rope is pulled, the disc inside the O stutters and
+              catches, and the light finds a wall
      fall     that wall goes over forwards and there is another behind it,
               and another, faster each time
      hero     the last wall does not fall. The bulb walks off to the corner
@@ -41,6 +42,7 @@ import {
   OVERTURE_START,
   markOvertureSeen,
 } from "./overture";
+import { ROPE, ropePath } from "./logo-paths";
 
 /* The gap between one wall and the next, and therefore how far away the
    standing wall always is. Against the 1400px perspective on .ovt__stage
@@ -55,11 +57,14 @@ const FALL = [1.25, 0.95, 0.72, 0.55, 0.42, 0.33, 0.27, 0.24];
 /* and how much of the previous fall has to finish before the next starts */
 const OVERLAP = [1.1, 0.95, 0.84, 0.78, 0.72, 0.68, 0.64];
 
-/* nobody should ever be stuck in a dark room: if the switch has not been
-   touched by now, the sequence flips it itself */
-const AUTO_FLIP = 9;
+/* Both clocks start the moment the counter hits 100, not when the bulb
+   finishes arriving - what the visitor is waiting through is the whole
+   dark beat, so that is what has to be measured.
 
-const rad = 180 / Math.PI;
+   The nudge first, then the sequence pulls the rope itself: nobody should
+   ever be left standing in a dark room wondering whose move it is. */
+const GUIDE_AT = 6;
+const AUTO_PULL = 10;
 
 export function initOverture(root: HTMLElement): () => void {
   const ac = new AbortController();
@@ -103,18 +108,22 @@ export function initOverture(root: HTMLElement): () => void {
     const flash = q("[data-ovt-flash]")!;
     const rig = q("[data-ovt-rig]")!;
     const sway = q("[data-ovt-sway]")!;
-    const cord = q("[data-ovt-cord]")!;
     const lamp = q<HTMLButtonElement>("[data-ovt-lamp]")!;
     const svg = q("svg.ovt__svg")!;
-    const switchEl = q<HTMLButtonElement>("[data-ovt-switch]")!;
-    const rocker = q("[data-rocker]")!;
-    const hint = q("[data-ovt-hint]")!;
+    const pull = q<HTMLButtonElement>("[data-ovt-pull]")!;
+    const ropeSvg = q("[data-ovt-rope-svg]")!;
+    /* every stroke that has to follow the cord's path, redrawn together */
+    const ropeLines = qq("[data-ovt-rope-bed],[data-ovt-rope],[data-ovt-rope-twist],[data-ovt-rope-hit]");
+    const bead = q("[data-ovt-bead]")!;
     const loader = q("[data-ovt-loader]")!;
     const loaderInner = q("[data-ovt-loader-inner]")!;
     const countEl = q("[data-ovt-count]")!;
     const skip = q<HTMLButtonElement>("[data-ovt-skip]")!;
 
     if (!walls.length) return;
+
+    /* when the counter hit 100 - see GUIDE_AT / AUTO_PULL */
+    let t100 = performance.now();
 
     /* ---------------------------------------------------- the camera */
     const cam = { z: 0 };
@@ -124,18 +133,17 @@ export function initOverture(root: HTMLElement): () => void {
        has to put back everything the previous run moved rather than assume
        a fresh DOM. */
     root.classList.remove("is-done");
-    gsap.set(root, { "--lit": 0, backgroundColor: "#000" });
+    gsap.set(root, { "--lit": 0, "--guide": 0, "--pilot": 0.35, backgroundColor: "#000" });
     gsap.set([stage, vignette], { autoAlpha: 1 });
     gsap.set(flash, { autoAlpha: 1, opacity: 0 });
     gsap.set(loader, { autoAlpha: 1 });
     gsap.set(loaderInner, { autoAlpha: 1, y: 0 });
-    gsap.set(rig, { x: 0, y: 0, scale: 1, autoAlpha: 0 });
-    gsap.set(sway, { rotation: 0 });
-    gsap.set(cord, { autoAlpha: 1, scaleY: 1 });
+    gsap.set(rig, { x: 0, y: 0, scale: 1, autoAlpha: 0, transformOrigin: "50% 50%" });
+    gsap.set(sway, { rotation: 0, y: 0 });
     gsap.set(svg, { rotationY: 0, rotationX: 0 });
-    gsap.set(switchEl, { autoAlpha: 0, y: 18, display: "" });
+    gsap.set(lamp, { y: 0, scale: 1 });
+    gsap.set(pull, { autoAlpha: 0, display: "" });
     gsap.set(skip, { autoAlpha: 0, display: "" });
-    gsap.set(rocker, { rotation: 0, transformOrigin: "48px 70px" });
     gsap.set(dust, { opacity: 0 });
     lamp.tabIndex = -1;
     lamp.setAttribute("aria-label", "Turn the light on");
@@ -190,6 +198,8 @@ export function initOverture(root: HTMLElement): () => void {
         if (done) return;
         done = true;
         countEl.textContent = "100";
+        /* the two idle clocks in arm() are measured from here */
+        t100 = performance.now();
         next();
       };
 
@@ -220,114 +230,241 @@ export function initOverture(root: HTMLElement): () => void {
       tl.to({}, { duration: 0.55 });          // the held beat
     }
 
-    /* ---------------------------------------------------- 2 · the bulb
-       It is lowered in rather than faded in - the cord grows down from the
-       top of the screen and the lamp comes with it - and it is already
-       swinging when it arrives, because a pendant that appears dead still
-       reads as a picture of a bulb. */
+    /* ---------------------------------------------------- 2 · the mark
+       It resolves out of the dark rather than sliding in from anywhere:
+       the room is pitch black and then there is an object in the middle
+       of it, very slightly too large, settling to its own size. Nothing
+       travels, because nothing is hanging - it is standing there and it
+       was always standing there, you just could not see it. */
     function bulb(next: () => void) {
-      startPendulum();
-      angVel = 0.014;                          // the kick it arrives with
+      startTurn();
 
       const tl = line({ onComplete: next });
       tl.set(rig, { autoAlpha: 1 });
-      tl.fromTo(cord,
-        { scaleY: 0, transformOrigin: "50% 0%" },
-        { scaleY: 1, duration: 1.05, ease: "power2.out" }, 0);
       tl.fromTo(lamp,
-        { y: -180, autoAlpha: 0 },
-        { y: 0, autoAlpha: 1, duration: 1.05, ease: "power2.out" }, 0);
+        { scale: 1.14, autoAlpha: 0 },
+        { scale: 1, autoAlpha: 1, duration: 1.3, ease: "power3.out" }, 0);
 
-      /* the switch shows up a beat later, so the bulb has the screen to
-         itself first and the switch reads as the answer to it */
-      tl.to(switchEl, { autoAlpha: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.85);
+      /* the rope drops in a beat later and swings itself still, so the
+         mark has the screen to itself first and the rope reads as the
+         answer to it */
+      tl.to(pull, { autoAlpha: 1, duration: 0.5 }, 0.75);
+      tl.add(() => { ropeState.vy = 7; ropeState.vx = 5; }, 0.75);
       tl.to(skip, { autoAlpha: 1, duration: 0.5 }, 1.2);
     }
 
-    /* ---------------------------------------------------- the pendulum
-       A real one, integrated per frame, not a yoyo tween: theta'' =
-       -k sin(theta) - c theta' + drive. The cursor is the drive term, so
-       moving past the bulb pushes it and it keeps swinging after you have
-       gone - which is the whole difference between "it reacts to the mouse"
-       and "it is hanging there".
+    /* ---------------------------------------------------- the rope
+       A hanging thing you can actually take hold of. Two numbers, px and
+       py, say where the knob is relative to where it wants to be; the
+       drag writes them, a spring returns them, and the path and the knob
+       are redrawn off them every frame. Nothing else in here knows or
+       cares which of the two is currently in charge.
 
-       k sets the period (~1.5s at this value, about right for a metre of
-       flex), c bleeds it off slowly enough that it never looks damped. */
-    let angle = 0;
-    let angVel = 0;
+       The switch fires the moment py crosses the click point on the way
+       *down*, not on release - that is what a real chain switch does, and
+       it is the difference between pulling a cord and pressing a button
+       shaped like one. */
+    const ropeState = { px: 0, py: 0, vx: 0, vy: 0 };
+    const dragTo = { x: 0, y: 0 };
+    let ropeMode: "idle" | "drag" | "auto" = "idle";
+    let ropeFire: (() => void) | null = null;
+    let ropeLive = false;
+
+    /* The rope works in screen pixels, so its SVG is handed a viewBox that
+       is exactly its own client box. Re-measured on resize, because the
+       box is sized in vh and the cord has to keep reaching the knob. */
+    const box = { w: 220, h: 460 };
+    const measure = () => {
+      const r = pull.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      box.w = Math.round(r.width);
+      box.h = Math.round(r.height);
+      ropeSvg.setAttribute("viewBox", `0 0 ${box.w} ${box.h}`);
+    };
+    measure();
+    on(window, "resize", () => { measure(); drawRope(); });
+
+    const drawRope = () => {
+      const { px, py } = ropeState;
+      /* where the cord ends and the knob begins */
+      const len = box.h - ROPE.knob;
+      const d = ropePath(px, py, len, box.w);
+      ropeLines.forEach((el) => el.setAttribute("d", d));
+      gsap.set(bead, { x: box.w / 2 + px, y: len + py });
+    };
+    drawRope();
+
+    addTicker(() => {
+      if (ropeMode === "drag") {
+        /* chase the pointer rather than snapping to it - the lag is the
+           weight of the cord */
+        ropeState.px += (dragTo.x - ropeState.px) * 0.42;
+        ropeState.py += (dragTo.y - ropeState.py) * 0.42;
+      } else if (ropeMode === "idle") {
+        ropeState.vx += -0.26 * ropeState.px;
+        ropeState.vy += -0.26 * ropeState.py;
+        ropeState.vx *= 0.8;
+        ropeState.vy *= 0.8;
+        ropeState.px += ropeState.vx;
+        ropeState.py += ropeState.vy;
+        if (Math.abs(ropeState.py) < 0.04 && Math.abs(ropeState.vy) < 0.04) {
+          ropeState.py = 0; ropeState.vy = 0;
+        }
+        if (Math.abs(ropeState.px) < 0.04 && Math.abs(ropeState.vx) < 0.04) {
+          ropeState.px = 0; ropeState.vx = 0;
+        }
+      }
+      drawRope();
+      if (ropeLive && ropeFire && ropeState.py > ROPE.trigger) {
+        ropeLive = false;
+        ropeFire();
+      }
+    });
+
+    /* Tap, keyboard, and the clock all come through here: the rope is
+       pulled for you and everything downstream happens exactly as if you
+       had done it by hand. */
+    function autoPull(depth = ROPE.trigger + 34) {
+      if (ropeMode === "drag") return;
+      ropeMode = "auto";
+      gsap.killTweensOf(ropeState);
+      gsap.to(ropeState, {
+        py: depth,
+        duration: 0.26,
+        ease: "power2.out",
+        onComplete: () => {
+          ropeMode = "idle";
+          ropeState.vy = -2.2;          // let go, and it whips back
+        },
+      });
+    }
+
+    /* ---------------------------------------------------- the turn
+       The mark stands still, so this is the only thing keeping it from
+       reading as a flat SVG pinned to the middle of the screen: it turns
+       a few degrees toward the cursor, and as it does the specular
+       highlight travels across the glass and the ring's tube shading
+       rolls. Ten degrees is enough - any more and the wordmark starts to
+       keystone and it stops being a logo. */
     let mx = -1;
     let my = -1;
-    let pendulum = false;
+    let turning = false;
 
-    function startPendulum() {
-      if (pendulum) return;
-      pendulum = true;
+    function startTurn() {
+      if (turning) return;
+      turning = true;
 
       on(window, "mousemove", ((e: MouseEvent) => {
         mx = e.clientX;
         my = e.clientY;
       }) as EventListener);
 
-      const turnY = gsap.quickTo(svg, "rotationY", { duration: 0.9, ease: "power3" });
-      const turnX = gsap.quickTo(svg, "rotationX", { duration: 0.9, ease: "power3" });
+      const turnY = gsap.quickTo(svg, "rotationY", { duration: 1.1, ease: "power3" });
+      const turnX = gsap.quickTo(svg, "rotationX", { duration: 1.1, ease: "power3" });
 
       addTicker(() => {
+        if (mx < 0) return;
         const r = lamp.getBoundingClientRect();
         if (!r.width) return;
         const cx = r.left + r.width / 2;
         const cy = r.top + r.height / 2;
-
-        /* the push, strongest just beside the bulb and gone by ~520px, so
-           crossing the room does nothing and walking past it does */
-        let drive = 0;
-        if (mx >= 0) {
-          const dx = mx - cx;
-          const near = Math.max(0, 1 - Math.abs(dx) / 520);
-          drive = gsap.utils.clamp(-1, 1, dx / 260) * near * near * 0.0009;
-        }
-        angVel += -0.0072 * Math.sin(angle) + drive - angVel * 0.0075;
-        angle += angVel;
-        gsap.set(sway, { rotation: angle * rad });
-
-        /* and the lamp itself turns to face you - a few degrees only. This
-           is the part that stops it reading as a flat SVG: the glass
-           highlight travels across the envelope as it turns. */
-        if (mx >= 0) {
-          turnY(gsap.utils.clamp(-16, 16, (mx - cx) / 34));
-          turnX(gsap.utils.clamp(-10, 10, -(my - cy) / 46));
-        }
+        turnY(gsap.utils.clamp(-10, 10, (mx - cx) / 62));
+        turnX(gsap.utils.clamp(-7, 7, -(my - cy) / 78));
       });
     }
 
-    /* ---------------------------------------------------- 3 · the switch
-       Armed until something flips it: the plate, the bulb, a keypress, or
-       eventually the clock. Whichever gets there first disarms the rest. */
+    /* what the mark does when the rope goes over: a short, hard settle,
+       the way a fixture on a bracket takes the click of a switch */
+    function jolt() {
+      const tl = line();
+      tl.fromTo(sway,
+        { y: 0 },
+        { y: 5, duration: 0.07, ease: "power3.out" }, 0);
+      tl.to(sway, { y: 0, duration: 0.7, ease: "elastic.out(1, 0.32)" }, 0.07);
+    }
+
+    /* ---------------------------------------------------- 3 · the pull
+       Armed until something pulls it: the rope by hand, a tap on the rope
+       or the bulb, a keypress, or eventually the clock. Whichever gets
+       there first disarms the rest. */
     function arm(fire: () => void) {
       let fired = false;
       const go = () => {
         if (fired) return;
         fired = true;
-        gsap.to(hint, { autoAlpha: 0, duration: 0.25 });
-        gsap.killTweensOf(switchEl);
+        ropeLive = false;
+        gsap.killTweensOf(root);
+        gsap.to(root, { "--guide": 0, duration: 0.25 });
+        jolt();
         fire();
       };
+      /* what the rope itself calls once it is pulled far enough */
+      ropeFire = go;
+      ropeLive = true;
 
-      /* the hint breathes rather than blinks - it has to be findable in a
-         black room without becoming the loudest thing in it */
-      gsap.fromTo(switchEl,
-        { "--pilot": 0.35 },
-        { "--pilot": 1, duration: 1.15, ease: "sine.inOut", repeat: -1, yoyo: true });
+      /* --- dragging it -------------------------------------------- */
+      let id = -1;
+      let sx = 0, sy = 0, moved = 0;
 
-      on(switchEl, "click", go);
+      on(pull, "pointerdown", ((e: PointerEvent) => {
+        if (fired) return;
+        e.preventDefault();
+        id = e.pointerId;
+        sx = e.clientX; sy = e.clientY; moved = 0;
+        dragTo.x = ropeState.px; dragTo.y = ropeState.py;
+        gsap.killTweensOf(ropeState);
+        ropeMode = "drag";
+        try { pull.setPointerCapture(id); } catch { /* not capturable, fine */ }
+      }) as EventListener);
+
+      on(window, "pointermove", ((e: PointerEvent) => {
+        if (ropeMode !== "drag" || e.pointerId !== id) return;
+        /* the rope's units are screen pixels, so this is the raw delta */
+        const dx = e.clientX - sx;
+        const dy = e.clientY - sy;
+        moved = Math.max(moved, Math.hypot(dx, dy));
+        dragTo.x = gsap.utils.clamp(-ROPE.maxX, ROPE.maxX, dx);
+        /* it can be pushed up a little, but a rope does not compress */
+        dragTo.y = gsap.utils.clamp(-10, ROPE.maxY, dy);
+      }) as EventListener);
+
+      const release = ((e: PointerEvent) => {
+        if (ropeMode !== "drag" || e.pointerId !== id) return;
+        ropeMode = "idle";
+        /* a grab-and-let-go with no travel in it is a tap, and a tap on a
+           pull rope obviously means pull it */
+        if (moved < 8) autoPull();
+      }) as EventListener;
+      on(window, "pointerup", release);
+      on(window, "pointercancel", release);
+
+      /* --- and everything that is not a drag ---------------------- */
       on(lamp, "click", go);
-      /* Enter/Space anywhere, so it works without having to find the switch
+      /* Enter/Space anywhere, so it works without having to find the rope
          first - except when the skip button has focus, where the browser is
          about to turn the same keypress into a click on it. */
       on(window, "keydown", ((e: KeyboardEvent) => {
         if (e.target === skip) return;
-        if (e.key === "Enter" || e.key === " ") go();
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); autoPull(); }
       }) as EventListener);
-      after(AUTO_FLIP, go);
+
+      /* --- the two idle clocks, measured from the counter hitting 100 --- */
+      const since = (performance.now() - t100) / 1000;
+
+      after(Math.max(0.2, GUIDE_AT - since), () => {
+        if (fired) return;
+        gsap.to(root, { "--guide": 1, duration: 0.6, ease: "power2.out" });
+        /* it breathes rather than blinks - it has to be findable in a black
+           room without becoming the loudest thing in it */
+        gsap.fromTo(root,
+          { "--pilot": 0.4 },
+          { "--pilot": 1, duration: 1.2, ease: "sine.inOut", repeat: -1, yoyo: true });
+      });
+
+      after(Math.max(0.6, AUTO_PULL - since), () => {
+        if (fired) return;
+        autoPull();
+      });
     }
 
     /* ---------------------------------------------------- 4 · ignition
@@ -337,10 +474,6 @@ export function initOverture(root: HTMLElement): () => void {
        between the two is exactly what makes CGI flicker look fake. */
     function ignite(next: () => void) {
       const tl = line({ onComplete: next });
-
-      /* the rocker goes over first, and the bulb feels it */
-      tl.to(rocker, { rotation: 14, duration: 0.12, ease: "power3.out" }, 0);
-      tl.add(() => { angVel += 0.004; }, 0.12);
 
       const strike = (v: number, t: number) => tl.set(root, { "--lit": v }, t);
       strike(0.5, 0.1);
@@ -358,8 +491,9 @@ export function initOverture(root: HTMLElement): () => void {
       tl.fromTo(flash, { opacity: 0 }, { opacity: 0.1, duration: 0.05, yoyo: true, repeat: 1 }, 0.24);
       tl.fromTo(flash, { opacity: 0 }, { opacity: 0.14, duration: 0.06, yoyo: true, repeat: 1 }, 0.56);
 
-      /* and the switch is done being the point of the screen */
-      tl.to(switchEl, { autoAlpha: 0, duration: 0.5, ease: "power2.inOut" }, 0.7);
+      /* and the rope is done being the point of the screen. It is let go of
+         first, so it is still swinging itself back up as it fades. */
+      tl.to(pull, { autoAlpha: 0, duration: 0.7, ease: "power2.inOut" }, 0.8);
       tl.to({}, { duration: 0.5 });            // the light holds on the first wall
     }
 
@@ -435,7 +569,7 @@ export function initOverture(root: HTMLElement): () => void {
     }
 
     /* ---------------------------------------------------- 6 · the finale
-       The bulb has done its job, so it walks out of the middle of the frame
+       The mark has done its job, so it walks out of the middle of the frame
        and shrinks into the corner, and the camera runs the last GAP at the
        standing wall. At the end of that run the wall is at z = 0 with an
        identity transform, which is to say it *is* the hero - so all the
@@ -443,17 +577,14 @@ export function initOverture(root: HTMLElement): () => void {
     function finale() {
       const tl = line({ onComplete: handOff });
 
-      /* Shrink about the glass rather than about the box, so the bulb goes
-         to the corner and the cord goes away from it instead of the whole
-         assembly sliding off as a unit. Measured now, not at build time:
-         the cord's height is viewport-relative. */
-      const glassY = cord.offsetHeight + 152;
-      gsap.set(rig, { transformOrigin: `110px ${glassY}px` });
-      const toX = 62 - window.innerWidth / 2;
-      const toY = window.innerHeight - 64 - glassY;
+      /* The rig is the whole screen and the mark is dead centre in it, so
+         the origin is the middle and the trip to the corner is just the
+         vector from the centre of the screen to where it is going. */
+      gsap.set(rig, { transformOrigin: "50% 50%" });
+      const toX = 74 - window.innerWidth / 2;
+      const toY = window.innerHeight - 74 - window.innerHeight / 2;
 
-      tl.to(rig, { x: toX, y: toY, scale: 0.15, duration: 1.5, ease: "power2.inOut" }, 0);
-      tl.to(cord, { autoAlpha: 0, duration: 0.7, ease: "power2.in" }, 0.35);
+      tl.to(rig, { x: toX, y: toY, scale: 0.13, duration: 1.5, ease: "power2.inOut" }, 0);
       /* it stops being a lamp lighting a room and becomes a light on a page */
       tl.to(root, { "--lit": 0.55, duration: 1.2, ease: "power2.inOut" }, 0.5);
 
@@ -495,7 +626,7 @@ export function initOverture(root: HTMLElement): () => void {
         /* the page is clickable again from here; the bulb is the only thing
            in this layer that still takes a pointer */
         root.classList.add("is-done");
-        gsap.set([switchEl, skip], { display: "none" });
+        gsap.set([pull, skip], { display: "none" });
         document.dispatchEvent(new CustomEvent(OVERTURE_DONE));
       }, 0.2);
     }
@@ -507,15 +638,17 @@ export function initOverture(root: HTMLElement): () => void {
       if (handedOff) return;
       running.forEach((tl) => tl.kill());
       running.length = 0;
-      gsap.killTweensOf([switchEl, hint, svg, ...slabs]);
+      ropeLive = false;
+      ropeMode = "idle";
+      gsap.killTweensOf([root, ropeState, pull, svg, ...slabs]);
       timers.forEach(clearTimeout);
       timers.length = 0;
 
-      gsap.set(root, { "--lit": 0.55 });
+      gsap.set(root, { "--lit": 0.55, "--guide": 0 });
       gsap.set(slabs, { autoAlpha: 0 });
       gsap.set(slabs[walls.length - 1], { autoAlpha: 1, rotationX: 0, "--lit-floor": 1 });
       gsap.set(rig, { autoAlpha: 0 });
-      gsap.set([switchEl, skip, loader], { autoAlpha: 0 });
+      gsap.set([pull, skip, loader], { autoAlpha: 0 });
       cam.z = walls.length * GAP;
       pushCam();
       handOff();
