@@ -4,21 +4,26 @@
 
    The story, in order:
 
-     0-100    the site loads under the SoCheers mark, and the counter is
-              the real preload of every image the sequence is about to
-              need - nothing here is allowed to arrive late and pop
-     dark     the loader goes and the screen is genuinely black for a beat
-     bulb     the mark itself drops in on a flex - the logo *is* the bulb,
-              its O is the glass - swings on a real pendulum, turns toward
-              the cursor, and waits for you with a rope hanging off it
+     black    the room is on screen from the first frame - no loader, no
+              counter. The wall images preload silently behind that black,
+              which is what the beat before the mark buys its time for
+     mark     the SoCheers mark resolves out of the dark standing in the
+              middle of the room - the logo *is* the bulb, its O is the
+              glass - turns toward the cursor, and waits for you with a
+              rope hanging beside it
      on       the rope is pulled, the disc inside the O stutters and
               catches, and the light finds a wall
-     fall     that wall goes over forwards and there is another behind it,
-              and another, faster each time
-     hero     the last wall does not fall. The bulb walks off to the corner
-              and shrinks into the furniture, the camera runs at the wall
-              until it is exactly the size of the screen, and the sequence
-              hands over to the real hero underneath it
+     dock     the flicker stops and, in the same breath, the mark leaves
+              the middle of the room: it shrinks into the top-left corner
+              and crosses over from the lit 3D fixture to the same flat
+              lockup the two-dimensional site logo already is
+     fall     that first wall goes over forwards and there is another
+              behind it, and another, faster each time - the mark is
+              already parked in the corner for all of it
+     hero     the camera runs at the last wall until it is exactly the
+              size of the screen and the sequence hands over to the real
+              hero underneath it. The docked mark stays: a small fixture
+              in the corner, still clickable, still the replay
 
    The hand-off is the only part with a hard constraint, and the whole 3D
    layout is arranged around it: every wall is a viewport-sized element, so
@@ -43,6 +48,7 @@ import {
   markOvertureSeen,
 } from "./overture";
 import { ROPE, ropePath } from "./logo-paths";
+import { OVERTURE_SFX } from "./content";
 
 /* The gap between one wall and the next, and therefore how far away the
    standing wall always is. Against the 1400px perspective on .ovt__stage
@@ -57,14 +63,32 @@ const FALL = [1.25, 0.95, 0.72, 0.55, 0.42, 0.33, 0.27, 0.24];
 /* and how much of the previous fall has to finish before the next starts */
 const OVERLAP = [1.1, 0.95, 0.84, 0.78, 0.72, 0.68, 0.64];
 
-/* Both clocks start the moment the counter hits 100, not when the bulb
-   finishes arriving - what the visitor is waiting through is the whole
-   dark beat, so that is what has to be measured.
+/* Both clocks start the moment the mark is on screen and waiting, not from
+   page load - the wait a visitor actually feels is the one after there is
+   something to act on.
 
    The nudge first, then the sequence pulls the rope itself: nobody should
    ever be left standing in a dark room wondering whose move it is. */
 const GUIDE_AT = 6;
 const AUTO_PULL = 10;
+
+/* How large the docked mark ends up, and where. Read off the site's own
+   nav logo when it can be found, so "become the logo of SoCheers" is not
+   a figure of speech - the docked mark actually lands where that logo
+   sits. Falls back to a plain corner inset if the nav is not there. */
+function dockTarget() {
+  const navLogo = document.querySelector<HTMLElement>(".nav__logo");
+  if (navLogo) {
+    const r = navLogo.getBoundingClientRect();
+    if (r.width) {
+      /* the lockup reads as a small badge, not a wordmark, so it is sized
+         a little taller than the text it is standing in for */
+      return { cx: r.left + r.width * 0.4, cy: r.top + r.height / 2, h: r.height * 2.2 };
+    }
+  }
+  /* the nav not being there yet is not a reason to skip docking */
+  return { cx: 66, cy: 40, h: 46 };
+}
 
 export function initOverture(root: HTMLElement): () => void {
   const ac = new AbortController();
@@ -80,6 +104,27 @@ export function initOverture(root: HTMLElement): () => void {
   };
   const on = (t: EventTarget, type: string, fn: EventListener) =>
     t.addEventListener(type, fn, { signal: ac.signal } as AddEventListenerOptions);
+
+  /* The three cues, one per beat: pulled, caught, landed. Each is loaded
+     once and played by cloning the node rather than restarting it - the
+     falls overlap each other by the end of the sequence, and a shared
+     element would just cut its own previous hit short instead of
+     layering. Autoplay policy can refuse any of this (silently, if the
+     visitor has not interacted with the tab yet - the auto-pull at
+     AUTO_PULL is the case that can actually hit this), and a sound effect
+     failing to play is not a reason to break the sequence, so the
+     rejection is swallowed rather than surfaced. */
+  const clips = {
+    pull: new Audio(OVERTURE_SFX.pull),
+    on: new Audio(OVERTURE_SFX.on),
+    fall: new Audio(OVERTURE_SFX.fall),
+  };
+  Object.values(clips).forEach((a) => { a.preload = "auto"; a.volume = 0.85; });
+  const sfx = (name: keyof typeof clips) => {
+    const el = clips[name].cloneNode(true) as HTMLAudioElement;
+    el.volume = clips[name].volume;
+    void el.play().catch(() => {});
+  };
 
   const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel);
   const qq = <T extends HTMLElement>(sel: string) =>
@@ -115,14 +160,13 @@ export function initOverture(root: HTMLElement): () => void {
     /* every stroke that has to follow the cord's path, redrawn together */
     const ropeLines = qq("[data-ovt-rope-bed],[data-ovt-rope],[data-ovt-rope-twist],[data-ovt-rope-hit]");
     const bead = q("[data-ovt-bead]")!;
-    const loader = q("[data-ovt-loader]")!;
-    const loaderInner = q("[data-ovt-loader-inner]")!;
-    const countEl = q("[data-ovt-count]")!;
+    const dockMark = q("[data-ovt-dock]")!;
     const skip = q<HTMLButtonElement>("[data-ovt-skip]")!;
 
     if (!walls.length) return;
 
-    /* when the counter hit 100 - see GUIDE_AT / AUTO_PULL */
+    /* when the mark had the room to itself and started waiting - see
+       GUIDE_AT / AUTO_PULL, set at the top of bulb() */
     let t100 = performance.now();
 
     /* ---------------------------------------------------- the camera */
@@ -136,11 +180,10 @@ export function initOverture(root: HTMLElement): () => void {
     gsap.set(root, { "--lit": 0, "--guide": 0, "--pilot": 0.35, backgroundColor: "#000" });
     gsap.set([stage, vignette], { autoAlpha: 1 });
     gsap.set(flash, { autoAlpha: 1, opacity: 0 });
-    gsap.set(loader, { autoAlpha: 1 });
-    gsap.set(loaderInner, { autoAlpha: 1, y: 0 });
     gsap.set(rig, { x: 0, y: 0, scale: 1, autoAlpha: 0, transformOrigin: "50% 50%" });
     gsap.set(sway, { rotation: 0, y: 0 });
-    gsap.set(svg, { rotationY: 0, rotationX: 0 });
+    gsap.set(svg, { autoAlpha: 1, rotationY: 0, rotationX: 0 });
+    gsap.set(dockMark, { autoAlpha: 0 });
     gsap.set(lamp, { y: 0, scale: 1 });
     gsap.set(pull, { autoAlpha: 0, display: "" });
     gsap.set(skip, { autoAlpha: 0, display: "" });
@@ -165,78 +208,51 @@ export function initOverture(root: HTMLElement): () => void {
        re-locks the scroll after the site has already been handed back. */
     document.dispatchEvent(new CustomEvent(OVERTURE_START));
 
-    /* ---------------------------------------------------- 0 · the load
-       The counter is the actual preload, not a tween pretending to be one.
-       Two things shape it so it never looks like either:
-         · a floor, so a warm cache does not flash 100 and cut - the number
-           still takes ~1.4s to walk up even when every file is already there
-         · easing toward the real figure rather than jumping to it, so a
-           burst of four images landing together reads as acceleration
-           instead of as a jump cut. */
-    function load(next: () => void) {
+    /* ---------------------------------------------------- 0 · the room
+       No loader, no counter: the room is on screen from the very first
+       frame, black, with nothing in it yet. That black is real time,
+       though, not just a beat - it is what the wall images preload
+       behind, silently, so nothing pops into view mid-fall later on. A
+       slow connection is a reason to start late, not a reason to hang the
+       door, so it is capped short: there is no visible progress to hide
+       a long wait behind any more. */
+    function boot(next: () => void) {
       const urls = qq<HTMLImageElement>("img.ovt__face")
         .map((img) => img.currentSrc || img.src)
         .filter(Boolean);
 
-      const st = { real: urls.length ? 0 : 1, shown: 0 };
+      if (!urls.length) { next(); return; }
+
       let loaded = 0;
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        next();
+      };
       urls.forEach((url) => {
         const im = new Image();
         const tick = () => {
           loaded += 1;
-          st.real = loaded / urls.length;
+          if (loaded >= urls.length) finish();
         };
         im.onload = tick;
         im.onerror = tick;      // a missing wall must not hang the door
         im.src = url;
       });
-
-      const FLOOR = 1.4;
-      const t0 = performance.now();
-      let done = false;
-      const finish = () => {
-        if (done) return;
-        done = true;
-        countEl.textContent = "100";
-        /* the two idle clocks in arm() are measured from here */
-        t100 = performance.now();
-        next();
-      };
-
-      const drive: gsap.TickerCallback = () => {
-        const elapsed = (performance.now() - t0) / 1000;
-        const target = Math.min(st.real, elapsed / FLOOR) * 100;
-        const gap = target - st.shown;
-        st.shown += Math.abs(gap) < 0.4 ? gap : gap * 0.12;
-        countEl.textContent = String(Math.min(100, Math.round(st.shown)));
-        if (st.real >= 1 && st.shown > 99.5) {
-          gsap.ticker.remove(drive);
-          finish();
-        }
-      };
-      addTicker(drive);
-      /* a slow connection is a reason to start late, not a reason to hang */
-      after(7, finish);
+      after(2.2, finish);
     }
 
-    /* ---------------------------------------------------- 1 · the dark
-       The loader lifts and there is nothing underneath it. The beat of
-       genuine black is the point - it is what makes the bulb an arrival
-       rather than just the next thing on screen. */
-    function dark(next: () => void) {
-      const tl = line({ onComplete: next });
-      tl.to(loaderInner, { autoAlpha: 0, y: -18, duration: 0.5, ease: "power2.in" }, 0);
-      tl.to(loader, { autoAlpha: 0, duration: 0.4 }, 0.35);
-      tl.to({}, { duration: 0.55 });          // the held beat
-    }
-
-    /* ---------------------------------------------------- 2 · the mark
+    /* ---------------------------------------------------- 1 · the mark
        It resolves out of the dark rather than sliding in from anywhere:
        the room is pitch black and then there is an object in the middle
        of it, very slightly too large, settling to its own size. Nothing
        travels, because nothing is hanging - it is standing there and it
        was always standing there, you just could not see it. */
     function bulb(next: () => void) {
+      /* the two idle clocks in arm() are measured from here: from the
+         moment there is something on screen to act on, not from load */
+      t100 = performance.now();
       startTurn();
 
       const tl = line({ onComplete: next });
@@ -395,6 +411,7 @@ export function initOverture(root: HTMLElement): () => void {
         ropeLive = false;
         gsap.killTweensOf(root);
         gsap.to(root, { "--guide": 0, duration: 0.25 });
+        sfx("pull");
         jolt();
         fire();
       };
@@ -474,6 +491,7 @@ export function initOverture(root: HTMLElement): () => void {
        between the two is exactly what makes CGI flicker look fake. */
     function ignite(next: () => void) {
       const tl = line({ onComplete: next });
+      tl.add(() => sfx("on"), 0);
 
       const strike = (v: number, t: number) => tl.set(root, { "--lit": v }, t);
       strike(0.5, 0.1);
@@ -497,6 +515,29 @@ export function initOverture(root: HTMLElement): () => void {
       tl.to({}, { duration: 0.5 });            // the light holds on the first wall
     }
 
+    /* ---------------------------------------------------- 5 · the dock
+       The flicker stops and, in the same breath, the mark leaves the
+       middle of the room: it shrinks into the corner the site's own logo
+       already lives in and crosses over from the lit 3D fixture to the
+       flat lockup that logo is. Runs alongside the first wall going over
+       rather than blocking it - the mark retreating and the room coming
+       to life read as one thing happening, not two. */
+    function dock() {
+      const t = dockTarget();
+      /* LAMP_VIEWBOX (lib/logo-paths.ts) is 476 tall; the target height
+         is what the rig's scale has to work out to */
+      const scale = t.h / 476;
+      const toX = t.cx - window.innerWidth / 2;
+      const toY = t.cy - window.innerHeight / 2;
+
+      const tl = line();
+      tl.to(rig, { x: toX, y: toY, scale, duration: 1.3, ease: "power2.inOut" }, 0);
+      /* the crossfade happens mid-flight, once the fixture is small
+         enough that the two croppings do not have to agree */
+      tl.to(svg, { autoAlpha: 0, duration: 0.4, ease: "power2.in" }, 0.6);
+      tl.to(dockMark, { autoAlpha: 1, duration: 0.45, ease: "power2.out" }, 0.85);
+    }
+
     /* ---------------------------------------------------- the impact
        Weight, in three cheap parts: the room jolts, the light bounces off
        whatever just hit the floor, and dust comes up off it. `force` falls
@@ -504,6 +545,7 @@ export function initOverture(root: HTMLElement): () => void {
        too fast for a full-strength jolt to be anything but sickening. */
     function impact(force: number) {
       const tl = line();
+      tl.add(() => sfx("fall"), 0);
       tl.to(stage, {
         keyframes: [
           { y: 13 * force, duration: 0.07 },
@@ -523,7 +565,7 @@ export function initOverture(root: HTMLElement): () => void {
       return tl;
     }
 
-    /* ---------------------------------------------------- 5 · the falls
+    /* ---------------------------------------------------- 6 · the falls
        Each slab pivots on its own bottom edge, so it goes over forwards and
        *through* the camera on the way down rather than away from it - which
        is what makes the front of the sequence feel like something is being
@@ -568,25 +610,17 @@ export function initOverture(root: HTMLElement): () => void {
       tl.to({}, { duration: 0.45 });
     }
 
-    /* ---------------------------------------------------- 6 · the finale
-       The mark has done its job, so it walks out of the middle of the frame
-       and shrinks into the corner, and the camera runs the last GAP at the
-       standing wall. At the end of that run the wall is at z = 0 with an
-       identity transform, which is to say it *is* the hero - so all the
-       hand-off has to do is stop being in front of it. */
+    /* ---------------------------------------------------- 7 · the finale
+       The mark has already docked (dock(), run alongside the first wall
+       going over), so all that is left is the run at the standing wall:
+       the camera closes the last GAP until the wall is at z = 0 with an
+       identity transform, which is to say it *is* the hero - so the
+       hand-off only has to stop being in front of it. */
     function finale() {
       const tl = line({ onComplete: handOff });
 
-      /* The rig is the whole screen and the mark is dead centre in it, so
-         the origin is the middle and the trip to the corner is just the
-         vector from the centre of the screen to where it is going. */
-      gsap.set(rig, { transformOrigin: "50% 50%" });
-      const toX = 74 - window.innerWidth / 2;
-      const toY = window.innerHeight - 74 - window.innerHeight / 2;
-
-      tl.to(rig, { x: toX, y: toY, scale: 0.13, duration: 1.5, ease: "power2.inOut" }, 0);
       /* it stops being a lamp lighting a room and becomes a light on a page */
-      tl.to(root, { "--lit": 0.55, duration: 1.2, ease: "power2.inOut" }, 0.5);
+      tl.to(root, { "--lit": 0.55, duration: 1.2, ease: "power2.inOut" }, 0);
 
       /* the run at the wall */
       tl.to(cam, {
@@ -594,12 +628,12 @@ export function initOverture(root: HTMLElement): () => void {
         duration: 1.45,
         ease: "power3.inOut",
         onUpdate: pushCam,
-      }, 0.3);
+      }, 0);
 
       /* and as it fills the screen it stops being lit *by* something and
          just becomes the picture: the room's darkness lifts off it */
-      tl.to(slabs[walls.length - 1], { "--lit-floor": 1, duration: 1.1, ease: "power2.inOut" }, 0.5);
-      tl.to(vignette, { autoAlpha: 0, duration: 1.1, ease: "power2.inOut" }, 0.5);
+      tl.to(slabs[walls.length - 1], { "--lit-floor": 1, duration: 1.1, ease: "power2.inOut" }, 0);
+      tl.to(vignette, { autoAlpha: 0, duration: 1.1, ease: "power2.inOut" }, 0);
       tl.to(skip, { autoAlpha: 0, duration: 0.4 }, 0);
     }
 
@@ -633,22 +667,34 @@ export function initOverture(root: HTMLElement): () => void {
 
     /* ---------------------------------------------------- skipping out
        Not a fast-forward - a cut. Everything in flight dies, the room is
-       set to its last frame, and the hand-off runs on its own. */
+       set to its last frame, and the hand-off runs on its own - but the
+       mark still ends up docked, because skipping the show is not a
+       reason to skip having a logo. */
     function bail() {
       if (handedOff) return;
       running.forEach((tl) => tl.kill());
       running.length = 0;
       ropeLive = false;
       ropeMode = "idle";
-      gsap.killTweensOf([root, ropeState, pull, svg, ...slabs]);
+      gsap.killTweensOf([root, ropeState, pull, svg, dockMark, rig, ...slabs]);
       timers.forEach(clearTimeout);
       timers.length = 0;
 
       gsap.set(root, { "--lit": 0.55, "--guide": 0 });
       gsap.set(slabs, { autoAlpha: 0 });
       gsap.set(slabs[walls.length - 1], { autoAlpha: 1, rotationX: 0, "--lit-floor": 1 });
-      gsap.set(rig, { autoAlpha: 0 });
-      gsap.set([pull, skip, loader], { autoAlpha: 0 });
+
+      const t = dockTarget();
+      gsap.set(rig, {
+        autoAlpha: 1,
+        transformOrigin: "50% 50%",
+        x: t.cx - window.innerWidth / 2,
+        y: t.cy - window.innerHeight / 2,
+        scale: t.h / 476,
+      });
+      gsap.set(svg, { autoAlpha: 0 });
+      gsap.set(dockMark, { autoAlpha: 1 });
+      gsap.set([pull, skip], { autoAlpha: 0 });
       cam.z = walls.length * GAP;
       pushCam();
       handOff();
@@ -659,7 +705,7 @@ export function initOverture(root: HTMLElement): () => void {
     }) as EventListener);
 
     /* ---------------------------------------------------- run it */
-    load(() => dark(() => bulb(() => arm(() => ignite(() => falls(finale))))));
+    boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(finale); }))));
   }, root);
 
   /* -------------------------------------------------- teardown

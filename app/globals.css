@@ -210,6 +210,15 @@ em{ font-style:italic; }
 }
 .nav.is-hidden{ transform:translateY(-120%); }
 .nav__logo{ font-family:var(--f-display); font-weight:700; font-size:21px; letter-spacing:-.01em; }
+/* Once the overture has docked its own flat lockup in this corner (see
+   dock() in lib/overture-motion.ts), the nav's own text logo is just
+   duplicate ink sitting under it - so it goes invisible. It stays in the
+   DOM, in place and the same size, on purpose: it is still the "back to
+   top" link, the sibling selector only ever touches its opacity, and
+   dockTarget() reads its (still-correct) box to know where to land the
+   mark in the first place. Overture and Nav are siblings in app/page.tsx,
+   which is what makes the plain sibling combinator work here. */
+.overture.is-done ~ .nav .nav__logo{ opacity:0; }
 /* centred on the artwork's window, not on the viewport - --hero-cx is the
    window centre's offset from the viewport centre, set in lib/motion.ts */
 .nav__links{
@@ -1110,7 +1119,7 @@ em{ font-style:italic; }
 }
 .ovt__lamp{
   position:relative; display:block;
-  width:var(--lamp-w); height:calc(var(--lamp-w) * 464 / 400);
+  width:var(--lamp-w); height:calc(var(--lamp-w) * 476 / 400);
   background:none; border:0; padding:0; cursor:none;
   pointer-events:auto;
   transform-style:preserve-3d;
@@ -1118,6 +1127,24 @@ em{ font-style:italic; }
 @media (hover:none){ .ovt__lamp{ cursor:pointer; } }
 .ovt__lamp:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:8px; }
 .ovt__svg{ display:block; width:100%; height:100%; overflow:visible; }
+
+/* ---- the dock ----
+   The flat lockup (components/SoCheersLockup.tsx - the same mark drawn
+   flat rather than as glass and metal), laid over the 3D lamp and hidden
+   until the mark docks. The two are cropped differently - the lamp's
+   viewBox carries headroom above the glass so the fixture can hang, the
+   lockup is cropped tight to its own ink - so rather than try to line
+   their coordinate spaces up pixel for pixel, the swap happens after the
+   lamp has faded out: at the size the docked mark ends up (a few dozen
+   pixels), a frame or two of nothing between old and new reads as a
+   blink, not a jump. */
+.ovt__dock{
+  position:absolute; left:50%; top:50%;
+  height:74%; aspect-ratio:344 / 348;
+  transform:translate(-50%, -44%);
+  opacity:0; pointer-events:none;
+}
+.ovt__dock-mark{ display:block; width:100%; height:100%; color:var(--cream); }
 
 /* everything inside the glass that only exists when it is alight. Reads
    --lit directly, which is what makes the ignition stutter a single
@@ -1214,12 +1241,6 @@ em{ font-style:italic; }
   display:block; width:1px; height:22px;
   background:linear-gradient(to top, rgba(241,236,225,.5), rgba(241,236,225,0));
 }
-
-/* ---- the loading screen ----
-   Deliberately identical to .loader in components/Chrome.tsx: this one
-   stands in for it while the overture runs (lib/motion.ts hides that one),
-   and the two have to be indistinguishable or the swap would show. */
-.ovt__loader{ z-index:6; }
 
 .ovt__skip{
   position:absolute; right:var(--pad); bottom:34px; z-index:7;

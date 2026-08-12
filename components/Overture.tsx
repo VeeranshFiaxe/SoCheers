@@ -428,10 +428,20 @@ export default function Overture() {
             <span className="ovt__bloom" aria-hidden="true" />
           </button>
           <span className="ovt__glow" aria-hidden="true" />
+
+          {/* Where the mark ends up. It stops flickering, and in the same
+              breath the 3D fixture crosses over into this - the same
+              lockup the loading beat would have shown, at the size and
+              in the corner a logo actually lives (see dock() in
+              lib/overture-motion.ts). Sits over the lamp and starts
+              invisible; the two never have to be seen at once. */}
+          <span className="ovt__dock" data-ovt-dock aria-hidden="true">
+            <SoCheersLockup className="ovt__dock-mark" />
+          </span>
         </div>
       </div>
 
-      {/* --- the rope --------------------------------------------------- */}
+      {/* --- the rope ----------------------------------------------------- */}
       <button
         type="button"
         className="ovt__pull"
@@ -447,22 +457,6 @@ export default function Overture() {
         <i />
         Pull the rope
       </span>
-
-      {/* --- the loading screen ---------------------------------------- */}
-      {/* Deliberately the same design as the site's own loader in
-          components/Chrome.tsx: this one replaces it while the overture is
-          running (lib/motion.ts hides that one), and the two have to be
-          indistinguishable or the swap would show. */}
-      <div className="loader ovt__loader" data-ovt-loader>
-        <div className="loader__inner" data-ovt-loader-inner>
-          <SoCheersLockup className="loader__mark" />
-          <div className="loader__count">
-            <span data-ovt-count>0</span>
-            <i>%</i>
-          </div>
-          <div className="loader__tag">MAKING MORE HAPPEN</div>
-        </div>
-      </div>
 
       <button type="button" className="ovt__skip" data-ovt-skip data-cursor="Skip">
         Skip intro

@@ -32,9 +32,9 @@ export const IMG = {
    rather than as pictures, which is why the loudest, highest-contrast
    images are deliberately at the back.
 
-   Every file here is preloaded before the sequence starts and the 0-100%
-   counter is that preload, so keep this list small and keep the files
-   light - nothing here is above ~450KB. */
+   Every file here is preloaded, silently, before the flicker is allowed
+   to catch (see boot() in lib/overture-motion.ts) - so keep this list
+   small and keep the files light, nothing here is above ~450KB. */
 export const OVERTURE_WALLS = [
   { img: "/assets/about/crowd.jpg", label: "The room" },
   { img: IMG.camera, label: "Production" },
@@ -48,6 +48,15 @@ export const OVERTURE_WALLS = [
 /* the wall that does not fall */
 export const OVERTURE_FINAL = IMG.frame;
 
+/* the three cues, one per beat: the rope going over, the filament
+   catching, a wall meeting the floor. See sfx() in lib/overture-motion.ts
+   for how they're actually played. */
+export const OVERTURE_SFX = {
+  pull: "/assets/SC Website Revamp/Sound effects/String Pull.mp3",
+  on: "/assets/SC Website Revamp/Sound effects/Light On.mp3",
+  fall: "/assets/SC Website Revamp/Sound effects/Wall Fall.mp3",
+} as const;
+
 export const RAIL = [
   "Index",
   "Who",
@@ -60,10 +69,11 @@ export const RAIL = [
 /* A bare "#..." is an on-page anchor; anything else is a real route.
    components/Chrome.tsx rewrites the hashes when the nav is on a sub-page. */
 export const NAV_LINKS = [
-  { href: "#who", label: "Who" },
-  { href: "#what", label: "What" },
-  { href: "#awards", label: "Awards" },
+  { href: "#top", label: "Home" },
   { href: "/about", label: "About" },
+  { href: "#what", label: "Work" },
+  { href: "#awards", label: "Series" },
+  { href: "#contact", label: "Contact" },
 ];
 
 /* the dictionary entry, written over the photo at the end of the hero pin */
