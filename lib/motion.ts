@@ -724,6 +724,8 @@ export function initSite(): () => void {
         mx = e.clientX; my = e.clientY;
         xTo(mx); yTo(my);
         if (rxTo && ryTo) { rxTo(mx); ryTo(my); }
+        cursor.classList.add("is-visible");
+        ring?.classList.add("is-visible");
       }) as EventListener);
 
       /* Inertia read-out.

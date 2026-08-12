@@ -145,9 +145,14 @@ em{ font-style:italic; }
   position:fixed; top:0; left:0; z-index:9999; pointer-events:none;
   width:10px; height:10px; border-radius:50%; background:var(--cream);
   mix-blend-mode:difference; transform:translate(-50%,-50%);
-  transition:width .35s var(--ease), height .35s var(--ease), background .3s;
+  opacity:0;
+  transition:width .35s var(--ease), height .35s var(--ease), background .3s, opacity .3s;
   display:grid; place-items:center;
 }
+/* stays invisible at its default (0,0) resting spot until the first
+   mousemove proves the pointer is actually there - otherwise it just
+   sits pinned over whatever renders in the page's top-left corner */
+.cursor.is-visible{ opacity:1; }
 .cursor__label{ font-family:var(--f-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#04140b; opacity:0; transform:scale(.6); transition:opacity .25s, transform .25s; white-space:nowrap; }
 .cursor.is-active{ width:82px; height:82px; background:var(--accent); mix-blend-mode:normal; }
 .cursor.is-active .cursor__label{ opacity:1; transform:scale(1); }
@@ -155,11 +160,13 @@ em{ font-style:italic; }
   position:fixed; top:0; left:0; z-index:9998; pointer-events:none;
   width:38px; height:38px; border-radius:50%; border:1px solid rgba(241,236,225,.35);
   transform:translate(-50%,-50%); mix-blend-mode:difference;
+  opacity:0;
   transition:width .4s var(--ease), height .4s var(--ease), opacity .3s, border-color .3s;
   /* the ring's transform is driven every frame by the inertia read-out in
      lib/motion.ts, so it is worth promoting */
   will-change:transform;
 }
+.cursor-ring.is-visible{ opacity:1; }
 .cursor-ring.is-active{ width:0; height:0; opacity:0; }
 @media (hover:none){ .cursor,.cursor-ring{ display:none; } }
 
@@ -213,11 +220,11 @@ em{ font-style:italic; }
 /* Once the overture has docked its own flat lockup in this corner (see
    dock() in lib/overture-motion.ts), the nav's own text logo is just
    duplicate ink sitting under it - so it goes invisible. It stays in the
-   DOM, in place and the same size, on purpose: it is still the "back to
-   top" link, the sibling selector only ever touches its opacity, and
-   dockTarget() reads its (still-correct) box to know where to land the
-   mark in the first place. Overture and Nav are siblings in app/page.tsx,
-   which is what makes the plain sibling combinator work here. */
+   DOM, in place and the same size, on purpose: dockTarget() reads its
+   (still-correct) box to know where to land the mark in the first place.
+   It is not a link (see components/Chrome.tsx) - just a layout reference.
+   Overture and Nav are siblings in app/page.tsx, which is what makes the
+   plain sibling combinator work here. */
 .overture.is-done ~ .nav .nav__logo{ opacity:0; }
 /* centred on the artwork's window, not on the viewport - --hero-cx is the
    window centre's offset from the viewport centre, set in lib/motion.ts */
@@ -1230,9 +1237,9 @@ em{ font-style:italic; }
   top:calc(48vh + 78px);
   transform:translateX(-50%);
   display:flex; flex-direction:column; align-items:center; gap:9px;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.28em;
-  text-transform:uppercase; color:rgba(241,236,225,.62); white-space:nowrap;
-  text-shadow:0 2px 14px rgba(0,0,0,.9);
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.28em;
+  text-transform:uppercase; color:rgba(11,11,12,.94); white-space:nowrap;
+  text-shadow:none;
 }
 @media (max-width:700px){
   .ovt__guide{ left:calc(50% + 36vw); top:calc(44vh + 78px); }
@@ -1240,7 +1247,7 @@ em{ font-style:italic; }
 /* a tick pointing back up at the knob, so the words have a referent */
 .ovt__guide i{
   display:block; width:1px; height:22px;
-  background:linear-gradient(to top, rgba(241,236,225,.5), rgba(241,236,225,0));
+  background:linear-gradient(to top, rgba(11,11,12,.5), rgba(11,11,12,0));
 }
 
 .ovt__skip{

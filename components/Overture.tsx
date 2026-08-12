@@ -118,11 +118,6 @@ function Lamp() {
           <stop offset="1" stopColor="#ff7a1a" stopOpacity="0.05" />
         </radialGradient>
 
-        <linearGradient id="ovt-spec" x1="0" y1="0" x2="0.4" y2="1">
-          <stop offset="0" stopColor="#ffffff" stopOpacity="0.5" />
-          <stop offset="1" stopColor="#ffffff" stopOpacity="0" />
-        </linearGradient>
-
         <filter id="ovt-soft" x="-60%" y="-60%" width="220%" height="220%">
           <feGaussianBlur stdDeviation="6" />
         </filter>
@@ -171,14 +166,6 @@ function Lamp() {
           opacity="0"
         />
         {/* the glass surface, over everything inside it */}
-        <ellipse
-          cx="152"
-          cy="132"
-          rx="14"
-          ry="34"
-          fill="url(#ovt-spec)"
-          transform="rotate(-22 152 132)"
-        />
         <ellipse cx="160" cy="112" rx="5" ry="7.5" fill="#fff" opacity="0.4" transform="rotate(-24 160 112)" />
         <ellipse cx="240" cy="220" rx="16" ry="9" fill="#fff" opacity="0.06" transform="rotate(28 240 220)" />
       </g>

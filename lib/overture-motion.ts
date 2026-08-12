@@ -59,9 +59,17 @@ const GAP = 620;
 /* how long each wall takes to go over. Runs out, so a longer wall list just
    keeps the last (fastest) value - the point of the ramp is that it ends up
    somewhere faster than you can follow, not that every entry is tuned. */
-const FALL = [1.25, 0.95, 0.72, 0.55, 0.42, 0.33, 0.27, 0.24];
+const FALL = [1.25, 0.95, 0.72, 0.55, 0.42, 0.33, 0.27, 0.24, 0.22, 0.2, 0.19, 0.185, 0.18, 0.175];
 /* and how much of the previous fall has to finish before the next starts */
-const OVERLAP = [1.1, 0.95, 0.84, 0.78, 0.72, 0.68, 0.64];
+const OVERLAP = [1.1, 0.95, 0.84, 0.78, 0.72, 0.68, 0.64, 0.62, 0.6, 0.59, 0.58, 0.57, 0.56, 0.55];
+/* the first SOUND_WALLS falls are the ones with an actual thing in the
+   picture - each gets its own impact thud. Everything past that is texture
+   going over too fast to individually track, and a thud per one of those
+   started counting as more walls falling than the eye could actually see -
+   so they still jolt and dust, just silently. Covers the original seven
+   plus the first extra batch (Planning/Audience/Pulse); only the newest,
+   fastest four (Attitude/Reverie/Voyage/Horizon) fall silent. */
+const SOUND_WALLS = 10;
 
 /* Both clocks start the moment the mark is on screen and waiting, not from
    page load - the wait a visitor actually feels is the one after there is
@@ -124,9 +132,26 @@ export function initOverture(
     expand: new Audio(OVERTURE_SFX.expand),
   };
   Object.values(clips).forEach((a) => { a.preload = "auto"; a.volume = 0.85; });
+  /* a plain <audio> element's volume tops out at 1 - the expand cue asked
+     to run twice as loud needs a real gain stage past that ceiling, so it
+     alone is routed through a WebAudio gain node instead of el.volume. */
+  let actx: AudioContext | null = null;
+  const GAIN: Partial<Record<keyof typeof clips, number>> = { expand: 2 };
   const sfx = (name: keyof typeof clips) => {
     const el = clips[name].cloneNode(true) as HTMLAudioElement;
-    el.volume = clips[name].volume;
+    const boost = GAIN[name];
+    if (boost) {
+      try {
+        actx ??= new AudioContext();
+        const gain = actx.createGain();
+        gain.gain.value = boost;
+        actx.createMediaElementSource(el).connect(gain).connect(actx.destination);
+      } catch {
+        el.volume = 1; // best it can do without WebAudio
+      }
+    } else {
+      el.volume = clips[name].volume;
+    }
     void el.play().catch(() => {});
   };
 
@@ -257,7 +282,6 @@ export function initOverture(
       /* the two idle clocks in arm() are measured from here: from the
          moment there is something on screen to act on, not from load */
       t100 = performance.now();
-      startTurn();
 
       const tl = line({ onComplete: next });
       tl.set(rig, { autoAlpha: 1 });
@@ -359,40 +383,6 @@ export function initOverture(
       });
     }
 
-    /* ---------------------------------------------------- the turn
-       The mark stands still, so this is the only thing keeping it from
-       reading as a flat SVG pinned to the middle of the screen: it turns
-       a few degrees toward the cursor, and as it does the specular
-       highlight travels across the glass and the ring's tube shading
-       rolls. Ten degrees is enough - any more and the wordmark starts to
-       keystone and it stops being a logo. */
-    let mx = -1;
-    let my = -1;
-    let turning = false;
-
-    function startTurn() {
-      if (turning) return;
-      turning = true;
-
-      on(window, "mousemove", ((e: MouseEvent) => {
-        mx = e.clientX;
-        my = e.clientY;
-      }) as EventListener);
-
-      const turnY = gsap.quickTo(svg, "rotationY", { duration: 1.1, ease: "power3" });
-      const turnX = gsap.quickTo(svg, "rotationX", { duration: 1.1, ease: "power3" });
-
-      addTicker(() => {
-        if (mx < 0) return;
-        const r = lamp.getBoundingClientRect();
-        if (!r.width) return;
-        const cx = r.left + r.width / 2;
-        const cy = r.top + r.height / 2;
-        turnY(gsap.utils.clamp(-10, 10, (mx - cx) / 62));
-        turnX(gsap.utils.clamp(-7, 7, -(my - cy) / 78));
-      });
-    }
-
     /* what the mark does when the rope goes over: a short, hard settle,
        the way a fixture on a bracket takes the click of a switch */
     function jolt() {
@@ -478,7 +468,7 @@ export function initOverture(
         /* it breathes rather than blinks - it has to be findable in a black
            room without becoming the loudest thing in it */
         gsap.fromTo(root,
-          { "--pilot": 0.4 },
+          { "--pilot": 0.7 },
           { "--pilot": 1, duration: 1.2, ease: "sine.inOut", repeat: -1, yoyo: true });
       });
 
@@ -547,9 +537,9 @@ export function initOverture(
        whatever just hit the floor, and dust comes up off it. `force` falls
        away as the sequence speeds up - by the end the walls are going over
        too fast for a full-strength jolt to be anything but sickening. */
-    function impact(force: number) {
+    function impact(force: number, sound: boolean) {
       const tl = line();
-      tl.add(() => sfx("fall"), 0);
+      if (sound) tl.add(() => sfx("fall"), 0);
       tl.to(stage, {
         keyframes: [
           { y: 13 * force, duration: 0.07 },
@@ -596,7 +586,7 @@ export function initOverture(
         tl.to(slab, { rotationZ: i % 2 ? 2.4 : -2.4, duration: dur, ease: "power1.in" }, at);
         tl.to(slab, { opacity: 0, duration: dur * 0.34, ease: "power2.in" }, at + dur * 0.68);
 
-        tl.add(impact(force), at + dur * 0.9);
+        tl.add(impact(force, i < SOUND_WALLS), at + dur * 0.9);
 
         /* the camera moves up into the space, starting before the wall has
            finished going over so the two read as one motion */
@@ -740,5 +730,6 @@ export function initOverture(
     timers.forEach(clearTimeout);
     tickers.forEach((fn) => gsap.ticker.remove(fn));
     ctx.revert();
+    void actx?.close();
   };
 }

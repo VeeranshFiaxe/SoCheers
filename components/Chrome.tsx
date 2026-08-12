@@ -62,9 +62,9 @@ export function Nav({ variant = "home" }: { variant?: "home" | "sub" }) {
 
   return (
     <header className="nav" id="nav">
-      <a href={sub ? "/" : "#top"} className="nav__logo" data-cursor="Top" data-magnetic>
+      <span className="nav__logo" aria-hidden="true">
         SOCHEERS
-      </a>
+      </span>
       <nav className="nav__links">
         {NAV_LINKS.map((l) => (
           <a

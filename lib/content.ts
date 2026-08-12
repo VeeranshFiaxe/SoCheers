@@ -43,6 +43,18 @@ export const OVERTURE_WALLS = [
   { img: IMG.brain, label: "Strategy" },
   { img: IMG.bootPhone, label: "Content" },
   { img: "/assets/who-culture.jpg", label: "Us" },
+  /* extra beats, tacked on the back where the falls are already fastest and
+     the images are only ever read as texture, not pictures - see FALL/
+     OVERLAP in lib/overture-motion.ts. Past SOUND_WALLS (same file) these
+     stop getting their own impact thud: at this speed a sound per wall
+     started reading as more walls than were actually on screen. */
+  { img: "/assets/SC Website Revamp/01. Home/Wall 1.jpg", label: "Planning" },
+  { img: "/assets/SC Website Revamp/01. Home/Wall 2.jpg", label: "Audience" },
+  { img: "/assets/SC Website Revamp/01. Home/Wall 8.jpg", label: "Pulse" },
+  { img: "/assets/SC Website Revamp/01. Home/Wall 3.jpg", label: "Attitude" },
+  { img: "/assets/SC Website Revamp/01. Home/Wall 4.jpg", label: "Reverie" },
+  { img: "/assets/SC Website Revamp/01. Home/Wall 6.jpg", label: "Voyage" },
+  { img: "/assets/SC Website Revamp/01. Home/Wall 7.jpg", label: "Horizon" },
 ] as const;
 
 /* the wall that does not fall */
