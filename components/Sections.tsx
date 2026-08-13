@@ -74,7 +74,6 @@ export function What() {
                 ))}
               </div>
               <div className="wcard__body">
-                <span className="wcard__idx">{b.idx} · Bucket</span>
                 <h3 className="wcard__name" data-roll><RollText>{b.name}</RollText></h3>
                 <ul className="wcard__list">
                   {b.items.map((i) => <li key={i}>{i}</li>)}
@@ -213,11 +212,36 @@ export function Contact() {
               <path d="M10 10.2v5.6l5-2.8-5-2.8z" fill="currentColor" stroke="none" />
             </svg>
           </a>
+          <a
+            href="https://www.facebook.com/TheSoCheers"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="SoCheers on Facebook"
+            data-magnetic
+            data-cursor="Follow"
+          >
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5.5" />
+              <path d="M14.4 8.4h-1.6a1.8 1.8 0 0 0-1.8 1.8V12h3.3l-.45 3h-2.85v6.9" />
+            </svg>
+          </a>
+          <a
+            href="https://x.com/TheSoCheers"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="SoCheers on X"
+            data-magnetic
+            data-cursor="Follow"
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4l16 16M20 4L4 20" />
+            </svg>
+          </a>
         </div>
 
         <div className="contact__foot">
           <span>SOCHEERS · EST. 2013</span>
-          <span>MUMBAI · DELHI</span>
+          <span>MUMBAI</span>
           <span>MAKING MORE HAPPEN</span>
         </div>
       </div>

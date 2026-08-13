@@ -16,6 +16,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import Lenis from "lenis";
 import { OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
+import { MEANING, WCARD_SFX } from "./content";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -279,15 +280,6 @@ export function initSite(): () => void {
         gsap.set(vignette, { autoAlpha: 1 });   // already at rest, so already expanded
         // the entry is simply there, already written
         gsap.set(entry, { autoAlpha: 1 });
-        // no pin here, so gate the rail on the hero itself
-        const reducedRail = document.querySelector<HTMLElement>(".rail");
-        if (reducedRail) {
-          ScrollTrigger.create({
-            trigger: hero, start: "top top", end: "bottom top",
-            onLeave: () => reducedRail.classList.add("is-visible"),
-            onEnterBack: () => reducedRail.classList.remove("is-visible"),
-          });
-        }
         return;
       }
 
@@ -315,20 +307,10 @@ export function initSite(): () => void {
 
       gsap.set(entry, { autoAlpha: 1 });
 
-      // Anything keyed to the hero pin has to hang off *this* trigger. A second
-      // ScrollTrigger with the same trigger/start created afterwards measures the
-      // hero from inside the pin-spacer, so its "top top" resolves to the end of
-      // the pin instead of the start, and it never fires in the right place.
-      const rail = document.querySelector<HTMLElement>(".rail");
-
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: hero, start: "top top", end: "+=240%",
           pin: true, scrub: 1, invalidateOnRefresh: true,
-          // the rail stays out of the way until the window expand *and* the
-          // definition are done - they share this one pin
-          onLeave: () => rail?.classList.add("is-visible"),
-          onEnterBack: () => rail?.classList.remove("is-visible"),
         },
       });
 
@@ -378,11 +360,22 @@ export function initSite(): () => void {
         { autoAlpha: 0, y: -34 },
         { autoAlpha: 1, y: 0, duration: ENTRY * 0.3, ease: "power2.out" }, E(0.1));
 
-      // the headword drops in and settles out of a tilt
-      tl.fromTo("[data-meaning-word]",
-        { autoAlpha: 0, yPercent: 34, rotate: -3.5, scale: 0.94 },
-        { autoAlpha: 1, yPercent: 0, rotate: 0, scale: 1,
-          duration: ENTRY * 0.4, ease: "power3.out" }, E(0.12));
+      // the headword types itself in, one letter at a time - steps(1) so
+      // each character snaps straight to visible instead of fading, which
+      // is what actually reads as typing rather than a staggered fade-in.
+      // Fast and punchy on purpose: the whole word is done in a fraction of
+      // the budget the old drop-in used.
+      tl.fromTo("[data-meaning-word]", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0 }, E(0.12));
+      tl.fromTo("[data-meaning-char]",
+        { autoAlpha: 0 },
+        { autoAlpha: 1, duration: ENTRY * 0.02, stagger: ENTRY * 0.017, ease: "steps(1)" },
+        E(0.12));
+      tl.fromTo("[data-meaning-caret]",
+        { autoAlpha: 0 },
+        { autoAlpha: 1, duration: ENTRY * 0.02 }, E(0.12));
+      tl.to("[data-meaning-caret]",
+        { autoAlpha: 0, duration: ENTRY * 0.05 },
+        E(0.12) + ENTRY * 0.017 * (MEANING.word.length - 1) + ENTRY * 0.06);
       tl.fromTo("[data-meaning-say]",
         { autoAlpha: 0, scale: 0.3 },
         { autoAlpha: 1, scale: 1, duration: ENTRY * 0.22, ease: "back.out(2.4)" }, E(0.34));
@@ -691,22 +684,6 @@ export function initSite(): () => void {
       on(window, "resize", () => reflow());
     }
 
-    /* -------------------------------------------------- section rail */
-    /* (the rail's show/hide gate lives on the hero pin trigger in initHero) */
-    function initRail() {
-      const items = document.querySelectorAll<HTMLElement>(".rail__item");
-      if (!items.length) return;
-      const setActive = (i: number) =>
-        items.forEach((it, n) => it.classList.toggle("is-active", n === i));
-      document.querySelectorAll<HTMLElement>("[data-sec]").forEach((sec) => {
-        const i = parseInt(sec.dataset.sec || "0", 10);
-        ScrollTrigger.create({
-          trigger: sec, start: "top 55%", end: "bottom 55%",
-          onEnter: () => setActive(i), onEnterBack: () => setActive(i),
-        });
-      });
-    }
-
     /* -------------------------------------------------- cursor (dot + ring) */
     function initCursor() {
       const cursor = document.querySelector<HTMLElement>(".cursor");
@@ -873,6 +850,24 @@ export function initSite(): () => void {
        on leave, settle back on the cover. */
     function initWCardCycle() {
       if (!canHover || prefersReduced) return;
+
+      // One clip, cloned per play so a fast cycle doesn't cut its own last
+      // hit short - same approach as the overture's cues (see sfx() in
+      // lib/overture-motion.ts). Autoplay rejection is swallowed: a missed
+      // whir is not a reason to break the hover cycle.
+      const wcardClips = WCARD_SFX.map((src) => {
+        const a = new Audio(src);
+        a.preload = "auto";
+        a.volume = 0.5;
+        return a;
+      });
+      const playWCardSfx = () => {
+        const clip = wcardClips[Math.floor(Math.random() * wcardClips.length)];
+        const el = clip.cloneNode(true) as HTMLAudioElement;
+        el.volume = clip.volume;
+        void el.play().catch(() => {});
+      };
+
       document.querySelectorAll<HTMLElement>(".wcard").forEach((card) => {
         const imgs = Array.from(card.querySelectorAll<HTMLImageElement>(".wcard__img img"));
         if (imgs.length < 2) return;
@@ -888,6 +883,7 @@ export function initSite(): () => void {
           timer = window.setInterval(() => {
             i = (i + 1) % imgs.length;
             show(i);
+            playWCardSfx();
           }, 420);
           intervals.push(timer);
         });
@@ -1079,7 +1075,6 @@ export function initSite(): () => void {
     initTiles();
     initWCardCycle();
     initCounters();
-    initRail();
     initNav();
     initMarquees();
 

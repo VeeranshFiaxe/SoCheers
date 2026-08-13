@@ -1,0 +1,165 @@
+/* ============================================================
+   BLOG / WHITEPAPER PAGE  (/blogs)
+
+   Route-scoped, white background throughout - the one page in the site
+   that opens light instead of walking there. Re-points the same theme
+   variables the About page's .is-light block does (see app/about/about.css)
+   rather than importing that file cross-route, so this page has no
+   dependency on /about's stack existing.
+   ============================================================ */
+.bl-page{
+  --cream:#0b0b0c;
+  --muted:rgba(11,11,12,.6);
+  --line:rgba(11,11,12,.14);
+  --faint:rgba(11,11,12,.08);
+  --panel:rgba(11,11,12,.05);
+  --accent:oklch(0.55 0.17 152);
+  background:#f4f2ec; color:var(--cream);
+}
+
+.bl-hero{ padding-top:clamp(160px,26vh,240px); padding-bottom:clamp(56px,8vh,96px); }
+.bl-hero__title{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(38px,6.4vw,92px); line-height:.98; letter-spacing:-.03em;
+  margin-top:22px; max-width:16ch; text-wrap:balance;
+}
+.bl-hero__lede{
+  margin-top:26px; max-width:48ch;
+  font-size:clamp(15px,1.2vw,19px); line-height:1.7; color:var(--muted);
+}
+
+/* ---------- the tabbed hub: Blogs / White Papers / Reports ---------- */
+.bl-tabs{ padding:clamp(40px,6vh,72px) 0 clamp(64px,9vh,110px); }
+.bl-tabs__bar{
+  position:relative;
+  display:inline-flex; gap:4px; padding:4px;
+  border:1px solid var(--line); border-radius:100px;
+  background:var(--panel);
+}
+/* The one element that actually moves - sized and positioned in JS off the
+   active button's own box (components/BlogTabs.tsx), so it tracks buttons
+   of unequal width instead of assuming a fixed step. */
+.bl-tabs__pill{
+  position:absolute; top:4px; left:0; bottom:4px;
+  border-radius:100px; background:var(--accent);
+  transition:transform .45s var(--ease), width .45s var(--ease);
+  will-change:transform;
+}
+.bl-tabs__btn{
+  position:relative; z-index:1;
+  font-family:var(--f-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); background:transparent; border:none; border-radius:100px;
+  padding:11px 20px; cursor:pointer;
+  transition:color .35s var(--ease);
+}
+.bl-tabs__btn:hover{ color:var(--cream); }
+.bl-tabs__btn.is-active{ color:#04140b; }
+.bl-tabs__panel{ margin-top:clamp(28px,4vh,44px); }
+
+/* ---------- the empty tabs: still the hub, just not live yet ---------- */
+.bl-empty{
+  border:1px dashed var(--line); border-radius:24px;
+  padding:clamp(40px,6vw,80px) clamp(28px,4vw,56px);
+  text-align:center;
+}
+.bl-empty__title{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(22px,2.6vw,32px); line-height:1.1; letter-spacing:-.02em;
+  margin-top:14px;
+}
+.bl-empty__copy{
+  margin:14px auto 0; max-width:46ch;
+  font-size:14.5px; line-height:1.68; color:var(--muted);
+}
+
+.bl-paper__card{
+  border:1px solid var(--line); border-radius:24px;
+  padding:clamp(28px,4vw,56px);
+  display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(32px,5vw,64px);
+  align-items:center;
+  background:color-mix(in srgb, #fff 60%, transparent);
+}
+.bl-paper__title{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(24px,3vw,40px); line-height:1.08; letter-spacing:-.02em;
+  margin-top:14px; max-width:16ch;
+}
+.bl-paper__blurb{
+  margin-top:18px; max-width:46ch;
+  font-size:clamp(14.5px,1.05vw,17px); line-height:1.68; color:var(--muted);
+}
+.bl-paper__points{ list-style:none; margin-top:22px; display:flex; flex-direction:column; gap:12px; }
+.bl-paper__points li{
+  position:relative; padding-left:24px;
+  font-size:14px; line-height:1.55; color:var(--muted);
+}
+.bl-paper__points li::before{
+  content:""; position:absolute; left:0; top:.55em;
+  width:8px; height:1px; background:var(--accent);
+}
+
+.bl-paper__form{
+  border:1px solid var(--line); border-radius:16px;
+  padding:clamp(22px,2.6vw,32px);
+  display:flex; flex-direction:column; gap:16px;
+  background:var(--panel);
+}
+.bl-paper__form-label{
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--muted);
+}
+.bl-paper__form-row{ display:flex; gap:10px; flex-wrap:wrap; }
+.bl-paper__form-row input{
+  flex:1 1 180px;
+  font-family:var(--f-body); font-size:15px; color:var(--cream);
+  background:#fff; border:1px solid var(--line); border-radius:10px;
+  padding:13px 16px;
+}
+.bl-paper__form-row input::placeholder{ color:var(--muted); }
+.bl-paper__submit{
+  display:inline-flex; align-items:center; justify-content:center; gap:12px;
+  font-family:inherit; font-weight:600; font-size:15px;
+  background:var(--accent); color:#04140b; border:none; border-radius:10px;
+  padding:14px 20px; cursor:pointer;
+  transition:transform .3s var(--ease), gap .3s var(--ease);
+}
+.bl-paper__submit:hover{ gap:16px; transform:translateY(-1px); }
+
+/* ---------- the topic grid ---------- */
+.bl-topics{ padding:clamp(40px,6vh,72px) 0 clamp(80px,12vh,140px); }
+.bl-topics__grid{
+  margin-top:clamp(28px,4vh,44px);
+  display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2vw,26px);
+}
+.bl-topic{
+  border:1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius:14px;
+  padding:clamp(20px,2vw,28px);
+  transition:border-color .4s var(--ease), transform .4s var(--ease);
+}
+.bl-topic:hover{ border-color:var(--accent); border-style:solid; transform:translateY(-4px); }
+.bl-topic__idx{
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; color:var(--accent);
+}
+.bl-topic__name{
+  display:block; margin-top:12px;
+  font-family:var(--f-display); font-weight:700; font-size:clamp(17px,1.5vw,21px); letter-spacing:-.01em;
+}
+.bl-topic p{ margin-top:10px; font-size:14px; line-height:1.6; color:var(--muted); }
+
+/* ---------- the way onward ---------- */
+.bl-end{
+  border-top:1px solid var(--line); padding:34px var(--pad);
+  display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
+}
+.bl-end__back{
+  display:inline-flex; align-items:center; gap:10px;
+  font-family:var(--f-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--muted); transition:color .35s, gap .35s var(--ease);
+}
+.bl-end__back:hover{ color:var(--cream); gap:16px; }
+
+@media (max-width:860px){
+  .bl-paper__card{ grid-template-columns:1fr; }
+  .bl-topics__grid{ grid-template-columns:1fr; }
+}

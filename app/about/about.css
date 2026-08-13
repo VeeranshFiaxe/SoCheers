@@ -101,14 +101,14 @@
    the previous card instead of leaving a sliver of the page behind it. */
 .ab-panel + .ab-panel{ margin-top:calc(var(--panel-r) * -1); }
 
-/* The ramp. Five steps out of black, crossing to cream at "what drives
-   us" - the section that was always designed light - and finishing white
-   under the office grid. */
+/* Black opener, then straight to one consistent off-white for every panel
+   after - no gray midpoint, and no pure #fff either: it read as too stark
+   a jump in contrast against the cream the rest of the site uses. */
 .ab-intro   { background:#0b0b0c; z-index:1; }
-.ab-founders{ background:#141418; z-index:2; }
-.ab-people  { background:#24242a; z-index:3; }
+.ab-founders{ background:#f4f2ec; z-index:2; }
+.ab-people  { background:#f4f2ec; z-index:3; }
 .ab-drives  { background:#f4f2ec; z-index:4; }
-.ab-space   { background:#fff;    z-index:5; }
+.ab-space   { background:#f4f2ec; z-index:5; }
 
 /* The contents, not the card. GSAP scrubs this as the next panel climbs
    over it, so the covered card recedes instead of just being hidden. */
@@ -119,20 +119,42 @@
 }
 
 /* ---------- 2 · the intro line + the team artwork ---------- */
-.ab-intro{ padding:clamp(96px,18vh,190px) 0; }
+/* This panel pins for one viewport's worth of scroll (see the panel-stack
+   block in lib/about-motion.ts) - scrolling further doesn't reveal more of
+   it, it just drags the next panel up over it. So everything here has to
+   actually fit inside that one screen with room to spare, not rely on
+   being centred in a box taller than the viewport: the old padding + a
+   vertically-centred grid was pushing the payoff line low enough to sit
+   right at (or past) that cut. Padding trimmed and the grid top-aligned
+   instead of centred, so the whole column sits higher, up near the tag,
+   with headroom below it. */
+.ab-intro{ padding:clamp(64px,10vh,120px) 0; }
 .ab-intro__grid{
   display:grid; grid-template-columns:1fr 1.02fr;
-  gap:clamp(40px,5vw,84px); align-items:center;
+  gap:clamp(40px,5vw,84px); align-items:start;
   perspective:1400px;   /* depth for the [data-tilt] lean on the visual */
+}
+/* The section's own headline, right under the About page's hero and above
+   the discipline list it introduces. */
+.ab-intro__title{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(26px,3.6vw,50px); line-height:1.06; letter-spacing:-.02em;
+  margin-bottom:clamp(30px,4.4vh,46px);
 }
 .ab-intro__line{
   font-family:var(--f-display); font-weight:600;
   font-size:clamp(24px,3vw,46px); line-height:1.16; letter-spacing:-.015em;
 }
 .ab-intro__line em{
-  color:var(--accent); display:block; margin-top:.12em;
+  color:var(--accent);
   font-weight:400; font-style:italic; text-wrap:balance;
 }
+/* The payoff is now its own split root (see AboutIntro in
+   AboutSections.tsx), so this margin lands once, on the paragraph itself -
+   not on the inline em nested inside it. A lighter touch than
+   .who__pitch's on the home page: a full blank line here was reading as
+   too big a jump between the two closely-related lines. */
+.ab-intro__payoff{ margin-top:.6em; }
 
 /* Three layers, back to front: burst, cutout, bulbs. The box is sized by
    the artwork's own ratio so the bulb percentages keep their relationship
@@ -190,11 +212,10 @@
   display:grid; grid-template-columns:repeat(2,max-content);
   justify-content:center; gap:clamp(28px,4vw,64px);
 }
-/* Just the photo at rest - name, role and bio all live in .founder__reveal
-   now, off to whichever side that founder sits on, and only show up on
-   hover/focus. Bigger than the plain-card version: with the bio gone, the
-   photo is the only thing carrying the section, so it can afford the
-   size. */
+/* The photo at rest - name, role and bio live beside it in
+   .founder__reveal, always on screen (see below), so the photo no longer
+   has to carry the section on its own the way a hover-only reveal asked
+   it to; kept at the same generous size regardless. */
 .founder{ position:relative; max-width:clamp(280px,24vw,400px); }
 .founder__photo{
   position:relative; overflow:hidden; aspect-ratio:4/5;
@@ -220,35 +241,46 @@
   filter:grayscale(0) contrast(1) brightness(1); transform:scale(1.04);
 }
 
-/* The reveal. Anchored beside the photo but starting its slide from much
-   further out - close to the section's own edge - so the motion reads as
-   the text arriving from off-screen, not just nudging out from behind
-   the image. Centred on the photo vertically (not pinned to its top) so
-   a bio that runs longer than the photo is tall overflows evenly on both
-   sides instead of spilling out past one edge - that symmetry, plus the
-   opaque card behind it, is what keeps a tall paragraph from reading as
-   a layout bug. .ab-panel's overflow:hidden clips it if a narrow
-   viewport leaves no room to fully show. */
+/* The reveal - always on screen now, sliding in from its own outer edge as
+   the section scrolls into view rather than hidden until hover (see the
+   founder write-ups block in lib/about-motion.ts). Anchored beside the
+   photo, off to whichever side that founder sits on.
+
+   Split in two on purpose: this outer element owns the fixed
+   translateY(-50%) that centres it on the photo, and the inner
+   .founder__revealIn is what GSAP's scroll-scrubbed x/autoAlpha tween
+   actually animates. Putting both on the same element would have the
+   tween's x overwrite the -50% baseline the moment it ran, since GSAP's
+   x/y and a percentage transform can't both own the same property.
+   Centred vertically (not pinned to the top) so a bio that runs longer
+   than the photo is tall overflows evenly on both sides instead of
+   spilling out past one edge. .ab-panel's overflow:hidden clips it if a
+   narrow viewport leaves no room to fully show. */
 .founder__reveal{
   position:absolute; top:50%; z-index:2;
   width:clamp(260px,22vw,360px);
+  transform:translateY(-50%);
+}
+.founder--left .founder__reveal{ right:calc(100% + 24px); }
+.founder--right .founder__reveal{ left:calc(100% + 24px); }
+.founder__revealIn{
   padding:clamp(24px,2.2vw,32px);
   display:flex; flex-direction:column; justify-content:center; align-items:center;
   text-align:center;
   background:var(--bg); border:1px solid var(--line);
-  box-shadow:0 30px 70px rgba(0,0,0,.55);
-  opacity:0; pointer-events:none; will-change:transform, opacity;
-  transition:transform .65s var(--ease), opacity .5s var(--ease);
+  box-shadow:0 30px 70px rgba(0,0,0,.4);
 }
-.founder--left .founder__reveal{
-  right:calc(100% + 1px); transform:translate(-180px,-50%);
-}
-.founder--right .founder__reveal{
-  left:calc(100% + 1px); transform:translate(180px,-50%);
-}
-.founder:hover .founder__reveal,
-.founder:focus-within .founder__reveal{
-  opacity:1; transform:translate(0,-50%); pointer-events:auto;
+@media (min-width:861px){
+  /* Explicit dark-theme values, undoing the ambient .is-light remap this
+     panel applies to --cream/--muted/--line: the card's own background
+     stays the dark var(--bg) at this width (--bg isn't one of the
+     properties .is-light touches), so its type has to keep the dark
+     theme's light-on-dark pair rather than the panel's own flipped one -
+     that mismatch was why the text had gone invisible. */
+  .founder__revealIn{
+    --cream:#f1ece1; --muted:rgba(241,236,225,.5); --line:rgba(241,236,225,.1);
+    color:var(--cream);
+  }
 }
 .founder__name{
   font-family:var(--f-display); font-weight:700;
@@ -264,12 +296,11 @@
 }
 
 @media (max-width:860px){
-  /* No hover on touch, and no off-screen room either once the pair
-     stacks to one column - so the panel just docks under the photo,
-     always open, the way the card used to work before the reveal. */
-  .founder__reveal{
-    position:static; width:auto; height:auto; opacity:1; pointer-events:auto;
-    transform:none; padding:0; margin-top:16px;
+  /* No off-screen room once the pair stacks to one column - so the panel
+     just docks under the photo instead of sitting beside it. */
+  .founder__reveal{ position:static; width:auto; transform:none; }
+  .founder__revealIn{
+    padding:0; margin-top:16px;
     background:none; border:none; box-shadow:none;
   }
 }
@@ -281,40 +312,26 @@
 .ab-people{
   padding:clamp(56px,8vh,96px) 0; min-height:100svh; display:flex; flex-direction:column; justify-content:center;
 }
+/* Copy column gets the bigger share now - at a near-even split the short
+   two-paragraph statement read as sparse next to a photo filling its
+   entire column edge to edge. */
 .ab-people__top{
   margin-top:clamp(22px,3vh,36px);
-  display:grid; grid-template-columns:1fr 1.05fr; gap:clamp(28px,3.6vw,56px); align-items:start;
+  display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(28px,3.6vw,56px); align-items:start;
 }
-.ab-people__copy{ display:flex; flex-direction:column; gap:clamp(24px,3.4vh,36px); }
-.ab-people__title{
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px,4.8vw,66px); line-height:1.0; letter-spacing:-.02em; max-width:12ch;
-}
-
-/* The single unified statement - purpose, then belief, read as one thought
-   rather than two boxes competing for the same width. */
+/* The section's main copy now that the title has moved above it - what
+   used to be one paragraph behind a small "Why we exist" label is now the
+   statement itself, in two beats with real air between them. */
+.ab-people__copy{ display:flex; flex-direction:column; gap:clamp(28px,4vh,40px); }
 .ab-people__note{
-  max-width:46ch;
-  font-size:clamp(15px,1.15vw,18.5px); line-height:1.72; color:var(--muted);
-}
-.ab-people__note-label{
-  display:block; font-family:var(--f-mono); font-size:11px; letter-spacing:.22em;
-  text-transform:uppercase; color:var(--accent); margin-bottom:14px;
+  max-width:58ch;
+  font-size:clamp(17px,1.6vw,23px); line-height:1.58; color:var(--muted);
 }
 
-/* The film gate. Perforations are a repeating gradient whose position is
-   scrubbed by lib/about-motion.ts, so the reel crawls against the pan. */
-.filmstrip{
-  position:relative; background:#08090a; border:1px solid var(--line);
-  padding:9px; display:flex; flex-direction:column; gap:9px; overflow:hidden;
-}
-.filmstrip__perf{
-  height:15px; flex:none;
-  background-image:repeating-linear-gradient(90deg,
-    rgba(241,236,225,.85) 0 22px, rgba(241,236,225,0) 22px 48px);
-  background-position:var(--perf-x,0px) 0;
-}
-.filmstrip__win{ position:relative; overflow:hidden; aspect-ratio:16/10; }
+/* The group shot's crop window - no visible frame around it any more,
+   just the clip that lets the photo pan past its own edges (the pan
+   itself lives in lib/about-motion.ts). */
+.filmstrip__win{ position:relative; overflow:hidden; aspect-ratio:16/10; border-radius:12px; }
 /* Wider than its window on purpose: that overhang is the pan's travel. */
 .filmstrip__win img{ width:120%; max-width:none; will-change:transform; }
 
@@ -338,9 +355,12 @@
   --accent:oklch(0.55 0.17 152);
   color:var(--cream);
 }
+/* The playful script - already the site's marker for tone-of-voice
+   moments (hero greet, driver numerals) - reads better without the tight
+   negative tracking and shouty caps the display face used here. */
 .ab-drives__title{
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px,4.8vw,66px); line-height:1.0; letter-spacing:-.02em; text-transform:uppercase;
+  font-family:var(--f-playful); font-weight:700;
+  font-size:clamp(38px,6vw,88px); line-height:1.05; letter-spacing:0;
   text-align:center;
 }
 .drivers{
@@ -387,14 +407,6 @@
   margin-top:26px; max-width:52ch;
   font-size:clamp(15px,1.35vw,21px); line-height:1.62; color:var(--muted);
 }
-.rooms{ list-style:none; display:flex; flex-wrap:wrap; gap:10px; margin-top:30px; }
-.rooms__item{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase;
-  color:var(--accent); border:1px solid color-mix(in srgb, var(--accent) 40%, transparent);
-  border-radius:40px; padding:8px 16px; transition:background .4s, color .4s;
-}
-.rooms__item:hover{ background:var(--accent); color:#04140b; }
-
 /* A jigsaw of eight unequal panels rather than a repeating grid - the
    reference is a flat mosaic (a puzzle of rectangles, not tilted photos),
    so this is built as eight named grid-areas of very different shapes
@@ -443,7 +455,7 @@
 
 /* ---------- the way onward ---------- */
 .ab-end{
-  position:relative; z-index:5; background:#fff;
+  position:relative; z-index:5; background:#f4f2ec;
   border-top:1px solid var(--line); padding:34px var(--pad);
   display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;
 }

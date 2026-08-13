@@ -1,4 +1,4 @@
-import { NAV_LINKS, RAIL } from "@/lib/content";
+import { NAV_LINKS } from "@/lib/content";
 import RollText from "./Roll";
 import SoCheersLockup from "./SoCheersLockup";
 
@@ -35,49 +35,47 @@ export function Loader() {
   );
 }
 
-export function Rail() {
-  return (
-    <aside className="rail" aria-hidden="true">
-      {RAIL.map((label, i) => (
-        <span
-          key={label}
-          className={i === 0 ? "rail__item is-active" : "rail__item"}
-          data-rail={i}
-        >
-          <i>{String(i + 1).padStart(2, "0")}</i>
-          <em>{label}</em>
-        </span>
-      ))}
-    </aside>
-  );
-}
-
 /* `variant` only rewrites where the links point. On the home page they stay
    bare hashes so Lenis picks them up and scrolls smoothly (it only binds
    a[href^="#"]); on a sub-page the same labels have to leave the page, so
    they become root-relative and the browser handles them normally. */
-export function Nav({ variant = "home" }: { variant?: "home" | "sub" }) {
+export function Nav({
+  variant = "home",
+  active,
+}: {
+  variant?: "home" | "sub";
+  /* the current page's own NAV_LINKS href, e.g. "/about" or "/contact" -
+     only sub-pages need this, since the home page's sections aren't
+     distinct "current" links to mark. */
+  active?: string;
+}) {
   const sub = variant === "sub";
   const to = (hash: string) => (sub ? `/${hash}` : hash);
 
   return (
     <header className="nav" id="nav">
-      <span className="nav__logo" aria-hidden="true">
-        SOCHEERS
-      </span>
+      {sub ? (
+        <a href="/" className="nav__logo" aria-label="SoCheers" data-cursor="Home">
+          <SoCheersLockup className="nav__logo-mark" />
+        </a>
+      ) : (
+        <span className="nav__logo" aria-hidden="true">
+          SOCHEERS
+        </span>
+      )}
       <nav className="nav__links">
         {NAV_LINKS.map((l) => (
           <a
             key={l.href}
             href={l.href.startsWith("#") ? to(l.href) : l.href}
             data-roll
-            aria-current={sub && l.href === "/about" ? "page" : undefined}
+            aria-current={active && l.href === active ? "page" : undefined}
           >
             <RollText>{l.label}</RollText>
           </a>
         ))}
       </nav>
-      <a href={to("#contact")} className="nav__cta" data-magnetic data-cursor="Say hi">
+      <a href="/contact" className="nav__cta" data-magnetic data-cursor="Say hi">
         <span>Let&rsquo;s chat</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M5 12h14M13 6l6 6-6 6" />

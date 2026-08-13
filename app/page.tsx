@@ -1,4 +1,4 @@
-import { Loader, Nav, Overlays, Rail } from "@/components/Chrome";
+import { Loader, Nav, Overlays } from "@/components/Chrome";
 import Hero from "@/components/Hero";
 import Overture from "@/components/Overture";
 import { Awards, Clients, Contact, What, Who } from "@/components/Sections";
@@ -14,7 +14,6 @@ export default function Home() {
           asks the same question so the two never disagree about who owns the
           screen. */}
       <Overture />
-      <Rail />
       <Nav />
 
       <main id="top">

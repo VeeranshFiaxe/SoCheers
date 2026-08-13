@@ -6,7 +6,7 @@ import { initAbout } from "@/lib/about-motion";
 
 /* Boots the shared engine plus the About-only scroll work. initSite() is
    reused wholesale - every one of its blocks guards on an empty selection,
-   so the home page's hero, loader, rail and dictionary entry simply do not
+   so the home page's hero, loader and dictionary entry simply do not
    run here, and this page still gets Lenis, the cursor, the split reveals
    and the marquees for free.
 

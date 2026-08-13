@@ -64,7 +64,17 @@ export default function Hero() {
           <div className="meaning__inner">
             <div className="meaning__head">
               <h2 className="meaning__word" data-meaning-word>
-                {MEANING.word}
+                {/* The split spans are decorative (typed in letter by letter,
+                    see [data-meaning-char] in lib/motion.ts) - the real word
+                    lives in this visually-hidden copy, same pattern as
+                    [data-split] elsewhere (see .sr-only in globals.css). */}
+                <span className="sr-only">{MEANING.word}</span>
+                <span aria-hidden="true">
+                  {MEANING.word.split("").map((ch, i) => (
+                    <span className="mword__ch" data-meaning-char key={i}>{ch}</span>
+                  ))}
+                  <span className="mword__caret" data-meaning-caret><i /></span>
+                </span>
               </h2>
               <button
                 type="button"

@@ -19,7 +19,7 @@
   /* the --font-* variables come from next/font/google in app/layout.tsx */
   --f-display: var(--font-display), "Familjen Grotesk", sans-serif;
   --f-body:    var(--font-body), "DM Sans", sans-serif;
-  --f-mono:    var(--font-mono), "DM Mono", ui-monospace, monospace;
+  --f-mono:    var(--font-mono), "Inter", sans-serif;
   --f-playful: var(--font-playful), "Caveat", cursive;
   --f-loader:  var(--font-loader), "Bricolage Grotesque", var(--f-display);
 
@@ -123,7 +123,7 @@ em{ font-style:italic; }
 .pixgrid > i{ display:block; background:var(--bg); opacity:0; will-change:opacity; }
 
 /* ============================================================
-   GRAIN · SPOTLIGHT · CURSOR · PROGRESS · RAIL · LOADER
+   GRAIN · SPOTLIGHT · CURSOR · PROGRESS · LOADER
    ============================================================ */
 .grain{
   position:fixed; inset:-60%; z-index:9998; pointer-events:none; opacity:.045;
@@ -173,22 +173,6 @@ em{ font-style:italic; }
 .progress{ position:fixed; top:0; left:0; width:100%; height:2px; z-index:9997; }
 .progress__bar{ display:block; height:100%; width:0%; background:var(--accent); box-shadow:0 0 12px var(--accent); }
 
-/* hidden until the hero pin (window expand + image stack) is done -
-   `is-visible` is toggled in lib/motion.ts */
-.rail{
-  position:fixed; right:calc(var(--pad) * .42); top:50%; transform:translateY(-50%);
-  z-index:880; display:flex; flex-direction:column; gap:13px; mix-blend-mode:difference;
-  opacity:0; visibility:hidden; pointer-events:none;
-  transition:opacity .55s var(--ease), visibility .55s var(--ease);
-}
-.rail.is-visible{ opacity:1; visibility:visible; }
-.rail__item{ display:flex; align-items:center; gap:9px; font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; color:rgba(241,236,225,.3); transition:color .4s var(--ease); }
-.rail__item i{ font-style:normal; }
-.rail__item em{ font-style:normal; text-transform:uppercase; opacity:0; transform:translateX(6px); transition:opacity .4s var(--ease), transform .4s var(--ease); }
-.rail__item.is-active{ color:var(--cream); }
-.rail__item.is-active em{ opacity:1; transform:translateX(0); }
-@media (max-width:1100px){ .rail{ display:none; } }
-
 .loader{ position:fixed; inset:0; z-index:9990; background:var(--bg); display:grid; place-items:center; }
 .loader__inner{ text-align:center; position:relative; z-index:2; }
 /* The mark itself rather than the name set in a typeface: this is the same
@@ -217,6 +201,12 @@ em{ font-style:italic; }
 }
 .nav.is-hidden{ transform:translateY(-120%); }
 .nav__logo{ font-family:var(--f-display); font-weight:700; font-size:21px; letter-spacing:-.01em; }
+/* Sub-page logo: the same flat lockup the homepage docks into this corner
+   once the overture finishes (see .ovt__dock-mark) - sub-pages skip the
+   overture entirely, so they show that same graphic here from the start
+   rather than a plain text wordmark. */
+.nav__logo-mark{ display:block; height:46px; width:auto; color:currentColor; }
+a.nav__logo{ display:inline-flex; align-items:center; }
 /* Once the overture has docked its own flat lockup in this corner (see
    dock() in lib/overture-motion.ts), the nav's own text logo is just
    duplicate ink sitting under it - so it goes invisible. It stays in the
@@ -390,6 +380,22 @@ em{ font-style:italic; }
      without this the word sits visibly right of /soh-cheers/ below it */
   margin-left:-0.14em;
 }
+/* Each letter is its own inline node so GSAP can pop them in one at a time
+   (typewriter stagger, see lib/motion.ts) rather than fading the word in
+   as one block. */
+.mword__ch{ display:inline-block; }
+/* The typing cursor - a blink on the inner <i> so the CSS keyframe never
+   fights the outer wrapper's GSAP-driven autoAlpha (show/hide of the caret
+   itself is scrubbed; the blink underneath it is not). */
+.mword__caret{ display:inline-block; }
+.mword__caret i{
+  display:inline-block; width:.055em; height:.74em;
+  margin-left:.03em; vertical-align:-0.08em;
+  background:var(--accent);
+  animation:mwordBlink .9s steps(1) infinite;
+}
+@keyframes mwordBlink{ 50%{ opacity:0; } }
+@media (prefers-reduced-motion:reduce){ .mword__caret i{ animation:none; } }
 .meaning__say{
   flex:none; margin-top:clamp(10px,1.6vw,26px); pointer-events:auto;
   width:38px; height:38px; border-radius:50%;
@@ -486,7 +492,9 @@ em{ font-style:italic; }
 .who__brand{ color:var(--accent); }
 .who__pitch{
   font-weight:400; font-style:italic; color:var(--accent);
-  margin-top:.12em;
+  /* one blank line's worth of extra air between the white claim and the
+     green pitch, not just a paragraph-sized nudge */
+  margin-top:1.2em;
 }
 .who__share{
   text-decoration:none;
@@ -514,8 +522,8 @@ em{ font-style:italic; }
 .stat:hover{ transform:translateY(-4px); }
 .stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(38px,4vw,62px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--stat-accent, var(--accent)); }
-.stat__num i{ color:var(--stat-accent, var(--accent)); font-style:normal; }
-.stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); margin-top:8px; }
+.stat__num i{ color:var(--cream); font-style:normal; }
+.stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
 
 /* The cutout stands on its own - no frame, no card. What holds it to the
    page is the paint splash behind it (components/Splash.tsx), which is
@@ -675,8 +683,7 @@ em{ font-style:italic; }
 .wcard__img img{ position:absolute; inset:0; opacity:0; transform:scale(1.08); transition:opacity .4s ease-in-out, transform .9s var(--ease); }
 .wcard__img img.is-active{ opacity:1; z-index:1; }
 .wcard__body{ position:relative; z-index:2; padding:clamp(24px,2vw,36px); transform:translateZ(40px); }
-.wcard__idx{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); }
-.wcard__name{ font-family:var(--f-display); font-weight:700; font-size:clamp(30px,3vw,50px); line-height:1; letter-spacing:-.02em; margin:12px 0 22px; }
+.wcard__name{ display:block; font-family:var(--f-display); font-weight:700; font-size:clamp(30px,3vw,50px); line-height:1; letter-spacing:-.02em; margin:0 0 22px; text-align:center; }
 /* Every card reserves room for six rows even when it lists fewer, so the
    bottom-anchored bodies all start at the same height and the titles line
    up across the row. Kept as a calc off the row metrics below so the two
@@ -856,7 +863,7 @@ em{ font-style:italic; }
    Contact popup (placeholder brief form)
    ------------------------------------------------------------ */
 .cmodal{
-  position:fixed; inset:0; z-index:200;
+  position:fixed; inset:0; z-index:950;
   display:grid; place-items:center;
   padding:clamp(16px,4vw,40px);
   background:rgba(6,6,7,.72);
@@ -916,7 +923,7 @@ em{ font-style:italic; }
 .cmodal__field{ display:flex; flex-direction:column; gap:6px; }
 .cmodal__field span{
   font-family:var(--f-mono); font-size:10px; letter-spacing:.2em;
-  text-transform:uppercase; color:var(--muted);
+  text-transform:uppercase; color:var(--muted); text-align:left;
 }
 .cmodal__field input,
 .cmodal__field textarea{

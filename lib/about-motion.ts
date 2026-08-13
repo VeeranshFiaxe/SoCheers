@@ -146,60 +146,79 @@ export function initAbout(): () => void {
         });
     }
 
-    /* -------------------------------------------------- the film gate
-       The photo pans across its window while the perforations crawl the
-       other way. Opposed directions is what sells it - matched ones just
-       read as the whole block sliding. */
+    /* -------------------------------------------------- founder write-ups
+       Each one slides in from its own outer edge as the section scrolls
+       into view - scrubbed to actual scroll position (not a one-shot
+       reveal), so it genuinely reads as sliding into frame rather than
+       just fading up in place. Left founder's card arrives from further
+       left, right founder's from further right - matching which side of
+       the pair each one sits on (see .founder--left/--right in about.css). */
+    const foundersSection = document.querySelector<HTMLElement>(".ab-founders");
+    if (foundersSection) {
+      document.querySelectorAll<HTMLElement>(".founder__revealIn").forEach((el) => {
+        const dir = el.closest(".founder--left") ? -1 : 1;
+        gsap.fromTo(el,
+          { autoAlpha: 0, x: 110 * dir },
+          {
+            autoAlpha: 1, x: 0, ease: "none",
+            scrollTrigger: {
+              trigger: foundersSection, start: "top 75%", end: "top 25%",
+              scrub: 1, invalidateOnRefresh: true,
+            },
+          });
+      });
+    }
+
+    /* -------------------------------------------------- the group shot pan
+       The photo pans across its own crop window as you scroll. */
     document.querySelectorAll<HTMLElement>("[data-film]").forEach((strip) => {
       const img = strip.querySelector<HTMLElement>("[data-film-img]");
-      const st = {
-        trigger: strip, start: "top bottom", end: "bottom top",
-        scrub: 1, invalidateOnRefresh: true,
-      };
-      if (img) {
-        gsap.fromTo(img, { xPercent: 2 }, { xPercent: -12, ease: "none", scrollTrigger: st });
-      }
-      // The sprockets are a repeating gradient, so panning them is a
-      // background shift. Travel is a whole number of the 48px period
-      // (see .filmstrip__perf) so the holes never land half-cut.
-      gsap.fromTo(strip, { "--perf-x": "0px" },
-        { "--perf-x": "-192px", ease: "none", scrollTrigger: st });
+      if (!img) return;
+      gsap.fromTo(img, { xPercent: 2 }, {
+        xPercent: -12, ease: "none",
+        scrollTrigger: {
+          trigger: strip, start: "top bottom", end: "bottom top",
+          scrub: 1, invalidateOnRefresh: true,
+        },
+      });
     });
 
     /* -------------------------------------------------- the panel stack
-       about.css stacks every section past the opener as a card, each one a
-       shade lighter and each pulled up onto the last by its own corner
-       radius. That alone gives the overlap; this gives it depth.
+       Each panel pins in place - the section itself stops moving the
+       moment its top hits the viewport top - while pinSpacing:false keeps
+       its layout space from being reserved, so the next panel (already
+       sitting right below it in the document) is dragged up through the
+       viewport for the whole pin window instead of only meeting it at the
+       edge. That's what actually reads as "the next section slides up and
+       stacks on top" rather than the page just changing colour underfoot;
+       the rounded top edge and shadow from about.css are what sell the
+       covering card as a separate plane once it arrives.
 
-       The move is on the card being *covered*, not the one arriving. As
-       the next panel climbs over it, the outgoing card's contents drift up
-       a little, shrink a little and dim - so it reads as sinking away
-       under the new one rather than simply being hidden behind it. The
-       panel box itself never moves: it is the thing holding the colour and
-       the rounded edge, and translating it would open a gap.
-
-       Scrubbed from the moment the panel's foot reaches the bottom of the
-       viewport (the point the next card starts to show) to the moment it
-       leaves the top, so the recede tracks the cover exactly. */
+       The pinned card's own contents drift up a little, shrink a little
+       and dim over that same window, so it reads as sinking away under
+       the new one rather than just sitting there inert while it's covered. */
     gsap.utils.toArray<HTMLElement>("[data-panel]").forEach((panel, i, all) => {
-      // the last card is never covered by anything, so it never recedes
+      // the last card has nothing after it to cover it, so it never pins
       if (i === all.length - 1) return;
 
       const inner = panel.querySelector<HTMLElement>(":scope > .wrap");
-      if (!inner) return;
 
-      gsap.fromTo(inner,
-        { y: 0, scale: 1, autoAlpha: 1 },
-        {
-          y: -64, scale: 0.94, autoAlpha: 0.35, ease: "none",
-          scrollTrigger: {
-            trigger: panel,
-            start: "bottom bottom",
-            end: "bottom top",
-            scrub: 0.6,
-            invalidateOnRefresh: true,
-          },
-        });
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: panel,
+          start: "top top",
+          end: () => "+=" + window.innerHeight,
+          pin: true,
+          pinSpacing: false,
+          scrub: 0.6,
+          invalidateOnRefresh: true,
+        },
+      });
+      if (inner) {
+        tl.fromTo(inner,
+          { y: 0, scale: 1, autoAlpha: 1 },
+          { y: -64, scale: 0.94, autoAlpha: 0.35, ease: "none" }, 0);
+      }
     });
 
     /* -------------------------------------------------- the crowd

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Familjen_Grotesk, DM_Sans, DM_Mono, Caveat, Bricolage_Grotesque } from "next/font/google";
+import { Familjen_Grotesk, DM_Sans, Inter, Caveat, Bricolage_Grotesque } from "next/font/google";
 import "./globals.css";
 
 const display = Familjen_Grotesk({
@@ -31,9 +31,12 @@ const body = DM_Sans({
   display: "swap",
 });
 
-const mono = DM_Mono({
+/* Still named "mono"/--font-mono - that variable drives every uppercase,
+   letter-spaced label site-wide (nav links, tags, buttons), it just no
+   longer points at an actual monospace face. */
+const mono = Inter({
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "600"],
   variable: "--font-mono",
   display: "swap",
 });

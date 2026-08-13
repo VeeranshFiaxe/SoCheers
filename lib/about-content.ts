@@ -91,8 +91,6 @@ export const DRIVERS = [
   },
 ];
 
-export const ROOMS = ["Idhar", "Udhar", "Jidhar", "Kidhar"];
-
 export const SPACE_COPY =
   "Imagine the meeting rooms named Idhar, Udhar, Jidhar, Kidhar. Because when someone asks “Where are you?” you can say “Idhar” and still be in a room called Udhar.";
 

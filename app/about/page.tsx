@@ -14,14 +14,13 @@ export const metadata: Metadata = {
     "One team, many disciplines. The people, the founders and the office behind SoCheers - an independent, integrated creative agency.",
 };
 
-/* One scrolling page, no sub-tabs. No Loader and no Rail: the loader belongs
-   to the home page's hero sequence, and the rail indexes that page's
-   sections. */
+/* One scrolling page, no sub-tabs. No Loader: it belongs to the home page's
+   hero sequence. */
 export default function About() {
   return (
     <>
       <Overlays />
-      <Nav variant="sub" />
+      <Nav variant="sub" active="/about" />
 
       <main id="top">
         <AboutHero />

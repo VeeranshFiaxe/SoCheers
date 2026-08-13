@@ -68,8 +68,7 @@ export default function ContactModal() {
                 setOpen(false);
               }}
             >
-              <span className="tag">LET&rsquo;S TALK</span>
-              <h3 className="cmodal__title">Tell us about the brief.</h3>
+              <h3 className="cmodal__title">Let&rsquo;s talk.</h3>
 
               <label className="cmodal__field">
                 <span>Name</span>
@@ -81,7 +80,7 @@ export default function ContactModal() {
               </label>
               <label className="cmodal__field">
                 <span>Message</span>
-                <textarea name="message" placeholder="What are you building?" rows={4} required />
+                <textarea name="message" placeholder="Brief us." rows={4} required />
               </label>
 
               <button type="submit" className="cmodal__submit">

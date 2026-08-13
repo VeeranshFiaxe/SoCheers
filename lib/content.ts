@@ -72,14 +72,13 @@ export const OVERTURE_SFX = {
   expand: "/assets/SC Website Revamp/Sound effects/logo expand.mp3",
 } as const;
 
-export const RAIL = [
-  "Index",
-  "Who",
-  "What",
-  "Brands",
-  "Awards",
-  "Contact",
-];
+/* the whir each WHAT WE DO card gets on hover, once per frame swap - one of
+   the two is picked at random each time so the cycle doesn't repeat the
+   exact same hit on every swap. See initWCardCycle() in lib/motion.ts. */
+export const WCARD_SFX = [
+  "/assets/SC Website Revamp/Sound effects/Frames 1.mp3",
+  "/assets/SC Website Revamp/Sound effects/Frames 2.mp3",
+] as const;
 
 /* A bare "#..." is an on-page anchor; anything else is a real route.
    components/Chrome.tsx rewrites the hashes when the nav is on a sub-page. */
@@ -88,7 +87,7 @@ export const NAV_LINKS = [
   { href: "/about", label: "About" },
   { href: "#what", label: "Work" },
   { href: "#awards", label: "Series" },
-  { href: "#contact", label: "Contact" },
+  { href: "/blogs", label: "Insights" },
 ];
 
 /* the dictionary entry, written over the photo at the end of the hero pin */
@@ -117,15 +116,14 @@ export const BUCKETS = [
   {
     idx: "01",
     name: "Strategy",
-    img: IMG.brain,
+    img: `${HOME_DIR}/Strategy 7.png`,
     images: [
-      IMG.brain,
+      `${HOME_DIR}/Strategy 7.png`,
       `${HOME_DIR}/Strategy 2.png`,
       `${HOME_DIR}/Strategy 3.jpg`,
       `${HOME_DIR}/Strategy 4.jpg`,
       `${HOME_DIR}/Strategy 5.jpg`,
       `${HOME_DIR}/Strategy 6.jpg`,
-      `${HOME_DIR}/Strategy 7.png`,
       `${HOME_DIR}/Strategy 8.jpg`,
       `${HOME_DIR}/Strategy 9.jpg`,
       `${HOME_DIR}/Strategy 10.jpg`,

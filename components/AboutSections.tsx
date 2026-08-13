@@ -2,7 +2,7 @@ import AboutBulbs from "./AboutBulbs";
 import AboutSplash from "./AboutSplash";
 import {
   ABOUT_IMG, ABOUT_INTRO, BELIEF, DRIVERS,
-  FOUNDERS, ROOMS, SPACE_COPY, SPACE_SHOTS, WHY_WE_EXIST,
+  FOUNDERS, SPACE_COPY, SPACE_SHOTS, WHY_WE_EXIST,
 } from "@/lib/about-content";
 
 /* 1 · the opener lives in components/AboutHero.tsx - it carries enough
@@ -21,9 +21,20 @@ export function AboutIntro() {
   return (
     <section className="ab-panel ab-intro" data-sec="1" data-panel>
       <div className="wrap ab-intro__grid">
-        <p className="ab-intro__line" data-split>
-          {ABOUT_INTRO.list} <em>{ABOUT_INTRO.payoff}</em>
-        </p>
+        <div className="ab-intro__copy">
+          <h2 className="ab-intro__title" data-split>
+            An agency that leads, for those who lead.
+          </h2>
+          {/* Two separate split roots, not one paragraph with a nested
+              inline payoff: SplitText clones a nested display:block tag
+              onto every visual line it wraps to, so a margin set on the
+              old inline <em> was duplicating itself between the green
+              text's own wrapped lines, not just before them. */}
+          <p className="ab-intro__line" data-split>{ABOUT_INTRO.list}</p>
+          <p className="ab-intro__line ab-intro__payoff" data-split>
+            <em>{ABOUT_INTRO.payoff}</em>
+          </p>
+        </div>
 
         <div className="ab-intro__visual" data-tilt>
           <span className="ab-intro__splash" data-splash aria-hidden="true">
@@ -46,7 +57,7 @@ export function AboutIntro() {
    takeovers. The ticker underneath closes the section off. */
 export function AboutFounders() {
   return (
-    <section className="ab-panel ab-founders" id="founders" data-sec="2" data-panel>
+    <section className="ab-panel ab-founders is-light" id="founders" data-sec="2" data-panel>
       <div className="wrap">
         <span className="tag" data-reveal>BUILT BY TWO</span>
 
@@ -60,16 +71,22 @@ export function AboutFounders() {
                 <img src={f.img} alt={f.name} style={{ objectPosition: f.imgPos }} />
               </div>
 
-              {/* hidden until hover/focus - see .founder__reveal in
-                  about.css. Slides in from the side each founder sits on,
-                  so it reads as arriving from off-screen rather than
-                  unfolding out of the photo. */}
+              {/* Always on screen now, not hidden until hover - it slides
+                  in from its own outer edge as the section scrolls into
+                  view (see the founder write-ups block in
+                  lib/about-motion.ts). Split into an outer positioning
+                  wrapper and an inner reveal card on purpose: GSAP's
+                  scroll-scrubbed x/autoAlpha tween on the inner element
+                  would otherwise fight the outer's own translateY(-50%)
+                  centring transform. */}
               <div className="founder__reveal">
-                <h2 className="founder__name">{f.name}</h2>
-                <p className="founder__role">{f.role}</p>
-                {f.bio.map((p, j) => (
-                  <p className="founder__bio" key={j}>{p}</p>
-                ))}
+                <div className="founder__revealIn">
+                  <h2 className="founder__name">{f.name}</h2>
+                  <p className="founder__role">{f.role}</p>
+                  {f.bio.map((p, j) => (
+                    <p className="founder__bio" key={j}>{p}</p>
+                  ))}
+                </div>
               </div>
             </article>
           ))}
@@ -79,33 +96,24 @@ export function AboutFounders() {
   );
 }
 
-/* 4 · the group shot, run through a film gate. The strip pans as you scroll
-   and the perforations crawl with it, so the frame reads as a moving reel
-   rather than a photo with a border drawn on it. */
+/* 4 · the group shot, panning across its own crop window as you scroll -
+   see [data-film] in lib/about-motion.ts. The copy is the section's main
+   statement now: no more "Why we exist" label, just the two sentences it
+   was labelling, each its own paragraph. */
 export function AboutPeople() {
   return (
-    <section className="ab-panel ab-people" data-sec="3" data-panel>
+    <section className="ab-panel ab-people is-light" data-sec="3" data-panel>
       <div className="wrap">
         <span className="tag" data-reveal>IF YOU ASK OUR PEOPLE, WHO WE ARE?</span>
 
         <div className="ab-people__top">
           <div className="ab-people__copy">
-            <h2 className="ab-people__title" data-split>
-              An agency that leads, for those who lead.
-            </h2>
-
-            <p className="ab-people__note" data-reveal>
-              <span className="ab-people__note-label">Why we exist</span>
-              {WHY_WE_EXIST} {BELIEF}
-            </p>
+            <p className="ab-people__note" data-reveal>{WHY_WE_EXIST}</p>
+            <p className="ab-people__note" data-reveal>{BELIEF}</p>
           </div>
 
-          <div className="filmstrip" data-film>
-            <span className="filmstrip__perf" aria-hidden="true" />
-            <div className="filmstrip__win">
-              <img src={ABOUT_IMG.people} alt="The SoCheers team together" data-film-img />
-            </div>
-            <span className="filmstrip__perf" aria-hidden="true" />
+          <div className="filmstrip__win" data-film>
+            <img src={ABOUT_IMG.people} alt="The SoCheers team together" data-film-img />
           </div>
         </div>
       </div>
@@ -152,12 +160,6 @@ export function AboutSpace() {
       <div className="wrap">
         <h2 className="ab-space__title" data-split>The space.</h2>
         <p className="ab-space__copy" data-reveal>{SPACE_COPY}</p>
-
-        <ul className="rooms" data-reveal>
-          {ROOMS.map((r) => (
-            <li className="rooms__item" key={r}>{r}</li>
-          ))}
-        </ul>
 
         <div className="spacegrid">
           {SPACE_SHOTS.map((s, i) => (
