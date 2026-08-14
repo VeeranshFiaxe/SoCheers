@@ -1,5 +1,12 @@
 import ContactModal from "./ContactModal";
 import {
+  GLOBE_GRATICULE,
+  GLOBE_INDIA,
+  GLOBE_LAND,
+  GLOBE_PIN,
+  GLOBE_R,
+} from "@/lib/globe-paths";
+import {
   BARS,
   BAR_STROKE,
   MARK,
@@ -184,27 +191,17 @@ function Pendant() {
 /* ------------------------------------------------------------------
    The globe.
 
-   Where the work is made, said once and without a map service: a
-   monoline wireframe in the same weight as the rest of the site's line
-   art, turned so India is the face of it, with the pin on Mumbai. The
-   graticule is drawn as ellipses rather than projected properly - at
-   this size a real projection buys nothing you can see and costs a
-   dependency.
+   Where the work is made, said once and without a map service: the real
+   coastline in an orthographic projection, in the same monoline weight as
+   the rest of the site's line art, turned so the subcontinent is the face
+   of it and pinned on Mumbai.
 
-   India is authored in its own 100 x 120 box (roughly 68-97E by 8-35N)
-   and dropped onto the sphere by the transform on the group, which is
-   also how the pin's position was worked out: 19.08N 72.88E lands just
-   inside the west coast at about (33, 60) in that box. */
-const INDIA =
-  "M30 0C40 3 46 6 52 8C62 10 68 12 74 15C82 15 88 19 92 26" +
-  "C88 30 82 31 76 30C72 33 71 39 70 45C75 52 78 60 76 68" +
-  "C73 80 68 90 62 99C59 105 57 109 55 111C52 106 49 97 46 90" +
-  "C41 79 37 68 34 58C30 52 26 49 21 47C14 46 8 43 6 38" +
-  "C8 34 13 33 17 34C15 28 14 22 15 16C19 9 24 3 30 0Z";
-
-/* the pin, in the globe's own coordinates - India's (33, 60) run through
-   the same translate/scale the outline gets */
-const PIN = { x: -4.3, y: 2 };
+   None of the geometry is authored here. It is projected once by
+   scripts/build-globe.mjs (d3-geo + Natural Earth, both devDependencies)
+   and baked into lib/globe-paths.ts as flat path strings, so nothing maps
+   at runtime and nothing ships but the four `d` attributes. Everything is
+   in one coordinate space at r=100 about the origin, which is why the
+   sphere below is a plain circle and the pin needs no offset. */
 
 function Globe() {
   return (
@@ -217,47 +214,74 @@ function Globe() {
     >
       <defs>
         <clipPath id="foot-globe-clip">
-          <circle cx="0" cy="0" r="100" />
+          <circle cx="0" cy="0" r={GLOBE_R} />
         </clipPath>
       </defs>
 
       {/* the sphere */}
-      <circle cx="0" cy="0" r="100" fill="rgba(241,236,225,.035)" />
+      <circle cx="0" cy="0" r={GLOBE_R} fill="rgba(241,236,225,.04)" />
 
-      <g
-        clipPath="url(#foot-globe-clip)"
+      <g clipPath="url(#foot-globe-clip)">
+        {/* the graticule, 15 degrees, projected with everything else - so
+            the meridians bow the way they actually do rather than being
+            ellipses guessing at it */}
+        <path
+          d={GLOBE_GRATICULE}
+          fill="none"
+          stroke="currentColor"
+          strokeOpacity="0.17"
+          strokeWidth="0.8"
+        />
+
+        {/* the coastline, given a fill so it reads as ground rather than
+            as one more line of the grid */}
+        <path
+          d={GLOBE_LAND}
+          fill="rgba(241,236,225,.13)"
+          stroke="currentColor"
+          strokeOpacity="0.38"
+          strokeWidth="0.8"
+          strokeLinejoin="round"
+        />
+
+        {/* and the one country this is actually about, lifted out of it.
+            Still cream, not accent: the accent belongs to the pin, and two
+            greens a few pixels apart would be one green too many. */}
+        <path
+          d={GLOBE_INDIA}
+          fill="rgba(241,236,225,.42)"
+          stroke="currentColor"
+          strokeOpacity="0.85"
+          strokeWidth="1"
+          strokeLinejoin="round"
+        />
+      </g>
+
+      {/* the rim, over the top of all of it, so the sphere has an edge */}
+      <circle
+        cx="0"
+        cy="0"
+        r={GLOBE_R}
         fill="none"
         stroke="currentColor"
-        strokeOpacity="0.22"
-        strokeWidth="1.1"
-      >
-        {/* meridians - ellipses of falling width, which is what a set of
-            evenly spaced great circles looks like from outside */}
-        <ellipse cx="0" cy="0" rx="34" ry="100" />
-        <ellipse cx="0" cy="0" rx="68" ry="100" />
-        <line x1="0" y1="-100" x2="0" y2="100" />
-        {/* parallels - flat lines, since the globe is drawn upright */}
-        <line x1="-100" y1="0" x2="100" y2="0" strokeOpacity="0.3" />
-        {[-64, -34, 34, 64].map((y) => (
-          <line key={y} x1={-Math.sqrt(10000 - y * y)} y1={y} x2={Math.sqrt(10000 - y * y)} y2={y} />
-        ))}
-      </g>
+        strokeOpacity="0.4"
+        strokeWidth="1.4"
+      />
 
-      {/* the landmass, given a fill so it reads as ground rather than as
-          one more line of the graticule */}
-      <g clipPath="url(#foot-globe-clip)" transform="translate(-34 -52) scale(0.9)">
-        <path d={INDIA} fill="rgba(241,236,225,.16)" stroke="currentColor" strokeOpacity="0.55" strokeWidth="1.7" strokeLinejoin="round" />
-      </g>
-
-      {/* and the rim, over the top of both, so the sphere has an edge */}
-      <circle cx="0" cy="0" r="100" fill="none" stroke="currentColor" strokeOpacity="0.4" strokeWidth="1.6" />
-
-      {/* the pin. The ring behind it is animated outward on a loop by
-          lib/motion.ts - a location marker that never does anything is
+      {/* the pin. The ring behind it is pushed outward on a loop by the
+          stylesheet - a location marker that never does anything is
           indistinguishable from a full stop. */}
-      <circle className="foot__ping" cx={PIN.x} cy={PIN.y} r="6" fill="none" stroke="var(--accent)" strokeWidth="1.6" />
-      <circle cx={PIN.x} cy={PIN.y} r="4" fill="var(--accent)" />
-      <circle cx={PIN.x} cy={PIN.y} r="10" fill="var(--accent)" opacity="0.16" />
+      <circle
+        className="foot__ping"
+        cx={GLOBE_PIN.x}
+        cy={GLOBE_PIN.y}
+        r="5"
+        fill="none"
+        stroke="var(--accent)"
+        strokeWidth="1.5"
+      />
+      <circle cx={GLOBE_PIN.x} cy={GLOBE_PIN.y} r="9" fill="var(--accent)" opacity="0.18" />
+      <circle cx={GLOBE_PIN.x} cy={GLOBE_PIN.y} r="3.4" fill="var(--accent)" />
     </svg>
   );
 }
