@@ -11,6 +11,12 @@ export const ABOUT_IMG = {
   visual: "/assets/about/abt%20vis.png",
   founderSid: "/assets/about/founder-sid.jpg",
   founderMehul: "/assets/about/founder-mehul.jpg",
+  /* The pair in one frame, and the first thing the founders section shows.
+     Both of them stand cleanly in their own half of it, and in the same
+     left-to-right order as FOUNDERS below - which is what lets the section
+     tear this photo down the middle and hand each half to the founder
+     standing in it (see .founders__duo in about.css). */
+  foundersDuo: "/assets/about/founders-duo.webp",
   people: "/assets/about/people.jpg",
   /* the pop-art crowd, cropped out of the client's own reference slide */
   crowd: "/assets/about/crowd.jpg",
@@ -94,16 +100,28 @@ export const DRIVERS = [
 export const SPACE_COPY =
   "Imagine the meeting rooms named Idhar, Udhar, Jidhar, Kidhar. Because when someone asks “Where are you?” you can say “Idhar” and still be in a room called Udhar.";
 
-/* PLACEHOLDER grid. Photos are the client's phone shots of the rooms; the
-   room-to-photo mapping is unconfirmed (only the Jidhar sign is legible at
-   this resolution) so no tile claims a room by name. */
-export const SPACE_SHOTS = [
-  "/assets/about/space-02.jpg",
-  "/assets/about/space-03.jpg",
-  "/assets/about/space-04.jpg",
-  "/assets/about/space-05.jpg",
-  "/assets/about/space-06.jpg",
-  "/assets/about/space-07.jpg",
-  "/assets/about/space-08.jpg",
-  "/assets/about/space-09.jpg",
+/* The office, in eight frames: one of each of the four meeting rooms, and
+   four of the people who book them. The room shots used to be all eight
+   tiles, which meant the same doorway three or four times over - the four
+   kept here are one per room, chosen for the shot rather than the sign
+   (the client's phone shots of the same door are near-duplicates of each
+   other). No tile claims a room by name: only the Jidhar sign is legible
+   at this resolution and a caption guessing at the other three would be
+   worse than none.
+
+   `pos` is the object-position a tile needs when the mosaic hands it a
+   slot of the wrong shape - a wide band cut out of a phone-portrait shot
+   lands on the ceiling unless it is told where the subject is. The order
+   here is the grid-area order a..h in about.css, so the aspect of each
+   photo is matched to the slot it falls into and rooms and people
+   alternate around the mosaic rather than clumping. */
+export const SPACE_SHOTS: { src: string; alt: string; pos?: string }[] = [
+  { src: "/assets/about/people-run.webp", alt: "The SoCheers team after a morning run, medals up" },
+  { src: "/assets/about/space-04.jpg", alt: "A SoCheers meeting room, seen from the floor outside" },
+  { src: "/assets/about/space-05.jpg", alt: "A SoCheers meeting room behind fluted glass" },
+  { src: "/assets/about/people-cake.webp", alt: "A birthday in the SoCheers kitchen" },
+  { src: "/assets/about/people-offsite.webp", alt: "The whole of SoCheers on its twelfth-birthday offsite" },
+  { src: "/assets/about/space-07.jpg", alt: "A SoCheers meeting room, hexagon tiles behind the door", pos: "center 34%" },
+  { src: "/assets/about/people-khaugalli.webp", alt: "Khaugalli day at the SoCheers office", pos: "center 42%" },
+  { src: "/assets/about/space-09.jpg", alt: "A SoCheers meeting room at the end of the floor" },
 ];

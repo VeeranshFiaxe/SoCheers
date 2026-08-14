@@ -16,7 +16,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import Lenis from "lenis";
 import { OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
-import { MEANING, WCARD_SFX } from "./content";
+import { FOOTER_SFX, MEANING, WCARD_SFX } from "./content";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -1056,6 +1056,164 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- the footer
+       The page ends by being lifted off a room that was always there.
+
+       Two things, and they are deliberately not one: the lift is scrubbed,
+       because it *is* the scroll, and what happens in the room is played
+       in real time, because a filament dying and a cord letting go are
+       events with their own tempo - scrubbing them would let you hold a
+       bulb half dead with the scroll wheel, which is the one thing that
+       would give the whole conceit away.
+
+       Everything in app/globals.css is written as the end of it: mark
+       upright, cord gone, room dark, copy up. So this sets the *start* -
+       hanging, alight, a white room, nothing else in it - and the
+       timeline's job is to get back to the stylesheet. */
+    function initFooter() {
+      const foot = document.querySelector<HTMLElement>("[data-foot]");
+      const page = document.querySelector<HTMLElement>("[data-foot-lift]");
+      const run = document.querySelector<HTMLElement>("[data-foot-run]");
+      if (!foot || !page || !run) return;
+
+      const pivot = foot.querySelector<HTMLElement>("[data-foot-pivot]");
+      const cord = foot.querySelector<HTMLElement>("[data-foot-cord]");
+      const mark = foot.querySelector<HTMLElement>("[data-foot-mark]");
+      if (!pivot || !cord || !mark) return;
+
+      /* Two reveal groups, because the two addresses are tilted onto the
+         ring by the stylesheet and a rise would overwrite that transform.
+         They come up on opacity alone; everything else gets the rise. */
+      const parts = gsap.utils.toArray<HTMLElement>("[data-foot-part]", foot);
+      const fades = parts.filter((p) => p.dataset.footPart === "fade");
+      const rises = parts.filter((p) => p.dataset.footPart !== "fade");
+
+      const html = document.documentElement;
+
+      /* --- the lift ---
+         The page slides straight up off the room and does nothing else.
+
+         It used to scale down a little as it went, which drew the sides in
+         and let the room show along the left and right edges as well as
+         the bottom - so the page read as receding into the distance rather
+         than lifting away, and the white appeared on three sides at once.
+         The only thing left is the bottom edge rounding off as it goes,
+         which keeps the departing page reading as a card without ever
+         moving its left or right edge. The upward travel is the scroll
+         itself; nothing here has to animate it. */
+      if (!prefersReduced) {
+        gsap.fromTo(page,
+          { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+          {
+            borderBottomLeftRadius: 26, borderBottomRightRadius: 26,
+            ease: "none", immediateRender: false,
+            scrollTrigger: { trigger: run, start: "top bottom", end: "top top", scrub: true },
+          });
+      }
+
+      /* Reduced motion gets the stylesheet's own end state and no room
+         to watch - the copy is all there, the mark is upright, and the
+         only thing that happens is the page sliding off it. */
+      if (prefersReduced) return;
+
+      /* --- the cues ---
+         Same approach as the overture's own sfx() (lib/overture-motion.ts):
+         one Audio per cue, preloaded once, played by cloning the node so a
+         cue retriggered on a scroll-back-up-then-down doesn't cut its own
+         previous hit short. Autoplay rejection is swallowed - a missed
+         cue is not a reason to break the sequence. */
+      const footClips = {
+        drop: new Audio(FOOTER_SFX.drop),
+        flicker: new Audio(FOOTER_SFX.flicker),
+        retract: new Audio(FOOTER_SFX.retract),
+      };
+      Object.values(footClips).forEach((a) => { a.preload = "auto"; a.volume = 0.7; });
+      const footSfx = (name: keyof typeof footClips) => {
+        const clip = footClips[name];
+        const el = clip.cloneNode(true) as HTMLAudioElement;
+        el.volume = clip.volume;
+        void el.play().catch(() => {});
+      };
+
+      /* --- the pre-state --- */
+      const hang = () => {
+        gsap.set(foot, { "--lit": 1 });
+        gsap.set(pivot, { rotation: 0 });
+        gsap.set(rises, { autoAlpha: 0, y: 28 });
+        gsap.set(fades, { autoAlpha: 0 });
+      };
+      hang();
+
+      const tl = gsap.timeline({ paused: true });
+
+      /* 1 · lowered in, already alight. The cord is scaled rather than
+            sized: it is a 2px line, so scaleY and a growing height are
+            the same picture, and one of them costs a layout per frame. */
+      tl.fromTo(mark,
+        { y: () => -(cord.offsetHeight + mark.offsetHeight + 60), rotation: 180 },
+        { y: 0, duration: 1.05, ease: "power2.out" }, 0);
+      tl.fromTo(cord, { scaleY: 0 }, { scaleY: 1, duration: 1.05, ease: "power2.out" }, 0);
+
+      /* 2 · and then it dangles. A damped swing about the ceiling rose,
+            written out rather than looped: the first throw is the cord
+            going taut and is much bigger than the rest, which is the
+            part a uniform oscillation always gets wrong. */
+      const swing: [number, number][] = [[6.2, 0.52], [-4, 0.62], [2.4, 0.58], [-1.3, 0.54], [0.5, 0.5], [0, 0.44]];
+      swing.forEach(([r, d], i) => {
+        tl.to(pivot, { rotation: r, duration: d, ease: i === 0 ? "sine.out" : "sine.inOut" }, i === 0 ? 0.98 : ">");
+      });
+      tl.add(() => footSfx("drop"), 0.98);
+
+      /* 3 · it goes. Hard sets, not tweens, for the same reason the
+            overture's ignition is hard sets: a filament is conducting or
+            it is not, and easing between the two is what makes flicker
+            look drawn. The room is the same number, so the white goes
+            with it - the strobe is the whole screen, not the bulb. */
+      const OUT = 3.5;
+      tl.add(() => footSfx("flicker"), OUT);
+      const strike = (v: number, t: number) => tl.set(foot, { "--lit": v }, OUT + t);
+      strike(0.4, 0);
+      strike(1, 0.05);
+      strike(0, 0.11);
+      strike(0.9, 0.2);
+      strike(0, 0.25);
+      strike(0.45, 0.42);
+      strike(0, 0.47);
+      strike(0.18, 0.6);
+      tl.to(foot, { "--lit": 0, duration: 0.3, ease: "power2.in" }, OUT + 0.62);
+
+      /* 4 · in the dark, the cord lets go. It retracts to the ceiling it
+            came from, the mark drops the inch it was being held up by,
+            and on the way back it turns over - so the thing that was a
+            bulb hanging upside down finishes as the logo, the right way
+            up, exactly where it already was. */
+      const CUT = OUT + 1.25;
+      tl.add(() => footSfx("retract"), CUT);
+      tl.to(cord, { scaleY: 0, duration: 0.45, ease: "power2.in" }, CUT);
+      tl.to(mark, { y: 30, duration: 0.3, ease: "power2.in" }, CUT);
+      tl.to(mark, { y: 0, rotation: 0, duration: 1.15, ease: "power3.inOut" }, CUT + 0.26);
+
+      /* 5 · and the room fills in around it */
+      tl.to(rises, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power2.out", stagger: 0.1 }, CUT + 0.85);
+      tl.to(fades, { autoAlpha: 1, duration: 0.9, ease: "power2.out", stagger: 0.14 }, CUT + 1);
+
+      /* The gate. Not "when the footer is in view" - it is always in
+         view, it is fixed - but when enough of it has been uncovered
+         that the room is worth looking at. Scrolling back up puts it
+         back to hanging, so it plays again on the way down rather than
+         handing you a dark room and nothing to watch. */
+      ScrollTrigger.create({
+        trigger: run,
+        start: "top 38%",
+        onEnter: () => { html.classList.add("is-foot"); tl.play(); },
+        onLeaveBack: () => {
+          html.classList.remove("is-foot");
+          tl.pause(0).invalidate();
+          hang();
+        },
+      });
+    }
+
     /* -------------------------------------------------- boot */
     document.documentElement.classList.remove("no-js");
 
@@ -1077,6 +1235,7 @@ export function initSite(): () => void {
     initCounters();
     initNav();
     initMarquees();
+    initFooter();
 
     runLoader();
 
@@ -1101,6 +1260,7 @@ export function initSite(): () => void {
     lenis = null;
     ScrollTrigger.getAll().forEach((st) => st.kill());
     ctx.revert();
+    document.documentElement.classList.remove("is-foot");
     document.documentElement.classList.add("no-js");
   };
 }

@@ -133,8 +133,12 @@ em{ font-style:italic; }
 @keyframes grain{ 0%{transform:translate(0,0)} 20%{transform:translate(-4%,3%)} 40%{transform:translate(3%,-3%)} 60%{transform:translate(-2%,2%)} 80%{transform:translate(2%,-1%)} 100%{transform:translate(0,0)} }
 
 /* cursor-following glow */
+/* z-index:2, not 1: <main> has had to become a layer of its own so it can
+   sit on top of the fixed footer room (see the FOOTER block at the end of
+   this file), and the glow has to stay over the page rather than under
+   it. Everything else in the overlay stack is already in the 9000s. */
 .spotlight{
-  position:fixed; inset:0; z-index:1; pointer-events:none;
+  position:fixed; inset:0; z-index:2; pointer-events:none;
   background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),
     color-mix(in srgb, var(--accent) 13%, transparent), transparent 70%);
   opacity:.55; mix-blend-mode:screen;
@@ -525,140 +529,60 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .stat__num i{ color:var(--cream); font-style:normal; }
 .stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
 
-/* The cutout stands on its own - no frame, no card. What holds it to the
-   page is the paint splash behind it (components/Splash.tsx), which is
-   allowed to bleed past the box on every side, so nothing here clips. */
+/* The visual stands on its own - no frame, no card, no surface of any
+   kind. It is the mark held in the air as particles
+   (components/ParticleLogo.tsx), drawn on a transparent canvas over the
+   section's own black, so there is nothing here to read as a panel. */
 /* Sized explicitly, not stretched to the column: it is meant to bleed past
    its own grid track into the quiet space on the right, while the text
    column next to it keeps the width it already had. */
-/* The artwork runs past the right gutter so the section reads as one wide
-   frame rather than a photo parked inside a column. */
 .who__photo{
   position:relative; align-self:center;
   width:auto; margin-right:calc(var(--pad) * -1);
   height:clamp(360px, 40vw, 660px);
 }
-.who__photo img{
-  position:relative; z-index:1;
-  width:100%; height:100%;
-  object-fit:contain; object-position:right center;
+
+/* .plogo is the *frame*: the box the composition is centred and scaled
+   to, exactly the footprint the artwork used to have. Nothing is painted
+   on it - no background, no border, no filter. Anything painted here
+   would be the rectangle the whole piece is trying not to be. */
+/* pointer-events:none on purpose - the cursor is tracked on the window,
+   so the field still feels it, but nothing here becomes a hover target
+   or gets in front of the site's own cursor behaviour. */
+.plogo{
+  position:absolute; inset:0; z-index:1; color:var(--cream); pointer-events:none;
+  /* How far the canvas is allowed to hang past the frame, top and
+     bottom. The mark takes about four fifths of the frame's height, so
+     without this a grain thrown upward runs out of canvas almost
+     immediately and shears off against a straight edge. The canvas is
+     transparent and inert, so all this costs is a few more pixels to
+     clear - and grains can now be pushed clear of the section entirely
+     and drift back in. lib/particle-logo.ts measures the overhang off
+     the two boxes rather than being told it, so this number is the only
+     place it is set. */
+  --plogo-bleed:34%;
 }
-
-/* The splatter sits behind the artwork and is deliberately larger than it
-   on every side, so the throw looks like it landed past the cutout rather
-   than being contained by it. Sized by insets, not a centring translate,
-   because lib/motion.ts owns this element's transform - it drags it toward
-   the cursor, and a transform here would be overwritten. */
-.who__splash{
-  position:absolute; z-index:0; pointer-events:none;
-  left:-8%; right:-16%; top:-22%; bottom:-12%;
-  will-change:transform;
-  /* Hard guarantee that nothing ever drifts under the copy: the left edge
-     is faded out entirely, so however far the cursor drags the splash or
-     a mist body wanders, the text column stays on clean black. The pull
-     is up to 110px, so the fade has to be wider than that. */
-  -webkit-mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 12%, #000 26%);
-  mask-image:linear-gradient(to right, transparent 0, rgba(0,0,0,.35) 12%, #000 26%);
-}
-/* Held back on the svg rather than the wrapper: lib/motion.ts fades the
-   wrapper in with autoAlpha, so any opacity set there gets overwritten. */
-.who__splash .splash{ position:relative; z-index:1; width:100%; height:100%; display:block; overflow:visible; opacity:.8; }
-
-/* ---- the drifting mist inside the splatter (components/Splash.tsx) ----
-   Sits behind the thrown paint and is smaller than it, so it reads as
-   vapour still hanging in the air rather than a wash behind the picture.
-
-   plus-lighter is the whole trick: it adds the two layers' light channel
-   for channel, so a violet body crossing a green one genuinely produces
-   the sum of the two - a colour neither of them is - instead of the front
-   one covering the back one. isolation on the container keeps that
-   addition inside the mist so it can never blow out the artwork. */
-.splash__mist{
-  position:absolute; inset:0; z-index:0;
-  isolation:isolate; pointer-events:none;
+/* Deliberately taller than the element it sits in, and sized in width and
+   height rather than by insets: a canvas is a replaced element, so a
+   left/right/top/bottom box with auto dimensions does not stretch it - it
+   quietly keeps its intrinsic 300x150 and solves the insets around that. */
+.plogo canvas{
+  position:absolute; left:0; top:calc(var(--plogo-bleed) * -1);
+  width:100%; height:calc(100% + var(--plogo-bleed) * 2);
   display:block;
+  opacity:0; transition:opacity 1.2s var(--ease);
 }
-.splash__blob{
-  position:absolute;
-  left:var(--blob-x); top:var(--blob-y);
-  width:var(--blob-size); aspect-ratio:1;
-  margin:calc(var(--blob-size) / -2) 0 0 calc(var(--blob-size) / -2);
-  /* Flat fill, not a radial gradient: a gradient fading to transparent at
-     the edge would hide the border-radius behind a soft circle and throw
-     away the morph. The blur is what softens the edge here. */
-  background:var(--blob-c);
-  mix-blend-mode:plus-lighter;
-  opacity:.5;
-  filter:blur(18px);
-  will-change:transform, border-radius;
-}
-/* Blur is heavy to recompute; drop it on small screens where the whole
-   thing is a fraction of its size anyway. */
-@media (max-width:860px){ .splash__blob{ filter:blur(14px); } }
+.plogo.is-live canvas{ opacity:1; }
 
-/* Each body travels its own path, and the eight-value border-radius is
-   animated alongside the transform so the *silhouette* changes as it goes.
-   That is the difference between vapour and a sprite sliding around: the
-   corner radii move independently, so the outline bulges on one side while
-   it pulls in on another, and no two frames have the same shape. */
-@keyframes wander-a{
-  0%   { transform:translate(0,0) scale(1) rotate(0deg);        border-radius:58% 42% 63% 37% / 47% 55% 45% 53%; opacity:.36; }
-  25%  { transform:translate(58%,-34%) scale(1.28) rotate(34deg); border-radius:38% 62% 34% 66% / 62% 38% 62% 38%; opacity:.55; }
-  55%  { transform:translate(-46%,32%) scale(.72) rotate(-28deg); border-radius:67% 33% 51% 49% / 35% 66% 34% 65%; opacity:.3; }
-  80%  { transform:translate(24%,58%) scale(1.14) rotate(19deg);  border-radius:44% 56% 68% 32% / 58% 44% 56% 42%; opacity:.5; }
-  100% { transform:translate(-30%,-18%) scale(.94) rotate(-11deg);border-radius:60% 40% 42% 58% / 50% 52% 48% 50%; opacity:.42; }
+/* What is there before the engine arrives, and what stays if WebGL never
+   does: the same mark, flat, at the same framing. The two crossfade, so
+   what you see is the drawn logo condensing into powder rather than one
+   picture being swapped for another. */
+.plogo__still{
+  position:absolute; inset:0; width:100%; height:100%;
+  opacity:.28; transition:opacity 1.2s var(--ease);
 }
-@keyframes wander-b{
-  0%   { transform:translate(0,0) scale(1.1) rotate(0deg);        border-radius:41% 59% 36% 64% / 63% 35% 65% 37%; opacity:.44; }
-  30%  { transform:translate(-62%,26%) scale(.78) rotate(-41deg); border-radius:66% 34% 58% 42% / 38% 63% 37% 62%; opacity:.3; }
-  60%  { transform:translate(38%,-52%) scale(1.34) rotate(26deg); border-radius:33% 67% 62% 38% / 55% 42% 58% 45%; opacity:.58; }
-  85%  { transform:translate(52%,34%) scale(.9) rotate(48deg);    border-radius:57% 43% 39% 61% / 44% 57% 43% 56%; opacity:.38; }
-  100% { transform:translate(-16%,-40%) scale(1.16) rotate(-14deg);border-radius:48% 52% 55% 45% / 60% 39% 61% 40%; opacity:.5; }
-}
-@keyframes wander-c{
-  0%   { transform:translate(0,0) scale(.88) rotate(0deg);        border-radius:63% 37% 47% 53% / 39% 61% 39% 61%; opacity:.32; }
-  28%  { transform:translate(44%,48%) scale(1.3) rotate(-37deg);  border-radius:35% 65% 66% 34% / 64% 36% 64% 36%; opacity:.54; }
-  52%  { transform:translate(-54%,-30%) scale(1.02) rotate(22deg);border-radius:59% 41% 33% 67% / 43% 59% 41% 57%; opacity:.36; }
-  78%  { transform:translate(18%,-58%) scale(.74) rotate(53deg);  border-radius:45% 55% 61% 39% / 57% 46% 54% 43%; opacity:.48; }
-  100% { transform:translate(-26%,22%) scale(1.2) rotate(-8deg);  border-radius:52% 48% 44% 56% / 48% 53% 47% 52%; opacity:.4; }
-}
-@keyframes wander-d{
-  0%   { transform:translate(0,0) scale(1.05) rotate(0deg);       border-radius:37% 63% 58% 42% / 66% 33% 67% 34%; opacity:.4; }
-  22%  { transform:translate(-38%,-56%) scale(.8) rotate(29deg);  border-radius:64% 36% 42% 58% / 34% 65% 35% 66%; opacity:.56; }
-  50%  { transform:translate(60%,18%) scale(1.26) rotate(-44deg); border-radius:46% 54% 67% 33% / 59% 41% 60% 40%; opacity:.3; }
-  76%  { transform:translate(-22%,54%) scale(.92) rotate(17deg);  border-radius:55% 45% 36% 64% / 42% 58% 40% 60%; opacity:.5; }
-  100% { transform:translate(34%,-24%) scale(1.12) rotate(-33deg);border-radius:49% 51% 53% 47% / 51% 49% 52% 48%; opacity:.38; }
-}
-@keyframes wander-e{
-  0%   { transform:translate(0,0) scale(.95) rotate(0deg);        border-radius:68% 32% 44% 56% / 52% 47% 53% 48%; opacity:.34; }
-  33%  { transform:translate(-58%,40%) scale(1.32) rotate(-24deg);border-radius:32% 68% 57% 43% / 41% 62% 38% 59%; opacity:.52; }
-  61%  { transform:translate(46%,-44%) scale(.76) rotate(51deg);  border-radius:61% 39% 35% 65% / 67% 32% 68% 33%; opacity:.3; }
-  88%  { transform:translate(-14%,-62%) scale(1.18) rotate(-9deg);border-radius:43% 57% 62% 38% / 47% 55% 44% 56%; opacity:.46; }
-  100% { transform:translate(28%,30%) scale(1) rotate(36deg);     border-radius:54% 46% 48% 52% / 56% 43% 57% 44%; opacity:.42; }
-}
-@keyframes wander-f{
-  0%   { transform:translate(0,0) scale(1.14) rotate(0deg);       border-radius:44% 56% 66% 34% / 36% 64% 35% 65%; opacity:.38; }
-  27%  { transform:translate(56%,52%) scale(.82) rotate(43deg);   border-radius:65% 35% 38% 62% / 60% 39% 62% 41%; opacity:.3; }
-  58%  { transform:translate(-48%,-36%) scale(1.24) rotate(-31deg);border-radius:36% 64% 55% 45% / 45% 56% 43% 54%; opacity:.56; }
-  82%  { transform:translate(30%,-58%) scale(.98) rotate(12deg);  border-radius:58% 42% 47% 53% / 63% 36% 65% 38%; opacity:.4; }
-  100% { transform:translate(-34%,26%) scale(1.08) rotate(-47deg);border-radius:51% 49% 51% 49% / 49% 51% 50% 50%; opacity:.48; }
-}
-
-@media (prefers-reduced-motion:reduce){
-  .splash__blob{ animation:none !important; }
-}
-
-/* The palette the splatter throws, sampled off the WHO WE ARE artwork -
-   the same green, violet, gold, magenta and cyan the illustration and the
-   stat counts already use, so the two read as one image. */
-.who__splash{
-  --sp-pale:       #eafff4;
-  --sp-acc-pink:   #f91e7e;
-  --sp-acc-blue:   #291df1;
-  --sp-acc-gold:   #fea320;
-  --sp-acc-violet: #7b4ff0;
-  --sp-acc-cyan:   #01ddc0;
-}
+.plogo.is-live .plogo__still{ opacity:0; }
 
 @media (max-width:860px){
   .who__grid{ grid-template-columns:1fr; gap:36px; }
@@ -758,73 +682,19 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .awards__track .star{ color:var(--accent); -webkit-text-stroke:0; font-size:.5em; }
 
 /* ============================================================
-   8 · CLOSING CTA
+   8 · THE ASK  (shared: the footer's CTA, and the Contact page)
    ============================================================ */
-.contact{
-  position:relative; padding:clamp(72px,11vh,130px) 0 clamp(76px,11.5vh,136px); overflow:hidden; text-align:center;
-  /* The two source images are not the same shape - "footer left" is a
-     tall 2:3 cutout, "footer right" is a wide 3:2 one. Sizing both off one
-     shared height (the old approach) made the wide one visibly bigger,
-     since at equal height its width comes out 2.25x the tall one's - so
-     the right side gets its own, smaller height budget here to land at a
-     comparable footprint instead of a matching number. */
-  --cast-h:clamp(250px, 29vw, 460px);
-  --cast-h-right:calc(var(--cast-h) * .72);
-  /* Clearance the copy column reserves on each side - based on whichever
-     side renders wider, which is the right one (3:2 at .72 height still
-     comes out wider per unit height than the left's 2:3). */
-  --cast-w:calc(var(--cast-h-right) * 1.5);
-}
-.contact__inner{
-  position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:16px;
-  /* A light reservation, not a hard clearance: the mascots are anchored to
-     the bottom of the section (below) rather than centred on it, so they
-     no longer sit at the same height as the title - this padding only
-     needs to keep the shorter lines (emails, the CTA) off their shoulders. */
-  padding:0 max(var(--pad), calc(var(--cast-w) * .38));
-}
+/* There is no closing CTA *section* any more - the home page now ends on
+   AWARDS and hands straight over to the footer, which is where the ask
+   lives (see .foot__ask at the end of this file). What is left here is the
+   two pieces that outlived it, because the Contact page renders them too:
+   the button itself (components/ContactModal.tsx) and the row of accounts
+   (app/contact/page.tsx, which only overrides their alignment). */
 
-/* The mascots stand at the foot of the section rather than centred on it,
-   so they read as grounded figures the copy is addressed over rather than
-   as a wall either side of it - nothing here competes with the headline
-   for the same vertical band. Bled past the section's own edge on their
-   outer side and faded there, so each one reads as walking in from
-   off-screen rather than stopping at a hard border - the same move as the
-   WHO WE ARE splash's mask, just mirrored per side. */
-.contact__cast{
-  position:absolute; bottom:clamp(16px, 6vh, 60px); z-index:1; pointer-events:none;
-  width:auto;
-}
-.contact__cast--left{
-  aspect-ratio:2 / 3; height:var(--cast-h);
-  left:clamp(-60px, -3vw, 0px);
-  -webkit-mask-image:linear-gradient(to left, #000 70%, transparent 100%);
-  mask-image:linear-gradient(to left, #000 70%, transparent 100%);
-}
-.contact__cast--right{
-  aspect-ratio:3 / 2; height:calc(var(--cast-h-right) * 1.22);
-  bottom:calc(clamp(16px, 6vh, 60px) + 5vh);
-  right:clamp(-60px, -3vw, 0px);
-  filter:brightness(.94);
-  -webkit-mask-image:linear-gradient(to right, #000 70%, transparent 100%);
-  mask-image:linear-gradient(to right, #000 70%, transparent 100%);
-}
-.contact__cast img{ width:100%; height:100%; object-fit:contain; object-position:bottom; }
-
-@media (max-width:1180px){
-  /* Below this the copy column and a full-width mascot start fighting for
-     the same horizontal space - rather than shrink them illegibly small,
-     drop them to a quiet backdrop behind the text instead of a bled-in
-     figure either side of it. Zeroing --cast-w here, not just hiding the
-     mascots, matters: .contact__inner's padding is calc'd off that same
-     variable, and it must collapse back to var(--pad) once there is
-     nothing on the sides to clear. */
-  .contact{ --cast-w:0px; }
-  .contact__cast{ display:none; }
-}
-.contact__title{ font-family:var(--f-display); font-weight:700; font-size:clamp(36px,6.2vw,96px); line-height:.9; letter-spacing:-.03em; text-wrap:balance; }
+/* No margin of its own: it sits in a flex column in the footer and in the
+   Contact page's own layout, and both of those own their spacing. */
 .contact__cta{
-  margin-top:60px; display:inline-flex; align-items:center; gap:16px;
+  display:inline-flex; align-items:center; gap:16px;
   font-family:var(--f-display); font-weight:600; font-size:clamp(20px,2.4vw,34px);
   background:var(--accent); color:#04140b; border:none; border-radius:60px; padding:20px 44px; position:relative; overflow:hidden;
 }
@@ -832,19 +702,14 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .contact__cta::before{ content:""; position:absolute; inset:0; background:var(--cream); transform:translateY(101%); transition:transform .45s var(--ease); }
 .contact__cta:hover::before{ transform:translateY(0); }
 .contact__cta:hover svg{ transform:translateX(6px); }
-.contact__emails{
-  margin-top:60px; display:flex; gap:clamp(28px,5vw,64px); flex-wrap:wrap; justify-content:center;
-}
-.contact__email{ display:flex; flex-direction:column; align-items:center; gap:6px; }
-.contact__email-label{
-  font-family:var(--f-mono); font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:var(--cream);
-}
-.contact__email-addr{
-  font-family:var(--f-display); font-weight:600; font-size:clamp(17px,1.8vw,22px);
-  transition:color .3s var(--ease);
-}
-.contact__email:hover .contact__email-addr{ color:var(--accent); }
+.contact__cta{ cursor:none; }
+@media (hover:none){ .contact__cta{ cursor:pointer; } }
 
+/* The row of accounts. Only the Contact page uses this now - the footer
+   draws its own (.foot__social) because it needs a different size and a
+   different hover to sit in the floor row - but the base has to stay here:
+   app/contact/contact.css assumes it exists and overrides nothing but
+   justify-content and the margin. */
 .contact__social{ margin-top:32px; display:flex; gap:16px; justify-content:center; }
 .contact__social a{
   width:42px; height:42px; border-radius:50%; display:grid; place-items:center;
@@ -853,9 +718,6 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 }
 .contact__social a:hover{ color:var(--accent); border-color:rgba(47,229,137,.5); transform:translateY(-3px); }
 
-.contact__foot{ margin-top:24px; display:flex; gap:30px; flex-wrap:wrap; justify-content:center; font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
-.contact__cta{ cursor:none; }
-@media (hover:none){ .contact__cta{ cursor:pointer; } }
 .cmodal__close,
 .cmodal__submit{ font-family:inherit; border:none; cursor:pointer; }
 
@@ -1277,3 +1139,358 @@ html.is-overture .nav,
 html.is-overture .progress,
 html.is-overture .hero__scroll{ opacity:0 !important; pointer-events:none; }
 .nav,.progress,.hero__scroll{ transition:opacity .7s var(--ease); }
+
+/* ============================================================
+   THE FOOTER
+   (components/Footer.tsx · motion in initFooter, lib/motion.ts)
+
+   The page does not end and then show a footer. The footer is a room
+   the size of the viewport, fixed behind everything, and the last screen
+   of scroll lifts <main> off it - so the footer never moves at all, and
+   what looks like it rising into view is the page above it going away.
+
+   Three parts to make that work, and they have to agree:
+     .foot       the room - fixed, one viewport tall, at the bottom of
+                 the paint order
+     main        opaque and one layer up, so the room is invisible until
+                 it is uncovered
+     .foot-run   one viewport of nothing after main, because a fixed
+                 element contributes no height and there would otherwise
+                 be nothing left to scroll
+
+   Everything written here is the *end* of the sequence - the mark
+   upright, no cord, the room dark, the copy up. That is what a
+   script-less or reduced-motion visitor gets, and it is the state the
+   engine tweens back from rather than to.
+   ============================================================ */
+main[data-foot-lift]{
+  position:relative; z-index:1;
+  background:var(--bg);
+  /* No transform of any kind - and that is the point. The page travels
+     straight up off the room, which is just the scroll, so its left and
+     right edges never move and the room can only ever appear along the
+     bottom. initFooter animates the bottom corners' radius and nothing
+     else. */
+  /* The contact shadow the page casts down onto the room. Static, not
+     animated: there is nothing behind main for it to fall on until the
+     room is uncovered, and against the site's own black it is invisible
+     - so it costs one paint and needs no keyframe. */
+  box-shadow:0 30px 70px rgba(0,0,0,.5);
+}
+.foot-run{ height:100dvh; pointer-events:none; }
+
+/* Once the room is uncovered the page's own furniture is in the way of
+   it - a cream nav over a white room reads as a bug, and the progress
+   bar has nothing left to report. Set by initFooter on the same trigger
+   that starts the sequence; the transition is the shared one declared
+   with .nav above. */
+html.is-foot .nav,
+html.is-foot .progress{ opacity:0; pointer-events:none; }
+
+.foot{
+  position:fixed; inset:0; z-index:0;
+  height:100dvh; overflow:hidden;
+  background:var(--bg); color:var(--cream);
+
+  /* the mark, and everything measured off it */
+  --mark-w:clamp(112px, 11vw, 168px);
+  --mark-h:calc(var(--mark-w) * 258 / 204);   /* PENDANT_RATIO */
+  --mark-y:27dvh;                              /* where its centre comes to rest */
+  --cord:calc(var(--mark-y) - var(--mark-h) / 2);
+  /* how far off the mark the addresses stand */
+  --reach:clamp(178px, 20vw, 290px);
+
+  /* The ask, under the bulb.
+
+     A share of the room's height first, and only then a clearance: 46dvh
+     is where it belongs in the composition, and the second reading is the
+     floor under that - the mark is sized off *width*, so on a short wide
+     window it hangs lower than 46dvh would allow for and the ask has to
+     be pushed past it. Everything vertical in here works this way, so the
+     whole ladder stretches with the window instead of one gap in it
+     absorbing all the slack. */
+  --ask-y:max(46dvh, calc(var(--mark-y) + var(--mark-h) / 2 + 34px));
+  /* A reservation, not the block's real height - that is a wrapped
+     headline plus a button and is only known at layout time. This is what
+     the floor below is told to clear. */
+  --ask-h:clamp(118px, 17vh, 168px);
+  /* Where the floor of the room starts - everything below the social ring
+     (the globe, the sign-off, the back-to-top column) is measured down
+     from here rather than up from the viewport's own bottom edge. Two
+     numbers used to own this independently (--mark-y from the top,
+     the old row's own `bottom:clamp(...)` from the bottom) and nothing
+     tied them together, so a short window let the ring and the floor
+     collide and a tall one left a dead gap neither side knew was there.
+
+     Same shape as --ask-y: a share of the room's height, floored by the
+     clearance the block above actually needs. 72dvh is where the floor
+     belongs; the second reading only takes over on windows short enough
+     that the ask would otherwise be sitting on top of it. */
+  --floor-y:max(72dvh, calc(var(--ask-y) + var(--ask-h)));
+
+  /* the light in the room, 0 to 1. One number: the bulb's hot parts, the
+     white the room turns while it is on, and the warmth in the corners
+     all read it, so the whole death of the light is this being set nine
+     times rather than three things kept in step. */
+  --lit:0;
+}
+
+/* ---- the room's own light ----
+   White laid over the site's black and faded by --lit, so "off" is
+   genuinely the page's own background and there is no near-black to
+   pick a value for. */
+.foot__day{
+  position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:#f3efe6; opacity:var(--lit);
+}
+/* and what one bulb in a white room actually looks like: not a glow -
+   on white a glow is invisible - but the corners falling away warm.
+   Multiply, so it can only ever darken what is under it. */
+.foot__bloom{
+  position:absolute; left:50%; top:var(--mark-y); z-index:1; pointer-events:none;
+  width:170vmax; height:170vmax; margin:-85vmax 0 0 -85vmax;
+  background:radial-gradient(circle closest-side,
+    rgba(255,246,226,0) 14%, rgba(214,180,120,.30) 62%, rgba(140,108,62,.44) 100%);
+  mix-blend-mode:multiply; opacity:var(--lit);
+}
+
+/* ---- the pendant ----
+   pivot = the ceiling rose. Zero-sized and at the very top of the room,
+           so the swing is a rotation about the point the cord actually
+           hangs from and not about the middle of the bulb.
+   cord  = the flex, scaled down from nothing as the bulb is lowered
+   mark  = the bulb - and, once the cord lets go and it turns over, the
+           logo. */
+.foot__pivot{
+  position:absolute; left:50%; top:0; z-index:3;
+  width:0; height:0; transform-origin:0 0; pointer-events:none;
+}
+.foot__cord{
+  position:absolute; left:-1px; top:0; width:2px; height:var(--cord);
+  /* Collapsed by default, because the end of the sequence is a mark with
+     no cord attached to it - the height is what the engine scales *to*,
+     and a script-less visitor should never see the flex. */
+  transform:scaleY(0); transform-origin:50% 0;
+  background:linear-gradient(to bottom,
+    rgba(120,104,78,.35) 0%, rgba(160,140,104,.85) 22%, rgba(196,176,134,.95) 100%);
+}
+.foot__markpos{
+  position:absolute; left:0; top:var(--cord);
+  width:var(--mark-w); height:var(--mark-h); margin-left:calc(var(--mark-w) / -2);
+}
+.foot__mark{ display:block; width:100%; height:100%; color:var(--cream); }
+.foot__svg{ display:block; width:100%; height:100%; overflow:visible; }
+
+/* the two halves of the bulb: what only exists while it is alight, and
+   what only exists once it is dead - which is the mark drawn flat, the
+   way the site's logo is drawn everywhere else. Exact inverses, so the
+   crossover needs no timing of its own. */
+.foot__lit{ opacity:var(--lit); }
+.foot__cold{ opacity:calc(1 - var(--lit)); }
+
+/* ---- the copy, on a ring round the mark ----
+   The addresses on its shoulders, tipped a few degrees so they sit on
+   the circle rather than beside it. The tilt lives on this element and
+   the reveal only ever touches opacity, which leaves the transform of
+   the <a> inside free for the magnetic pull. */
+.foot__mail{
+  position:absolute; top:var(--mark-y); z-index:4;
+  width:min(290px, 24vw); margin-top:-2.6em;
+}
+.foot__mail--l{ right:calc(50% + var(--reach)); text-align:right; transform:rotate(-4.5deg); }
+.foot__mail--r{ left:calc(50% + var(--reach)); text-align:left;  transform:rotate(4.5deg); }
+.foot__mail a{ display:flex; flex-direction:column; gap:7px; }
+.foot__mail--l a{ align-items:flex-end; }
+.foot__mail--r a{ align-items:flex-start; }
+.foot__mail-label{
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.22em;
+  text-transform:uppercase; color:var(--muted);
+}
+.foot__mail-addr{
+  font-family:var(--f-display); font-weight:600; font-size:clamp(16px,1.7vw,21px);
+  transition:color .3s var(--ease);
+}
+.foot__mail a:hover .foot__mail-addr{ color:var(--accent); }
+
+/* ---- the ask ----
+   Under the bulb, and the reason the accounts came off the ring: this is
+   the one thing the room is actually asking, so it gets the space
+   directly below the mark rather than sharing it with five icons. */
+.foot__ask{
+  position:absolute; left:0; right:0; top:var(--ask-y); z-index:4;
+  display:flex; flex-direction:column; align-items:center;
+  gap:clamp(18px, 2.6vh, 34px);
+  padding:0 var(--pad); text-align:center;
+}
+.foot__ask-title{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(28px, 4vw, 58px); line-height:.95; letter-spacing:-.03em;
+  text-wrap:balance;
+}
+/* The button is a shade smaller here than it was as a full section's
+   closing CTA - it is one item in a room now, not the last word on a
+   screen of its own. */
+.foot__ask .contact__cta{
+  font-size:clamp(16px, 1.5vw, 21px); padding:15px 32px; gap:12px;
+}
+.foot__ask .contact__cta svg{ width:19px; height:19px; }
+
+/* The accounts, closing the floor row. */
+.foot__social{ display:flex; gap:10px; }
+.foot__social a{
+  width:36px; height:36px; border-radius:50%;
+  display:grid; place-items:center;
+  border:1px solid var(--line); color:var(--muted);
+  transition:color .3s var(--ease), border-color .3s var(--ease), background-color .3s var(--ease);
+}
+.foot__social a:hover{
+  color:#04140b; background:var(--accent);
+  border-color:color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* ---- the floor of the room ----
+   One real row now, not three independently-anchored corners: .foot__base
+   is a flex row pinned to --floor-y (so it always starts a fixed distance
+   under the social ring, never colliding with it and never stranded far
+   below it), with the globe at one end and the back-to-top column at the
+   other. Both start level at the row's own top - simpler than trying to
+   fake a shared baseline across a globe icon, two lines of script and a
+   two-line mono column, and it looks exactly as level as that would.
+
+   The sign-off can't live in this row: it is centred across the *whole*
+   width, which a three-up flex row can't also do for two edge-anchored
+   children without either constraining their widths or fighting the
+   centred one for space. It stays its own absolutely-positioned, centred
+   element, floated over the row's empty middle instead. */
+.foot__base{
+  position:absolute; left:0; right:0; top:var(--floor-y); z-index:4;
+  display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
+  padding:0 var(--pad);
+}
+
+.foot__where{ display:flex; align-items:center; gap:16px; }
+/* Sized off whichever axis is scarcer. It used to read width alone, which
+   made it its largest exactly where there was least room for it - a short,
+   wide window - and the floor row bloated to match. */
+.foot__globe{ display:block; width:clamp(84px, min(11vw, 15vh), 148px); aspect-ratio:1; }
+.foot__globe-svg{ display:block; width:100%; height:100%; color:var(--cream); }
+.foot__place{ display:flex; flex-direction:column; gap:6px; }
+.foot__place b{
+  font-family:var(--f-mono); font-weight:400; font-size:12px;
+  letter-spacing:.2em; text-transform:uppercase; color:var(--cream);
+}
+.foot__place i{
+  font-style:normal; font-family:var(--f-mono); font-size:10.5px;
+  letter-spacing:.14em; color:var(--muted);
+}
+
+/* The sign-off, the way the reference hangs one under its globe: the
+   name in the site's hand, and what it does in the site's voice, big
+   enough to be the last thing read. */
+.foot__sign{
+  /* Relative to .foot__base, not to .foot: it is a child of the base row
+     now (see components/Footer.tsx), and .foot__base is itself already
+     sitting at --floor-y - stacking that offset again here would double
+     it. 6px is the small nudge down that keeps it roughly level with
+     .foot__where's own content past that shared starting line. */
+  position:absolute; left:0; right:0; top:6px; z-index:4;
+  display:flex; flex-direction:column; align-items:center; gap:2px;
+  padding:0 var(--pad); text-align:center; pointer-events:none;
+}
+.foot__sign-name{
+  font-family:var(--f-playful); font-size:clamp(30px, 3.6vw, 54px); line-height:1;
+  color:var(--cream);
+}
+.foot__sign-line{
+  font-family:var(--f-display); font-weight:700; text-transform:uppercase;
+  font-size:clamp(24px, 4.4vw, 66px); line-height:.95; letter-spacing:-.02em;
+  white-space:nowrap;
+  -webkit-text-stroke:1px var(--cream); color:transparent;
+}
+
+.foot__ends{
+  display:flex; flex-direction:column; align-items:flex-end; gap:14px;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--muted);
+}
+.foot__ends-meta{ display:flex; align-items:center; gap:14px; }
+.foot__ends-meta i{ font-style:normal; }
+.foot__ends a{ transition:color .3s var(--ease); }
+.foot__ends a:hover{ color:var(--accent); }
+
+.foot__legal{
+  position:absolute; left:0; right:0; bottom:0; z-index:4;
+  display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap;
+  padding:15px var(--pad); border-top:1px solid var(--line);
+  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--muted);
+}
+
+/* ---- the pin ----
+   A marker that never does anything is a full stop. One ring, pushed
+   out and faded, on the same beat as a breath. */
+.foot__ping{ transform-box:fill-box; transform-origin:50% 50%; opacity:0; }
+@media (prefers-reduced-motion: no-preference){
+  .foot__ping{ animation:foot-ping 2.8s var(--ease) infinite; }
+}
+@keyframes foot-ping{
+  0%   { transform:scale(.55); opacity:.85; }
+  70%  { transform:scale(2.9);  opacity:0; }
+  100% { transform:scale(2.9);  opacity:0; }
+}
+
+/* ---- narrow ----
+   Below this the ring cannot hold: the addresses at ±--reach would be over
+   the mark. Everything comes off the circle and stacks down the middle
+   instead, which is the only honest layout at this width - the pendant,
+   the drop and the flicker are untouched.
+
+   The stack is authored as explicit dvh stops rather than derived from
+   --ask-y/--floor-y the way the wide layout is: with everything in one
+   column there is no "beside" left for the solver to protect, and one
+   readable ladder of positions beats four interlocking calcs. */
+@media (max-width:820px){
+  .foot{
+    --mark-w:clamp(92px, 24vw, 128px);
+    --mark-y:22dvh;
+  }
+  .foot__mail{
+    left:0; right:0; width:auto; margin-top:0;
+    text-align:center; transform:none;
+  }
+  .foot__mail a{ align-items:center; }
+  .foot__mail--l{ top:33dvh; }
+  .foot__mail--r{ top:39dvh; }
+
+  .foot__ask{ top:46dvh; gap:16px; }
+  .foot__ask-title{ font-size:clamp(24px, 6.6vw, 34px); }
+  .foot__ask .contact__cta{ font-size:15px; padding:13px 26px; }
+
+  /* The floor row is one flex track above this width so the globe and the
+     accounts can start level with each other - but there is nothing to be
+     level with once they are stacked, so the row goes back to being the
+     plain wrapper it was (display:contents) and each child takes its own
+     position back rather than inheriting the row's. */
+  .foot__base{ display:contents; }
+
+  /* .foot__ends survives as the accounts and nothing else: "back to top"
+     is a scroll away on a phone and "est. 2013" is already in the sign-off
+     above it, so the column drops its second line rather than the whole
+     block - hiding .foot__ends outright would take the accounts with it. */
+  .foot__ends{
+    position:absolute; left:0; right:0; top:63dvh; z-index:4;
+    align-items:center;
+  }
+  .foot__ends-meta{ display:none; }
+
+  .foot__where{
+    position:absolute; left:0; right:0; bottom:auto; top:71dvh;
+    justify-content:center;
+  }
+  .foot__sign{ top:auto; bottom:clamp(52px, 8vh, 76px); }
+  .foot__sign-line{ font-size:clamp(21px, 6.4vw, 40px); }
+  .foot__legal{ justify-content:center; text-align:center; font-size:9.5px; }
+}
+@media (max-width:560px){
+  .foot__legal span:last-child{ display:none; }
+}

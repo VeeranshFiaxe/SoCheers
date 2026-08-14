@@ -208,15 +208,59 @@
   padding:clamp(56px,8vh,96px) 0;
 }
 .founders{
+  position:relative;                 /* the duo frame is placed against this */
   margin-top:clamp(22px,3.6vh,40px);
   display:grid; grid-template-columns:repeat(2,max-content);
   justify-content:center; gap:clamp(28px,4vw,64px);
+}
+
+/* ---- the pair, in one frame ----
+   What the section opens on, sitting over the two portrait frames and the
+   exact size of one of them, so when it tears the halves are already in
+   the middle of where the two founders will end up.
+
+   Everything here is written as the *end* of the split - the frame gone,
+   the portraits standing on their own - because that is what a
+   script-less or reduced-motion visitor should be handed. The engine sets
+   the start (lib/about-motion.ts) and the frame is only ever visible
+   while it is running. */
+.founders__duo{
+  position:absolute; left:50%; top:0; z-index:3;
+  width:clamp(280px,24vw,400px); aspect-ratio:4/5;
+  transform:translateX(-50%);
+  pointer-events:none;
+  visibility:hidden; opacity:0;
+}
+/* Two whole copies of the photo, each clipped to its own side. A clip-path
+   travels with the element it is set on, so a half stays exactly the half
+   it started as however far it is moved - which is what lets the tear be
+   two plain x tweens rather than a frame being re-cropped every frame. */
+.founders__half{
+  position:absolute; inset:0; overflow:hidden;
+  border:1px solid var(--line); background:var(--panel);
+}
+.founders__half--l{ clip-path:inset(0 50% 0 0); }
+.founders__half--r{ clip-path:inset(0 0 0 50%); }
+.founders__half img{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover;
+  /* the shot is full-length and the frame is not, so it is biased up the
+     body: this keeps both faces well clear of the top edge and spends the
+     crop on the floor instead */
+  object-position:center 34%;
+  /* the same grade the portraits sit at, so the dissolve from one to the
+     other is a change of picture and not a change of treatment */
+  filter:grayscale(1) contrast(1.06) brightness(.92);
 }
 /* The photo at rest - name, role and bio live beside it in
    .founder__reveal, always on screen (see below), so the photo no longer
    has to carry the section on its own the way a hover-only reveal asked
    it to; kept at the same generous size regardless. */
-.founder{ position:relative; max-width:clamp(280px,24vw,400px); }
+/* An explicit width, not a max-width: .founders__duo has to be exactly one
+   frame wide for the tear to line up with the two portraits it becomes,
+   and both are sized off this same clamp. A max-content column resolves to
+   the same number either way - this only takes the guess out of it. */
+.founder{ position:relative; width:clamp(280px,24vw,400px); }
 .founder__photo{
   position:relative; overflow:hidden; aspect-ratio:4/5;
   background:var(--panel); border:1px solid var(--line);
@@ -297,7 +341,11 @@
 
 @media (max-width:860px){
   /* No off-screen room once the pair stacks to one column - so the panel
-     just docks under the photo instead of sitting beside it. */
+     just docks under the photo instead of sitting beside it, and the
+     split has nowhere to happen: two frames stacked vertically cannot be
+     a photo torn down the middle, so the pair shot is dropped here rather
+     than played as a tear that does not land. */
+  .founders__duo{ display:none; }
   .founder__reveal{ position:static; width:auto; transform:none; }
   .founder__revealIn{
     padding:0; margin-top:16px;

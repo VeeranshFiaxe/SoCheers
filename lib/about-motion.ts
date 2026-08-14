@@ -146,28 +146,96 @@ export function initAbout(): () => void {
         });
     }
 
-    /* -------------------------------------------------- founder write-ups
-       Each one slides in from its own outer edge as the section scrolls
-       into view - scrubbed to actual scroll position (not a one-shot
-       reveal), so it genuinely reads as sliding into frame rather than
-       just fading up in place. Left founder's card arrives from further
-       left, right founder's from further right - matching which side of
-       the pair each one sits on (see .founder--left/--right in about.css). */
-    const foundersSection = document.querySelector<HTMLElement>(".ab-founders");
-    if (foundersSection) {
-      document.querySelectorAll<HTMLElement>(".founder__revealIn").forEach((el) => {
+    /* -------------------------------------------------- the founders split
+       The section arrives as one photograph of the two of them and comes
+       apart as you keep scrolling: the frame tears down the middle, the
+       halves draw out to where each founder will stand, and as they go the
+       two portraits come up underneath them and the write-ups slide in
+       from the outer edges.
+
+       Scrubbed, not fired: the whole point is that the tear is something
+       the reader is doing with the scroll rather than something that
+       happens at them, and it has to be as reversible as the scroll is.
+
+       One number carries the geometry - `step`, half the distance between
+       the two portrait frames. Each half travels one step out, each frame
+       starts one step in, so the halves land exactly where the portraits
+       are and nothing has to be nudged by eye. Read from offsetLeft, which
+       transforms do not touch, so it stays true no matter where in the
+       tween a refresh lands. */
+    const foundersMM = gsap.matchMedia();
+
+    foundersMM.add("(min-width: 861px)", () => {
+      const section = document.querySelector<HTMLElement>(".ab-founders");
+      const grid = document.querySelector<HTMLElement>("[data-founders]");
+      if (!section || !grid) return;
+
+      const duo = grid.querySelector<HTMLElement>("[data-founders-duo]");
+      const halves = gsap.utils.toArray<HTMLElement>("[data-founders-half]", grid);
+      const arts = gsap.utils.toArray<HTMLElement>(".founder", grid);
+      const photos = gsap.utils.toArray<HTMLElement>("[data-founder-photo]", grid);
+      const cards = gsap.utils.toArray<HTMLElement>(".founder__revealIn", grid);
+      if (!duo || halves.length !== 2 || arts.length !== 2) return;
+
+      const step = () => (arts[1].offsetLeft - arts[0].offsetLeft) / 2;
+
+      /* about.css keeps the pair frame hidden - that is the state the page
+         ends in, and the one it has to be in if this never runs. Here it is
+         the state the page *starts* in, so it is turned on by hand and the
+         timeline is what takes it away again. */
+      gsap.set(duo, { autoAlpha: 1 });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: section, start: "top 88%", end: "top 16%",
+          scrub: 1, invalidateOnRefresh: true,
+        },
+      });
+
+      /* 1 · the pair, held. A slow settle out of a slight oversize, so the
+            first third of the window is a photograph being looked at
+            rather than a still frame waiting for its cue. */
+      tl.fromTo(duo, { scale: 1.05 }, { scale: 1, duration: 0.34, ease: "none" }, 0);
+
+      /* 2 · the tear. Halves out, frames in from where the halves were -
+            the two moves are the same distance in opposite directions, so
+            each portrait is arriving exactly as its half leaves. */
+      tl.fromTo(halves[0], { x: 0 }, { x: () => -step(), duration: 0.44, ease: "power2.inOut" }, 0.34);
+      tl.fromTo(halves[1], { x: 0 }, { x: () => step(), duration: 0.44, ease: "power2.inOut" }, 0.34);
+      tl.fromTo(arts[0], { x: () => step() }, { x: 0, duration: 0.44, ease: "power2.inOut" }, 0.34);
+      tl.fromTo(arts[1], { x: () => -step() }, { x: 0, duration: 0.44, ease: "power2.inOut" }, 0.34);
+
+      tl.fromTo(photos, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "power1.out" }, 0.44);
+      tl.to(duo, { autoAlpha: 0, duration: 0.28, ease: "power1.in" }, 0.46);
+
+      /* 3 · and the write-ups, each from the side its founder stands on
+            (see .founder--left/--right in about.css). */
+      cards.forEach((el) => {
         const dir = el.closest(".founder--left") ? -1 : 1;
+        tl.fromTo(el,
+          { autoAlpha: 0, x: 120 * dir },
+          { autoAlpha: 1, x: 0, duration: 0.34, ease: "power2.out" }, 0.7);
+      });
+    });
+
+    /* Stacked to one column there is no middle for a photo to tear along,
+       so the pair shot is out (about.css hides it) and the write-ups keep
+       the plain slide they always had. */
+    foundersMM.add("(max-width: 860px)", () => {
+      const section = document.querySelector<HTMLElement>(".ab-founders");
+      if (!section) return;
+      document.querySelectorAll<HTMLElement>(".founder__revealIn").forEach((el) => {
         gsap.fromTo(el,
-          { autoAlpha: 0, x: 110 * dir },
+          { autoAlpha: 0, y: 28 },
           {
-            autoAlpha: 1, x: 0, ease: "none",
+            autoAlpha: 1, y: 0, ease: "none",
             scrollTrigger: {
-              trigger: foundersSection, start: "top 75%", end: "top 25%",
+              trigger: el, start: "top 92%", end: "top 62%",
               scrub: 1, invalidateOnRefresh: true,
             },
           });
       });
-    }
+    });
 
     /* -------------------------------------------------- the group shot pan
        The photo pans across its own crop window as you scroll. */

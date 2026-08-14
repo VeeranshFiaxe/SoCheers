@@ -16,8 +16,6 @@ export const IMG = {
   workEntertainment: "/assets/work-entertainment.png",
   workLifestyle: "/assets/work-lifestyle.jpg",
   workB2b: "/assets/work-b2b.png",
-  footerLeft: "/assets/SC Website Revamp/01. Home/footer left.png",
-  footerRight: "/assets/SC Website Revamp/01. Home/footer right.png",
 } as const;
 
 /* ------------------------------------------------------------------
@@ -80,6 +78,18 @@ export const WCARD_SFX = [
   "/assets/SC Website Revamp/Sound effects/Frames 2.mp3",
 ] as const;
 
+/* The footer's cues - the overture in reverse, so it borrows the
+   overture's own three sounds rather than asking for new ones: the same
+   filament catching is what a filament dying sounds like, the same cord
+   sound plays whichever way the cord is moving, and a bulb settling on
+   its drop is the same weight as a wall meeting the floor. See
+   initFooter() in lib/motion.ts. */
+export const FOOTER_SFX = {
+  drop: OVERTURE_SFX.fall,      // the cord snapping taut on the first swing
+  flicker: OVERTURE_SFX.on,     // the strikes, right before it goes dark
+  retract: OVERTURE_SFX.pull,   // the cord letting go and drawing back up
+} as const;
+
 /* A bare "#..." is an on-page anchor; anything else is a real route.
    components/Chrome.tsx rewrites the hashes when the nav is on a sub-page. */
 export const NAV_LINKS = [
@@ -116,8 +126,9 @@ export const BUCKETS = [
   {
     idx: "01",
     name: "Strategy",
-    img: `${HOME_DIR}/Strategy 7.png`,
+    img: `${HOME_DIR}/Strategy 9.jpg`,
     images: [
+      `${HOME_DIR}/Strategy 9.jpg`,
       `${HOME_DIR}/Strategy 7.png`,
       `${HOME_DIR}/Strategy 2.png`,
       `${HOME_DIR}/Strategy 3.jpg`,
@@ -125,7 +136,6 @@ export const BUCKETS = [
       `${HOME_DIR}/Strategy 5.jpg`,
       `${HOME_DIR}/Strategy 6.jpg`,
       `${HOME_DIR}/Strategy 8.jpg`,
-      `${HOME_DIR}/Strategy 9.jpg`,
       `${HOME_DIR}/Strategy 10.jpg`,
     ],
     items: [
@@ -140,15 +150,14 @@ export const BUCKETS = [
   {
     idx: "02",
     name: "Creativity",
-    img: IMG.warMask,
+    img: `${HOME_DIR}/creativity 7.jpg`,
     images: [
-      IMG.warMask,
+      `${HOME_DIR}/creativity 7.jpg`,
       `${HOME_DIR}/Creativity 2.jpg`,
       `${HOME_DIR}/Creativity 3.png`,
       `${HOME_DIR}/Creativity 4.jpg`,
       `${HOME_DIR}/creativity 5.jpg`,
       `${HOME_DIR}/creativity 6.jpg`,
-      `${HOME_DIR}/creativity 7.jpg`,
       `${HOME_DIR}/creativity 8.jpg`,
       `${HOME_DIR}/creativity 9.jpg`,
       `${HOME_DIR}/creativity 10.jpg`,

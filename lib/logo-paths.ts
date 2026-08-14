@@ -92,6 +92,21 @@ export const LAMP_RATIO = 476 / 400;
 /* and the flat lockup's box, which *is* tight */
 export const LOCKUP_VIEWBOX = "28 70 344 348";
 
+/* ---- the pendant's box ----
+   The footer hangs the mark upside down from a flex, which is the one
+   place on the site where that is the honest reading: the bulb is being
+   lowered into a dark room, and a bulb comes down from a ceiling rose by
+   its base. For the cord to meet that base rather than float above it,
+   the box has to be cropped to the ink and nothing else - LAMP_VIEWBOX's
+   headroom (which exists so the standing fixture can be centred on its
+   glass) would put 18% of the mark's own height of empty air between the
+   cord and the metal.
+
+   x: the ring's outer edge, 200 ± (r + stroke/2 + the shadow pass)
+   y: the top of the glass down to the bottom of the last base bar.       */
+export const PENDANT_VIEWBOX = "98 74 204 258";
+export const PENDANT_RATIO = 258 / 204;
+
 /* ---- the pull rope ----
    A ceiling cord beside the mark rather than anything attached to it.
    It is measured in screen pixels, not in the mark's units: the rope's

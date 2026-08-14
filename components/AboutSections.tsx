@@ -53,21 +53,49 @@ export function AboutIntro() {
   );
 }
 
-/* 3 · both founders in one frame, side by side - not two full-screen
-   takeovers. The ticker underneath closes the section off. */
+/* 3 · the two of them, arriving as one.
+
+   The section opens on the single photo of the pair - and then tears it
+   down the middle as you keep scrolling: the two halves draw apart, each
+   one dissolving into that founder's own portrait as it goes, and the
+   write-ups slide in from the outer edges behind them. Which half becomes
+   which founder is not a decision the code makes - they are standing in
+   that order in the photograph (see ABOUT_IMG.foundersDuo).
+
+   The halves are two full copies of the same image, each clipped to its
+   own side, rather than one image in a splitting frame: a clip-path
+   travels with the element it is on, so a half stays exactly the half it
+   started as no matter how far it is moved, and neither copy ever has to
+   be re-cropped mid-flight. All of the timing is in lib/about-motion.ts. */
 export function AboutFounders() {
   return (
     <section className="ab-panel ab-founders is-light" id="founders" data-sec="2" data-panel>
       <div className="wrap">
         <span className="tag" data-reveal>BUILT BY TWO</span>
 
-        <div className="founders">
+        <div className="founders" data-founders>
+          <div className="founders__duo" data-founders-duo aria-hidden="true">
+            {(["l", "r"] as const).map((side) => (
+              <span
+                className={`founders__half founders__half--${side}`}
+                data-founders-half={side}
+                key={side}
+              >
+                <img src={ABOUT_IMG.foundersDuo} alt="" />
+              </span>
+            ))}
+          </div>
+
           {FOUNDERS.map((f, i) => (
             <article
               className={`founder founder--${i === 0 ? "left" : "right"}`}
               key={f.name}
             >
-              <div className="founder__photo" data-clip>
+              {/* No data-clip: the shared engine's image reveal writes its
+                  own autoAlpha/y/scale on that hook, and this photo is
+                  driven start to finish by the split timeline instead -
+                  two authors on one transform is one too many. */}
+              <div className="founder__photo" data-founder-photo>
                 <img src={f.img} alt={f.name} style={{ objectPosition: f.imgPos }} />
               </div>
 
@@ -151,9 +179,9 @@ export function AboutDrives() {
   );
 }
 
-/* 6 · the office. PLACEHOLDER grid - these are the client's phone shots and
-   the room-to-photo mapping is unconfirmed, so the four names run as their
-   own line and no tile claims one. */
+/* 6 · the office - four rooms and the four people shots that stop it being
+   a page of doorways. The room-to-photo mapping is still unconfirmed, so
+   the four names run in the copy and no tile claims one. */
 export function AboutSpace() {
   return (
     <section className="ab-panel ab-space is-light" data-sec="5" data-panel>
@@ -162,10 +190,14 @@ export function AboutSpace() {
         <p className="ab-space__copy" data-reveal>{SPACE_COPY}</p>
 
         <div className="spacegrid">
-          {SPACE_SHOTS.map((s, i) => (
-            <figure className="spacegrid__tile" key={s} data-clip>
+          {SPACE_SHOTS.map((s) => (
+            <figure className="spacegrid__tile" key={s.src} data-clip>
               <div className="spacegrid__inner">
-                <img src={s} alt={`SoCheers office, frame ${i + 1}`} />
+                <img
+                  src={s.src}
+                  alt={s.alt}
+                  style={s.pos ? { objectPosition: s.pos } : undefined}
+                />
               </div>
             </figure>
           ))}

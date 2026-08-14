@@ -1,8 +1,7 @@
 import { Fragment } from "react";
-import { AWARDS, BUCKETS, CLIENT_ROWS, IMG, STATS } from "@/lib/content";
-import ContactModal from "./ContactModal";
+import { AWARDS, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
+import ParticleLogo from "./ParticleLogo";
 import RollText from "./Roll";
-import Splash from "./Splash";
 
 export function Who() {
   /* No wall of its own any more: this section slides up *behind* the pinned
@@ -34,21 +33,12 @@ export function Who() {
             </div>
           </div>
 
-          <div className="who__photo" data-tilt>
-            {/* Chases the pointer harder than the site default: a wider
-                reach, a much longer throw and a gentler falloff, so it is
-                reacting well before the cursor is on top of it. */}
-            <span
-              className="who__splash"
-              data-splash
-              data-splash-reach="1150"
-              data-splash-pull="110"
-              data-splash-bite="1.35"
-              aria-hidden="true"
-            >
-              <Splash />
-            </span>
-            <img src={IMG.culture} alt="The SoCheers team, off the clock" data-clip />
+          {/* The mark, held in the air as a few tens of thousands of
+              grains - components/ParticleLogo.tsx. It owns its own
+              pointer behaviour, so no data-tilt here: the cursor is
+              supposed to go *through* it, not lean it. */}
+          <div className="who__photo">
+            <ParticleLogo />
           </div>
         </div>
       </div>
@@ -138,113 +128,7 @@ export function Awards() {
   );
 }
 
-export function Contact() {
-  return (
-    <section className="sec contact" id="contact" data-section data-sec="5">
-      <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>
-
-      {/* The two mascots that fill what would otherwise be dead space either
-          side of the centred copy - bled off their own edge of the section
-          rather than framed, so they read as characters leaning in from
-          off-screen instead of a pair of product shots. data-tilt gives
-          them the same cursor-reactive lean the WHO WE ARE photo has. */}
-      <div className="contact__cast contact__cast--left" data-tilt aria-hidden="true">
-        <img src={IMG.footerLeft} alt="" data-clip />
-      </div>
-      <div className="contact__cast contact__cast--right" data-tilt aria-hidden="true">
-        <img src={IMG.footerRight} alt="" data-clip />
-      </div>
-
-      <div className="contact__inner">
-        <h2 className="contact__title" data-split data-wipe="down">Brief us. Or&nbsp;just say hi.</h2>
-        <ContactModal />
-
-        <div className="contact__emails">
-          <a href="mailto:hello@socheers.net" className="contact__email" data-magnetic data-cursor="Email">
-            <span className="contact__email-label">Bring us a brief</span>
-            <span className="contact__email-addr">hello@socheers.net</span>
-          </a>
-          <a href="mailto:careers@socheers.net" className="contact__email" data-magnetic data-cursor="Email">
-            <span className="contact__email-label">Bring us your best work</span>
-            <span className="contact__email-addr">careers@socheers.net</span>
-          </a>
-        </div>
-
-        <div className="contact__social" data-reveal>
-          <a
-            href="https://www.instagram.com/thesocheers/"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="SoCheers on Instagram"
-            data-magnetic
-            data-cursor="Follow"
-          >
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="2" width="20" height="20" rx="5.5" />
-              <circle cx="12" cy="12" r="4.2" />
-              <circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none" />
-            </svg>
-          </a>
-          <a
-            href="https://in.linkedin.com/company/socheers"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="SoCheers on LinkedIn"
-            data-magnetic
-            data-cursor="Follow"
-          >
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
-              <rect x="2" y="9" width="4" height="12" />
-              <circle cx="4" cy="4" r="2" />
-            </svg>
-          </a>
-          <a
-            href="https://www.youtube.com/@ThisIsSoCheers"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="SoCheers on YouTube"
-            data-magnetic
-            data-cursor="Follow"
-          >
-            <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 8.5a3 3 0 0 0-2.1-2.1C18.1 6 12 6 12 6s-6.1 0-7.9.4A3 3 0 0 0 2 8.5 31 31 0 0 0 1.6 13a31 31 0 0 0 .4 4.5A3 3 0 0 0 4.1 19.6C5.9 20 12 20 12 20s6.1 0 7.9-.4a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .4-4.5 31 31 0 0 0-.4-4.5z" />
-              <path d="M10 10.2v5.6l5-2.8-5-2.8z" fill="currentColor" stroke="none" />
-            </svg>
-          </a>
-          <a
-            href="https://www.facebook.com/TheSoCheers"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="SoCheers on Facebook"
-            data-magnetic
-            data-cursor="Follow"
-          >
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="2" width="20" height="20" rx="5.5" />
-              <path d="M14.4 8.4h-1.6a1.8 1.8 0 0 0-1.8 1.8V12h3.3l-.45 3h-2.85v6.9" />
-            </svg>
-          </a>
-          <a
-            href="https://x.com/TheSoCheers"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="SoCheers on X"
-            data-magnetic
-            data-cursor="Follow"
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 4l16 16M20 4L4 20" />
-            </svg>
-          </a>
-        </div>
-
-        <div className="contact__foot">
-          <span>SOCHEERS · EST. 2013</span>
-          <span>MUMBAI</span>
-          <span>MAKING MORE HAPPEN</span>
-        </div>
-      </div>
-    </section>
-  );
-}
+/* There is no closing CTA section any more. The page ends on AWARDS and
+   hands straight over to the footer, and the ask - the line and the
+   button - is the first thing waiting under the bulb once the room is
+   uncovered. See .foot__ask in components/Footer.tsx. */
