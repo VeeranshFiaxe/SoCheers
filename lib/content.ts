@@ -78,6 +78,18 @@ export const WCARD_SFX = [
   "/assets/SC Website Revamp/Sound effects/Frames 2.mp3",
 ] as const;
 
+/* The footer's cues - the overture in reverse, so it borrows the
+   overture's own three sounds rather than asking for new ones: the same
+   filament catching is what a filament dying sounds like, the same cord
+   sound plays whichever way the cord is moving, and a bulb settling on
+   its drop is the same weight as a wall meeting the floor. See
+   initFooter() in lib/motion.ts. */
+export const FOOTER_SFX = {
+  drop: OVERTURE_SFX.fall,      // the cord snapping taut on the first swing
+  flicker: OVERTURE_SFX.on,     // the strikes, right before it goes dark
+  retract: OVERTURE_SFX.pull,   // the cord letting go and drawing back up
+} as const;
+
 /* A bare "#..." is an on-page anchor; anything else is a real route.
    components/Chrome.tsx rewrites the hashes when the nav is on a sub-page. */
 export const NAV_LINKS = [
