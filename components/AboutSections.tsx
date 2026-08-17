@@ -53,6 +53,19 @@ export function AboutIntro() {
           <AboutBulbs />
         </div>
       </div>
+
+      {/* The hand-off from black to cream, and the whole of it - there is
+          no card arriving over this section and no pin under it, just this
+          band at the foot of the panel (see .ab-bridge in about.css).
+
+          A warm ramp with two layers of noise over it: the paper arrives
+          as grain eating into the dark, and the dark leaves as finer grain
+          dying out on the paper. Purely decorative and entirely static -
+          no canvas, no script, nothing repainting after first paint. */}
+      <span className="ab-bridge" aria-hidden="true">
+        <i className="ab-bridge__a" />
+        <i className="ab-bridge__b" />
+      </span>
     </section>
   );
 }
@@ -160,34 +173,46 @@ export function AboutPeople() {
   return (
     <section className="ab-panel ab-people is-light" data-sec="3">
       <div className="wrap">
-        <span className="tag" data-reveal>IF YOU ASK OUR PEOPLE, WHO WE ARE?</span>
+        {/* The statement, on its own, centred and with nothing beside it.
+            This section used to be a two-column row - headline and tag
+            hard left, a 4:3 photograph in one column and two paragraphs
+            in the other - and the three parts spent the whole section
+            competing: the claim never got a clear read because a picture
+            of forty people was sitting next to it, and the picture never
+            got looked at because it was cropped to a column.
 
-        {/* the em stays inline - a nested block tag gets cloned onto every
-            line SplitText wraps to, which is why it carries colour and
-            style but never a margin */}
-        <h2 className="ab-people__title" data-split>
-          An agency that leads, <em>for those who lead.</em>
-        </h2>
+            One thing at a time now. The claim, then the photograph at
+            full width as a single band, then the two statements under it
+            as a pair. Same content, read in order instead of all at
+            once. */}
+        <header className="ab-people__head">
+          <span className="tag" data-reveal>If you ask our people</span>
 
-        <div className="ab-people__body">
-          <figure className="ab-people__shot">
-            <div className="filmstrip__win" data-film>
-              <img src={ABOUT_IMG.people} alt="The SoCheers team together" data-film-img />
-            </div>
-            <figcaption className="ab-people__cap" data-reveal>
-              <span>The team, in one frame</span>
-              <span>Mumbai · Est. 2013</span>
-            </figcaption>
-          </figure>
+          {/* the em stays inline - a nested block tag gets cloned onto every
+              line SplitText wraps to, which is why it carries colour and
+              style but never a margin */}
+          <h2 className="ab-people__title" data-split>
+            An agency that leads, <em>for those who lead.</em>
+          </h2>
+        </header>
 
-          <div className="ab-people__notes">
-            {[WHY_WE_EXIST, BELIEF].map((note, i) => (
-              <p className="ab-people__note" data-reveal key={i}>
-                <i className="ab-people__idx">{String(i + 1).padStart(2, "0")}</i>
-                {note}
-              </p>
-            ))}
+        <figure className="ab-people__shot">
+          <div className="filmstrip__win" data-film>
+            <img src={ABOUT_IMG.people} alt="The SoCheers team together" data-film-img />
           </div>
+          <figcaption className="ab-people__cap" data-reveal>
+            <span>The team, in one frame</span>
+            <span>Mumbai · Est. 2013</span>
+          </figcaption>
+        </figure>
+
+        <div className="ab-people__notes">
+          {[WHY_WE_EXIST, BELIEF].map((note, i) => (
+            <p className="ab-people__note" data-reveal key={i}>
+              <i className="ab-people__idx">{String(i + 1).padStart(2, "0")}</i>
+              {note}
+            </p>
+          ))}
         </div>
       </div>
     </section>

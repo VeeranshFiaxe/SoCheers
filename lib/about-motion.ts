@@ -18,71 +18,17 @@ gsap.registerPlugin(ScrollTrigger);
 
 export function initAbout(): () => void {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const canHover = window.matchMedia("(hover:hover)").matches;
-
-  const tickers: gsap.TickerCallback[] = [];
-  const addTicker = (fn: gsap.TickerCallback) => { gsap.ticker.add(fn); tickers.push(fn); };
-  const ac = new AbortController();
 
   const ctx = gsap.context(() => {
     /* -------------------------------------------------- the hero
-       The video plays on its own; this just runs the colour field - drift
-       on its own, and the cursor pushing whole layers around at different
-       depths. */
-    if (!prefersReduced) {
-      /* · the colour field drifts · Each orb wanders on its own loop, on
-         an index-derived path so no two ever sync up. This rides the
-         inner <b>; the outer <i> is left free for the cursor. */
-      gsap.utils.toArray<HTMLElement>("[data-hero-drift]").forEach((b, i) => {
-        gsap.to(b, {
-          x: `random(-26, 26)`, y: `random(-30, 30)`,
-          duration: 7 + (i % 5) * 1.6,
-          repeat: -1, yoyo: true, ease: "sine.inOut",
-          delay: (i * 0.7) % 3.5,
-        });
-      });
-
-      /* · cursor depth · One ticker for every layer that declares a
-         depth. Driven off the ticker rather than mousemove because the
-         hero also moves under a still cursor while scrolling, and a
-         mousemove-only read would go stale mid-scroll. Negative depths
-         lean against the pointer, which is what separates the type
-         plane from the artwork behind it. */
-      if (canHover) {
-        type Layer = { d: number; xTo: gsap.QuickToFunc; yTo: gsap.QuickToFunc };
-        const layers: Layer[] = gsap.utils
-          .toArray<HTMLElement>("[data-hero-depth]")
-          .map((el) => ({
-            d: parseFloat(el.dataset.heroDepth || "0"),
-            xTo: gsap.quickTo(el, "x", { duration: 1.1, ease: "power3" }),
-            yTo: gsap.quickTo(el, "y", { duration: 1.1, ease: "power3" }),
-          }));
-
-        if (layers.length) {
-          const MAX = 30;                 // px of travel at full depth
-          let mx = 0, my = 0, live = false, onScreen = true;
-          window.addEventListener("mousemove", (e: MouseEvent) => {
-            mx = e.clientX; my = e.clientY; live = true;
-          }, { signal: ac.signal });
-
-          ScrollTrigger.create({
-            trigger: ".ab-open", start: "top bottom", end: "bottom top",
-            onToggle: (self) => { onScreen = self.isActive; },
-          });
-
-          addTicker(() => {
-            if (!live || !onScreen) return;
-            // -1..1 from the viewport centre
-            const nx = (mx / window.innerWidth) * 2 - 1;
-            const ny = (my / window.innerHeight) * 2 - 1;
-            layers.forEach((l) => {
-              l.xTo(nx * MAX * l.d);
-              l.yTo(ny * MAX * l.d * 0.7);
-            });
-          });
-        }
-      }
-    }
+       Nothing to run. The opener used to carry eleven blurred colour orbs,
+       each drifting on its own loop with a cursor-depth ticker pushing the
+       whole field around - a dozen large-radius blurs being recomposited
+       every frame, which is exactly the cost you feel first on a slow
+       machine. The opener is the film and the line over it now (see
+       components/AboutHero.tsx); the only motion left on it is the scroll
+       parallax further down this file, which is one transform on one
+       element. */
 
     /* -------------------------------------------------- the bulbs
        Ideas arriving over the team, one at a time. Each bulb owns a looping
@@ -170,7 +116,7 @@ export function initAbout(): () => void {
        true no matter where in the tween a refresh lands. */
     const foundersMM = gsap.matchMedia();
 
-    foundersMM.add("(min-width: 861px)", () => {
+    foundersMM.add("(min-width: 1101px)", () => {
       const section = document.querySelector<HTMLElement>(".ab-founders");
       const grid = document.querySelector<HTMLElement>("[data-founders]");
       if (!section || !grid) return;
@@ -291,7 +237,7 @@ export function initAbout(): () => void {
     /* Stacked to one column there is no middle for a photo to tear along,
        so the pair shot is out (about.css hides it) and the write-ups keep
        the plain slide they always had. */
-    foundersMM.add("(max-width: 860px)", () => {
+    foundersMM.add("(max-width: 1100px)", () => {
       const section = document.querySelector<HTMLElement>(".ab-founders");
       if (!section) return;
       document.querySelectorAll<HTMLElement>(".founder__revealIn").forEach((el) => {
@@ -321,62 +267,30 @@ export function initAbout(): () => void {
       });
     });
 
-    /* -------------------------------------------------- the founders card
-       Two pins, one after the other, and they are not the same kind.
+    /* -------------------------------------------------- the founders hold
+       There used to be a climb ahead of this: the intro was pinned at the
+       fold with pinSpacing off, so the founders panel was dragged up
+       through the viewport as a rounded, shadowed card sliding over a
+       stopped page. That is a slide transition - a rectangle flying in
+       over the previous slide - and it read as one.
 
-       1 · the climb. The opener is pinned from the moment its foot reaches
-       the foot of the screen, and pinSpacing:false means its layout space
-       is not held - so the founders panel, sitting right under it in the
-       document, is drawn up through the viewport instead of only meeting
-       it at the edge. That travel over a section that has stopped moving
-       is the stack: a card rising over the page, its curved top edge and
-       shadow (see .ab-founders in about.css) selling it as a plane above
-       rather than a colour change underneath. The opener's own contents
-       drift up, shrink and dim as it goes, so it recedes under the card
-       instead of sitting there inert while it is covered.
+       It is gone, along with the card. The black-to-cream change is a
+       gradient at the foot of the intro now (see .ab-intro::after in
+       about.css): no pin, no cover, nothing moving except the page, and
+       the colour simply changes underneath as you scroll through it.
 
-       Every panel used to do this to the one before it. Only this join
-       does now - which is the difference between a page with a moment in
-       it and a page made of the same trick five times.
+       What is left is the hold. The join inside the founders panel is a
+       fixed three seconds of choreography (see the founders block above)
+       and it needs the section to stand still while it plays. pinSpacing
+       stays ON: the space is reserved, so nothing below is pulled up over
+       the top of it. The panel stops, the join plays, the page scrolls on.
 
-       2 · the hold, once the card has landed. The join inside the founders
-       panel is a fixed three seconds of choreography (see the founders
-       block above) and it needs the section to stand still while it plays.
-       pinSpacing stays ON for this one: the space is reserved, so nothing
-       below is pulled up over the top of it. The panel stops, the join
-       plays, and then the page scrolls on into the next section plainly.
-
-       Both are skipped under 861px, where the join does not run and the
-       panels are stacked to one column anyway. */
+       Skipped under 1101px, where the join does not run and the panels are
+       stacked to one column anyway. */
     const holdMM = gsap.matchMedia();
-    holdMM.add("(min-width: 861px)", () => {
-      const opener = document.querySelector<HTMLElement>(".ab-intro");
+    holdMM.add("(min-width: 1101px)", () => {
       const panel = document.querySelector<HTMLElement>(".ab-founders");
       if (!panel) return;
-
-      if (opener) {
-        const climb = gsap.timeline({
-          scrollTrigger: {
-            trigger: opener,
-            /* its foot, not its head: the opener is content-height rather
-               than a fixed screen, so anchoring the climb to the bottom
-               edge is what makes the card start exactly at the fold no
-               matter how tall the copy above it runs */
-            start: "bottom bottom",
-            end: () => "+=" + window.innerHeight,
-            pin: true,
-            pinSpacing: false,
-            scrub: 0.6,
-            invalidateOnRefresh: true,
-          },
-        });
-        const inner = opener.querySelector<HTMLElement>(":scope > .wrap");
-        if (inner) {
-          climb.fromTo(inner,
-            { y: 0, scale: 1, autoAlpha: 1 },
-            { y: -64, scale: 0.94, autoAlpha: 0.35, ease: "none" }, 0);
-        }
-      }
 
       ScrollTrigger.create({
         trigger: panel,
@@ -404,9 +318,5 @@ export function initAbout(): () => void {
     }
   });
 
-  return () => {
-    ac.abort();
-    tickers.forEach((fn) => gsap.ticker.remove(fn));
-    ctx.revert();
-  };
+  return () => ctx.revert();
 }

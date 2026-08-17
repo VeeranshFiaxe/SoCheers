@@ -3,10 +3,15 @@
 
    The logo is already a light bulb - a monoline ring with the base
    stacked underneath it and a coloured disc sitting off-centre inside.
-   The overture leans on that: the same paths are drawn twice, once flat
-   and cream on the loading screen (components/SoCheersLockup.tsx) and
-   once as a physical object lit from the inside (the Lamp in
-   components/Overture.tsx).
+   The overture leans on that: these paths are the mark rebuilt as a
+   physical object that can be lit from the inside (the Lamp in
+   components/Overture.tsx, the pendant in components/Footer.tsx, the
+   grains in lib/particle-logo.ts).
+
+   They are not the site's flat logo. That is the design book's own
+   artwork, split into two masks by scripts/build-logo.py and painted by
+   components/SoCheersLockup.tsx - a drawing of a logo is fine as a prop
+   to light, and not fine as the logo.
 
    The mark stands the right way up and stays there. Its base is at the
    bottom, so there is no honest way to hang it from a flex - a pendant
@@ -89,7 +94,11 @@ export const WORD = [
 export const LAMP_VIEWBOX = "0 -62 400 476";
 export const LAMP_RATIO = 476 / 400;
 
-/* and the flat lockup's box, which *is* tight */
+/* and the drawn lockup's box, which *is* tight. The site's flat logo is
+   not drawn from these paths any more - it is the design book's own
+   artwork, split into two masks by scripts/build-logo.py and painted by
+   components/SoCheersLockup.tsx - so this is only still the box of the
+   wordmark the overture's lit fixture carries (components/Overture.tsx). */
 export const LOCKUP_VIEWBOX = "28 70 344 348";
 
 /* ---- the pendant's box ----

@@ -79,11 +79,17 @@ export const WCARD_SFX = [
 ] as const;
 
 /* A bare "#..." is an on-page anchor; anything else is a real route.
-   components/Chrome.tsx rewrites the hashes when the nav is on a sub-page. */
-export const NAV_LINKS = [
+   components/Chrome.tsx rewrites the hashes when the nav is on a sub-page.
+
+   `soon` is a label with nowhere to go yet: it renders as plain text rather
+   than a link, so the slot is held in the running order while the page
+   behind it is still being built. Drop the flag and give it an href the
+   moment there is one. */
+export const NAV_LINKS: { href: string; label: string; soon?: boolean }[] = [
   { href: "#top", label: "Home" },
   { href: "/about", label: "About" },
   { href: "#what", label: "Work" },
+  { href: "#ai-work", label: "AI Work", soon: true },
   { href: "#awards", label: "Series" },
   { href: "/blogs", label: "Insights" },
 ];
@@ -221,16 +227,15 @@ export const TILES = [
 
 /* Recognition.
 
-   This used to be six strings running past in a marquee, which is exactly
-   what the client wall two sections above already does - two ticker rows
-   in a row read as one long ticker, and neither of them got looked at.
-   So the shows are a catalogue now: an index you can pick from on one
-   side, the work that won on the other (components/AwardShelf.tsx).
+   Six shows, run past in two marquees under the section title (see
+   Awards() in components/Sections.tsx). `img` and `alt` are carried but
+   nothing renders them at the moment - the ticker is names and years
+   only; they are kept because the stills are the obvious next thing this
+   section grows.
 
    The six shows are real. The year, the category line and the image on
    each entry are PLACEHOLDERS - swap them for the actual citation and the
-   winning campaign's still once those land. `img` wants a landscape crop;
-   the frame is 16:10 and covers. */
+   winning campaign's still once those land. */
 export type Award = {
   name: string;
   year: string;

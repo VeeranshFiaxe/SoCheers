@@ -85,17 +85,23 @@ const AUTO_PULL = 10;
    a figure of speech - the docked mark actually lands where that logo
    sits. Falls back to a plain corner inset if the nav is not there. */
 function dockTarget() {
-  const navLogo = document.querySelector<HTMLElement>(".nav__logo");
+  /* the nav's own lockup, not the header slot around it: the two are the
+     same graphic now (components/Chrome.tsx), so this can land on the
+     artwork itself rather than on a text box standing in for it - which is
+     what makes the swap at the hand-off invisible. */
+  const navLogo = document.querySelector<HTMLElement>(".nav__logo-mark");
   if (navLogo) {
     const r = navLogo.getBoundingClientRect();
     if (r.width) {
-      /* the lockup reads as a small badge, not a wordmark, so it is sized
-         a little taller than the text it is standing in for */
-      return { cx: r.left + r.width * 0.4, cy: r.top + r.height / 2, h: r.height * 2.2 };
+      /* DOCK_FILL: .ovt__dock is 74% of the rig's own height (globals.css),
+         and `h` here is the rig's height - so the lockup inside it only
+         comes out the size of the nav's mark if the rig is scaled up by
+         the inverse of that. */
+      return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height / 0.74 };
     }
   }
   /* the nav not being there yet is not a reason to skip docking */
-  return { cx: 66, cy: 40, h: 46 };
+  return { cx: 66, cy: 40, h: 62 };
 }
 
 export function initOverture(

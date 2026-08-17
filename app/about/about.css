@@ -19,9 +19,25 @@
   background:#05062e;
 }
 .ab-open__media{ position:absolute; inset:-5% 0; z-index:0; will-change:transform; }
-.ab-open__mediaIn{ position:absolute; inset:0; will-change:transform; }
-.ab-open__media video{ width:100%; height:100%; object-fit:cover; display:block; }
+.ab-open__mediaIn{ position:absolute; inset:0; }
+/* Graded down rather than left at full strength: the film is the ground
+   the headline stands on now, not the subject, and at native contrast the
+   type had to fight it for every line. */
+.ab-open__media video{
+  width:100%; height:100%; object-fit:cover; display:block;
+  filter:saturate(.72) contrast(1.04) brightness(.72);
+}
 
+/* The wash the type sits on - heaviest at the left edge where the words
+   are, gone by the right third so the film is still a film. */
+.ab-open__wash{
+  position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to right,
+    rgba(6,6,10,.86) 0%,
+    rgba(6,6,10,.66) 32%,
+    rgba(6,6,10,.22) 62%,
+    rgba(6,6,10,.10) 100%);
+}
 /* The hand-off downward: a firm, early commit to solid --bg so the art's
    navy is fully gone before the section ends and section 2 picks up on
    flat colour with no seam. */
@@ -34,27 +50,24 @@
     rgba(11,11,12,0) 68%);
 }
 
-/* ---------- the drifting colour field ---------- */
-/* Masked off before the section's own overflow:hidden gets to it - without
-   this, an orb (and the light it throws) rides at full strength right up to
-   the bottom edge and the crop reads as a hard cut. Fading it out over the
-   last stretch lets the glow melt into .ab-open__veil's own fade instead of
-   colliding with the clip. */
-.abh__orbs{
-  position:absolute; inset:0; z-index:2; pointer-events:none;
-  -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 72%, transparent 96%);
-  mask-image:linear-gradient(to bottom, #000 0%, #000 72%, transparent 96%);
+/* ---------- the opener's type ----------
+   The client's own line, live rather than painted into artwork. One
+   measure, one accent, nothing else on the plate: the whole point of
+   dropping the colour field was that the words could carry the screen. */
+.ab-open__inner{ position:relative; z-index:2; width:100%; }
+.ab-open__eyebrow{ display:block; color:var(--accent); }
+.ab-open__title{
+  margin-top:clamp(18px,2.4vh,28px);
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(42px,7vw,116px); line-height:.96; letter-spacing:-.035em;
+  max-width:13ch; text-wrap:balance;
 }
-.abh__orb{ position:absolute; display:block; will-change:transform; }
-.abh__orb > b{
-  display:block; width:100%; aspect-ratio:1; border-radius:50%;
-  background:radial-gradient(circle at 50% 50%, var(--orb-c), transparent 70%);
-  filter:blur(var(--orb-b,40px)); opacity:var(--orb-o,.4);
-  will-change:transform;
+.ab-open__title em{
+  color:var(--accent); font-style:italic; font-weight:400;
 }
-.abh__orb--dot > b{
-  background:var(--orb-c); filter:none;
-  box-shadow:0 0 12px var(--orb-c);
+.ab-open__sub{
+  margin-top:clamp(20px,3vh,34px); max-width:34ch;
+  font-size:clamp(15px,1.25vw,20px); line-height:1.62; color:rgba(241,236,225,.72);
 }
 
 .ab-open__cue{
@@ -79,35 +92,25 @@
    stopped being an effect and became the page's default state, and it put
    a hard seam at every join on the way to the one place that wanted it.
 
-   So the card is spent once, where it earns something: the founders panel
-   rises over the black opener on a curved edge, which is the page turning
-   from the opener to the body of itself. Everything after it is a plain
-   section scrolling into the next one - same off-white, no edge, nothing
-   climbing over anything.
+   Then it was spent once, on the founders panel - a rounded card with a
+   drop shadow sliding up over a pinned black section. Which is the exact
+   move a slide deck makes, and it read as one: the page stopped, a white
+   rectangle flew in over it, the page started again.
 
-   The founders panel then holds for a screen once it lands, because the
-   join inside it has to play out uninterrupted (see the founders hold in
-   lib/about-motion.ts) - but that pin keeps its spacing, so it is a pause
-   in the scroll rather than one more card being covered.
+   There is no card now. The opener simply runs out of black: the bottom
+   of the intro panel is a long ramp from #0b0b0c to the cream every panel
+   below it sits on, so the page changes colour under you over most of a
+   screen's height instead of being covered by something. No edge, no
+   corner, no shadow, nothing pinned - the transition is the gradient and
+   the gradient is the whole of it.
+
+   The founders panel still holds for a screen once it arrives, because
+   the join inside it has to play out uninterrupted (see the founders hold
+   in lib/about-motion.ts) - but that pin keeps its spacing, so it is a
+   pause in the scroll rather than a slide change.
    ============================================================ */
-.ab-stack{ position:relative; z-index:1; --panel-r:clamp(18px,2.4vw,40px); }
+.ab-stack{ position:relative; z-index:1; }
 .ab-panel{ position:relative; overflow:hidden; }
-
-/* The one card. The rounded top edge, the shadow cast upward onto the
-   opener and the negative margin that lands that edge over it - the three
-   together are what read as a plane arriving above the page rather than a
-   background colour changing underfoot. Only this panel gets them; the
-   corner is only a corner because .ab-panel clips. */
-.ab-founders{
-  border-radius:var(--panel-r) var(--panel-r) 0 0;
-  margin-top:calc(var(--panel-r) * -1);
-  box-shadow:0 -30px 64px rgba(0,0,0,.5);
-}
-/* the opener's contents, which sink and dim as that card climbs over them */
-.ab-intro > .wrap{ will-change:transform; }
-@media (prefers-reduced-motion:reduce){
-  .ab-intro > .wrap{ will-change:auto; transform:none !important; opacity:1 !important; }
-}
 
 /* Black opener, then straight to one consistent off-white for every panel
    after - no gray midpoint, and no pure #fff either: it read as too stark
@@ -130,7 +133,103 @@
    a tall portrait beside it, so top-aligning left the text sitting up by
    itself with the whole lower half of the visual unanswered. Centred, the
    two columns read as one row. */
-.ab-intro{ padding:clamp(64px,10vh,120px) 0; }
+/* The bottom padding is not spacing - it is the length of the transition.
+   The bridge below occupies it, so the copy and the artwork have to sit
+   clear of the band the page is changing colour in. */
+.ab-intro{ padding:clamp(64px,10vh,120px) 0 clamp(240px,38vh,460px); }
+/* above the bridge, so the intro copy is never washed by it */
+.ab-intro > .wrap{ position:relative; z-index:1; }
+
+/* ============================================================
+   THE BRIDGE  ·  black to cream
+
+   The whole transition between the opener and the body of the page. It
+   was a card sliding up over a pinned section first, which was a slide
+   change; then a plain multi-stop ramp, which was smooth in the sense
+   that nothing jumped and grey in the sense that half its length was
+   flat mid-grey with nothing happening in it. Any two-colour ramp has
+   that problem - sRGB puts the midpoint of #0b0b0c and #f4f2ec somewhere
+   around a dead putty, and a long band of it reads as fog, not as a
+   change.
+
+   ---- why this is noise and not a dither grid ----
+
+   The obvious answer was an ordered dither: checkerboards of cream over
+   the dark, halving as they go down. It was terrible, and predictably so
+   in hindsight. A checkerboard is 50% ink everywhere - it has no density
+   to vary, so it cannot dissolve anything; it is a flat texture that
+   sits on the page. And stacking three of them puts three regular grids
+   over each other, which is a recipe for exactly one thing: they beat
+   against each other into visible plaid. Two grids of different pitch
+   always find an alignment somewhere.
+
+   So there is no grid. Both layers are fractal noise - generated once by
+   an feTurbulence in an inline SVG, thresholded to hard on/off so it
+   reads as pixels rather than as blur, and stitched so it tiles without
+   a seam. Noise has no pitch, so nothing can beat against anything, and
+   two layers at different frequencies stay two grains rather than
+   becoming a third pattern.
+
+   The ramp also stopped going through neutral grey, which is the other
+   half of why the plain version read as fog: sRGB's midpoint between
+   #0b0b0c and #f4f2ec is a dead putty. Routed through warm ash instead,
+   the whole band stays on the cream's own hue and reads as one material
+   getting lighter rather than as a grey wash between two colours.
+
+   Static, and free: two background-images and two masks, no canvas, no
+   script, nothing repainting after first paint. Nothing animates, so
+   there is nothing to switch off under reduced motion either.
+   ============================================================ */
+.ab-bridge{
+  position:absolute; left:0; right:0; bottom:0; z-index:0;
+  display:block; height:clamp(280px,44vh,540px); pointer-events:none;
+  /* Warm ash, not grey. Hand-stopped so it holds the black through the
+     first fifth and then spends most of its travel in the middle, where
+     the grain is densest - the two are doing their work in the same
+     place. The last stop is exactly the panel colour below, which is
+     what makes the join between the two sections unfindable. */
+  background:linear-gradient(to bottom,
+    rgba(11,11,12,0) 0%,
+    #0b0b0c 12%,
+    #131110 26%,
+    #221e1a 38%,
+    #3b342d 50%,
+    #605648 61%,
+    #8d8271 71%,
+    #b8ae9e 81%,
+    #ddd7c9 91%,
+    #f4f2ec 100%);
+}
+
+/* The two grain layers. Each is one tiling SVG of thresholded fractal
+   noise, flood-filled to a colour, masked to its own band down the
+   bridge. `stitchTiles` is what lets a 320px tile repeat across a wide
+   screen without a seam showing, and the discrete alpha transfer is what
+   makes the speckle hard-edged - left continuous it is a soft blur and
+   reads as dirt on the screen rather than as an image breaking up. */
+.ab-bridge i{
+  position:absolute; inset:0; display:block;
+  background-repeat:repeat; background-size:320px 320px;
+}
+/* 1 · the paper arriving, as coarse grain over the dark end of the ramp */
+.ab-bridge__a{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.42' numOctaves='3' stitchTiles='stitch' result='t'/%3E%3CfeComponentTransfer in='t' result='m'%3E%3CfeFuncA type='discrete' tableValues='0 0 0 1'/%3E%3C/feComponentTransfer%3E%3CfeFlood flood-color='%23f4f2ec' result='f'/%3E%3CfeComposite in='f' in2='m' operator='in'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23a)'/%3E%3C/svg%3E");
+  opacity:.55;
+  -webkit-mask-image:linear-gradient(to bottom, transparent 14%, #000 40%, #000 58%, transparent 82%);
+  mask-image:linear-gradient(to bottom, transparent 14%, #000 40%, #000 58%, transparent 82%);
+}
+/* 2 · and the dark leaving, as finer grain thinning out on the paper.
+      This is what stops the foot of the bridge arriving as a clean edge
+      of flat cream - it gives the transition a tail. */
+.ab-bridge__b{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' result='t'/%3E%3CfeComponentTransfer in='t' result='m'%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 1'/%3E%3C/feComponentTransfer%3E%3CfeFlood flood-color='%230b0b0c' result='f'/%3E%3CfeComposite in='f' in2='m' operator='in'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23b)'/%3E%3C/svg%3E");
+  opacity:.4;
+  -webkit-mask-image:linear-gradient(to bottom, transparent 48%, rgba(0,0,0,.95) 70%, rgba(0,0,0,.5) 86%, transparent 99%);
+  mask-image:linear-gradient(to bottom, transparent 48%, rgba(0,0,0,.95) 70%, rgba(0,0,0,.5) 86%, transparent 99%);
+}
+@media (max-width:860px){
+  .ab-bridge{ height:clamp(220px,34vh,340px); }
+}
 .ab-intro__grid{
   display:grid; grid-template-columns:1fr 1.02fr;
   gap:clamp(40px,5vw,84px); align-items:center;
@@ -214,7 +313,11 @@
   position:relative;                 /* the duo frame is placed against this */
   margin-top:clamp(22px,3.6vh,40px);
   display:grid; grid-template-columns:repeat(2,max-content);
-  justify-content:center; gap:clamp(28px,4vw,64px);
+  /* Tighter than it was (it ran to 64px), and the frames themselves are
+     narrower - see .founder below. Both changes buy the same thing: room
+     in the margins for the write-ups, which is what stops them setting
+     four words to a line. */
+  justify-content:center; gap:clamp(20px,2.6vw,40px);
   /* the depth the pair shot's tilt turns in, same figure the WHAT WE DO
      grid uses so the two leans have the same strength of perspective */
   perspective:1200px;
@@ -238,7 +341,7 @@
      on this element every frame - a centring transform here would be the
      first thing it overwrote. */
   position:absolute; left:0; right:0; top:0; z-index:3;
-  width:clamp(280px,24vw,400px); margin-inline:auto; aspect-ratio:4/5;
+  width:clamp(250px,20vw,330px); margin-inline:auto; aspect-ratio:4/5;
   /* the frame itself stays inert - the two halves inside it take the
      pointer instead (see below), so nothing outside the picture is
      catching hovers on its behalf */
@@ -351,7 +454,7 @@
    frame wide for the tear to line up with the two portraits it becomes,
    and both are sized off this same clamp. A max-content column resolves to
    the same number either way - this only takes the guess out of it. */
-.founder{ position:relative; width:clamp(280px,24vw,400px); }
+.founder{ position:relative; width:clamp(250px,20vw,330px); }
 .founder__photo{
   position:relative; overflow:hidden; aspect-ratio:4/5;
   background:var(--panel); border:1px solid var(--line);
@@ -393,11 +496,16 @@
    narrow viewport leaves no room to fully show. */
 .founder__reveal{
   position:absolute; top:50%; z-index:2;
-  width:clamp(260px,22vw,360px);
+  /* Wider than the photo it sits beside, not narrower. It used to be
+     clamped to 360px and then given 32px of padding on both sides, which
+     left the bio a measure of about twenty characters - at that width a
+     two-sentence paragraph breaks every three or four words and the whole
+     write-up sets like a stanza. The frames gave up the width for this. */
+  width:clamp(280px,26vw,400px);
   transform:translateY(-50%);
 }
-.founder--left .founder__reveal{ right:calc(100% + 24px); }
-.founder--right .founder__reveal{ left:calc(100% + 24px); }
+.founder--left .founder__reveal{ right:calc(100% + clamp(20px,2vw,32px)); }
+.founder--right .founder__reveal{ left:calc(100% + clamp(20px,2vw,32px)); }
 /* No card behind it. This used to be a dark slab with light type, which
    was a window cut into an off-white panel for no reason beyond having
    been inherited from the dark theme - and it took a block of overrides
@@ -405,53 +513,81 @@
    write-up is just type: it inherits the panel's .is-light colours, so
    name, role and bio are the same near-black as everything else here and
    nothing needs a background, a border or a shadow to sit on. */
+/* Ranged left, not centred. Centring is what turned two ordinary
+   paragraphs into verse: every line ends on a different axis, so the eye
+   has to find the start of each one, and short ragged lines centred over
+   each other read as stanzas whatever they say. Flush left the same lines
+   read as prose. No inner padding either - the gap to the photo is set on
+   .founder__reveal above, and padding here was only ever eating measure. */
 .founder__revealIn{
-  padding:clamp(24px,2.2vw,32px);
-  display:flex; flex-direction:column; justify-content:center; align-items:center;
-  text-align:center;
+  display:flex; flex-direction:column; justify-content:center;
+  text-align:left;
 }
 .founder__name{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(22px,2.1vw,34px); line-height:1.04; letter-spacing:-.02em;
+  font-size:clamp(21px,1.9vw,30px); line-height:1.06; letter-spacing:-.02em;
+  text-wrap:balance;
 }
 .founder__role{
   font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--muted); margin-top:8px; padding-bottom:14px; border-bottom:1px solid var(--line);
 }
+/* Up from 14.5px with a longer leading. A bigger face on a wider measure
+   is the other half of the fix - it is what puts eight or nine words on a
+   line instead of three, which is the actual difference between a
+   paragraph and a poem. `pretty` cleans up the last line so a paragraph
+   never ends on a single orphaned word. */
 .founder__bio{
   font-family:var(--f-body); font-weight:300;
-  font-size:clamp(13px,.9vw,14.5px); line-height:1.58; color:var(--muted); margin-top:12px;
+  font-size:clamp(14px,1.05vw,16.5px); line-height:1.66; color:var(--muted);
+  margin-top:14px; text-wrap:pretty;
 }
 
-@media (max-width:860px){
+/* 1100, not 860. The flanking layout needs room in both margins for a
+   write-up wide enough to read, and between roughly 860 and 1100 there
+   simply is not any: two frames plus the gap take the middle, the panels
+   overflow into .ab-panel's clip, and half of each bio is cut off the
+   sides of the page. Below this width the pair stacks and the write-ups
+   dock under their own photo instead, which is a layout rather than a
+   squeeze. The founders timeline in lib/about-motion.ts switches at the
+   same number - the two have to agree, or the desktop join would run
+   against the stacked markup. */
+@media (max-width:1100px){
+  .founders{ grid-template-columns:1fr; gap:clamp(40px,6vh,64px); }
   /* No off-screen room once the pair stacks to one column - so the panel
      just docks under the photo instead of sitting beside it, and the
      split has nowhere to happen: two frames stacked vertically cannot be
      a photo joined down the middle, so the pair shot is dropped here
      rather than played as a join that does not land. */
   .founders__duo{ display:none; }
+  .founder{ width:min(100%,420px); margin-inline:auto; }
   .founder__reveal{ position:static; width:auto; transform:none; }
-  .founder__revealIn{ padding:0; margin-top:16px; }
+  .founder__revealIn{ margin-top:16px; }
+  /* it is no longer one screen once the two of them are stacked */
+  .ab-founders{ min-height:0; }
 }
 
 /* ---------- 4 · if you ask our people ----------
-   Still built to read in one screen rather than scroll through, which is
-   what keeps the gaps here tighter than its siblings' - but it carries the
-   page's headline now, so it is a section with a top, a middle and a
-   bottom instead of a tag and two paragraphs. */
-.ab-people{
-  padding:clamp(56px,8vh,96px) 0; min-height:100svh; display:flex; flex-direction:column; justify-content:center;
+   Three bands stacked down the middle: the claim, the photograph, the two
+   statements. The one-screen lock is off - it was what forced the picture
+   into a column beside the copy in the first place, and the section reads
+   better given the room to be three things in a row than squeezed into
+   being one crowded thing. */
+.ab-people{ padding:clamp(90px,13vh,150px) 0 clamp(80px,12vh,140px); }
+
+/* Centred, and the only thing on screen when you arrive at it. */
+.ab-people__head{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
 }
 /* The page's claim about itself, moved here from the intro. Set at the
-   scale that claim deserves - display face, tight tracking, near the top
-   of the section with only the tag above it - and short enough a measure
-   that it breaks into two or three lines rather than running flat across
-   the page. */
+   scale that claim deserves - display face, tight tracking - and on a
+   measure short enough that it breaks into two or three lines rather than
+   running flat across the page. */
+/* face and size come from the page's shared heading scale, further down
+   this file - what is set here is only what is particular to this one */
 .ab-people__title{
   margin-top:clamp(16px,2.4vh,28px);
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(32px,5.2vw,76px); line-height:1.02; letter-spacing:-.03em;
-  max-width:17ch; text-wrap:balance;
+  max-width:18ch; text-wrap:balance;
 }
 /* The turn in the sentence, in the site's own voice - the same accent
    italic the home page gives its pitch and its name. It reads as the
@@ -460,29 +596,16 @@
   color:var(--accent); font-weight:400; font-style:italic;
 }
 
-/* Photo first and larger, copy second - the reverse of the intro above,
-   which puts its copy left and its artwork right. Two sections running
-   the same way round in a row is what made this one read as filler.
-
-   Top-aligned, not centred. Centring was an answer to the notes hanging
-   off the foot of the photo, but it left both of them floating against
-   the picture with nothing lining up: the first hairline landed somewhere
-   down the middle of the image and the numerals had no edge to answer to.
-   Started at the top, the rule over "01" is exactly the top edge of the
-   photograph, which is the one alignment in the row a reader can actually
-   see. The photo's column is a shade narrower too - the notes need the
-   width more than the picture does, and a slightly smaller shot is easier
-   to sit beside. */
-.ab-people__body{
-  margin-top:clamp(32px,4.6vh,60px);
-  display:grid; grid-template-columns:.96fr 1.04fr;
-  gap:clamp(28px,4vw,64px); align-items:start;
-}
-.ab-people__shot{ margin:0; }
+/* The photograph, full column width and cut wide. Forty people in a 4:3
+   box beside a paragraph is a thumbnail of a group shot; the same frame
+   run across the page as a band is the group shot. The pan (still driven
+   from lib/about-motion.ts) finally has somewhere to go, too. */
+.ab-people__shot{ margin:clamp(40px,6vh,76px) 0 0; }
 /* The group shot's crop window - no visible frame around it, just the clip
    that lets the photo pan past its own edges (the pan itself lives in
    lib/about-motion.ts). */
 .filmstrip__win{ position:relative; overflow:hidden; aspect-ratio:4/3; border-radius:14px; }
+.ab-people__shot .filmstrip__win{ aspect-ratio:21/9; }
 /* Wider than its window on purpose: that overhang is the pan's travel. */
 .filmstrip__win img{ width:120%; max-width:none; will-change:transform; }
 /* A caption in the same mono the tags and the footer's meta use, split to
@@ -495,29 +618,25 @@
   text-transform:uppercase; color:var(--muted);
 }
 
-/* Two statements, indexed. The hairline and the numeral above each one
-   are the drivers' device further down the page, which is what makes
+/* Two statements, indexed, side by side under the picture rather than
+   stacked in a column beside it. The hairline and the numeral above each
+   one are the drivers' device further down the page, which is what makes
    these read as part of the same argument instead of loose body copy -
-   and it gives the column a structure the eye can count. */
-/* Sized off the height of the picture beside them rather than left at a
-   body-copy default: two statements against a photograph that tall were
-   being out-argued by it. The gap grows with the column for the same
-   reason - it is what keeps the pair reading as two statements rather
-   than one block of text that happens to have a rule through it. */
+   and set as a pair they answer each other, which is the whole reason
+   there are two of them. */
 .ab-people__notes{
-  display:flex; flex-direction:column;
-  gap:clamp(28px,4.2vh,52px);
+  margin-top:clamp(38px,5.5vh,68px);
+  display:grid; grid-template-columns:repeat(2,1fr);
+  gap:clamp(28px,4vw,64px);
 }
 .ab-people__note{
-  /* no measure cap: the column is already narrow enough to keep the line
-     length readable, and a 46ch ceiling on top of it was ending every
-     line well short of the right edge and leaving a band of empty page */
   border-top:1px solid var(--line);
   padding-top:clamp(16px,2vh,24px);
-  font-size:clamp(17px,1.52vw,23px); line-height:1.55; color:var(--muted);
+  /* the page's one body size again, not a third scale of its own */
+  font-size:clamp(14.5px,1.1vw,17.5px); line-height:1.62; color:var(--muted);
+  text-wrap:pretty;
 }
-/* the numeral sits on the hairline, so it is the first thing level with
-   the top edge of the photograph */
+/* the numeral sits on the hairline, at the head of its own column */
 .ab-people__idx{
   display:block; margin-bottom:12px;
   font-family:var(--f-mono); font-style:normal;
@@ -525,7 +644,8 @@
 }
 
 @media (max-width:860px){
-  .ab-people__body{ grid-template-columns:1fr; align-items:start; }
+  .ab-people__notes{ grid-template-columns:1fr; gap:clamp(26px,4vh,40px); }
+  .ab-people__shot .filmstrip__win{ aspect-ratio:16/10; }
   .ab-people__title{ max-width:none; }
 }
 
@@ -549,13 +669,24 @@
   --accent:oklch(0.55 0.17 152);
   color:var(--cream);
 }
-/* The playful script - already the site's marker for tone-of-voice
-   moments (hero greet, driver numerals) - reads better without the tight
-   negative tracking and shouty caps the display face used here. */
-.ab-drives__title{
-  font-family:var(--f-playful); font-weight:700;
-  font-size:clamp(38px,6vw,88px); line-height:1.05; letter-spacing:0;
-  text-align:center;
+/* One heading face for the whole page. This was set in the playful script
+   (Caveat) while every other heading on the page - the opener, the
+   founders, the people claim, the space - is the display face. One
+   section in a handwriting font does not read as a tone-of-voice moment
+   in context; it reads as a different page. Same family, same weight,
+   same tracking as .ab-people__title and .ab-space__title now, and the
+   shared scale below is what actually enforces it. */
+.ab-drives__title{ text-align:center; }
+
+/* The page's heading scale, in one place. Every h2 on this page is the
+   same face at the same size, so a reader moving down it never has to
+   work out whether a change of type means a change of subject. */
+.ab-people__title,
+.ab-drives__title,
+.ab-space__title{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(32px,5.2vw,76px); line-height:1.02; letter-spacing:-.03em;
+  text-transform:none;
 }
 .drivers{
   margin-top:clamp(38px,6vh,66px);
@@ -567,12 +698,17 @@
   transition:border-color .5s var(--ease), transform .5s var(--ease);
 }
 .driver:hover{ border-color:var(--accent); transform:translateY(-4px); }
+/* the display face again, not the script - same reason as the title
+   above. The numeral keeps the accent; it is the index, not decoration. */
 .driver__head{
-  display:block; font-family:var(--f-playful); font-size:clamp(19px,1.7vw,26px);
-  color:var(--accent); margin-bottom:12px;
+  display:block; font-family:var(--f-display); font-weight:600;
+  font-size:clamp(18px,1.5vw,23px); letter-spacing:-.01em;
+  color:var(--cream); margin-bottom:12px;
 }
-.driver__head i{ font-style:normal; }
-.driver p{ font-size:clamp(13px,1vw,15.5px); line-height:1.6; color:var(--muted); }
+.driver__head i{ font-style:normal; color:var(--accent); }
+/* the same body size as .ab-space__copy and the founders' bios - one
+   reading size for the whole page */
+.driver p{ font-size:clamp(14px,1.05vw,16.5px); line-height:1.62; color:var(--muted); }
 
 /* The crowd is masked at both ends so it melts into the cream it sits on
    rather than ending on a cut edge - top and bottom both, since the panel
@@ -602,15 +738,39 @@
 .ab-space{
   position:relative;
   min-height:100svh; display:flex; flex-direction:column; justify-content:center;
-  padding:clamp(44px,6.5vh,84px) 0;
+  /* tighter than the rest of the stack on purpose: every pixel taken off
+     the section's own padding goes straight into --stage-h below, and the
+     photograph is the thing worth the room here */
+  padding:clamp(32px,4.5vh,64px) 0;
 }
+/* The field does not run under either of these. Both boxes are measured at
+   runtime and the grid is cleared behind them - permanently, not dimmed:
+   those cells are paper for as long as the page is open, and neither the
+   wipe nor the cursor wave ever touches them again. keepOut() in
+   lib/ascii-field.ts does the measuring, and StageAscii.tsx names the
+   three elements.
+
+   The clearing is feathered rather than cut, so what you see is the grid
+   thinning out as it approaches the type instead of a white rectangle
+   lying on the effect.
+
+   The shadows stay behind that as insurance - they cover the soft ring at
+   the edge of the clearing, and the moment before the boxes are measured
+   on a resize. */
+.ab-space__title,
+.ab-space__copy{ position:relative; z-index:1; }
 .ab-space__title{
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(28px,4.2vw,58px); line-height:1.0; letter-spacing:-.02em; text-transform:uppercase;
+  text-shadow:0 0 14px #f4f2ec, 0 0 34px #f4f2ec, 0 0 62px #f4f2ec;
 }
 .ab-space__copy{
-  margin-top:clamp(14px,2vh,24px); max-width:52ch;
-  font-size:clamp(14px,1.15vw,18px); line-height:1.58; color:var(--muted);
+  text-shadow:0 0 10px #f4f2ec, 0 0 24px #f4f2ec, 0 0 44px #f4f2ec;
+}
+/* face, size and tracking come from the page's shared heading scale
+   above - this one used to be set uppercase at its own smaller size,
+   which made it the third heading treatment on one page */
+.ab-space__copy{
+  margin-top:clamp(16px,2.2vh,26px); max-width:56ch;
+  font-size:clamp(14.5px,1.1vw,17.5px); line-height:1.62; color:var(--muted);
 }
 /* ---- the stage ----
    One frame, ten photographs, a rail. This was a jigsaw of eight unequal
@@ -629,19 +789,96 @@
    actually show, at every viewport, without the section ever needing to
    scroll. The cap sits on .stage itself so the frame, the caption line
    and the rail all share one width and line up on both edges. */
+/* The budget was 42svh, which left the section fitting inside one screen
+   with room to spare - and a frame smaller than it needed to be, given
+   that the whole reason this replaced a mosaic was to show one photograph
+   at a size worth looking at. 54svh takes back most of that slack: at a
+   900px screen the frame goes from ~378px to ~486px tall and, because the
+   width is derived from it, from ~672px to ~864px across. The section
+   still lands inside 100svh at every desktop height - the arithmetic is
+   the frame plus the rail plus the caption line plus the title block plus
+   the padding above, which is why that padding came down with it. */
 .stage{
-  --stage-h:clamp(200px, 42svh, 560px);
+  position:relative;
+  /* 50svh, down from 54: the section's title is set at the page's shared
+     heading scale now rather than at its own smaller size, and that extra
+     line height has to come out of the frame's budget or the rail drops
+     below the fold - which is the one thing this section is built not to
+     do. */
+  --stage-h:clamp(220px, 50svh, 720px);
   width:min(100%, calc(var(--stage-h) * 16 / 9));
-  margin:clamp(20px,3vh,40px) auto 0;
+  margin:clamp(16px,2.2vh,30px) auto 0;
 }
+
+/* ---- the symbol field ----
+   The same photograph again, resolved into typed characters cut out of it,
+   under the frame - so what you actually see of it is the margin around
+   the picture.
+
+   There was a blurred copy of the photograph under this, to put its colour
+   on the paper around the frame. It is gone. The two were the same colours
+   at the same place, and the blur's whole effect was to lift the paper
+   toward the tone of the characters standing on it - which is contrast the
+   grid cannot spare, since the picture in it is only legible by the
+   difference between the two.
+
+   No pointer-events. It is behind an opaque frame and it must not put a
+   sheet across the thumbnails; the cursor is tracked on the window
+   instead - see the note in lib/ascii-field.ts.
+
+   The whole thing is decorative, and it is off on touch (below), where
+   there is no cursor to push the wave and the machine is likeliest to be
+   the one that cannot afford it. */
+/* Full bleed, and taller than the section it sits in. The first version
+   of this was cut to the spill's box - 152% wide and 16:9 - and it showed:
+   sideways there was enough room for the fade to be a fade, but top and
+   bottom the ellipse ran out of box and the grid ended on a line. So the
+   layer is the size of the screen now and then some, centred on the frame,
+   and it simply runs off the top and the bottom of the section. .ab-panel
+   clips, so the section's own edge is where it ends - which is an edge the
+   page already has, rather than one this effect introduced.
+
+   One ellipse doing both axes, sized explicitly rather than left to
+   farthest-corner: 78% by 92% of a box that is already bigger than the
+   view means the fade is long in both directions and reaches transparent
+   outside the section on three sides. The stops are weighted to hold
+   density around the frame and give most of the distance to the falloff -
+   the field should be unmistakable behind the picture and almost gone by
+   the time it reaches the copy. */
+.stage__ascii{
+  position:absolute; z-index:0; pointer-events:none; display:block;
+  left:50%; top:50%;
+  width:100vw; height:132svh;
+  transform:translate(-50%,-50%);
+  opacity:.92;
+  -webkit-mask-image:radial-gradient(ellipse 78% 92% at 50% 46%,
+    #000 0%, rgba(0,0,0,.9) 38%, rgba(0,0,0,.42) 70%, transparent 100%);
+  mask-image:radial-gradient(ellipse 78% 92% at 50% 46%,
+    #000 0%, rgba(0,0,0,.9) 38%, rgba(0,0,0,.42) 70%, transparent 100%);
+  /* it types itself in rather than appearing already there, which is what
+     keeps it part of the section arriving instead of a thing that
+     switched on */
+  animation:asciiIn 1.4s var(--ease) both;
+}
+@keyframes asciiIn{ from{ opacity:0 } to{ opacity:.92 } }
+
+/* everything real sits above the field */
+.stage__frame,
+.stage__meta,
+.stage__rail{ position:relative; z-index:1; }
 
 /* 16:9 and fixed, so the layout below it never shifts as the picture
    changes - and so the eventual landscape originals land in a frame cut
    to their own shape rather than being cropped again. */
+/* The shadow arrived with the spill and belongs to it: without it the
+   frame sits flat inside its own glow, which is the one arrangement that
+   makes the blur look like a mistake rather than like light. Wide, soft
+   and almost black - one shadow doing the whole job, not a stack. */
 .stage__frame{
   position:relative; overflow:hidden;
   aspect-ratio:16/9; border-radius:14px;
   background:var(--panel); border:1px solid var(--line);
+  box-shadow:0 30px 80px -20px rgba(0,0,0,.42), 0 4px 14px rgba(0,0,0,.10);
 }
 /* Every frame is mounted and stacked; the active one is simply the one at
    full opacity. A crossfade between two decoded images is instant, where
@@ -684,11 +921,20 @@
 /* Caption and counter at the two ends of one hairline, which is the
    device .ab-people__cap already uses under the group shot - the two
    sections then read as one page rather than two treatments. */
+/* The field is held off this line entirely - the grid is measured against
+   this element's own box and cleared behind it (keepOut() in
+   lib/ascii-field.ts), because this is where the rooms are named and a
+   caption you have to read twice is a caption that failed.
+
+   The shadow stays as the belt to that braces: it covers the soft ring
+   where the grid comes back, and it covers the case where the clearing is
+   measured a frame before this line reflows. */
 .stage__meta{
   display:flex; align-items:baseline; justify-content:space-between; gap:20px;
   margin-top:12px; padding-top:10px; border-top:1px solid var(--line);
   font-family:var(--f-mono); font-size:11px; letter-spacing:.18em;
   text-transform:uppercase;
+  text-shadow:0 0 8px #f4f2ec, 0 0 18px #f4f2ec;
 }
 /* The animation is on the inner span, not the <p>: the <p> is the stable
    element and the span is the one React replaces on every change (keyed
@@ -731,7 +977,7 @@
 .stage__thumb:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 
 /* The auto-advance is off entirely under reduced motion (AboutStage.tsx
-   folds it into the same `paused` flag as hover and off-screen), and the
+   folds it into the same `paused` flag as focus and off-screen), and the
    progress hairline is not rendered at all - there is no hold left for it
    to report. What is left here is the crossfade and the caption's lift,
    which have nothing to run against once the frame only changes when you
@@ -740,6 +986,11 @@
   .stage__frame img,
   .stage__cap span{ transition:none; animation:none; }
   .stage__thumb:hover{ transform:none; }
+  /* the field stays - it is a texture, and a still one is not motion. The
+     wave and the dissolve are what go, and those are switched off in
+     lib/ascii-field.ts rather than here, since a canvas cannot be stilled
+     by CSS. */
+  .stage__ascii{ animation:none; opacity:.9; }
 }
 
 /* ---------- the way onward ---------- */
@@ -757,9 +1008,15 @@
 
 @media (max-width:860px){
   .ab-open{ height:92svh; align-items:flex-end; }
-  .abh__orb{ opacity:.6; }
+  /* the type runs the full width of a phone, so the wash has to come from
+     under it rather than from the left */
+  .ab-open__wash{
+    background:linear-gradient(to top,
+      rgba(6,6,10,.9) 0%, rgba(6,6,10,.72) 46%, rgba(6,6,10,.28) 80%, rgba(6,6,10,.12) 100%);
+  }
+  .ab-open__inner{ padding-bottom:clamp(56px,10vh,96px); }
+  .ab-open__title{ max-width:none; }
   .ab-intro__line{ max-width:none; }
-  .founders{ grid-template-columns:1fr; gap:52px; }
   .drivers{ grid-template-columns:1fr; }
   .ab-drives{ padding-top:clamp(96px,15vh,150px); }
   /* The one-screen lock comes off here. On a phone the title, the copy
@@ -781,5 +1038,15 @@
      re-authored for narrow screens. */
   .stage__rail{ grid-template-columns:repeat(5,1fr); gap:5px; }
   .stage__meta{ font-size:10px; letter-spacing:.14em; }
+  /* The frame takes the full column here, so there is no margin left for
+     the spill to fill - what is left of it is the halo just past the
+     corners. Less bleed and a smaller blur radius, which also keeps the
+     filter off the phone's compositor at a size it would actually feel. */
+  /* No cursor to push the wave, no margin for it to show in, and the
+     likeliest machine to be short of frames. display:none is also what
+     stops the field working at all - with no box it has no grid, so it
+     samples nothing and never starts its loop. */
+  .stage__ascii{ display:none; }
+  .stage__frame{ box-shadow:0 18px 44px -14px rgba(0,0,0,.38); }
   .ab-open__cue{ display:none; }
 }

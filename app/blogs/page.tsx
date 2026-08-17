@@ -17,7 +17,10 @@ export default function Blog() {
       <Overlays />
       <Nav variant="sub" active="/blogs" />
 
-      <main id="top" className="bl-page">
+      {/* data-nav-light: cream ground from the first frame, so the fixed
+          header has to draw itself in black ink over it - see readGround()
+          in lib/motion.ts. */}
+      <main id="top" className="bl-page" data-nav-light>
         <section className="bl-hero wrap">
           <span className="tag" data-reveal>{BLOG_HERO.eyebrow}</span>
           <h1 className="bl-hero__title" data-split>

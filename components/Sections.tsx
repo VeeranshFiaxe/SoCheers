@@ -1,6 +1,5 @@
 import { Fragment } from "react";
 import { AWARDS, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
-import AwardShelf from "./AwardShelf";
 import ParticleLogo from "./ParticleLogo";
 import RollText from "./Roll";
 
@@ -114,18 +113,66 @@ export function Clients() {
 }
 
 export function Awards() {
-  /* The header stays where it was; what was a marquee under it is a
-     catalogue now - see the note at the top of components/AwardShelf.tsx
-     for why. The shelf is the only client island on this page's lower
-     half, so it is imported as a leaf and everything around it stays a
-     server component. */
+  /* One row, going past. This spent a while as a catalogue - an index on
+     the left, a still on the right - and the trouble with a catalogue is
+     that it asks to be worked through. Six shows is a fact about us, not
+     a body of work to browse.
+
+     What keeps it from reading as a fourth row of the client wall three
+     sections up is that it is not typed like one: the names are set
+     bigger and in caps, and every name is struck through with a purple
+     marker swipe (#97509f, off the design book's own solids) that fills
+     the whole name when you point at it. The wall above is grey type and
+     one green star; this is the loudest strip on the page, which is the
+     right way round for the section about being noticed.
+
+     Names only. The year used to ride above each one as a small mono
+     figure and it is out: the years on file are placeholders, and a
+     ticker is read in passing - a date going by at speed is a thing to
+     squint at rather than a thing to take in.
+
+     Server component, no state: the movement is the shared marquee
+     ticker in lib/motion.ts, same as the clients' rows. */
   return (
     <section className="sec awards" id="awards" data-section data-sec="4">
       <div className="wrap">
         <span className="tag" data-reveal>RECOGNITION</span>
-        <h2 className="awards__title" data-split>The room noticed.</h2>
-        <AwardShelf awards={AWARDS} />
+        <h2 className="awards__title" data-split>EVERY WIN COUNTS</h2>
       </div>
+
+      {/* The row is decoration as far as a screen reader is concerned -
+          duplicated and moving. The list below carries the same six
+          shows once, in order, off screen.
+
+          Four passes of the six, not two. The ticker in lib/motion.ts
+          wraps on half the track's width, so the track has to be at
+          least two screens wide or the tail runs out mid-viewport and
+          the whole strip appears to stop and jump back. Six names is
+          about one screen; twelve is not, whatever the window. */}
+      <div className="awards__rows" aria-hidden="true">
+        <div className="amarquee">
+          <div className="amarquee__track" data-marquee="left">
+            {[0, 1, 2, 3].map((copy) =>
+              AWARDS.map((a, i) => (
+                <Fragment key={`${copy}-${i}`}>
+                  <span className="amarquee__show">
+                    <b>{a.name}</b>
+                  </span>
+                  <span className="amarquee__dot" />
+                </Fragment>
+              )),
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* the same six, once and in order, for anything that cannot read a
+          moving row - carrying what the row carries and no more */}
+      <ul className="sr-only">
+        {AWARDS.map((a) => (
+          <li key={a.name}>{a.name}</li>
+        ))}
+      </ul>
     </section>
   );
 }

@@ -98,7 +98,7 @@ export const DRIVERS = [
 ];
 
 export const SPACE_COPY =
-  "Imagine the meeting rooms named Idhar, Udhar, Jidhar, Kidhar. Because when someone asks “Where are you?” you can say “Idhar” and still be in a room called Udhar.";
+  "Imagine the meeting rooms named Idhar, Udhar, Jidhar, Kidhar. Because when someone asks “Where are you?” you can say “Idhar” and still be in a room called Idhar.";
 
 /* The office, ten frames, one at a time (see components/AboutStage.tsx -
    a single cinematic frame with a rail of thumbnails under it, rather

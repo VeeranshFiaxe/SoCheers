@@ -38,7 +38,14 @@ export function Loader() {
 /* `variant` only rewrites where the links point. On the home page they stay
    bare hashes so Lenis picks them up and scrolls smoothly (it only binds
    a[href^="#"]); on a sub-page the same labels have to leave the page, so
-   they become root-relative and the browser handles them normally. */
+   they become root-relative and the browser handles them normally.
+
+   The mark in the corner is the same flat lockup on every page and on every
+   route - the home page used to carry a text wordmark here and lean on the
+   overture to fly its own copy of the lockup into the slot, which meant the
+   logo was a different object depending on how you arrived. Now the nav owns
+   it everywhere; the overture just hands over to it (see .ovt__rig's
+   is-done rule in globals.css). */
 export function Nav({
   variant = "home",
   active,
@@ -54,26 +61,33 @@ export function Nav({
 
   return (
     <header className="nav" id="nav">
-      {sub ? (
-        <a href="/" className="nav__logo" aria-label="SoCheers" data-cursor="Home">
-          <SoCheersLockup className="nav__logo-mark" />
-        </a>
-      ) : (
-        <span className="nav__logo" aria-hidden="true">
-          SOCHEERS
-        </span>
-      )}
+      <a
+        href={sub ? "/" : "#top"}
+        className="nav__logo"
+        aria-label="SoCheers"
+        data-cursor="Home"
+      >
+        <SoCheersLockup className="nav__logo-mark" />
+      </a>
       <nav className="nav__links">
-        {NAV_LINKS.map((l) => (
-          <a
-            key={l.href}
-            href={l.href.startsWith("#") ? to(l.href) : l.href}
-            data-roll
-            aria-current={active && l.href === active ? "page" : undefined}
-          >
-            <RollText>{l.label}</RollText>
-          </a>
-        ))}
+        {NAV_LINKS.map((l) =>
+          l.soon ? (
+            /* no href at all rather than href="#": an empty hash is a link
+               to the top of the page dressed up as a link to a section */
+            <span key={l.href} className="nav__soon" data-roll>
+              <RollText>{l.label}</RollText>
+            </span>
+          ) : (
+            <a
+              key={l.href}
+              href={l.href.startsWith("#") ? to(l.href) : l.href}
+              data-roll
+              aria-current={active && l.href === active ? "page" : undefined}
+            >
+              <RollText>{l.label}</RollText>
+            </a>
+          ),
+        )}
       </nav>
       <a href="/contact" className="nav__cta" data-magnetic data-cursor="Say hi">
         <span>Let&rsquo;s chat</span>

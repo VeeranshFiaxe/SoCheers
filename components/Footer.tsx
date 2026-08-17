@@ -1,4 +1,5 @@
 import ContactModal from "./ContactModal";
+import SoCheersLockup from "./SoCheersLockup";
 import {
   GLOBE_GRATICULE,
   GLOBE_INDIA,
@@ -141,21 +142,6 @@ function Pendant() {
         <ellipse cx="240" cy="220" rx="16" ry="9" fill="#fff" opacity="0.06" transform="rotate(28 240 220)" />
       </g>
 
-      {/* The disc as the flat logo draws it - under the ring, not over
-          it, which is the order in components/SoCheersLockup.tsx and the
-          only order in which the mark reads as one drawn object. Paired
-          with the `foot__cold` ring below: between them they are the
-          site's own logo, and they are the only thing left once the
-          glass has gone out. */}
-      <circle
-        className="foot__cold"
-        cx={MARK.blob.cx}
-        cy={MARK.blob.cy}
-        r={MARK.blob.r}
-        fill="#ffcb0c"
-        clipPath="url(#foot-clip)"
-      />
-
       {/* the ring and the three bars of the base, in one material,
           because in the logo they are one drawn object */}
       <g fill="none" strokeLinecap="round">
@@ -172,19 +158,34 @@ function Pendant() {
         <path d={RING_INNER} stroke="#ffffff" strokeOpacity="0.15" strokeWidth="2" />
         <path d={RING_OUTER} stroke="#000" strokeOpacity="0.35" strokeWidth="2.2" />
 
-        {/* the warm edge the disc throws onto the inside of the ring... */}
+        {/* the warm edge the disc throws onto the inside of the ring */}
         <path className="foot__lit" d={RING_INNER} stroke="#ffd79a" strokeOpacity="0.45" strokeWidth="3" />
-        {/* ...and, once the room is dark, the same monoline the site draws
-            its logo in everywhere else, so what is left standing at the
-            end is the mark rather than a dead prop. `foot__cold` is the
-            exact inverse of `foot__lit`, which is why the crossover needs
-            no timing of its own. */}
-        <path className="foot__cold" d={RING} stroke="currentColor" strokeWidth={MARK.stroke} />
-        {BARS.map((d) => (
-          <path key={`c${d}`} className="foot__cold" d={d} stroke="currentColor" strokeWidth={BAR_STROKE} />
-        ))}
       </g>
     </svg>
+  );
+}
+
+/* What the bulb leaves behind.
+
+   The glass dying used to hand over to a monoline copy of the *mark*
+   drawn inside this same SVG - the ring, the base and the disc, and no
+   wordmark, because the pendant's box is cropped to the bulb's own ink
+   (PENDANT_VIEWBOX). So the footer ended on a logo the site does not use
+   anywhere else: the nav's corner, the loading screen and the overture's
+   dock all show the full lockup, name and all.
+
+   This is that lockup, laid over the pendant and sized so its bulb lands
+   exactly on the pendant's - the same crossfade the overture does when
+   the 3D fixture becomes the flat mark, and for the same reason. It rides
+   `foot__cold`, the exact inverse of the glass's own `foot__lit`, so the
+   light going out and the logo arriving are one number rather than two
+   things kept in step. Geometry for the offsets is in .foot__lockup
+   (globals.css) - it is only arithmetic between two viewBoxes. */
+function ColdLockup() {
+  return (
+    <span className="foot__lockup foot__cold" aria-hidden="true">
+      <SoCheersLockup className="foot__lockup-mark" />
+    </span>
   );
 }
 
@@ -393,6 +394,7 @@ export default function Footer() {
         <span className="foot__markpos">
           <span className="foot__mark" data-foot-mark>
             <Pendant />
+            <ColdLockup />
           </span>
         </span>
       </div>

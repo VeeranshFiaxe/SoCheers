@@ -909,8 +909,17 @@ export function initSite(): () => void {
           if (!s.half) return;
           s.current += (s.half / s.base) * s.dir * dt + s.boost * dt;
           s.boost *= 0.9;
-          if (s.dir < 0 && s.current <= -s.half) s.current += s.half;
-          if (s.dir > 0 && s.current >= 0) s.current -= s.half;
+          /* Wrapped by modulo rather than by a pair of one-step tests.
+             The track is the same content twice, so any two offsets a
+             half apart are the same picture and this can never be seen -
+             but it holds for *any* offset, which the two tests did not.
+             They only ever subtracted one half, in one direction each, so
+             a hard scroll (which feeds `boost` in either direction,
+             whatever `dir` is) could carry the offset past the end of the
+             content the wrap was guarding, and the strip ran out
+             mid-viewport and appeared to stop dead and jump back. */
+          const t = ((s.current % s.half) + s.half) % s.half;
+          s.current = t - s.half;
           gsap.set(s.track, { x: s.current });
         });
       });
@@ -1258,6 +1267,44 @@ export function initSite(): () => void {
     function initNav() {
       const nav = document.getElementById("nav");
       const bar = document.querySelector<HTMLElement>(".progress__bar");
+
+      /* ---- which way round the nav is drawn ----
+         The header is fixed and the site is not one colour: the home page
+         runs black, the About page's panels come up cream under it, and
+         Insights and Contact are cream from the first frame. So the ink
+         has to follow whatever is behind it - white line work over black,
+         black over cream - or half the row is unreadable half the time.
+
+         This used to be a difference blend on the links, which is the
+         trick that *looks* like it solves this and does not: .nav is a
+         fixed element with a z-index, so it opens a stacking context, and
+         a blend inside one is composited against that context rather than
+         against the page scrolling under it. It never had the backdrop it
+         was supposed to be a function of.
+
+         So: the light grounds say so in the markup (`data-nav-light`, and
+         the About page's own .is-light panels), and this asks - on every
+         scroll, off rectangles that are already in the layout - whether
+         any of them is under the header's own midline. One class, and the
+         stylesheet does the rest (see --nav-ink in globals.css). */
+      const lights = gsap.utils.toArray<HTMLElement>("[data-nav-light], .is-light");
+      const readGround = () => {
+        if (!nav || !lights.length) return;
+        const r = nav.getBoundingClientRect();
+        /* the logo's own middle, not the header's bottom edge: the header
+           is padded well past its ink, and the corner the mark sits in is
+           what has to stay legible */
+        const y = r.top + r.height / 2;
+        const light = lights.some((el) => {
+          const b = el.getBoundingClientRect();
+          return b.top <= y && b.bottom >= y && b.width > 0;
+        });
+        nav.classList.toggle("is-on-light", light);
+      };
+      /* pages that are cream from the top have to be right on the first
+         frame, before anything has scrolled */
+      readGround();
+
       let lastY = 0;
       ScrollTrigger.create({
         start: 0, end: "max",
@@ -1266,8 +1313,10 @@ export function initSite(): () => void {
           const y = self.scroll();
           if (nav) nav.classList.toggle("is-hidden", y > lastY && y > 500);
           lastY = y;
+          readGround();
         },
       });
+      on(window, "resize", readGround);
     }
 
     /* -------------------------------------------------- the meaning entry

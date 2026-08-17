@@ -8,6 +8,32 @@
    home page, just given a full page and a proper front door from the nav.
    ============================================================ */
 
+/* ---------- the page's theme ----------
+   Light, and specifically the Insights page's light: the same off-white,
+   the same re-pointed variables (see .bl-page in app/blogs/blog.css).
+   Both are pages you reach straight from the nav, and this one arriving
+   in the site's dark theme while the other arrived in paper made them
+   read as two different sites.
+
+   Written as a variable swap rather than as colours restated on every
+   child, so every rule below - and everything this page borrows from
+   globals.css - inherits the light palette without knowing about it.
+   Same values as .bl-page, deliberately duplicated rather than imported
+   across routes: neither page should depend on the other's stylesheet
+   being loaded. */
+.ct-page{
+  --cream:#0b0b0c;
+  --muted:rgba(11,11,12,.6);
+  --line:rgba(11,11,12,.14);
+  --faint:rgba(11,11,12,.08);
+  --panel:rgba(11,11,12,.05);
+  /* the form fields' own ground - paper, not the panel tint, so an input
+     reads as somewhere to write rather than as another card */
+  --bg-2:#ffffff;
+  --accent:oklch(0.55 0.17 152);
+  background:#f4f2ec; color:var(--cream);
+}
+
 .ct-hero{
   position:relative; overflow:hidden;
   padding:clamp(140px,20vh,190px) 0 clamp(64px,9vh,110px);
@@ -40,8 +66,14 @@
 /* ---------- the form panel ----------
    The page's actual front door: a full inline form
    (components/ContactForm.tsx) rather than the footer's pop-up. */
+/* Paper, not the panel tint - the same translucent white the Insights
+   page gives its whitepaper card (.bl-paper__card in app/blogs/blog.css).
+   On an off-white page a card filled with --panel is a grey rectangle;
+   filled with white it is a sheet lying on the page, which is the only
+   reading that makes a form on it look like something to fill in. */
 .ctf__panel{
-  border:1px solid var(--line); border-radius:24px; background:var(--panel);
+  border:1px solid var(--line); border-radius:24px;
+  background:color-mix(in srgb, #fff 62%, transparent);
   padding:clamp(28px,3.6vw,48px);
 }
 /* The filler under it. flex:1 is doing the real work: whatever the left
@@ -106,7 +138,8 @@
    reduced-motion or script-less render still gets a legible, unlit mark
    with the copy beside it rather than a blank panel. */
 .ctf__done{
-  border:1px solid var(--line); border-radius:24px; background:var(--panel);
+  border:1px solid var(--line); border-radius:24px;
+  background:color-mix(in srgb, #fff 62%, transparent);
   padding:clamp(36px,4.4vw,64px) clamp(28px,3.6vw,48px);
   display:flex; flex-direction:column; align-items:center; text-align:center;
   position:relative; overflow:hidden;
@@ -178,25 +211,20 @@
   to{ opacity:1; transform:none; }
 }
 
-/* The "or reach us straight" card, sitting under the hero copy now that
-   the form has taken the second column. */
+/* What is left of the "prefer to skip the form?" card: the social row,
+   and nothing around it. The card itself - the label, the two mailto
+   addresses and the careers link - is gone from the markup (see
+   app/contact/page.tsx). It was a second, competing way to get in touch
+   sitting directly under the headline for the form, and the two of them
+   split the visitor between them.
+
+   So no border, no radius, no padding: a row of five marks under the
+   headline, which is what it always was underneath the card. */
 .ct-direct{
-  margin-top:clamp(32px,4vw,52px); align-self:stretch;
-  border:1px solid var(--line); border-radius:24px; padding:clamp(24px,2.8vw,34px);
-  display:flex; flex-direction:column; gap:16px;
+  margin-top:clamp(28px,3.6vw,44px); align-self:flex-start;
+  display:flex; flex-direction:column;
 }
-.ct-direct__label{
-  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.18em;
-  text-transform:uppercase; color:var(--muted);
-}
-.ct-direct__email{ display:flex; flex-direction:column; gap:4px; }
-.ct-direct__email span{ font-family:var(--f-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-.ct-direct__email b{
-  font-family:var(--f-display); font-weight:600; font-size:clamp(15px,1.4vw,18px);
-  transition:color .3s var(--ease);
-}
-.ct-direct__email:hover b{ color:var(--accent); }
-.ct-direct__social.contact__social{ justify-content:flex-start; margin-top:4px; }
+.ct-direct__social.contact__social{ justify-content:flex-start; margin:0; }
 
 /* Stacked, the form still has to come before the "skip the form" card -
    display:contents lets the copy's children reorder around the panel. */
@@ -225,16 +253,23 @@
   flex:1; margin-top:16px; align-self:stretch;
   display:grid; grid-template-columns:1fr; gap:16px;
 }
+/* align-items:stretch, not flex-start: the map inside has to run the full
+   width of the card, and a flex-start cross-axis would shrink it to its
+   own content. The two lines above it are inline-level anyway, so they
+   are unaffected by the change.
+
+   No lift on hover any more, and no background change. The card was an
+   anchor - the whole box was the click target, so the whole box answered
+   the pointer. It is a container now with one button in it, and a box
+   that rises under the cursor while only part of it can be clicked is
+   telling the reader something untrue. */
 .ct-office{
-  display:flex; flex-direction:column; align-items:flex-start;
+  display:flex; flex-direction:column; align-items:stretch;
   border:1px solid var(--line); border-radius:24px;
   padding:clamp(24px,2.8vw,34px);
-  transition:border-color .4s var(--ease), transform .4s var(--ease), background .4s var(--ease);
 }
-.ct-office:hover{
-  border-color:color-mix(in srgb, var(--accent) 50%, transparent);
-  transform:translateY(-4px); background:var(--panel);
-}
+.ct-office__tag,
+.ct-office__city{ align-self:flex-start; }
 .ct-office__tag{
   font-family:var(--f-mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
   color:var(--accent);
@@ -244,18 +279,52 @@
   font-family:var(--f-display); font-weight:700; font-size:clamp(22px,2.2vw,32px);
   letter-spacing:-.02em;
 }
-/* the one part that absorbs a stretched card, so "Get directions" keeps
-   its own 20px off the address on a card that isn't stretched at all */
+/* No flex:1 here any more - the map below takes the stretch instead. The
+   address sets to its own height and the map absorbs whatever the column
+   is taller than the card's content, which is what keeps the box exactly
+   the size it already was: the space the map fills is space this card was
+   holding empty. */
 .ct-office__addr{
-  flex:1; margin-top:14px; max-width:36ch;
+  margin-top:14px; max-width:36ch;
   font-size:14.5px; line-height:1.6; color:var(--muted);
 }
+
+/* ---------- the map in the card ----------
+   flex:1 with a floor. On the desktop layout the office card is stretched
+   by the column beside it and this simply expands into that slack. On a
+   stacked phone layout there is no slack to take, so min-height is what
+   stops the map collapsing to nothing - it is the only width where the
+   card gets taller than it used to be, and a map two pixels high would be
+   worse than no map.
+
+   pointer-events:none on the frame, not on this box: the embed would take
+   the wheel as a zoom the moment the cursor crossed it, and on a page
+   running Lenis that reads as the scroll having jammed. Nothing in the
+   card is interactive except the button under it. */
+.ct-office__map{
+  flex:1; min-height:190px; margin-top:20px;
+  position:relative; overflow:hidden;
+  border-radius:14px; border:1px solid var(--line);
+  background:var(--panel);
+}
+.ct-office__map iframe{
+  position:absolute; inset:0; width:100%; height:100%;
+  border:0; display:block; pointer-events:none;
+  /* held slightly back off full saturation so it sits with the page's own
+     grade instead of dropping a fully-branded Google tile into the middle
+     of an off-white card */
+  filter:saturate(.82) contrast(1.02);
+}
+/* the one thing in the card that is clickable, so it is the one thing
+   that answers the pointer */
 .ct-office__link{
+  align-self:flex-start;
   display:inline-flex; align-items:center; gap:8px; margin-top:20px;
   font-family:var(--f-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--cream); transition:gap .35s var(--ease), color .35s;
 }
-.ct-office:hover .ct-office__link{ gap:14px; color:var(--accent); }
+.ct-office__link:hover,
+.ct-office__link:focus-visible{ gap:14px; color:var(--accent); }
 
 .ct-end{
   border-top:1px solid var(--line); padding:32px var(--pad);

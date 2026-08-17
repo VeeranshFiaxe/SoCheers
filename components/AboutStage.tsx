@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SpaceShot } from "@/lib/about-content";
+import StageAscii from "./StageAscii";
 
 /* ============================================================
    THE SPACE, one frame at a time.
@@ -38,12 +39,17 @@ const pad = (n: number) => String(n).padStart(2, "0");
 export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
   const [i, setI] = useState(0);
 
-  /* Three separate reasons to hold: the pointer is on it, something
-     inside it has focus, or the section is off screen. Kept as one flag
-     each rather than a single counter so no path can leave it stuck
-     paused - releasing hover cannot accidentally cancel the off-screen
-     hold, and vice versa. */
-  const [hovered, setHovered] = useState(false);
+  /* Two reasons to hold: something inside it has focus, or the section is
+     off screen. Kept as one flag each rather than a single counter so no
+     path can leave it stuck paused.
+
+     Hover used to be a third, and it was wrong here. This frame is the
+     centre of its own section, so the pointer is resting on it for most of
+     the time anyone is looking at the thing - which meant the cycle
+     stopped exactly when it was being watched and only ran when nobody
+     was there to see it. It reads as a slideshow that does not work. The
+     hold on focus stays: that one is a keyboard user part way through the
+     rail, and moving the frame under them is a different problem. */
   const [focused, setFocused] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
   /* Read in an effect, not at render: matchMedia does not exist on the
@@ -87,7 +93,7 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
     return () => io.disconnect();
   }, []);
 
-  const paused = hovered || focused || !onScreen || reduced;
+  const paused = focused || !onScreen || reduced;
 
   /* The auto-advance, and the reason it is a setTimeout keyed on `i`
      rather than one long-lived setInterval.
@@ -136,11 +142,26 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
     <div
       className="stage"
       ref={rootRef}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
       onFocusCapture={() => setFocused(true)}
       onBlurCapture={() => setFocused(false)}
     >
+      {/* The same photograph again, typed out as symbols, with the cursor
+          pushing a wave through it. It sits under the frame, so what you
+          see of it is the margin around the picture.
+
+          There was a blurred copy of the photograph under this for a
+          while, to put the picture's colour on the paper around the frame.
+          It came out before the field went in: the characters are cut out
+          of the photograph itself and carry its colour at full strength,
+          so a soft wash of the same colours underneath was not adding to
+          them, it was lifting the paper toward them and taking away the
+          contrast the grid needs to be read at all.
+
+          Fed the same `i` as everything else, and told when the section is
+          on screen so it can keep its loop stopped the rest of the time.
+          Everything else about it is in lib/ascii-field.ts. */}
+      <StageAscii src={shot.src} active={onScreen} still={reduced} />
+
       {/* Every photo is mounted and stacked; only one is at full opacity.
           Cross-fading between two elements that are already decoded is
           what keeps the swap instant - swapping one <img>'s src would

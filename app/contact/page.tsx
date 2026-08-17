@@ -3,7 +3,11 @@ import "./contact.css";
 import { Nav, Overlays } from "@/components/Chrome";
 import ContactMotion from "@/components/ContactMotion";
 import ContactForm from "@/components/ContactForm";
-import { CONTACT_HERO, CONTACT_LINKS, OFFICES } from "@/lib/contact-content";
+/* CONTACT_LINKS is no longer read here - the careers link went with the
+   "prefer to skip the form?" card this page used to carry. The export is
+   left in lib/contact-content.ts as the one place that URL is written
+   down, for whatever picks it up next. */
+import { CONTACT_HERO, OFFICES } from "@/lib/contact-content";
 
 export const metadata: Metadata = {
   title: "Contact · SoCheers",
@@ -22,7 +26,12 @@ export default function Contact() {
       <Overlays />
       <Nav variant="sub" active="/contact" />
 
-      <main id="top">
+      {/* Light throughout, the same way /blogs is - see .ct-page in
+          contact.css. This page used to be the site's dark theme with a
+          dark form panel on it, which made it the one page you arrived at
+          from the nav that looked like a different site to the Insights
+          page beside it in that nav. */}
+      <main id="top" className="ct-page" data-nav-light>
         <section className="ct-hero">
           <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>
           <div className="wrap ct-hero__grid">
@@ -33,21 +42,14 @@ export default function Contact() {
                 <em>{CONTACT_HERO.lines[1]}</em>
               </h1>
 
+              {/* The "prefer to skip the form?" card is gone - the two
+                  mailto addresses, the careers link and the label above
+                  them. It was a second front door standing next to the
+                  first one and it argued with the form for the same
+                  visitor. What is left of it is the social row, which is
+                  not another way to send a brief and is the only place
+                  these links appear on this page. */}
               <div className="ct-direct" data-reveal>
-                <span className="ct-direct__label">Prefer to skip the form?</span>
-                <a href="mailto:hello@socheers.net" className="ct-direct__email" data-magnetic data-cursor="Email">
-                  <span>Bring us a brief</span>
-                  <b>hello@socheers.net</b>
-                </a>
-                <a href="mailto:careers@socheers.net" className="ct-direct__email" data-magnetic data-cursor="Email">
-                  <span>Bring us your best work</span>
-                  <b>careers@socheers.net</b>
-                </a>
-                <a href={CONTACT_LINKS.careers} target="_blank" rel="noopener noreferrer" className="ct-direct__email" data-magnetic data-cursor="Careers">
-                  <span>See open roles</span>
-                  <b>Careers</b>
-                </a>
-
                 <div className="contact__social ct-direct__social">
                   <a
                     href="https://www.instagram.com/thesocheers/"
@@ -120,28 +122,58 @@ export default function Contact() {
 
               {/* Offices used to be their own section below the fold, which
                   left dead space on both sides - they live in the hero's
-                  left column now, under the direct-contact card. */}
+                  left column now, under the social row.
+
+                  The card is a <div> rather than the <a> it used to be.
+                  It carries a map and a button now, and an anchor cannot
+                  hold either: an iframe inside a link swallows the click
+                  it is nested in, and a link inside a link is not markup
+                  a browser has a defined answer for. So the card holds
+                  the content and "Get directions" is the one thing in it
+                  that is clickable.
+
+                  The card's own height is unchanged - see .ct-office__map
+                  in contact.css. The map takes over the stretch the
+                  address block used to absorb, so it fills space this box
+                  was already holding empty rather than making it taller. */}
               <div className="ct-offices" data-reveal>
                 {OFFICES.map((o) => (
-                  <a
-                    key={o.city}
-                    className="ct-office"
-                    href={o.mapUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    data-magnetic
-                    data-cursor="Directions"
-                  >
+                  <div className="ct-office" key={o.city}>
                     <span className="ct-office__tag">{o.tag}</span>
                     <span className="ct-office__city">{o.city}</span>
                     <p className="ct-office__addr">{o.address}</p>
-                    <span className="ct-office__link">
+
+                    {/* Inert on purpose (pointer-events are off in CSS):
+                        a live Google embed takes the wheel as a zoom the
+                        moment the cursor crosses it, which on a page
+                        running Lenis means the scroll simply stops. It is
+                        a locator - the button under it is the way out to
+                        the real thing. */}
+                    <div className="ct-office__map">
+                      <iframe
+                        src={o.embedUrl}
+                        title={`Map of the SoCheers office in ${o.city}`}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        tabIndex={-1}
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    <a
+                      className="ct-office__link"
+                      href={o.dirUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-magnetic
+                      data-cursor="Directions"
+                    >
                       Get directions
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M5 12h14M13 6l6 6-6 6" />
                       </svg>
-                    </span>
-                  </a>
+                    </a>
+                  </div>
                 ))}
               </div>
             </div>
