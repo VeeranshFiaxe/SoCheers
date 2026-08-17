@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 import { AWARDS, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
+import AwardShelf from "./AwardShelf";
 import ParticleLogo from "./ParticleLogo";
 import RollText from "./Roll";
 
@@ -113,23 +114,17 @@ export function Clients() {
 }
 
 export function Awards() {
+  /* The header stays where it was; what was a marquee under it is a
+     catalogue now - see the note at the top of components/AwardShelf.tsx
+     for why. The shelf is the only client island on this page's lower
+     half, so it is imported as a leaf and everything around it stays a
+     server component. */
   return (
     <section className="sec awards" id="awards" data-section data-sec="4">
       <div className="wrap">
         <span className="tag" data-reveal>RECOGNITION</span>
         <h2 className="awards__title" data-split>The room noticed.</h2>
-      </div>
-      <div className="awards__marquee" aria-hidden="true">
-        <div className="awards__track" data-marquee="left">
-          {[0, 1].map((copy) =>
-            AWARDS.map((a, i) => (
-              <Fragment key={`${copy}-${i}`}>
-                <span>{a}</span>
-                <span className="star">✦</span>
-              </Fragment>
-            )),
-          )}
-        </div>
+        <AwardShelf awards={AWARDS} />
       </div>
     </section>
   );

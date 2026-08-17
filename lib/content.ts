@@ -219,11 +219,67 @@ export const TILES = [
   { idx: "06", name: "B2B", img: IMG.workB2b },
 ];
 
-export const AWARDS = [
-  "THE DRUM GLOBAL",
-  "CLIO ENTERTAINMENT",
-  "WEBBY AWARDS",
-  "CAMPAIGN SOUTH ASIA",
-  "MMA SMARTIES",
-  "SPIKES ASIA",
+/* Recognition.
+
+   This used to be six strings running past in a marquee, which is exactly
+   what the client wall two sections above already does - two ticker rows
+   in a row read as one long ticker, and neither of them got looked at.
+   So the shows are a catalogue now: an index you can pick from on one
+   side, the work that won on the other (components/AwardShelf.tsx).
+
+   The six shows are real. The year, the category line and the image on
+   each entry are PLACEHOLDERS - swap them for the actual citation and the
+   winning campaign's still once those land. `img` wants a landscape crop;
+   the frame is 16:10 and covers. */
+export type Award = {
+  name: string;
+  year: string;
+  category: string;
+  img: string;
+  alt: string;
+};
+
+export const AWARDS: Award[] = [
+  {
+    name: "THE DRUM GLOBAL",
+    year: "2025",
+    category: "Social and influencer",
+    img: "/assets/SC Website Revamp/01. Home/Production 4.jpg",
+    alt: "Placeholder still from the winning work",
+  },
+  {
+    name: "CLIO ENTERTAINMENT",
+    year: "2025",
+    category: "Audience and engagement",
+    img: IMG.workEntertainment,
+    alt: "Placeholder still from the winning work",
+  },
+  {
+    name: "WEBBY AWARDS",
+    year: "2024",
+    category: "Branded content",
+    img: "/assets/SC Website Revamp/01. Home/creativity 8.jpg",
+    alt: "Placeholder still from the winning work",
+  },
+  {
+    name: "CAMPAIGN SOUTH ASIA",
+    year: "2024",
+    category: "Integrated campaign",
+    img: IMG.workLifestyle,
+    alt: "Placeholder still from the winning work",
+  },
+  {
+    name: "MMA SMARTIES",
+    year: "2023",
+    category: "Brand experience",
+    img: IMG.workBfsi,
+    alt: "Placeholder still from the winning work",
+  },
+  {
+    name: "SPIKES ASIA",
+    year: "2023",
+    category: "Film craft",
+    img: "/assets/SC Website Revamp/01. Home/Production 7.jpg",
+    alt: "Placeholder still from the winning work",
+  },
 ];

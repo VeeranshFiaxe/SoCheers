@@ -106,12 +106,20 @@ export function initSite(): () => void {
       };
       on(document, OVERTURE_START, lock);
       on(document, OVERTURE_DONE, release);
-      if (overture) {
-        // a reload mid-page would otherwise restore the scroll under the
-        // sequence and hand back to the wrong part of the site
-        if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-        lock();
-      }
+
+      /* Every load starts at the hero, overture or not.
+
+         The hero pin stops the page the moment it mounts, so a browser-
+         restored scroll leaves the reader parked somewhere down the site
+         with the scroll locked and the hero sequence still waiting to be
+         played. Everything below is measured against that wrong position
+         too: the stat counters and the reveals are built with their
+         triggers already scrolled past, so they never run - which is why a
+         plain reload used to show dead numbers where a hard reload
+         (which lands at the top) showed them counting. */
+      if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+      window.scrollTo(0, 0);
+      if (overture) lock();
     }
 
     /* -------------------------------------------------- preloader */
@@ -192,20 +200,6 @@ export function initSite(): () => void {
     // where phase 2 leaves the stage: scaled about its own centre, dimmed
     const STAGE_REST = 1.05;
     const STAGE_DIM = 0.55;             // the brightness() phase 2 settles on
-
-    /* .hero__stage-vignette, evaluated in JS - the black-alpha of the edge
-       fade at a point (u,v) inside the stage box, so a fallen-apart grain
-       can be painted with the same darkening the real layer had. Two
-       gradients, composited the way the browser composites them. */
-    function vignetteAt(u: number, v: number) {
-      // linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%)
-      const edge = (t: number) => (t < 0.2 ? 1 - t / 0.2 : t > 0.8 ? (t - 0.8) / 0.2 : 0);
-      // radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%),
-      // farthest-corner, so the corner of the box is r = 1
-      const r = Math.hypot((u - 0.5) * 2, (v - 0.5) * 2) / Math.SQRT2;
-      const rad = r <= 0.78 ? 0 : Math.min(1, (r - 0.78) / 0.22) * 0.6;
-      return 1 - (1 - edge(u)) * (1 - rad);
-    }
 
     function initHero() {
       const hero = document.querySelector<HTMLElement>("[data-hero]");
@@ -550,14 +544,24 @@ export function initSite(): () => void {
     /* -------------------------------------------------- the hero crumbling
        The hero's last frame, rebuilt as grains so it can fall apart.
 
-       Every grain is painted to match what is under it - the sharp photo
-       inside the stage's rectangle, carrying the same vignette and dim the
-       real layer has; flat black outside it, same as the backdrop - so
-       handing over from the real layers to the grid moves nothing on
-       screen. Then the
-       grid pours off the bottom of the pin, bottom row first, the ones
-       above following into the gap, with a per-grain offset so the eroding
-       edge stays ragged instead of marching row by row. */
+       The whole frame is redrawn once into an offscreen canvas - the sharp
+       photo inside the stage's rectangle, carrying the same vignette and
+       dim the real layer has; flat black outside it, same as the backdrop -
+       so handing over from the real layers to the grid moves nothing on
+       screen. Then that frame is poured off the bottom of the pin a grain
+       at a time, bottom row first, the ones above following into the gap,
+       with a per-grain offset so the eroding edge stays ragged instead of
+       marching row by row.
+
+       All of it on one canvas. The grains were DOM elements once, tweened
+       by GSAP as a single tween across ~1300 of them, and that is what made
+       the fall stutter: every frame wrote ~1300 inline transforms and the
+       browser repainted the whole grid, since promoting that many tiles to
+       their own layers is worse still. Here GSAP animates one number and
+       the grid is drawn by hand, so a frame costs one drawImage per grain
+       that is actually in flight - the ones that have not started yet go
+       out as a single blit of the untouched rows, and the ones that have
+       already poured off are skipped. Same picture, one layer. */
     function crumble(
       tl: gsap.core.Timeline,
       at: number,
@@ -566,26 +570,72 @@ export function initSite(): () => void {
       boxEnd: () => { left: number; top: number; w: number; h: number },
       hide: (HTMLElement | null)[],
     ) {
-      const host = document.querySelector<HTMLElement>("[data-crumble]");
+      const host = document.querySelector<HTMLCanvasElement>("canvas[data-crumble]");
       const photo = document.querySelector<HTMLImageElement>("[data-stage-img]");
-      if (!host || !photo) return;
-      const grains = Array.from(host.querySelectorAll<HTMLElement>("i"));
-      if (!grains.length) return;
+      const ctx = host?.getContext("2d");
+      if (!host || !photo || !ctx) return;
 
       const cols = parseInt(host.dataset.cols || "48", 10);
       const rows = parseInt(host.dataset.rows || "27", 10);
-      const src = photo.getAttribute("src") || "";
+      const n = cols * rows;
+
+      /* The fall, precomputed per grain as plain numbers rather than as
+         GSAP per-target values - the render loop below reads these straight
+         out of typed arrays every frame, so nothing is recomputed and
+         nothing is allocated while it is running.
+
+         The shape is the one the old tween had: each grain falls for 0.5
+         and the stagger spans 0.95, so the two together fill `dur` exactly.
+         Normalised against that total, every grain's start and its own
+         length are fractions of the single 0..1 clock GSAP drives. */
+      const SPAN = 1.45;
+      const FALL = 0.5 / SPAN;
+      const seed = Array.from({ length: n }, () => Math.random());
+      const start = new Float32Array(n);
+      const offY = new Float32Array(n);         // in grain heights, as yPercent was
+      const offX = new Float32Array(n);
+      // the earliest start in each row, so whole untouched rows at the top
+      // can go out in one blit instead of a tile at a time
+      const rowStart = new Float32Array(rows).fill(1);
+      for (let i = 0; i < n; i++) {
+        const r = (i / cols) | 0;
+        const lead = rows > 1 ? (rows - 1 - r) / (rows - 1) : 0;
+        const s = (lead * 0.55 + seed[i] * 0.4) / SPAN;
+        start[i] = s;
+        if (s < rowStart[r]) rowStart[r] = s;
+        // far enough to clear the pin; they have faded out long before then
+        offY[i] = 6.2 + seed[i] * 6.8;
+        offX[i] = (seed[(i * 7 + 3) % n] - 0.5) * 0.7;
+      }
+
+      /* The frame the grains are cut from: everything under this layer,
+         drawn once. Capped at 1.5x device pixels - the grid is only ever on
+         screen while it is coming apart and shrinking, so a full retina
+         backing store is memory and fill rate spent on nothing. */
+      const frame = document.createElement("canvas");
+      const fctx = frame.getContext("2d");
+      let W = 0, H = 0, tw = 0, th = 0;
 
       const paint = () => {
         const pw = pin.offsetWidth, ph = pin.offsetHeight;
-        if (!pw || !ph) return;
-        const tw = pw / cols, th = ph / rows;
+        if (!pw || !ph || !fctx) return;
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        W = Math.round(pw * dpr); H = Math.round(ph * dpr);
+        tw = W / cols; th = H / rows;
+        frame.width = W; frame.height = H;
+        host.width = W; host.height = H;
+
+        // the flat-black backdrop, everywhere the photo does not reach
+        fctx.setTransform(1, 0, 0, 1, 0, 0);
+        fctx.fillStyle = "#000";
+        fctx.fillRect(0, 0, W, H);
 
         // the stage's resting rectangle: the contained box, scaled about its
         // own centre by the settle phase 2 applies
         const b = boxEnd();
-        const bw = b.w * STAGE_REST, bh = b.h * STAGE_REST;
-        const bl = b.left + b.w / 2 - bw / 2, bt = b.top + b.h / 2 - bh / 2;
+        const bw = b.w * STAGE_REST * dpr, bh = b.h * STAGE_REST * dpr;
+        const bl = (b.left + b.w / 2) * dpr - bw / 2;
+        const bt = (b.top + b.h / 2) * dpr - bh / 2;
 
         // initHero's fit(), replayed for that rectangle
         let iw = bw / PWIN.w, ih = iw * (PHOTO.h / PHOTO.w);
@@ -593,30 +643,87 @@ export function initSite(): () => void {
         const ix = bl + bw / 2 - (PWIN.l + PWIN.w / 2) * iw;
         const iy = bt + bh / 2 - (PWIN.t + PWIN.h / 2) * ih;
 
-        grains.forEach((g, i) => {
-          const c = i % cols, r = Math.floor(i / cols);
-          const u = ((c + 0.5) * tw - bl) / bw;
-          const v = ((r + 0.5) * th - bt) / bh;
-          if (u >= 0 && u <= 1 && v >= 0 && v <= 1) {
-            g.style.backgroundColor = "";
-            g.style.backgroundImage = `url("${src}")`;
-            g.style.backgroundSize = `${iw.toFixed(1)}px ${ih.toFixed(1)}px`;
-            g.style.backgroundPosition =
-              `${(ix - c * tw).toFixed(1)}px ${(iy - r * th).toFixed(1)}px`;
-            // the vignette, then the stage's brightness over it - one black
-            // overlay that comes to the same place as the two stacked
-            const a = 1 - STAGE_DIM * (1 - vignetteAt(u, v));
-            g.style.boxShadow = `inset 0 0 0 999px rgba(0,0,0,${a.toFixed(3)})`;
-          } else {
-            g.style.backgroundImage = "";
-            g.style.boxShadow = "";
-            g.style.backgroundColor = "#000";     // matches the flat-black backdrop
-          }
-        });
+        fctx.save();
+        fctx.beginPath();
+        fctx.rect(bl, bt, bw, bh);
+        fctx.clip();
+        if (photo.complete && photo.naturalWidth) fctx.drawImage(photo, ix, iy, iw, ih);
+
+        /* .hero__stage-vignette, redrawn here rather than approximated: the
+           two gradients are laid down exactly as CSS stacks them, which is
+           what makes the handover from the real layer invisible. */
+        // linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%)
+        const edge = fctx.createLinearGradient(bl, 0, bl + bw, 0);
+        edge.addColorStop(0, "rgba(0,0,0,1)");
+        edge.addColorStop(0.2, "rgba(0,0,0,0)");
+        edge.addColorStop(0.8, "rgba(0,0,0,0)");
+        edge.addColorStop(1, "rgba(0,0,0,1)");
+        fctx.fillStyle = edge;
+        fctx.fillRect(bl, bt, bw, bh);
+        // radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%)
+        // - drawn in the box's own unit space so the circle comes out as the
+        //   ellipse CSS draws, farthest-corner, i.e. r = 1 at the corners
+        fctx.translate(bl + bw / 2, bt + bh / 2);
+        fctx.scale(bw / 2, bh / 2);
+        const glow = fctx.createRadialGradient(0, 0, 0, 0, 0, Math.SQRT2);
+        glow.addColorStop(0.78, "rgba(0,0,0,0)");
+        glow.addColorStop(1, "rgba(0,0,0,.6)");
+        fctx.fillStyle = glow;
+        fctx.fillRect(-1, -1, 2, 2);
+        fctx.restore();
+
+        // and the brightness() phase 2 settles on, as the black it comes to
+        fctx.fillStyle = `rgba(0,0,0,${1 - STAGE_DIM})`;
+        fctx.fillRect(bl, bt, bw, bh);
+      };
+
+      /* One frame of the fall. Three kinds of grain, cheapest first: the
+         rows that have not started at all go out as a single blit, the
+         grains still sitting still are copied straight across, and only the
+         ones actually in flight pay for a transform. Anything past the end
+         of its own fall is at opacity 0 and simply skipped, so the loop
+         gets cheaper the further in it gets. */
+      const state = { t: 0 };
+      const render = () => {
+        if (!W) return;
+        const t = state.t;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+        ctx.globalAlpha = 1;
+
+        let top = 0;
+        while (top < rows && rowStart[top] > t) top++;
+        if (top > 0) ctx.drawImage(frame, 0, 0, W, top * th, 0, 0, W, top * th);
+
+        // still-seated grains below that block, in one identity-transform pass
+        for (let i = top * cols; i < n; i++) {
+          if (t >= start[i]) continue;
+          const x = (i % cols) * tw, y = ((i / cols) | 0) * th;
+          ctx.drawImage(frame, x, y, tw, th, x, y, tw, th);
+        }
+
+        // and the ones in the air
+        for (let i = top * cols; i < n; i++) {
+          const p = (t - start[i]) / FALL;
+          if (p <= 0 || p >= 1) continue;
+          const e = p * p * p;                  // power2.in - gravity, not a fade
+          const s = 1 - 0.5 * e;                // scale: 1 -> .5
+          const x = (i % cols) * tw, y = ((i / cols) | 0) * th;
+          ctx.globalAlpha = 1 - e;
+          ctx.setTransform(s, 0, 0, s,
+            x + tw / 2 + offX[i] * tw * e,
+            y + th / 2 + offY[i] * th * e);
+          ctx.drawImage(frame, x, y, tw, th, -tw / 2, -th / 2, tw, th);
+        }
       };
 
       paint();
-      on(window, "resize", paint);
+      render();
+      const remeasure = () => { paint(); render(); };
+      on(window, "resize", remeasure);
+      // the photo may still be in flight on a cold load - the frame is worth
+      // nothing until it is decoded, so redraw it once it lands
+      if (!photo.complete) photo.addEventListener("load", remeasure, { signal: ac.signal });
 
       /* The handover. The grid is a copy of the two layers under it, so
          swapping them is invisible - and the pin's own black has to go with
@@ -635,25 +742,13 @@ export function initSite(): () => void {
       tl.to("[data-meaning-veil]",
         { autoAlpha: 0, duration: dur * 0.42, ease: "power1.in" }, at + dur * 0.1);
 
-      /* One tween across every grain, not one per grain: at this count a
-         timeline of individual tweens is enough per-frame overhead to be
-         felt on a scrub. The fall and the stagger together have to span
-         exactly `dur`, so both are scaled off the shape's own total. */
-      const seed = grains.map(() => Math.random());
-      const K = dur / 1.45;               // the shape below runs .5 + .95
-      tl.to(grains, {
-        // far enough to clear the pin's overflow box; they have faded out
-        // long before they get there
-        yPercent: (i: number) => 620 + seed[i] * 680,
-        xPercent: (i: number) => (seed[(i * 7 + 3) % seed.length] - 0.5) * 70,
-        scale: 0.5,
-        opacity: 0,
-        duration: 0.5 * K,
-        ease: "power2.in",                // gravity, not a fade
-        stagger: (i: number) => {
-          const lead = rows > 1 ? (rows - 1 - Math.floor(i / cols)) / (rows - 1) : 0;
-          return (lead * 0.55 + seed[i] * 0.4) * K;
-        },
+      /* GSAP drives one number and nothing else; the ease lives in the
+         render, per grain, so reversing or scrubbing this is just a
+         different `t` and the whole grid follows from it. */
+      tl.to(state, {
+        t: 1, duration: dur, ease: "none",
+        immediateRender: false,
+        onStart: render, onUpdate: render,
       }, at);
     }
 
@@ -767,13 +862,22 @@ export function initSite(): () => void {
       });
     }
 
-    /* -------------------------------------------------- counters */
+    /* -------------------------------------------------- counters
+       Started a little later than the reveal that fades the stat in
+       (initReveals, "top 86%") rather than earlier: the count is the whole
+       point of the number, and at 88% a chunk of it used to run behind the
+       reveal's own fade, so what landed was a figure already most of the
+       way up. The delay leaves it running in full view.
+
+       The other half of "it only ran on a hard refresh" is in
+       initOvertureBridge: a restored scroll built these triggers already
+       past their own start. */
     function initCounters() {
       document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
         const end = parseFloat(el.getAttribute("data-count") || "0");
         const obj = { v: 0 };
         ScrollTrigger.create({
-          trigger: el, start: "top 88%", once: true,
+          trigger: el, start: "top 82%", once: true,
           onEnter: () => gsap.to(obj, { v: end, duration: 1.7, ease: "power2.out",
             onUpdate: () => { el.textContent = String(Math.round(obj.v)); } }),
         });
