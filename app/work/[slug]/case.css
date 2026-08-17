@@ -1,0 +1,160 @@
+/* ============================================================
+   ONE CASE.
+
+   A single narrative column with visuals breaking out of it - the rhythm
+   of the reference the client gave, not its content.
+
+   ---- the rule this file exists to honour ----
+
+   No block here has a reserved size, a min-height, or a margin that
+   belongs to the gap between two specific block types. Every block owns
+   the space above it and nothing owns space on behalf of a block that
+   might not be there. That is what makes a case with three assets sit
+   correctly next to one with eight without a single conditional: the
+   stack is only ever as tall as what is in it.
+
+   So: if a rule is ever added here that reads "the video needs room
+   under the board", it has just reintroduced the bug. Spacing goes on
+   the block, one direction only.
+   ============================================================ */
+
+.cs-page{ background:var(--bg); }
+
+/* ---- the head ---- */
+.cs-head{ padding:clamp(120px,18vh,180px) 0 clamp(40px,7vh,80px); }
+.cs-back{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+  color:rgba(241,236,225,.68);
+  transition:color .35s var(--ease), gap .35s var(--ease);
+}
+.cs-back:hover{ color:var(--accent); gap:12px; }
+
+.cs-brand{
+  display:block; margin-top:34px;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--accent);
+}
+.cs-title{
+  margin-top:14px; max-width:18ch;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(34px,6vw,92px); line-height:1.0; letter-spacing:-.035em;
+  text-wrap:balance;
+}
+.cs-meta{
+  margin-top:22px; list-style:none; display:flex; flex-wrap:wrap;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  color:rgba(241,236,225,.68);
+}
+.cs-meta li + li::before{ content:"·"; margin:0 10px; color:var(--faint); }
+.cs-intro{
+  margin-top:26px; max-width:56ch;
+  font-size:clamp(16px,1.35vw,20px); line-height:1.6; color:var(--muted);
+}
+
+/* ============================================================
+   THE BODY
+
+   One measure for the reading column, set once here. Blocks that break
+   out of it say so themselves - they do not each redefine the column.
+   ============================================================ */
+.cs-body{
+  --col:760px;
+  padding-bottom:clamp(80px,13vh,150px);
+}
+/* Every direct child is centred on the column by default. A block that
+   wants the full width overrides its own max-width and nothing else, so
+   the two kinds can be interleaved in any order. */
+.cs-body > *{
+  max-width:var(--col);
+  margin:clamp(46px,7vh,90px) auto 0;
+  padding:0 var(--pad);
+}
+
+.cs-copy__h{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(22px,2.6vw,36px); line-height:1.1; letter-spacing:-.025em;
+}
+.cs-copy__p{
+  margin-top:16px; font-size:clamp(16px,1.25vw,19px); line-height:1.68; color:var(--muted);
+}
+.cs-copy__h + .cs-copy__p{ margin-top:18px; }
+
+/* ---- pictures ---- */
+.cs-shot__in, .cs-board__in{
+  overflow:hidden; border-radius:12px; background:var(--panel);
+}
+.cs-shot--bleed{
+  max-width:none; padding:0;
+}
+.cs-shot--bleed .cs-shot__in{ border-radius:0; }
+
+.cs-duo__in{
+  display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.2vw,18px);
+}
+.cs-duo__in img{ border-radius:12px; aspect-ratio:4/5; }
+@media (max-width:640px){ .cs-duo__in{ grid-template-columns:1fr; } }
+
+.cs-video video{
+  width:100%; height:auto; display:block; border-radius:12px; background:#000;
+}
+
+/* A board is an artboard - tall, dense, and read by looking closely. It
+   gets the full width it can take and a light ground, because these are
+   almost always laid out for white. */
+.cs-board{ max-width:1100px; }
+.cs-board__in{ background:#f4f2ec; }
+
+.cs-body figcaption{
+  margin-top:12px;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:rgba(241,236,225,.68);
+}
+.cs-shot--bleed figcaption{ padding:0 var(--pad); }
+
+/* ---- numbers ---- */
+.cs-stats{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:clamp(16px,2.4vw,36px);
+  border-top:1px solid var(--line); padding-top:30px;
+}
+.cs-stat b{
+  display:block; font-family:var(--f-display); font-weight:700;
+  font-size:clamp(34px,4.4vw,62px); line-height:1; letter-spacing:-.03em;
+  color:var(--accent);
+}
+.cs-stat span{
+  display:block; margin-top:8px;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:rgba(241,236,225,.68);
+}
+
+.cs-quote p{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(21px,2.6vw,34px); line-height:1.28; letter-spacing:-.02em;
+  text-wrap:balance;
+}
+.cs-quote cite{
+  display:block; margin-top:16px; font-style:normal;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:rgba(241,236,225,.68);
+}
+
+/* ---- the way on ---- */
+.cs-next{ border-top:1px solid var(--line); padding:clamp(50px,8vh,90px) 0 clamp(70px,11vh,120px); }
+.cs-next__in{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(12px,1.6vw,24px);
+}
+.cs-next__card{
+  border:1px solid var(--faint); border-radius:12px; padding:24px;
+  display:flex; flex-direction:column; gap:6px;
+  transition:border-color .4s var(--ease), transform .4s var(--ease);
+}
+.cs-next__card:hover{ border-color:var(--accent); transform:translateY(-3px); }
+.cs-next__card b{ font-family:var(--f-display); font-size:19px; font-weight:700; letter-spacing:-.015em; }
+.cs-next__card span{ font-family:var(--f-mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:rgba(241,236,225,.68); }
+@media (max-width:760px){ .cs-next__in{ grid-template-columns:1fr; } }
+
+@media (prefers-reduced-motion:reduce){
+  .cs-next__card:hover{ transform:none; }
+}

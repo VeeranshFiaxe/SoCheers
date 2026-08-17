@@ -61,8 +61,11 @@ export function Nav({
 
   return (
     <header className="nav" id="nav">
+      {/* The mark goes home from everywhere, including from home - no hash,
+          on any page. initTopLinks() in lib/motion.ts turns the click into
+          a scroll when you are already there. */}
       <a
-        href={sub ? "/" : "#top"}
+        href="/"
         className="nav__logo"
         aria-label="SoCheers"
         data-cursor="Home"

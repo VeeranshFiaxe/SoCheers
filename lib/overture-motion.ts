@@ -143,22 +143,48 @@ export function initOverture(
      alone is routed through a WebAudio gain node instead of el.volume. */
   let actx: AudioContext | null = null;
   const GAIN: Partial<Record<keyof typeof clips, number>> = { expand: 2 };
+
+  /* Every clip currently sounding, held on purpose until it says it is
+     done - and, for the boosted ones, its audio graph held with it.
+
+     Nothing else refers to any of it: sfx() clones the element, builds the
+     nodes and returns, so the element, its source node and its gain are
+     all locals that go out of scope while the sound is still playing. A
+     detached <audio> feeding a graph nothing points at is collectable, and
+     Chrome does collect it - mid-clip, which sounds exactly like the cue
+     being cut off part way through. Short cues finish before the collector
+     ever looks at them, which is why this only showed up when the expand
+     cue was replaced with a longer recording. */
+  const sounding = new Map<HTMLAudioElement, AudioNode[]>();
+
   const sfx = (name: keyof typeof clips) => {
     const el = clips[name].cloneNode(true) as HTMLAudioElement;
     const boost = GAIN[name];
+    const chain: AudioNode[] = [];
     if (boost) {
       try {
         actx ??= new AudioContext();
+        /* A context built before the tab has been touched starts
+           suspended, and a suspended graph is silence, not a delay - the
+           element plays out with nothing coming through it. Harmless when
+           it is already running. */
+        void actx.resume().catch(() => {});
         const gain = actx.createGain();
         gain.gain.value = boost;
-        actx.createMediaElementSource(el).connect(gain).connect(actx.destination);
+        const source = actx.createMediaElementSource(el);
+        source.connect(gain).connect(actx.destination);
+        chain.push(source, gain);
       } catch {
         el.volume = 1; // best it can do without WebAudio
       }
     } else {
       el.volume = clips[name].volume;
     }
-    void el.play().catch(() => {});
+    sounding.set(el, chain);
+    const release = () => { sounding.delete(el); };
+    el.addEventListener("ended", release, { once: true });
+    el.addEventListener("error", release, { once: true });
+    void el.play().catch(release);
   };
 
   const q = <T extends HTMLElement>(sel: string) => root.querySelector<T>(sel);
@@ -616,26 +642,44 @@ export function initOverture(
        the camera closes the last GAP until the wall is at z = 0 with an
        identity transform, which is to say it *is* the hero - so the
        hand-off only has to stop being in front of it. */
+    /* Paced off the expand cue rather than off nothing in particular. The
+       cue is one continuous swell that resolves on its own last beat, so
+       the push has to be about as long as the recording is - land the wall
+       early and the tail plays over a page that has already arrived, which
+       is what "it doesn't finish" sounds like. The clip runs ~2.0s; the
+       push holds the screen for RUN and the hand-off's own 0.6s fade
+       carries the last of it. Retime this if the recording changes. */
+    const RUN = 1.95;
+
+    /* The cue starts where the picture does, not where the timeline does.
+       The push is power3.inOut, so it spends its first third of a second
+       barely moving - about 1.5% of the distance covered - and a cue fired
+       at 0 is a cue fired over a still frame. Held back to the point the
+       camera is visibly running at the wall, which is what the swell is
+       supposed to be the sound of. The clip is longer than what is left of
+       RUN by design: the hand-off's fade carries its last beat. */
+    const LEAD = 0.33;
+
     function finale() {
       const tl = line({ onComplete: handOff });
 
       /* it stops being a lamp lighting a room and becomes a light on a page */
-      tl.to(root, { "--lit": 0.55, duration: 1.2, ease: "power2.inOut" }, 0);
+      tl.to(root, { "--lit": 0.55, duration: RUN * 0.83, ease: "power2.inOut" }, 0);
 
-      tl.add(() => sfx("expand"), 0);
+      tl.add(() => sfx("expand"), LEAD);
 
       /* the run at the wall */
       tl.to(cam, {
         z: walls.length * GAP,
-        duration: 1.45,
+        duration: RUN,
         ease: "power3.inOut",
         onUpdate: pushCam,
       }, 0);
 
       /* and as it fills the screen it stops being lit *by* something and
          just becomes the picture: the room's darkness lifts off it */
-      tl.to(slabs[walls.length - 1], { "--lit-floor": 1, duration: 1.1, ease: "power2.inOut" }, 0);
-      tl.to(vignette, { autoAlpha: 0, duration: 1.1, ease: "power2.inOut" }, 0);
+      tl.to(slabs[walls.length - 1], { "--lit-floor": 1, duration: RUN * 0.76, ease: "power2.inOut" }, 0);
+      tl.to(vignette, { autoAlpha: 0, duration: RUN * 0.76, ease: "power2.inOut" }, 0);
       tl.to(skip, { autoAlpha: 0, duration: 0.4 }, 0);
     }
 
@@ -736,6 +780,10 @@ export function initOverture(
     timers.forEach(clearTimeout);
     tickers.forEach((fn) => gsap.ticker.remove(fn));
     ctx.revert();
+    // a replay starts the room again from black - anything still sounding
+    // from the last run belongs to a sequence that no longer exists
+    sounding.forEach((_chain, el) => el.pause());
+    sounding.clear();
     void actx?.close();
   };
 }

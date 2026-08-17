@@ -1,0 +1,285 @@
+/* ============================================================
+   WORK - the pinned stage and the browse wall.
+
+   The stage is the opening screen and it is dark, because it is a
+   photograph; the wall under it is cream. Same palette and the same
+   .is-light token remap every other route uses (globals.css).
+   ============================================================ */
+
+.wk-page{ position:relative; background:var(--bg); }
+/* Small mono type on black needs more than --muted gives it at 10-11px.
+   Same reasoning, same value as the Series page - if a third page wants
+   this it belongs in globals.css beside --muted. */
+.wk-page{ --dim:rgba(241,236,225,.68); }
+
+/* ============================================================
+   SECTION A - THE PINNED STAGE
+
+   The whole opening screen, and one composition rather than a stack: the
+   campaign frame fills the viewport, and the title block and the poster
+   wall both sit on it. There is no hero above this - see the note at the
+   top of components/WorkPinned.tsx.
+
+   The grid is the reference's: title block left, poster wall right, both
+   sitting on the floor of the frame. `align-items:end` is what puts them
+   there, and it is also what lets the two columns be wildly different
+   heights without either one being centred against the other.
+   ============================================================ */
+.wk-stage{
+  position:relative; isolation:isolate;
+  min-height:100svh;
+  display:flex; align-items:flex-end;
+  /* the top pad clears the fixed header, the bottom is the floor the
+     composition stands on */
+  padding:clamp(120px,18vh,180px) 0 clamp(34px,5vh,60px);
+  overflow:hidden;
+}
+
+/* Every frame mounted and stacked, one at full opacity - see the note in
+   components/WorkPinned.tsx for why this is not one <img> with its src
+   swapped. The crossfade is the whole transition; nothing slides. */
+.wk-stage__frame{
+  position:absolute; inset:0; z-index:0;
+  opacity:0; transition:opacity .7s var(--ease);
+}
+.wk-stage__frame[data-on]{ opacity:1; }
+
+/* Three washes, one job each: the floor the type stands on, a left-hand
+   pull so the title block has a ground even where the picture is bright,
+   and a top veil so the fixed header stays legible over any frame. */
+.wk-stage__scrim{
+  position:absolute; inset:0; z-index:1;
+  background:
+    linear-gradient(to top, rgba(4,4,5,.94), rgba(4,4,5,.5) 34%, transparent 68%),
+    linear-gradient(to right, rgba(4,4,5,.7), transparent 62%),
+    linear-gradient(to bottom, rgba(4,4,5,.6), transparent 22%);
+}
+
+.wk-stage__grid{
+  position:relative; z-index:2; width:100%;
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  align-items:end; gap:clamp(24px,4vw,64px);
+}
+
+/* ---- left: the title block ---- */
+.wk-lede{ max-width:56ch; }
+
+/* The genre row. Separated by a rule rather than by a pipe character -
+   a "|" between words is a glyph the reader has to discount, and at this
+   size it sits on the baseline looking like a bracket. */
+.wk-lede__tags{
+  list-style:none; display:flex; flex-wrap:wrap; align-items:center;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--cream);
+}
+.wk-lede__tags li + li::before{
+  content:""; display:inline-block; vertical-align:middle;
+  width:1px; height:11px; margin:0 12px;
+  background:rgba(241,236,225,.35);
+}
+
+.wk-lede__brand{
+  margin-top:14px;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(40px,6.4vw,96px); line-height:.98; letter-spacing:-.04em;
+}
+
+/* The credits line. Labels in the accent, values in cream, wrapping as
+   one paragraph rather than as a list - it is read as a sentence of
+   facts, the way a poster's small print is. */
+.wk-lede__credits{
+  margin-top:16px;
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 18px;
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.1em;
+  color:var(--cream);
+}
+.wk-lede__credits b{ font-weight:600; letter-spacing:.18em; }
+.wk-lede__credits i{
+  font-style:normal; text-transform:uppercase; letter-spacing:.18em;
+  color:var(--dim);
+}
+
+.wk-lede__line{
+  margin-top:18px; max-width:48ch;
+  font-size:clamp(14px,1.05vw,16px); line-height:1.62;
+  color:rgba(241,236,225,.78);
+}
+
+.wk-lede__go{
+  margin-top:26px;
+  display:inline-flex; align-items:center; gap:11px; padding:13px 26px 13px 13px;
+  border-radius:999px; background:var(--accent); color:#04140b;
+  font-weight:600; font-size:15px;
+}
+.wk-lede__play{
+  display:grid; place-items:center; width:30px; height:30px;
+  border-radius:50%; background:rgba(4,20,11,.16);
+}
+
+/* ---- right: the poster wall ---- */
+.wk-also{ min-width:0; }
+.wk-also__head{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding-bottom:14px;
+}
+.wk-also__label{
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--cream);
+}
+.wk-also__nav{ display:flex; gap:7px; }
+.wk-also__nav button{
+  width:32px; height:32px; display:grid; place-items:center;
+  border:1px solid rgba(241,236,225,.28); border-radius:50%;
+  background:none; color:var(--cream); cursor:none;
+  transition:border-color .35s var(--ease), background .35s var(--ease);
+}
+.wk-also__nav button:hover{ border-color:var(--cream); background:rgba(241,236,225,.1); }
+@media (hover:none){ .wk-also__nav button{ cursor:pointer; } }
+
+/* The padding here is doing something specific, and removing it breaks
+   the posters in a way that looks like a rendering bug rather than a CSS
+   one.
+
+   This scrolls sideways, so it carries overflow-x:auto - and the spec
+   says a non-visible overflow on one axis forces the other axis from
+   visible to auto as well. There is no such thing as "clip horizontally,
+   overflow vertically". So the track clips top and bottom whether or not
+   it was ever asked to, and the two things that live just outside a
+   poster's own box get cut: the 3px hover lift, and the top edge of the
+   2px accent ring on the selected one - which is why it looked shaved
+   even with the pointer nowhere near it.
+
+   The fix is to give the scroll box enough inner room for both and then
+   take that room back off the outside, so the wall sits exactly where it
+   did. 8px against a 3px lift plus a 2px ring leaves headroom for the
+   ring's corners, which reach slightly further than its edges. */
+.wk-also__track{
+  display:grid; grid-auto-flow:column;
+  grid-auto-columns:minmax(112px,1fr);
+  gap:clamp(9px,1vw,14px);
+  overflow-x:auto; scrollbar-width:none;
+  padding:8px 3px 6px;
+  margin:-8px -3px -6px;
+}
+.wk-also__track::-webkit-scrollbar{ display:none; }
+.wk-also__track:focus-visible{ outline:1px solid var(--accent); outline-offset:6px; }
+
+.wk-poster{
+  position:relative; text-align:left; background:none; border:0; padding:0;
+  color:inherit; font:inherit; cursor:none;
+  display:flex; flex-direction:column; gap:8px;
+  opacity:.62; transition:opacity .4s var(--ease), transform .4s var(--ease);
+}
+.wk-poster:hover{ opacity:1; transform:translateY(-3px); }
+.wk-poster[aria-selected="true"]{ opacity:1; }
+.wk-poster__shot{
+  display:block; aspect-ratio:2/3; overflow:hidden; border-radius:6px;
+  background:var(--panel); position:relative;
+}
+/* The selected poster says so with a ring, not only with opacity -
+   opacity alone is not a state anyone can point at on a call. */
+.wk-poster[aria-selected="true"] .wk-poster__shot{ box-shadow:0 0 0 2px var(--accent); }
+.wk-poster__name{
+  font-size:11px; line-height:1.3; color:rgba(241,236,225,.78);
+  text-align:center;
+}
+.wk-poster[aria-selected="true"] .wk-poster__name{ color:var(--cream); }
+@media (hover:none){ .wk-poster{ cursor:pointer; opacity:1; } }
+
+/* ---- narrow ----
+   Below this the two halves cannot sit side by side and stay readable,
+   so the wall drops under the title block. It stays inside the frame:
+   the composition is the point, and a poster wall that escapes the
+   picture on a phone is just the section this layout replaced. */
+@media (max-width:1000px){
+  .wk-stage{ min-height:auto; padding-bottom:clamp(28px,4vh,44px); }
+  .wk-stage__grid{ grid-template-columns:1fr; gap:clamp(26px,4vh,40px); }
+  .wk-lede__brand{ font-size:clamp(34px,9vw,58px); }
+  .wk-also__track{ grid-auto-columns:minmax(104px,1fr); }
+}
+@media (max-width:620px){
+  .wk-lede__line{ display:none; }
+  .wk-also__track{ grid-auto-columns:96px; }
+}
+
+/* ============================================================
+   SECTION B - THE BROWSE WALL
+   ============================================================ */
+.wk-browse{
+  background:#f4f2ec;
+  padding:clamp(80px,13vh,150px) 0 clamp(90px,15vh,170px);
+}
+.wk-browse__title{
+  margin-top:24px; max-width:18ch;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(28px,4.4vw,62px); line-height:1.02; letter-spacing:-.03em;
+}
+
+.wk-tabs{
+  margin-top:clamp(28px,4vh,44px); display:flex; gap:8px; flex-wrap:wrap;
+  border-bottom:1px solid var(--line); padding-bottom:18px;
+}
+.wk-tab{
+  font:inherit; cursor:none; background:none;
+  border:1px solid var(--faint); border-radius:999px;
+  padding:10px 20px; color:var(--muted); font-size:14px;
+  display:inline-flex; align-items:baseline; gap:6px;
+  transition:border-color .35s var(--ease), color .35s var(--ease), background .35s var(--ease);
+}
+.wk-tab sup{ font-family:var(--f-mono); font-size:9px; letter-spacing:.1em; opacity:.7; }
+.wk-tab:hover{ border-color:var(--cream); color:var(--cream); }
+.wk-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:#f4f2ec; }
+@media (hover:none){ .wk-tab{ cursor:pointer; } }
+
+/* Columns rather than a grid: the assets are a mix of orientations and
+   the browser packs them without anything being cropped to fit a cell.
+   Full reasoning in components/AiGrid.tsx. */
+.wk-grid{
+  margin-top:clamp(26px,4vh,42px);
+  column-count:3; column-gap:clamp(12px,1.4vw,20px);
+}
+@media (max-width:1000px){ .wk-grid{ column-count:2; } }
+@media (max-width:600px){ .wk-grid{ column-count:1; } }
+
+.wk-tile{
+  position:relative; display:block; margin:0 0 clamp(12px,1.4vw,20px);
+  break-inside:avoid; border-radius:12px; overflow:hidden;
+  background:var(--panel);
+}
+.wk-tile[hidden]{ display:none; }
+.wk-tile img{ transition:transform .8s var(--ease); }
+.wk-tile:hover img{ transform:scale(1.04); }
+.wk-tile__play{
+  position:absolute; top:12px; left:12px; z-index:2;
+  display:grid; place-items:center; width:30px; height:30px;
+  border-radius:50%; background:rgba(0,0,0,.45); color:#fff;
+}
+.wk-tile__cap{
+  position:absolute; left:0; right:0; bottom:0; z-index:2;
+  padding:34px 14px 14px;
+  background:linear-gradient(to top, rgba(0,0,0,.72), transparent);
+  color:#fff; display:flex; flex-direction:column; gap:2px;
+  opacity:0; transform:translateY(8px);
+  transition:opacity .45s var(--ease), transform .45s var(--ease);
+}
+.wk-tile:hover .wk-tile__cap{ opacity:1; transform:none; }
+.wk-tile__cap b{ font-family:var(--f-display); font-size:15px; font-weight:700; letter-spacing:-.01em; }
+.wk-tile__cap span{ font-family:var(--f-mono); font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
+@media (hover:none){ .wk-tile__cap{ opacity:1; transform:none; } }
+
+/* Stand-in content says so, in the UI, so a screenshot cannot be
+   mistaken for finished work. */
+.wk-tile.is-pending::before,
+.wk-poster.is-pending::before{
+  content:"PLACEHOLDER"; position:absolute; z-index:3; top:10px; right:10px;
+  font-family:var(--f-mono); font-size:8px; letter-spacing:.22em;
+  padding:4px 7px; border-radius:3px;
+  background:rgba(0,0,0,.62); color:#fff;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .wk-stage__frame, .wk-poster{ transition:none; }
+  .wk-tile img{ transition:none; }
+  .wk-tile:hover img{ transform:none; }
+  .wk-poster:hover{ transform:none; }
+}

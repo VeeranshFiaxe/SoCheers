@@ -36,7 +36,11 @@ export const IMG = {
 export const OVERTURE_WALLS = [
   { img: "/assets/about/crowd.jpg", label: "The room" },
   { img: IMG.camera, label: "Production" },
-  { img: IMG.creativity, label: "Creativity" },
+  /* Horizontal on purpose: this wall is held long enough to be read as a
+     picture, and the tall 9:16 art that used to sit here (creativity 7,
+     now down in the fast tail) lost most of itself to the crop on a wide
+     screen. */
+  { img: "/assets/SC Website Revamp/01. Home/Wall 3.jpg", label: "Attitude" },
   { img: IMG.photoshop, label: "Craft" },
   { img: IMG.brain, label: "Strategy" },
   { img: IMG.bootPhone, label: "Content" },
@@ -49,7 +53,7 @@ export const OVERTURE_WALLS = [
   { img: "/assets/SC Website Revamp/01. Home/Wall 1.jpg", label: "Planning" },
   { img: "/assets/SC Website Revamp/01. Home/Wall 2.jpg", label: "Audience" },
   { img: "/assets/SC Website Revamp/01. Home/Wall 8.jpg", label: "Pulse" },
-  { img: "/assets/SC Website Revamp/01. Home/Wall 3.jpg", label: "Attitude" },
+  { img: IMG.creativity, label: "Creativity" },
   { img: "/assets/SC Website Revamp/01. Home/Wall 4.jpg", label: "Reverie" },
   { img: "/assets/SC Website Revamp/01. Home/Wall 6.jpg", label: "Voyage" },
   { img: "/assets/SC Website Revamp/01. Home/Wall 7.jpg", label: "Horizon" },
@@ -84,13 +88,27 @@ export const WCARD_SFX = [
    `soon` is a label with nowhere to go yet: it renders as plain text rather
    than a link, so the slot is held in the running order while the page
    behind it is still being built. Drop the flag and give it an href the
-   moment there is one. */
+   moment there is one.
+
+   Work, Series and AI Work are all real routes now. Two of them used to
+   be hashes into the home page - Series pointed at #awards, the
+   recognition ticker, and Work at #what, the services grid. Both were
+   the right stand-in while the tab did not exist and the wrong link the
+   moment it did: "Series" and the awards ticker are different things
+   that happened to share a word, and what the agency does is not the
+   same page as what it has made. */
 export const NAV_LINKS: { href: string; label: string; soon?: boolean }[] = [
-  { href: "#top", label: "Home" },
+  /* The front page is "/", not "#top". It used to be an anchor into the
+     home page's own <main>, which meant hovering Home showed a hash in the
+     status bar and clicking it wrote one into the address bar - the site's
+     front door named after a scroll position. It is a real route now, and
+     on the home page itself initTopLinks() (lib/motion.ts) takes the click
+     and scrolls instead of reloading. */
+  { href: "/", label: "Home" },
   { href: "/about", label: "About" },
-  { href: "#what", label: "Work" },
-  { href: "#ai-work", label: "AI Work", soon: true },
-  { href: "#awards", label: "Series" },
+  { href: "/work", label: "Work" },
+  { href: "/ai-work", label: "AI Work" },
+  { href: "/series", label: "Series" },
   { href: "/blogs", label: "Insights" },
 ];
 

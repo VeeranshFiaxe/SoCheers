@@ -656,19 +656,11 @@
 .ab-drives{ padding:clamp(120px,18vh,200px) 0 0; }
 .ab-drives__inner{ position:relative; z-index:2; }
 
-/* Flip the theme by re-pointing the variables rather than restating colours
-   on every child - everything below inherits the light palette for free.
-   --panel is remapped too: the office grid sits on it, and a dark tile
-   backing under a white card reads as a hole. */
-.is-light{
-  --cream:#0b0b0c;
-  --muted:rgba(11,11,12,.62);
-  --line:rgba(11,11,12,.16);
-  --faint:rgba(11,11,12,.09);
-  --panel:rgba(11,11,12,.06);
-  --accent:oklch(0.55 0.17 152);
-  color:var(--cream);
-}
+/* .is-light - the light-panel token remap - used to be declared here and
+   now lives in app/globals.css. It started as this page's own trick and
+   is used by three routes, and a rule in a route stylesheet only exists
+   on the route that imports it: on /series and /ai-work the class matched
+   nothing and cream type landed on a cream ground. */
 /* One heading face for the whole page. This was set in the playful script
    (Caveat) while every other heading on the page - the opener, the
    founders, the people claim, the space - is the display face. One

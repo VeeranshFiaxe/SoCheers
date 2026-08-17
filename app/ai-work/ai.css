@@ -1,0 +1,232 @@
+/* ============================================================
+   AI WORK
+
+   A short page, styled like one. The hero carries the whole visual
+   argument and everything under it is set quietly - the brief asks for
+   something readable in under a minute, and a page that keeps
+   introducing new treatments is a page that keeps asking to be studied.
+
+   Site palette throughout: black ground, cream type, the green accent,
+   and the off-white the About page's panels use for the light half.
+   ============================================================ */
+
+.ai-page{ position:relative; background:var(--bg); }
+
+/* ============================================================
+   THE HERO
+
+   The Japanese-styled reference from the call, read as composition
+   rather than as decoration to copy: one enormous vertical column of
+   characters set as a graphic against the corner, the English holding
+   the centre, and a lot of empty ground. The kana never overlaps the
+   headline - it is the thing the headline is set against.
+   ============================================================ */
+.ai-hero{
+  position:relative; min-height:92svh;
+  display:flex; align-items:center;
+  padding:clamp(120px,20vh,200px) 0 clamp(70px,10vh,110px);
+  overflow:hidden;
+}
+.ai-hero__in{ position:relative; z-index:2; }
+
+.ai-hero__kana{
+  position:absolute; z-index:0; pointer-events:none; user-select:none;
+  right:calc(var(--pad) * .5); top:50%; transform:translateY(-50%);
+  writing-mode:vertical-rl;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(90px,20vw,280px); line-height:.9; letter-spacing:.04em;
+  /* an outline rather than a fill: filled at this size it stops being a
+     backdrop and starts competing with the headline for the same read */
+  color:transparent;
+  -webkit-text-stroke:1px rgba(241,236,225,.14);
+}
+@media (max-width:820px){
+  .ai-hero__kana{ right:auto; left:var(--pad); top:auto; bottom:-4%; transform:none; font-size:34vw; }
+}
+
+/* The break between the two sentences is a <br> in the markup, so the box
+   only has to be wide enough for the longer of them (24ch) - and balancing
+   is off, since balance would pull "make it" down onto the accent line. */
+.ai-hero__title{
+  margin-top:26px; max-width:25ch;
+  font-family:var(--f-display); font-weight:700;
+  /* Ceiling is 80px rather than 102px because the line is now a fixed
+     24 characters wide: at 102px that single line runs the full content
+     width and straight under the kana column on the right. */
+  font-size:clamp(30px,5vw,80px); line-height:1.04; letter-spacing:-.035em;
+}
+.ai-hero__title em{ color:var(--accent); }
+/* Phones: hold the sentence on one line by giving up size rather than
+   letting "make it" wrap away from it. */
+@media (max-width:560px){
+  .ai-hero__title{ font-size:clamp(24px,7vw,34px); }
+}
+.ai-hero__lede{
+  margin-top:clamp(20px,3vh,32px); max-width:50ch;
+  font-size:clamp(15px,1.2vw,19px); line-height:1.6; color:var(--muted);
+}
+.ai-hero__run{
+  display:inline-block; margin-top:22px;
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--accent);
+}
+
+/* ============================================================
+   THE FORK
+   ============================================================ */
+.ai-gate{
+  border-top:1px solid var(--line);
+  padding:clamp(54px,9vh,96px) 0;
+}
+.ai-gate__in{ display:flex; flex-direction:column; align-items:center; text-align:center; }
+.ai-gate__q{
+  max-width:36ch;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(19px,2.2vw,30px); line-height:1.24; letter-spacing:-.02em;
+  text-wrap:balance;
+}
+.ai-gate__doors{ margin-top:clamp(22px,3.4vh,36px); display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
+.ai-gate__door{
+  display:inline-flex; align-items:center; padding:14px 26px;
+  border:1px solid var(--faint); border-radius:999px;
+  font-size:14px; color:var(--muted);
+  transition:border-color .4s var(--ease), color .4s var(--ease), background .4s var(--ease);
+}
+.ai-gate__door:hover{ border-color:var(--cream); color:var(--cream); }
+/* The funny door is the one with the colour on it, and that is the whole
+   hierarchy: the client's own framing is that the story is the offer and
+   the work is the default, so one of these is an invitation and the other
+   is a way out. */
+.ai-gate__door--yes{ background:var(--accent); border-color:var(--accent); color:#04140b; font-weight:600; }
+.ai-gate__door--yes:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
+
+/* The collapse. Height rather than display, so the reveal has something
+   to animate; `inert` on the same element (see components/AiGate.tsx) is
+   what actually takes it out of reach while it is shut. */
+/* 1fr -> 0fr on a single-row grid, rather than a height animation: the
+   story's height is not knowable in CSS and animating to `auto` does not
+   interpolate, so the grid row is the one way to get a real collapse out
+   of content nobody measured. */
+.ai-hold{
+  overflow:hidden;
+  display:grid; grid-template-rows:1fr;
+  transition:grid-template-rows .75s var(--ease), opacity .5s var(--ease);
+}
+.ai-hold > *{ min-height:0; }
+.ai-hold[data-collapsed]{ grid-template-rows:0fr; opacity:0; }
+@media (prefers-reduced-motion:reduce){ .ai-hold{ transition:none; } }
+
+/* ============================================================
+   THE STORY
+   ============================================================ */
+.ai-story{ background:#f4f2ec; padding:clamp(80px,13vh,150px) 0; }
+.ai-story__in{ max-width:760px; }
+.ai-story__title{
+  margin-top:24px;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(30px,4.6vw,62px); line-height:1.02; letter-spacing:-.03em;
+  text-wrap:balance;
+}
+.ai-story__beats{ margin-top:clamp(34px,5vh,56px); display:flex; flex-direction:column; gap:clamp(20px,3vh,32px); }
+.ai-beat{
+  position:relative; padding-left:52px;
+  font-size:clamp(16px,1.3vw,19px); line-height:1.66; color:var(--muted);
+}
+.ai-beat__n{
+  position:absolute; left:0; top:.35em;
+  font-family:var(--f-mono); font-style:normal; font-size:11px; letter-spacing:.2em;
+  color:var(--accent);
+}
+/* The last beat is the turn, and it is set as the page's own voice rather
+   than as more narration. */
+.ai-beat:last-child{ color:var(--cream); font-size:clamp(18px,1.6vw,23px); line-height:1.5; }
+
+.ai-story__out{
+  margin-top:clamp(38px,6vh,64px); padding-top:26px; border-top:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
+}
+.ai-story__outline{ font-family:var(--f-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
+.ai-story__go{
+  display:inline-flex; align-items:center; gap:9px; padding:13px 24px;
+  border-radius:999px; background:var(--cream); color:#f4f2ec;
+  font-size:14px; font-weight:600;
+}
+
+/* ============================================================
+   THE WALL
+   ============================================================ */
+.ai-work{ background:#f4f2ec; padding:clamp(70px,11vh,130px) 0 clamp(90px,15vh,170px); }
+
+.ai-tabs{
+  margin-top:26px; display:flex; gap:8px; flex-wrap:wrap;
+  border-bottom:1px solid var(--line); padding-bottom:18px;
+}
+.ai-tab{
+  font:inherit; cursor:none; background:none;
+  border:1px solid var(--faint); border-radius:999px;
+  padding:10px 20px; color:var(--muted); font-size:14px;
+  display:inline-flex; align-items:baseline; gap:6px;
+  transition:border-color .35s var(--ease), color .35s var(--ease), background .35s var(--ease);
+}
+.ai-tab sup{ font-family:var(--f-mono); font-size:9px; letter-spacing:.1em; opacity:.7; }
+.ai-tab:hover{ border-color:var(--cream); color:var(--cream); }
+.ai-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:#f4f2ec; }
+@media (hover:none){ .ai-tab{ cursor:pointer; } }
+
+/* Columns, not grid - see the note at the top of components/AiGrid.tsx
+   for why the packing is handed to the browser. Each tile keeps its own
+   aspect-ratio (set inline from the asset's real pixels), so verticals
+   stay vertical and nothing is cropped to fit a cell. */
+.ai-grid{
+  margin-top:clamp(24px,4vh,40px);
+  column-count:3; column-gap:clamp(12px,1.4vw,20px);
+}
+@media (max-width:1000px){ .ai-grid{ column-count:2; } }
+@media (max-width:600px){ .ai-grid{ column-count:1; } }
+
+.ai-tile{
+  position:relative; margin:0 0 clamp(12px,1.4vw,20px);
+  break-inside:avoid; border-radius:12px; overflow:hidden;
+  background:var(--panel);
+}
+/* `hidden` on a filtered-out tile: the attribute already means this, and
+   the column layout needs it gone from flow rather than transparent. The
+   element stays mounted so its image is never re-decoded when the reader
+   comes back to the segment. */
+.ai-tile[hidden]{ display:none; }
+.ai-tile img{ transition:transform .8s var(--ease); }
+.ai-tile:hover img{ transform:scale(1.04); }
+
+.ai-tile__play{
+  position:absolute; top:12px; left:12px; z-index:2;
+  display:grid; place-items:center; width:30px; height:30px;
+  border-radius:50%; background:rgba(0,0,0,.45); color:#fff;
+}
+.ai-tile__cap{
+  position:absolute; left:0; right:0; bottom:0; z-index:2;
+  padding:34px 14px 14px;
+  background:linear-gradient(to top, rgba(0,0,0,.72), transparent);
+  color:#fff; display:flex; flex-direction:column; gap:2px;
+  opacity:0; transform:translateY(8px);
+  transition:opacity .45s var(--ease), transform .45s var(--ease);
+}
+.ai-tile:hover .ai-tile__cap{ opacity:1; transform:none; }
+.ai-tile__cap b{ font-family:var(--f-display); font-size:15px; font-weight:700; letter-spacing:-.01em; }
+.ai-tile__cap span{ font-family:var(--f-mono); font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
+/* Touch has no hover to reveal a caption with, so it is simply always up. */
+@media (hover:none){ .ai-tile__cap{ opacity:1; transform:none; } }
+
+/* Same placeholder flag the Series page uses, restated here rather than
+   shared: the two pages will not stay light at the same time, and a
+   badge is four lines. */
+.ai-tile.is-pending::before{
+  content:"PLACEHOLDER"; position:absolute; z-index:3; top:12px; right:12px;
+  font-family:var(--f-mono); font-size:8px; letter-spacing:.22em;
+  padding:4px 7px; border-radius:3px;
+  background:rgba(0,0,0,.62); color:#fff;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .ai-tile img{ transition:none; }
+  .ai-tile:hover img{ transform:none; }
+}

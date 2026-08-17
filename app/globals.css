@@ -63,6 +63,35 @@ img{ display:block; width:100%; height:100%; object-fit:cover; }
 em{ font-style:italic; }
 ::selection{ background:var(--accent); color:#04140b; }
 
+/* ============================================================
+   THE LIGHT PANEL
+
+   Flip the theme by re-pointing the variables rather than restating
+   colours on every child - everything inside inherits the light palette
+   for free. --panel is remapped too: a light card sits on it, and a dark
+   tile backing under one reads as a hole.
+
+   This lives here, and not in a route stylesheet, because it is the
+   site's second theme rather than one page's trick - the About page's
+   panels, the Series page's process/work/feed sections and the AI Work
+   page's story and wall all use it. It spent a while declared in
+   app/about/about.css, which is imported by /about and nowhere else, so
+   on the other two routes the class matched nothing at all and the type
+   inside those sections stayed cream on a cream ground. A theme this
+   quiet fails silently: nothing errors, the section just goes blank.
+
+   lib/motion.ts reads the same class off the DOM to decide which way to
+   draw the fixed header - see readGround(). */
+.is-light{
+  --cream:#0b0b0c;
+  --muted:rgba(11,11,12,.62);
+  --line:rgba(11,11,12,.16);
+  --faint:rgba(11,11,12,.09);
+  --panel:rgba(11,11,12,.06);
+  --accent:oklch(0.55 0.17 152);
+  color:var(--cream);
+}
+
 .wrap{ max-width:var(--maxw); margin:0 auto; padding:0 var(--pad); }
 
 .ln{ display:block; overflow:hidden; }
@@ -655,7 +684,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   position:relative; align-self:center;
   width:auto; margin-right:calc(var(--pad) * -1);
   margin-bottom:clamp(16px, 3.5vh, 44px);
-  height:clamp(280px, 28vw, 480px);
+  height:clamp(330px, 33vw, 560px);
 }
 
 /* .plogo is the *frame*: the box the composition is centred and scaled
@@ -1722,6 +1751,15 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 .foot__ends-meta i{ font-style:normal; }
 .foot__ends a{ transition:color .3s var(--ease); }
 .foot__ends a:hover{ color:var(--accent); }
+/* Back to top is a <button> - it scrolls, it does not go anywhere, so it
+   never belonged in the address bar. Everything a button brings with it is
+   taken back off so it reads as the piece of type next to it. */
+.foot__top{
+  font:inherit; letter-spacing:inherit; color:inherit;
+  background:none; border:0; padding:0; cursor:pointer;
+  transition:color .3s var(--ease);
+}
+.foot__top:hover{ color:var(--accent); }
 
 .foot__legal{
   position:absolute; left:0; right:0; bottom:0; z-index:4;

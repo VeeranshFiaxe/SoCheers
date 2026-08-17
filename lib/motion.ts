@@ -71,6 +71,43 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- going back to the top
+       Nothing on this site says "#top" any more. The nav's Home and the
+       mark in the corner are the real route, "/", and the footer's Back to
+       top is a button with no href at all - so hovering them shows a page,
+       not a scroll position, and clicking them leaves the address bar
+       alone.
+
+       Which leaves the behaviour to do by hand. On the page those links
+       already point at, going there is a scroll: letting the browser
+       follow "/" from the home page would reload the whole site - loader,
+       overture and all - to arrive somewhere the reader is already looking
+       at. From anywhere else it is a genuine trip home and is left alone.
+
+       Bound outside initLenis on purpose: that one bails under reduced
+       motion, and this has to work whether or not there is smooth
+       scrolling to do it with. */
+    function initTopLinks() {
+      const toTop = () => {
+        if (lenis) lenis.scrollTo(0, { duration: 1.4 });
+        else window.scrollTo({ top: 0, behavior: prefersReduced ? "auto" : "smooth" });
+      };
+
+      document.querySelectorAll<HTMLElement>("[data-top]").forEach((el) => {
+        on(el, "click", (e) => { e.preventDefault(); toTop(); });
+      });
+
+      document.querySelectorAll<HTMLAnchorElement>('a[href="/"]').forEach((a) => {
+        on(a, "click", ((e: MouseEvent) => {
+          // a real navigation home, or a deliberate new tab / new window
+          if (window.location.pathname !== "/") return;
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault();
+          toTop();
+        }) as EventListener);
+      });
+    }
+
     /* -------------------------------------------------- pixel grids
        React renders the <i> tiles; collect them per host. */
     const grids = new Map<Element, Grid>();
@@ -1520,6 +1557,7 @@ export function initSite(): () => void {
     initWCardCycle();
     initCounters();
     initNav();
+    initTopLinks();
     initMarquees();
     initFooter();
 

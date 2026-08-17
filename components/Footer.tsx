@@ -467,7 +467,12 @@ export default function Footer() {
             ))}
           </nav>
           <span className="foot__ends-meta">
-            <a href="#top" data-cursor="Top">Back to top</a>
+            {/* A control, not a destination: it moves the page, it does not
+                name a place, so it is a button and leaves the address bar
+                alone. Handled by initTopLinks() in lib/motion.ts. */}
+            <button type="button" className="foot__top" data-top data-cursor="Top">
+              Back to top
+            </button>
             <i>Est. 2013</i>
           </span>
         </div>
