@@ -16,7 +16,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import Lenis from "lenis";
 import { OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
-import { FOOTER_SFX, MEANING, WCARD_SFX } from "./content";
+import { MEANING, WCARD_SFX } from "./content";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -307,12 +307,15 @@ export function initSite(): () => void {
 
       gsap.set(entry, { autoAlpha: 1 });
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: hero, start: "top top", end: "+=240%",
-          pin: true, scrub: 1, invalidateOnRefresh: true,
-        },
-      });
+      /* Not scrubbed. A scrub ties every frame of this to the raw scroll
+         delta, which is exactly what made it fall apart under a fast or
+         hesitant scroll - half a gesture left it half-finished, and a fast
+         one made it stutter, chasing scroll events instead of running its
+         own clock. This timeline is paused and driven by hand (below): a
+         small scroll is just an intent - "go" - and once it fires, the
+         whole beat plays out on GSAP's own ticker at a fixed pace, the
+         same every time, no matter how the trigger was scrolled. */
+      const tl = gsap.timeline({ paused: true });
 
       /* - phase 1 · the window opens up -
          The window is the photo itself the whole time - it starts blue-tinted
@@ -405,16 +408,143 @@ export function initSite(): () => void {
       /* - phase 3 · the frame gives way -
          The whole hero comes apart from the bottom up and WHO WE ARE is
          behind it. Not a slab laid over the next section: .who is pulled up
-         a screen (globals.css), so for the last 100vh of this pin it is
-         already sitting under the hero waiting, and what the grains uncover
-         is the real section arriving rather than black.
-
-         The timeline runs 0 → ~1 for everything above; the pin got 100vh
-         longer for this, so the phase is that 100vh expressed in the same
-         units - which puts its start exactly where .who's top reaches the
-         bottom of the viewport. */
+         a screen (globals.css), so once this phase finishes it is already
+         sitting under the hero waiting, and what the grains uncover is the
+         real section arriving rather than black. */
       const CRUMBLE = 100 / 260;
       crumble(tl, 1, CRUMBLE, pin, boxEnd, [backdrop, stage]);
+
+      /* -------------------------------------------------- the sequencing
+         Three checkpoints on tl's own clock - REST (nothing has happened
+         yet), HOLD (the window is full screen and the entry is written -
+         a resting frame, not a mid-animation one) and DONE (crumbled away,
+         WHO WE ARE uncovered). A scroll intent in either direction just
+         asks "which checkpoint next" - it never sets a position itself, so
+         a twitchy trackpad and a single hard flick produce the same beat. */
+      // HOLD sits just short of 1, not on it: the crumble's handover to the
+      // grain grid is an instant .set() planted exactly at time 1 (below),
+      // so parking the hold checkpoint there would have every "rest" frame
+      // land mid-swap instead of on the finished entry.
+      const REST = 0, HOLD = 0.97, DONE = 1 + CRUMBLE;
+      type Stage = "rest" | "hold" | "done";
+      let phase: Stage = "rest";
+      let busy = false;
+      let cooldown = 0;
+      /* Whether a scroll gesture is currently ours to intercept. Not the
+         same thing as `phase !== "done"`: after the crumble finishes,
+         phase is "done" but locked is also false because we have just
+         handed scrolling back to the page - and scrolling back up into
+         the pin from WHO WE ARE re-locks with phase still "done" (that is
+         the state being reversed out of), so the two have to be tracked
+         separately or the reverse gesture has nothing listening for it. */
+      let locked = true;
+
+      /* The pin exists purely to hold the layout - a spacer exactly one
+         viewport tall, cancelled out by .who's own -100vh margin (globals.css)
+         so it sits right at the hero's natural bottom edge with no gap. It
+         does not drive anything: scrub is off, and the section only ever
+         moves through this space in one jump (below), never by scrolling
+         through it a pixel at a time. */
+      const st = ScrollTrigger.create({
+        trigger: hero, start: "top top", end: "+=100%", pin: true,
+        onEnter: () => { locked = true; lenis?.stop(); },
+        onEnterBack: () => { reclaim(); },
+      });
+      // the hero is on screen at rest as soon as it mounts - lock the page
+      // right away rather than waiting for a scroll event to discover it
+      lenis?.stop();
+
+      const play = (time: number, duration: number, onDone?: () => void) => {
+        busy = true;
+        gsap.to(tl, {
+          time, duration, ease: "none",
+          onComplete: () => { busy = false; cooldown = performance.now() + 420; onDone?.(); },
+        });
+      };
+
+      const advance = () => {
+        if (phase === "rest") { phase = "hold"; play(HOLD, 2.6); return; }
+        if (phase === "hold") {
+          phase = "done";
+          play(DONE, 1.5, () => {
+            // hand scroll back to the page, seated exactly where the pin
+            // ends - the crumble already carried the picture, so nothing
+            // visibly moves, and normal scroll just continues into WHO WE ARE
+            locked = false;
+            lenis?.scrollTo(st.end, { immediate: true, force: true });
+            lenis?.start();
+            ScrollTrigger.update();
+          });
+        }
+      };
+      const retreat = () => {
+        if (phase === "hold") { phase = "rest"; play(REST, 1.5); return; }
+        if (phase === "done") { phase = "hold"; play(HOLD, 1.3); }
+      };
+
+      /* Taking the scroll back as the reader comes up into the pin.
+         Being inside the pin at DONE is not a state anyone should ever sit
+         in: the hero has already come apart, so the pinned screen is empty
+         - the blank black wall. The only reason to be here is to reverse
+         out of it, so re-entry *is* the trigger for the reverse rather than
+         something that merely re-arms it. Previously the first flick up was
+         swallowed re-locking the scroll and the reader was parked in that
+         empty frame until a second one arrived, which is why it only ever
+         looked right when you were already scrolling up from further down. */
+      const reclaim = () => {
+        if (locked) return;
+        locked = true;
+        lenis?.stop();
+        if (phase === "done" && !busy) retreat();
+      };
+
+      const canAct = () => !busy && performance.now() > cooldown;
+      const intent = (dir: 1 | -1) => {
+        if (!canAct()) return;
+        if (dir > 0) advance(); else retreat();
+      };
+
+      // non-passive: the whole point is to eat the scroll while the sequence
+      // is being decided or played, and only ever let the browser actually
+      // move once the sequence is done with it
+      /* Heading back up while sitting at the pin's end: claim the gesture
+         here rather than letting the page carry into the pin first and
+         relying on onEnterBack to notice. Lenis smooth-scrolls with
+         momentum, so by the time that fires the reader has already been
+         moved a chunk of the way into the empty frame. */
+      const returning = (up: boolean) =>
+        !locked && up && phase === "done" && window.scrollY <= st.end;
+
+      const onWheel = (e: WheelEvent) => {
+        if (!locked) {
+          if (!returning(e.deltaY < 0)) return;
+          e.preventDefault();
+          reclaim();                     // starts the reverse itself
+          return;
+        }
+        e.preventDefault();
+        if (Math.abs(e.deltaY) < 4) return;
+        intent(e.deltaY > 0 ? 1 : -1);
+      };
+      let touchY = 0;
+      const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? 0; };
+      const onTouchMove = (e: TouchEvent) => {
+        const y = e.touches[0]?.clientY ?? touchY;
+        const dy = touchY - y;
+        if (!locked) {
+          if (!returning(dy < 0)) return;
+          e.preventDefault();
+          reclaim();
+          return;
+        }
+        e.preventDefault();
+        if (Math.abs(dy) < 6) return;
+        touchY = y;
+        intent(dy > 0 ? 1 : -1);
+      };
+      window.addEventListener("wheel", onWheel, { signal: ac.signal, passive: false });
+      window.addEventListener("touchstart", onTouchStart, { signal: ac.signal, passive: true });
+      window.addEventListener("touchmove", onTouchMove, { signal: ac.signal, passive: false });
     }
 
     /* -------------------------------------------------- the hero crumbling
@@ -787,10 +917,17 @@ export function initSite(): () => void {
         // top of that crossfade read as a shake, so they skip it. They also
         // skip the ambient at-a-distance lean: three cards sit well within
         // the 700px reach, so hovering one used to visibly tilt its neighbours.
-        const isWCard = el.classList.contains("wcard");
-        const img = isWCard ? null : el.querySelector("img");
+        // The founders' pair shot opts out of both for its own reasons: it
+        // holds three copies of one photograph (two clipped halves and the
+        // whole one over them - see AboutFounders), so an inner parallax
+        // would move the left half's image and nothing else and tear the
+        // join open; and it sits on top of the two portraits it replaces,
+        // where a lean from across the room would give the frame away
+        // before the join has even played.
+        const flat = el.classList.contains("wcard") || el.classList.contains("founders__duo");
+        const img = flat ? null : el.querySelector("img");
         items.set(el, {
-          el, hover: false, onScreen: false, ambient: !isWCard,
+          el, hover: false, onScreen: false, ambient: !flat,
           rX: gsap.quickTo(el, "rotationX", { duration: 0.8, ease: "power3" }),
           rY: gsap.quickTo(el, "rotationY", { duration: 0.8, ease: "power3" }),
           tZ: gsap.quickTo(el, "z", { duration: 0.8, ease: "power3" }),
@@ -1116,25 +1253,6 @@ export function initSite(): () => void {
          only thing that happens is the page sliding off it. */
       if (prefersReduced) return;
 
-      /* --- the cues ---
-         Same approach as the overture's own sfx() (lib/overture-motion.ts):
-         one Audio per cue, preloaded once, played by cloning the node so a
-         cue retriggered on a scroll-back-up-then-down doesn't cut its own
-         previous hit short. Autoplay rejection is swallowed - a missed
-         cue is not a reason to break the sequence. */
-      const footClips = {
-        drop: new Audio(FOOTER_SFX.drop),
-        flicker: new Audio(FOOTER_SFX.flicker),
-        retract: new Audio(FOOTER_SFX.retract),
-      };
-      Object.values(footClips).forEach((a) => { a.preload = "auto"; a.volume = 0.7; });
-      const footSfx = (name: keyof typeof footClips) => {
-        const clip = footClips[name];
-        const el = clip.cloneNode(true) as HTMLAudioElement;
-        el.volume = clip.volume;
-        void el.play().catch(() => {});
-      };
-
       /* --- the pre-state --- */
       const hang = () => {
         gsap.set(foot, { "--lit": 1 });
@@ -1146,65 +1264,80 @@ export function initSite(): () => void {
 
       const tl = gsap.timeline({ paused: true });
 
+      /* The whole thing runs in about three seconds now. It used to take
+         nearly seven, which is a long time to hold someone at the bottom
+         of a page watching a light they have already understood - so
+         every beat below is shorter and they overlap harder. The shapes
+         are unchanged; only the clock is. */
+
       /* 1 · lowered in, already alight. The cord is scaled rather than
             sized: it is a 2px line, so scaleY and a growing height are
             the same picture, and one of them costs a layout per frame. */
       tl.fromTo(mark,
         { y: () => -(cord.offsetHeight + mark.offsetHeight + 60), rotation: 180 },
-        { y: 0, duration: 1.05, ease: "power2.out" }, 0);
-      tl.fromTo(cord, { scaleY: 0 }, { scaleY: 1, duration: 1.05, ease: "power2.out" }, 0);
+        { y: 0, duration: 0.62, ease: "power2.out" }, 0);
+      tl.fromTo(cord, { scaleY: 0 }, { scaleY: 1, duration: 0.62, ease: "power2.out" }, 0);
 
       /* 2 · and then it dangles. A damped swing about the ceiling rose,
             written out rather than looped: the first throw is the cord
             going taut and is much bigger than the rest, which is the
-            part a uniform oscillation always gets wrong. */
-      const swing: [number, number][] = [[6.2, 0.52], [-4, 0.62], [2.4, 0.58], [-1.3, 0.54], [0.5, 0.5], [0, 0.44]];
+            part a uniform oscillation always gets wrong. Four throws
+            rather than six - past the fourth the movement is smaller than
+            the line is thick, so they were costing a second to show
+            nothing. */
+      const swing: [number, number][] = [[6.2, 0.3], [-3.6, 0.34], [1.8, 0.3], [0, 0.28]];
       swing.forEach(([r, d], i) => {
-        tl.to(pivot, { rotation: r, duration: d, ease: i === 0 ? "sine.out" : "sine.inOut" }, i === 0 ? 0.98 : ">");
+        tl.to(pivot, { rotation: r, duration: d, ease: i === 0 ? "sine.out" : "sine.inOut" }, i === 0 ? 0.58 : ">");
       });
-      tl.add(() => footSfx("drop"), 0.98);
 
       /* 3 · it goes. Hard sets, not tweens, for the same reason the
             overture's ignition is hard sets: a filament is conducting or
             it is not, and easing between the two is what makes flicker
             look drawn. The room is the same number, so the white goes
             with it - the strobe is the whole screen, not the bulb. */
-      const OUT = 3.5;
-      tl.add(() => footSfx("flicker"), OUT);
+      const OUT = 1.5;
       const strike = (v: number, t: number) => tl.set(foot, { "--lit": v }, OUT + t);
       strike(0.4, 0);
-      strike(1, 0.05);
-      strike(0, 0.11);
-      strike(0.9, 0.2);
-      strike(0, 0.25);
-      strike(0.45, 0.42);
-      strike(0, 0.47);
-      strike(0.18, 0.6);
-      tl.to(foot, { "--lit": 0, duration: 0.3, ease: "power2.in" }, OUT + 0.62);
+      strike(1, 0.04);
+      strike(0, 0.09);
+      strike(0.9, 0.16);
+      strike(0, 0.2);
+      strike(0.45, 0.32);
+      strike(0, 0.36);
+      strike(0.18, 0.44);
+      tl.to(foot, { "--lit": 0, duration: 0.22, ease: "power2.in" }, OUT + 0.46);
 
       /* 4 · in the dark, the cord lets go. It retracts to the ceiling it
             came from, the mark drops the inch it was being held up by,
             and on the way back it turns over - so the thing that was a
             bulb hanging upside down finishes as the logo, the right way
             up, exactly where it already was. */
-      const CUT = OUT + 1.25;
-      tl.add(() => footSfx("retract"), CUT);
-      tl.to(cord, { scaleY: 0, duration: 0.45, ease: "power2.in" }, CUT);
-      tl.to(mark, { y: 30, duration: 0.3, ease: "power2.in" }, CUT);
-      tl.to(mark, { y: 0, rotation: 0, duration: 1.15, ease: "power3.inOut" }, CUT + 0.26);
+      const CUT = OUT + 0.78;
+      tl.to(cord, { scaleY: 0, duration: 0.32, ease: "power2.in" }, CUT);
+      tl.to(mark, { y: 26, duration: 0.2, ease: "power2.in" }, CUT);
+      tl.to(mark, { y: 0, rotation: 0, duration: 0.72, ease: "power3.inOut" }, CUT + 0.18);
 
-      /* 5 · and the room fills in around it */
-      tl.to(rises, { autoAlpha: 1, y: 0, duration: 0.8, ease: "power2.out", stagger: 0.1 }, CUT + 0.85);
-      tl.to(fades, { autoAlpha: 1, duration: 0.9, ease: "power2.out", stagger: 0.14 }, CUT + 1);
+      /* 5 · and the room fills in around it, overlapping the turn rather
+            than waiting for it to finish */
+      tl.to(rises, { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out", stagger: 0.06 }, CUT + 0.5);
+      tl.to(fades, { autoAlpha: 1, duration: 0.5, ease: "power2.out", stagger: 0.08 }, CUT + 0.6);
 
       /* The gate. Not "when the footer is in view" - it is always in
          view, it is fixed - but when enough of it has been uncovered
-         that the room is worth looking at. Scrolling back up puts it
-         back to hanging, so it plays again on the way down rather than
-         handing you a dark room and nothing to watch. */
+         that the room is worth looking at.
+
+         Fires early, at a quarter uncovered rather than well past half:
+         the drop and the first swings then happen *while* the page is
+         still being scrolled off, so the bulb is already hanging there by
+         the time the room is actually being looked at, instead of the
+         reader arriving at an empty ceiling and waiting for it.
+
+         Scrolling back up puts it back to hanging, so it plays again on
+         the way down rather than handing you a dark room and nothing to
+         watch. */
       ScrollTrigger.create({
         trigger: run,
-        start: "top 38%",
+        start: "top 75%",
         onEnter: () => { html.classList.add("is-foot"); tl.play(); },
         onLeaveBack: () => {
           html.classList.remove("is-foot");

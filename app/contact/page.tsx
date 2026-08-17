@@ -3,7 +3,6 @@ import "./contact.css";
 import { Nav, Overlays } from "@/components/Chrome";
 import ContactMotion from "@/components/ContactMotion";
 import ContactForm from "@/components/ContactForm";
-import { IMG } from "@/lib/content";
 import { CONTACT_HERO, CONTACT_LINKS, OFFICES } from "@/lib/contact-content";
 
 export const metadata: Metadata = {
@@ -26,41 +25,30 @@ export default function Contact() {
       <main id="top">
         <section className="ct-hero">
           <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>
-          <div className="wrap">
-            <span className="tag" data-reveal>{CONTACT_HERO.eyebrow}</span>
-            <h1 className="ct-hero__title" data-split>
-              {CONTACT_HERO.lines[0]}
-              <em>{CONTACT_HERO.lines[1]}</em>
-            </h1>
-            <p className="ct-hero__lede" data-reveal>{CONTACT_HERO.lede}</p>
-          </div>
-        </section>
+          <div className="wrap ct-hero__grid">
+            <div className="ct-hero__copy">
+              <span className="tag" data-reveal>{CONTACT_HERO.eyebrow}</span>
+              <h1 className="ct-hero__title" data-split>
+                {CONTACT_HERO.lines[0]}
+                <em>{CONTACT_HERO.lines[1]}</em>
+              </h1>
 
-        <section className="ct-form sec">
-          <div className="wrap ct-form__grid">
-            <aside className="ct-visual" data-reveal>
-              <div className="ct-visual__photo" data-tilt>
-                <img src={IMG.team} alt="The SoCheers team" data-clip />
-                <div className="ct-visual__veil" />
-                <span className="ct-visual__tag">MAKING MORE HAPPEN</span>
-              </div>
-
-              <div className="ct-visual__direct">
-                <span className="ct-visual__label">Prefer to skip the form?</span>
-                <a href="mailto:hello@socheers.net" className="ct-visual__email" data-magnetic data-cursor="Email">
+              <div className="ct-direct" data-reveal>
+                <span className="ct-direct__label">Prefer to skip the form?</span>
+                <a href="mailto:hello@socheers.net" className="ct-direct__email" data-magnetic data-cursor="Email">
                   <span>Bring us a brief</span>
                   <b>hello@socheers.net</b>
                 </a>
-                <a href="mailto:careers@socheers.net" className="ct-visual__email" data-magnetic data-cursor="Email">
+                <a href="mailto:careers@socheers.net" className="ct-direct__email" data-magnetic data-cursor="Email">
                   <span>Bring us your best work</span>
                   <b>careers@socheers.net</b>
                 </a>
-                <a href={CONTACT_LINKS.careers} target="_blank" rel="noopener noreferrer" className="ct-visual__email" data-magnetic data-cursor="Careers">
+                <a href={CONTACT_LINKS.careers} target="_blank" rel="noopener noreferrer" className="ct-direct__email" data-magnetic data-cursor="Careers">
                   <span>See open roles</span>
                   <b>Careers</b>
                 </a>
 
-                <div className="contact__social ct-visual__social">
+                <div className="contact__social ct-direct__social">
                   <a
                     href="https://www.instagram.com/thesocheers/"
                     target="_blank"
@@ -129,40 +117,52 @@ export default function Contact() {
                   </a>
                 </div>
               </div>
-            </aside>
 
-            <div className="ctf__panel" data-reveal>
-              <ContactForm />
+              {/* Offices used to be their own section below the fold, which
+                  left dead space on both sides - they live in the hero's
+                  left column now, under the direct-contact card. */}
+              <div className="ct-offices" data-reveal>
+                {OFFICES.map((o) => (
+                  <a
+                    key={o.city}
+                    className="ct-office"
+                    href={o.mapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-magnetic
+                    data-cursor="Directions"
+                  >
+                    <span className="ct-office__tag">{o.tag}</span>
+                    <span className="ct-office__city">{o.city}</span>
+                    <p className="ct-office__addr">{o.address}</p>
+                    <span className="ct-office__link">
+                      Get directions
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 12h14M13 6l6 6-6 6" />
+                      </svg>
+                    </span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
 
-        <section className="ct-offices sec">
-          <div className="wrap">
-            <span className="tag" data-reveal>Where to find us</span>
+            {/* The form column carries a filler under the panel that grows
+                to whatever height the left-hand stack ends up at - without
+                it the corner under the form and beside the office card is
+                the dead space this layout kept leaving. */}
+            <div className="ct-hero__form">
+              <div className="ctf__panel" data-reveal>
+                <ContactForm />
+              </div>
 
-            <div className="ct-offices__grid">
-              {OFFICES.map((o) => (
-                <a
-                  key={o.city}
-                  className="ct-office"
-                  href={o.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-magnetic
-                  data-cursor="Directions"
-                >
-                  <span className="ct-office__tag">{o.tag}</span>
-                  <span className="ct-office__city">{o.city}</span>
-                  <p className="ct-office__addr">{o.address}</p>
-                  <span className="ct-office__link">
-                    Get directions
-                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </span>
-                </a>
-              ))}
+              <div className="ct-tip" data-reveal>
+                <span className="ct-tip__label">Before you hit send</span>
+                <p className="ct-tip__copy">
+                  The briefs we answer fastest tell us three things: what you want
+                  to move, by when, and roughly what you have to spend on it. A
+                  rough answer to each beats a blank.
+                </p>
+              </div>
             </div>
           </div>
         </section>
@@ -173,12 +173,6 @@ export default function Contact() {
               <path d="M19 12H5M11 18l-6-6 6-6" />
             </svg>
             <span>Back to home</span>
-          </a>
-          <a href="/blogs" className="nav__cta" data-magnetic data-cursor="Read">
-            <span>Read the blog</span>
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 12h14M13 6l6 6-6 6" />
-            </svg>
           </a>
         </div>
       </main>

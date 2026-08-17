@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { IMG } from "@/lib/content";
 
 /* Placeholder contact popup - swaps the old mailto CTA for a modal so the
@@ -8,6 +9,15 @@ import { IMG } from "@/lib/content";
    wiring yet; it just holds the UI until there's a form endpoint. */
 export default function ContactModal() {
   const [open, setOpen] = useState(false);
+  /* The trigger lives in the footer's `.foot__ask`, which is a
+     [data-foot-part] - GSAP keeps a transform on it (see initFooter in
+     lib/motion.ts), and a transformed ancestor is what `position:fixed`
+     resolves against. Rendered in place the dialog was therefore centred
+     on that block rather than on the viewport, which is why it sat far
+     down the screen. Portalling it to <body> puts it back on the
+     viewport, wherever the trigger happens to be. */
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
@@ -35,7 +45,7 @@ export default function ContactModal() {
         </svg>
       </button>
 
-      {open && (
+      {open && mounted && createPortal(
         <div
           className="cmodal"
           role="dialog"
@@ -91,7 +101,8 @@ export default function ContactModal() {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

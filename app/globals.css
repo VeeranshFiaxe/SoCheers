@@ -16,6 +16,14 @@
   --accent:    #2fe589;
   --accent:    oklch(0.86 0.22 152);
 
+  /* The logo's own colour, and the one thing on this page that is never
+     re-pointed: .is-light (the About page's panels) remaps --cream,
+     --accent and the rest to their light-background equivalents, so a mark
+     drawn in any of those changes with the section it happens to be over.
+     The lockup gets its own token instead, and every place the mark is
+     drawn reads it - loader, docked home-page mark, sub-page nav. */
+  --logo:      #ffcb0c;
+
   /* the --font-* variables come from next/font/google in app/layout.tsx */
   --f-display: var(--font-display), "Familjen Grotesk", sans-serif;
   --f-body:    var(--font-body), "DM Sans", sans-serif;
@@ -186,9 +194,9 @@ em{ font-style:italic; }
 .loader__mark{
   display:block; width:clamp(150px,20vw,250px); height:auto; margin:0 auto;
   aspect-ratio:344 / 346;             /* matches LOCKUP_VIEWBOX */
-  color:var(--cream);
+  color:var(--logo);
 }
-.sc-mark__blob{ fill:#ffcb0c; }
+.sc-mark__blob{ fill:var(--logo); }
 .loader__count{ font-family:var(--f-mono); font-size:14px; color:var(--accent); margin-top:14px; letter-spacing:.2em; }
 .loader__count i{ opacity:.6; font-style:normal; }
 .loader__tag{ font-family:var(--f-mono); font-size:10px; letter-spacing:.4em; color:var(--muted); margin-top:8px; }
@@ -197,19 +205,34 @@ em{ font-style:italic; }
 /* ============================================================
    NAV
    ============================================================ */
+/* The difference blend used to sit here, on the header, which meant the
+   logo was in it too - and difference is a function of the backdrop, so
+   the mark came out one colour over the black home page and another over
+   the About page's off-white panels. It was never a logo colour so much as
+   an accident of whatever it was passing over.
+   .nav paints no background of its own, so moving the blend down onto the
+   two children that actually need it - the links and the CTA, which are
+   type that has to stay legible over anything - leaves them looking
+   exactly as they did, and takes the mark out of the blend entirely. */
 .nav{
   position:fixed; top:0; left:0; width:100%; z-index:900;
   display:flex; align-items:center; justify-content:space-between;
-  padding:22px var(--pad); mix-blend-mode:difference;
+  padding:22px var(--pad);
   transition:transform .5s var(--ease);
 }
+.nav__links,
+.nav .nav__cta{ mix-blend-mode:difference; }
 .nav.is-hidden{ transform:translateY(-120%); }
 .nav__logo{ font-family:var(--f-display); font-weight:700; font-size:21px; letter-spacing:-.01em; }
 /* Sub-page logo: the same flat lockup the homepage docks into this corner
    once the overture finishes (see .ovt__dock-mark) - sub-pages skip the
    overture entirely, so they show that same graphic here from the start
    rather than a plain text wordmark. */
-.nav__logo-mark{ display:block; height:46px; width:auto; color:currentColor; }
+/* Not currentColor: that inherited --cream off the nav, which is exactly
+   the kind of context-dependent value this mark is not allowed to have.
+   Both the strokes and the disc read --logo now, so the lockup is one
+   flat brand yellow on every page it appears on. */
+.nav__logo-mark{ display:block; height:46px; width:auto; color:var(--logo); }
 a.nav__logo{ display:inline-flex; align-items:center; }
 /* Once the overture has docked its own flat lockup in this corner (see
    dock() in lib/overture-motion.ts), the nav's own text logo is just
@@ -493,7 +516,15 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   font-weight:600; color:var(--cream);
   border-top:1px solid var(--line); padding-top:22px;
 }
-.who__brand{ color:var(--accent); }
+/* The name, set exactly as the pitch below it is: same display face, same
+   italic, same 400. The weight is the whole reason it reads as italic -
+   Familjen Grotesk's italic is close to upright at the lede's 600, and at
+   400 the slant is unmistakable, which is why the pitch never needed help
+   and this did. Dropping to 400 also lets the name sit inside the heavier
+   sentence as a quoted thing rather than as part of the claim. */
+.who__brand{
+  color:var(--accent); font-style:italic; font-weight:400;
+}
 .who__pitch{
   font-weight:400; font-style:italic; color:var(--accent);
   /* one blank line's worth of extra air between the white claim and the
@@ -544,13 +575,22 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 
 /* .plogo is the *frame*: the box the composition is centred and scaled
    to, exactly the footprint the artwork used to have. Nothing is painted
-   on it - no background, no border, no filter. Anything painted here
-   would be the rectangle the whole piece is trying not to be. */
+   on it that has an edge - no background, no border, no filter. The one
+   thing it does paint is the bulb's own light (::before below), which is
+   a circle that has faded to nothing long before it reaches any side of
+   the box. Anything with a corner in it would be the rectangle the whole
+   piece is trying not to be. */
 /* pointer-events:none on purpose - the cursor is tracked on the window,
    so the field still feels it, but nothing here becomes a hover target
    or gets in front of the site's own cursor behaviour. */
 .plogo{
   position:absolute; inset:0; z-index:1; color:var(--cream); pointer-events:none;
+  /* The colour of the light in the glass. One value, read by the halo
+     below and by the flat mark's own glass, and the same reading as
+     TUNE.toneCore in lib/particle-logo.ts - the particles, the still and
+     the room they are in are all lit by one bulb, so they cannot be
+     allowed to disagree about what colour it is. */
+  --bulb:164, 200, 255;
   /* How far the canvas is allowed to hang past the frame, top and
      bottom. The mark takes about four fifths of the frame's height, so
      without this a grain thrown upward runs out of canvas almost
@@ -561,6 +601,31 @@ a.nav__logo{ display:inline-flex; align-items:center; }
      the two boxes rather than being told it, so this number is the only
      place it is set. */
   --plogo-bleed:34%;
+}
+/* ---- the light it throws into the room ----
+   The mark is a bulb and a lit bulb does not stop at its own glass, so
+   the section's black carries a wash of the same colour well past the
+   frame. Three things keep it from reading as a shape:
+
+     · closest-side on a square box, so it is a circle and its falloff is
+       finished at 78% of its own radius - the gradient never meets an
+       edge of the element and there is no rectangle to see;
+     · screen, so on black it can only ever add light and it can never
+       lift the section's background off the page's own colour;
+     · 41% rather than 50%. The glass sits above the middle of the mark -
+       the base is the bottom third of it - and a halo centred on the
+       element would be centred on the metal instead of on the light.
+
+   The numbers are the same shape as the overture's .ovt__glow, an order
+   of magnitude fainter: that one is the only light in a dark room, this
+   one is a lamp in a section that is already lit. */
+.plogo::before{
+  content:""; position:absolute; left:50%; top:41%;
+  height:190%; aspect-ratio:1; transform:translate(-50%, -50%);
+  background:radial-gradient(circle closest-side,
+    rgba(var(--bulb), .17) 0%, rgba(var(--bulb), .095) 26%,
+    rgba(var(--bulb), .035) 48%, rgba(var(--bulb), 0) 78%);
+  mix-blend-mode:screen; pointer-events:none;
 }
 /* Deliberately taller than the element it sits in, and sized in width and
    height rather than by insets: a canvas is a replaced element, so a
@@ -582,6 +647,11 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   position:absolute; inset:0; width:100%; height:100%;
   opacity:.28; transition:opacity 1.2s var(--ease);
 }
+/* 40% is FORM.tint.shell in lib/particle-cloud.ts, written out: the flat
+   glass is mixed the same distance toward the bulb's colour that a shell
+   grain is, so the two readings of the same mark agree. */
+.plogo__glass{ stroke:color-mix(in srgb, rgb(var(--bulb)) 40%, currentColor); }
+.plogo__core{ fill:rgb(var(--bulb)); }
 .plogo.is-live .plogo__still{ opacity:0; }
 
 @media (max-width:860px){
@@ -814,6 +884,40 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   .cmodal__visual{ height:160px; }
 }
 
+/* ---- the phone ----
+   Centring a 620px-tall dialog in a viewport a keyboard is about to eat
+   half of doesn't work, so on a phone it stops being a centred card and
+   becomes a sheet on the bottom edge: it starts where the thumb already
+   is, the photo goes (it was decoration the form had to scroll past),
+   and the fields go to 16px, which is the size below which iOS zooms the
+   whole page in on focus. */
+@media (max-width:620px){
+  .cmodal{ padding:0; place-items:end center; }
+  .cmodal__box{
+    width:100%; max-height:94dvh;
+    border-radius:22px 22px 0 0; border-bottom:none;
+    animation:cmodalSheet .32s var(--ease);
+  }
+  .cmodal__visual{ display:none; }
+  .cmodal__close{ top:12px; right:12px; width:40px; height:40px; }
+  .cmodal__form{
+    gap:13px;
+    padding:26px 20px calc(24px + env(safe-area-inset-bottom));
+  }
+  .cmodal__title{ margin-right:46px; }
+  .cmodal__field input,
+  .cmodal__field textarea{ font-size:16px; padding:13px 14px; }
+  .cmodal__field textarea{ min-height:108px; }
+  .cmodal__submit{
+    align-self:stretch; justify-content:center;
+    margin-top:4px; padding:15px 26px;
+  }
+}
+@keyframes cmodalSheet{
+  from{ opacity:0; transform:translateY(28px); }
+  to{ opacity:1; transform:none; }
+}
+
 /* ============================================================
    LINE-MASK TEXT REVEAL  ([data-split], built by JS per line)
    Each line sits in its own overflow:hidden mask and rises up into frame
@@ -1021,7 +1125,11 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   transform:translate(-50%, -44%);
   opacity:0; pointer-events:none;
 }
-.ovt__dock-mark{ display:block; width:100%; height:100%; color:var(--cream); }
+/* --logo, not --cream: this mark ends up parked in the nav's corner and
+   stays there, so it has to be the same colour the sub-pages' nav lockup
+   is (see .nav__logo-mark) or the home page finishes on a different logo
+   than every other page shows. */
+.ovt__dock-mark{ display:block; width:100%; height:100%; color:var(--logo); }
 
 /* everything inside the glass that only exists when it is alight. Reads
    --lit directly, which is what makes the ignition stutter a single
@@ -1195,25 +1303,28 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   /* the mark, and everything measured off it */
   --mark-w:clamp(112px, 11vw, 168px);
   --mark-h:calc(var(--mark-w) * 258 / 204);   /* PENDANT_RATIO */
-  --mark-y:27dvh;                              /* where its centre comes to rest */
+  /* Where its centre comes to rest: a little above the middle of the
+     room, so the drop and the turn happen at the centre of the screen
+     rather than up in the corner of it. Everything else is measured down
+     from here, which is why the sign-off had to go - at this height there
+     is no longer room below for the mark, the ask, a display line *and*
+     the floor row. */
+  --mark-y:43dvh;
   --cord:calc(var(--mark-y) - var(--mark-h) / 2);
   /* how far off the mark the addresses stand */
   --reach:clamp(178px, 20vw, 290px);
 
-  /* The ask, under the bulb.
-
-     A share of the room's height first, and only then a clearance: 46dvh
-     is where it belongs in the composition, and the second reading is the
-     floor under that - the mark is sized off *width*, so on a short wide
-     window it hangs lower than 46dvh would allow for and the ask has to
-     be pushed past it. Everything vertical in here works this way, so the
-     whole ladder stretches with the window instead of one gap in it
-     absorbing all the slack. */
-  --ask-y:max(46dvh, calc(var(--mark-y) + var(--mark-h) / 2 + 34px));
-  /* A reservation, not the block's real height - that is a wrapped
-     headline plus a button and is only known at layout time. This is what
-     the floor below is told to clear. */
-  --ask-h:clamp(118px, 17vh, 168px);
+  /* The ask, under the bulb. Purely a clearance now: with the mark at the
+     middle of the room there is no slack left to distribute, so this sits
+     directly under whatever the mark's own height works out to rather
+     than claiming a share of the height for itself. */
+  --ask-y:calc(var(--mark-y) + var(--mark-h) / 2 + clamp(20px, 3.4vh, 40px));
+  /* A reservation, and deliberately bigger than the block: the real
+     height is a headline plus a button and is only knowable at layout
+     time, so this is that plus the gap that should follow it. Carrying
+     the trailing gap in here is what lets the floor below be a single
+     max() and still land evenly at both ends of the height range. */
+  --ask-h:clamp(120px, 20.4dvh, 210px);
   /* Where the floor of the room starts - everything below the social ring
      (the globe, the sign-off, the back-to-top column) is measured down
      from here rather than up from the viewport's own bottom edge. Two
@@ -1222,11 +1333,16 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
      tied them together, so a short window let the ring and the floor
      collide and a tall one left a dead gap neither side knew was there.
 
-     Same shape as --ask-y: a share of the room's height, floored by the
-     clearance the block above actually needs. 72dvh is where the floor
-     belongs; the second reading only takes over on windows short enough
-     that the ask would otherwise be sitting on top of it. */
-  --floor-y:max(72dvh, calc(var(--ask-y) + var(--ask-h)));
+     A share of the room's height, floored by the clearance the ask above
+     actually needs - the same shape --ask-y used to have. A fixed step up
+     from the bottom was the obvious alternative and it is wrong here:
+     with the mark now at the middle of the room, that pinned the floor
+     while the ask stayed put, and every extra pixel of window height went
+     into the one gap between them. */
+  --floor-y:max(76dvh, calc(var(--ask-y) + var(--ask-h)));
+  /* what the one-line floor row stands at - the globe is the tallest
+     thing in it, so this is the globe */
+  --floor-h:clamp(64px, min(8.5vw, 11vh), 116px);
 
   /* the light in the room, 0 to 1. One number: the bulb's hot parts, the
      white the room turns while it is on, and the warmth in the corners
@@ -1349,31 +1465,43 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 }
 
 /* ---- the floor of the room ----
-   One real row now, not three independently-anchored corners: .foot__base
-   is a flex row pinned to --floor-y (so it always starts a fixed distance
-   under the social ring, never colliding with it and never stranded far
-   below it), with the globe at one end and the back-to-top column at the
-   other. Both start level at the row's own top - simpler than trying to
-   fake a shared baseline across a globe icon, two lines of script and a
-   two-line mono column, and it looks exactly as level as that would.
-
-   The sign-off can't live in this row: it is centred across the *whole*
-   width, which a three-up flex row can't also do for two edge-anchored
-   children without either constraining their widths or fighting the
-   centred one for space. It stays its own absolutely-positioned, centred
-   element, floated over the row's empty middle instead. */
+   One line, end to end. Two children, centred on each other rather than
+   top-aligned: with the sign-off gone there is nothing tall in the middle
+   for them to hang from, so the globe and the accounts read as sitting on
+   the same line, which is what they are. */
 .foot__base{
   position:absolute; left:0; right:0; top:var(--floor-y); z-index:4;
-  display:flex; align-items:flex-start; justify-content:space-between; gap:24px;
+  min-height:var(--floor-h);
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
   padding:0 var(--pad);
 }
 
 .foot__where{ display:flex; align-items:center; gap:16px; }
 /* Sized off whichever axis is scarcer. It used to read width alone, which
    made it its largest exactly where there was least room for it - a short,
-   wide window - and the floor row bloated to match. */
-.foot__globe{ display:block; width:clamp(84px, min(11vw, 15vh), 148px); aspect-ratio:1; }
-.foot__globe-svg{ display:block; width:100%; height:100%; color:var(--cream); }
+   wide window - and the floor row bloated to match. --floor-h is the same
+   number: the globe is what sets the row's height. */
+/* The viewBox carries headroom above the sphere for the signpost, so the
+   box is taller than the sphere it draws. The two negative margins hand
+   that headroom back to the row - without them the row would grow by the
+   height of a plank that is mostly empty space - which keeps --floor-h
+   meaning what it says: the diameter of the globe.
+
+   The closeness of the view is not set here - that is the projection's
+   scale, in scripts/build-globe.mjs. This is only how big the sphere
+   draws. */
+.foot__globe{
+  display:block; width:calc(var(--floor-h) * 1.12); aspect-ratio:224 / 276;
+  margin-top:calc(var(--floor-h) * -0.32);
+  margin-bottom:calc(var(--floor-h) * -0.06);
+}
+.foot__globe-svg{ display:block; width:100%; height:100%; color:var(--cream); overflow:visible; }
+/* the plank's lettering - same mono as the place name beside it, so the
+   marker reads as part of the line rather than as artwork next to it */
+.foot__sign-text{
+  font-family:var(--f-mono); font-weight:400;
+  paint-order:stroke; text-transform:uppercase;
+}
 .foot__place{ display:flex; flex-direction:column; gap:6px; }
 .foot__place b{
   font-family:var(--f-mono); font-weight:400; font-size:12px;
@@ -1384,32 +1512,11 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   letter-spacing:.14em; color:var(--muted);
 }
 
-/* The sign-off, the way the reference hangs one under its globe: the
-   name in the site's hand, and what it does in the site's voice, big
-   enough to be the last thing read. */
-.foot__sign{
-  /* Relative to .foot__base, not to .foot: it is a child of the base row
-     now (see components/Footer.tsx), and .foot__base is itself already
-     sitting at --floor-y - stacking that offset again here would double
-     it. 6px is the small nudge down that keeps it roughly level with
-     .foot__where's own content past that shared starting line. */
-  position:absolute; left:0; right:0; top:6px; z-index:4;
-  display:flex; flex-direction:column; align-items:center; gap:2px;
-  padding:0 var(--pad); text-align:center; pointer-events:none;
-}
-.foot__sign-name{
-  font-family:var(--f-playful); font-size:clamp(30px, 3.6vw, 54px); line-height:1;
-  color:var(--cream);
-}
-.foot__sign-line{
-  font-family:var(--f-display); font-weight:700; text-transform:uppercase;
-  font-size:clamp(24px, 4.4vw, 66px); line-height:.95; letter-spacing:-.02em;
-  white-space:nowrap;
-  -webkit-text-stroke:1px var(--cream); color:transparent;
-}
-
+/* The far end of the same line: accounts, then the two bits of small
+   print, laid out along it rather than stacked into a column - the row
+   only reads as one line if both of its ends are one line. */
 .foot__ends{
-  display:flex; flex-direction:column; align-items:flex-end; gap:14px;
+  display:flex; align-items:center; gap:clamp(16px, 2.4vw, 34px);
   font-family:var(--f-mono); font-size:11px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--muted);
 }
@@ -1452,45 +1559,43 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 @media (max-width:820px){
   .foot{
     --mark-w:clamp(92px, 24vw, 128px);
-    --mark-y:22dvh;
+    /* Higher than the desktop 43dvh, and not a contradiction of it: with
+       the two addresses stacked underneath rather than out on the mark's
+       shoulders, the column below it is four items long instead of two,
+       and the mark has to make room for them. */
+    --mark-y:24dvh;
   }
   .foot__mail{
     left:0; right:0; width:auto; margin-top:0;
     text-align:center; transform:none;
   }
   .foot__mail a{ align-items:center; }
-  .foot__mail--l{ top:33dvh; }
-  .foot__mail--r{ top:39dvh; }
+  .foot__mail--l{ top:36dvh; }
+  .foot__mail--r{ top:42dvh; }
 
-  .foot__ask{ top:46dvh; gap:16px; }
+  .foot__ask{ top:50dvh; gap:16px; }
   .foot__ask-title{ font-size:clamp(24px, 6.6vw, 34px); }
   .foot__ask .contact__cta{ font-size:15px; padding:13px 26px; }
 
-  /* The floor row is one flex track above this width so the globe and the
-     accounts can start level with each other - but there is nothing to be
-     level with once they are stacked, so the row goes back to being the
-     plain wrapper it was (display:contents) and each child takes its own
-     position back rather than inheriting the row's. */
+  /* The floor is one line at desktop; here there is no room for a line
+     that long, so the row goes back to being the plain wrapper it was
+     (display:contents) and its two halves stack down the middle with
+     their own positions. */
   .foot__base{ display:contents; }
 
   /* .foot__ends survives as the accounts and nothing else: "back to top"
-     is a scroll away on a phone and "est. 2013" is already in the sign-off
-     above it, so the column drops its second line rather than the whole
-     block - hiding .foot__ends outright would take the accounts with it. */
+     is a scroll away on a phone and "est. 2013" is small print the legal
+     line already carries - so it drops its second half rather than the
+     whole block, since hiding .foot__ends would take the accounts too. */
   .foot__ends{
-    position:absolute; left:0; right:0; top:63dvh; z-index:4;
-    align-items:center;
+    position:absolute; left:0; right:0; top:68dvh; z-index:4;
+    justify-content:center;
   }
   .foot__ends-meta{ display:none; }
 
   .foot__where{
-    position:absolute; left:0; right:0; bottom:auto; top:71dvh;
+    position:absolute; left:0; right:0; bottom:auto; top:76dvh;
     justify-content:center;
   }
-  .foot__sign{ top:auto; bottom:clamp(52px, 8vh, 76px); }
-  .foot__sign-line{ font-size:clamp(21px, 6.4vw, 40px); }
   .foot__legal{ justify-content:center; text-align:center; font-size:9.5px; }
-}
-@media (max-width:560px){
-  .foot__legal span:last-child{ display:none; }
 }

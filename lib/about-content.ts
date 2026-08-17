@@ -11,11 +11,11 @@ export const ABOUT_IMG = {
   visual: "/assets/about/abt%20vis.png",
   founderSid: "/assets/about/founder-sid.jpg",
   founderMehul: "/assets/about/founder-mehul.jpg",
-  /* The pair in one frame, and the first thing the founders section shows.
+  /* The pair in one frame, and what the founders section builds towards.
      Both of them stand cleanly in their own half of it, and in the same
-     left-to-right order as FOUNDERS below - which is what lets the section
-     tear this photo down the middle and hand each half to the founder
-     standing in it (see .founders__duo in about.css). */
+     left-to-right order as FOUNDERS below - which is what lets each half
+     of this photo ride in on the portrait of the founder standing in it
+     as the two frames come together (see .founders__duo in about.css). */
   foundersDuo: "/assets/about/founders-duo.webp",
   people: "/assets/about/people.jpg",
   /* the pop-art crowd, cropped out of the client's own reference slide */
@@ -100,28 +100,45 @@ export const DRIVERS = [
 export const SPACE_COPY =
   "Imagine the meeting rooms named Idhar, Udhar, Jidhar, Kidhar. Because when someone asks “Where are you?” you can say “Idhar” and still be in a room called Udhar.";
 
-/* The office, in eight frames: one of each of the four meeting rooms, and
-   four of the people who book them. The room shots used to be all eight
-   tiles, which meant the same doorway three or four times over - the four
-   kept here are one per room, chosen for the shot rather than the sign
-   (the client's phone shots of the same door are near-duplicates of each
-   other). No tile claims a room by name: only the Jidhar sign is legible
-   at this resolution and a caption guessing at the other three would be
-   worse than none.
+/* The office, ten frames, one at a time (see components/AboutStage.tsx -
+   a single cinematic frame with a rail of thumbnails under it, rather
+   than the mosaic this used to be).
 
-   `pos` is the object-position a tile needs when the mosaic hands it a
-   slot of the wrong shape - a wide band cut out of a phone-portrait shot
-   lands on the ceiling unless it is told where the subject is. The order
-   here is the grid-area order a..h in about.css, so the aspect of each
-   photo is matched to the slot it falls into and rooms and people
-   alternate around the mosaic rather than clumping. */
-export const SPACE_SHOTS: { src: string; alt: string; pos?: string }[] = [
-  { src: "/assets/about/people-run.webp", alt: "The SoCheers team after a morning run, medals up" },
-  { src: "/assets/about/space-04.jpg", alt: "A SoCheers meeting room, seen from the floor outside" },
-  { src: "/assets/about/space-05.jpg", alt: "A SoCheers meeting room behind fluted glass" },
-  { src: "/assets/about/people-cake.webp", alt: "A birthday in the SoCheers kitchen" },
-  { src: "/assets/about/people-offsite.webp", alt: "The whole of SoCheers on its twelfth-birthday offsite" },
-  { src: "/assets/about/space-07.jpg", alt: "A SoCheers meeting room, hexagon tiles behind the door", pos: "center 34%" },
-  { src: "/assets/about/people-khaugalli.webp", alt: "Khaugalli day at the SoCheers office", pos: "center 42%" },
-  { src: "/assets/about/space-09.jpg", alt: "A SoCheers meeting room at the end of the floor" },
+   All four rooms turn out to be nameable after all: the signs are legible
+   in these shots - Jidhar's blue hexagons and yellow door, Kidhar's red
+   interior behind fluted glass, Idhar's teal-and-yellow tile beside the
+   red cabinets, Udhar's teal hexagons - so each frame says which room it
+   is instead of hedging. That is the whole point of the copy above it;
+   naming them is what makes the joke land.
+
+   Rooms and people alternate down the list and no room sits next to
+   itself, because the rail shows every thumbnail at once and a run of
+   near-identical doorways in it reads as a mistake.
+
+   PLACEHOLDERS. Every one of these is a portrait phone shot standing in
+   until the real horizontal photography arrives - which is what `pos` is
+   doing all this work for: a 16:9 band cut out of a 9:16 frame lands on
+   the ceiling unless it is told the sign is a third of the way down. When
+   the landscape originals land, swap `src` and delete the `pos` on that
+   row; nothing else has to change. */
+export type SpaceShot = {
+  src: string;
+  alt: string;
+  /* the mono line under the frame - short, and naming the room where
+     there is a room to name */
+  cap: string;
+  pos?: string;
+};
+
+export const SPACE_SHOTS: SpaceShot[] = [
+  { src: "/assets/about/space-02.jpg", alt: "The Jidhar meeting room at SoCheers, seen through its glass front", cap: "Jidhar", pos: "center 36%" },
+  { src: "/assets/about/people-offsite.webp", alt: "The whole of SoCheers on its twelfth-birthday offsite", cap: "The offsite, all of us" },
+  { src: "/assets/about/space-05.jpg", alt: "The Kidhar meeting room at SoCheers, behind fluted glass", cap: "Kidhar", pos: "center 34%" },
+  { src: "/assets/about/people-run.webp", alt: "The SoCheers team after a morning run, medals up", cap: "The morning run" },
+  { src: "/assets/about/space-07.jpg", alt: "The Idhar meeting room at SoCheers, hexagon tile beside the door", cap: "Idhar", pos: "center 32%" },
+  { src: "/assets/about/people-cake.webp", alt: "A birthday in the SoCheers kitchen", cap: "A birthday, in the kitchen" },
+  { src: "/assets/about/space-09.jpg", alt: "The Udhar meeting room at SoCheers, teal hexagons through the door", cap: "Udhar", pos: "center 30%" },
+  { src: "/assets/about/people-khaugalli.webp", alt: "Khaugalli day at the SoCheers office", cap: "Khaugalli day", pos: "center 42%" },
+  { src: "/assets/about/space-01.jpg", alt: "The floor outside Jidhar, desks either side", cap: "Jidhar, from the floor", pos: "center 38%" },
+  { src: "/assets/about/space-08.jpg", alt: "The doorway into Udhar at SoCheers", cap: "Udhar, the way in", pos: "center 30%" },
 ];

@@ -10,7 +10,7 @@
 
 .ct-hero{
   position:relative; overflow:hidden;
-  padding:clamp(160px,26vh,240px) 0 clamp(64px,9vh,110px);
+  padding:clamp(140px,20vh,190px) 0 clamp(64px,9vh,110px);
   border-top:none;
 }
 /* Same vertical hairlines the home page's own closing CTA uses (see
@@ -20,32 +20,47 @@
    type on the home page already sits on. */
 .ct-hero .grid-lines{ z-index:0; }
 .ct-hero .wrap{ position:relative; z-index:1; }
+/* The form is the page's primary CTA, so it rides in the hero itself -
+   copy on the left, full intake panel on the right, no scroll required. */
+.ct-hero__grid{
+  display:grid; grid-template-columns:0.85fr 1.15fr; gap:clamp(28px,4vw,56px);
+  align-items:stretch;
+}
+.ct-hero__copy,
+.ct-hero__form{ display:flex; flex-direction:column; align-items:stretch; }
 .ct-hero__title{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(38px,6.4vw,92px); line-height:.98; letter-spacing:-.03em;
+  font-size:clamp(38px,4.6vw,72px); line-height:.98; letter-spacing:-.03em;
   max-width:14ch; margin-top:22px; text-wrap:balance;
 }
 .ct-hero__title em{
   color:var(--accent); font-style:italic; font-weight:400; display:block;
   margin-top:.1em;
 }
-.ct-hero__lede{
-  margin-top:28px; max-width:46ch;
-  font-size:clamp(15px,1.2vw,19px); line-height:1.7; color:var(--muted);
-}
-
-/* ---------- the form + visual, side by side ----------
-   The page's actual front door: a full inline form (components/ContactForm.tsx)
-   rather than the footer's pop-up, given a real second column instead of
-   sitting alone on an otherwise empty page. */
-.ct-form__grid{
-  display:grid; grid-template-columns:0.85fr 1.15fr; gap:clamp(28px,4vw,56px);
-  align-items:start;
-}
+/* ---------- the form panel ----------
+   The page's actual front door: a full inline form
+   (components/ContactForm.tsx) rather than the footer's pop-up. */
 .ctf__panel{
   border:1px solid var(--line); border-radius:24px; background:var(--panel);
   padding:clamp(28px,3.6vw,48px);
 }
+/* The filler under it. flex:1 is doing the real work: whatever the left
+   column comes to, this takes up the difference, so the bottom of the two
+   columns land together instead of leaving a hole beside the office card. */
+.ct-tip{
+  flex:1; margin-top:16px; min-height:130px;
+  border:1px dashed var(--line); border-radius:24px;
+  padding:clamp(24px,2.8vw,34px);
+  display:flex; flex-direction:column; justify-content:center; gap:12px;
+}
+.ct-tip__label{
+  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--accent);
+}
+.ct-tip__copy{
+  max-width:44ch; font-size:clamp(14.5px,1.1vw,17px); line-height:1.65; color:var(--muted);
+}
+
 .ctf .tag{ color:var(--accent); }
 .ctf__title{
   font-family:var(--f-display); font-weight:700;
@@ -83,52 +98,137 @@
 }
 .ctf__submit:hover{ gap:18px; transform:translateY(-1px); }
 
-.ct-visual{ display:flex; flex-direction:column; gap:24px; }
-.ct-visual__photo{
-  position:relative; border-radius:24px; overflow:hidden;
-  aspect-ratio:4 / 3;
+/* ---------- what the send turns into ----------
+   The panel hands over to the mark itself: it rises out of the bottom of
+   the panel, catches, flickers once and holds, and the line the whole
+   site is named for arrives under it. The bulb is components/ContactBulb.tsx,
+   whose lit parts sit at opacity 0 until `ctb-strike` runs - so a
+   reduced-motion or script-less render still gets a legible, unlit mark
+   with the copy beside it rather than a blank panel. */
+.ctf__done{
+  border:1px solid var(--line); border-radius:24px; background:var(--panel);
+  padding:clamp(36px,4.4vw,64px) clamp(28px,3.6vw,48px);
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  position:relative; overflow:hidden;
 }
-.ct-visual__photo img{ width:100%; height:100%; object-fit:cover; filter:saturate(.75) brightness(.8); }
-.ct-visual__veil{
-  position:absolute; inset:0;
-  background:linear-gradient(to top, rgba(6,6,7,.9), rgba(6,6,7,.05) 60%);
+/* the room the light throws behind itself */
+.ctf__done::before{
+  content:""; position:absolute; left:50%; top:0;
+  width:min(620px,120%); aspect-ratio:1; transform:translate(-50%,-42%);
+  background:radial-gradient(circle, rgba(255,190,60,.16), rgba(255,160,30,.05) 45%, transparent 70%);
+  opacity:0; pointer-events:none;
 }
-.ct-visual__tag{
-  position:absolute; left:22px; bottom:20px; right:22px;
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.28em; color:var(--accent);
+.ctf__bulb{
+  width:clamp(96px,11vw,138px); height:auto; color:var(--cream);
+  position:relative; z-index:1;
 }
-.ct-visual__direct{
+.ctf__done-tag{ margin-top:26px; color:var(--accent); }
+.ctf__done-title{
+  margin-top:14px;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(26px,2.9vw,38px); line-height:1.08; letter-spacing:-.02em;
+  text-wrap:balance;
+}
+.ctf__done-title em{
+  display:block; margin-top:.14em;
+  color:var(--accent); font-style:italic; font-weight:400;
+}
+.ctf__done-note{
+  margin-top:18px; max-width:34ch;
+  font-size:clamp(14.5px,1.1vw,17px); line-height:1.65; color:var(--muted);
+}
+.ctb__lit{ opacity:0; }
+
+@media (prefers-reduced-motion: no-preference){
+  .ctf__bulb{ animation:ctb-rise .9s var(--ease) both; }
+  /* the strike, held back until the mark has finished coming up */
+  .ctf__done .ctb__lit{ animation:ctb-strike 1.5s steps(1,end) .62s forwards; }
+  .ctf__done::before{ animation:ctb-room 1.5s ease-out .62s forwards; }
+  .ctf__done-tag,
+  .ctf__done-title,
+  .ctf__done-note{ animation:ctb-say .8s var(--ease) both; }
+  .ctf__done-tag{ animation-delay:.8s; }
+  .ctf__done-title{ animation-delay:.92s; }
+  .ctf__done-note{ animation-delay:1.06s; }
+}
+
+@keyframes ctb-rise{
+  from{ opacity:0; transform:translateY(46px) scale(.94); }
+  to{ opacity:1; transform:none; }
+}
+/* filament behaviour, not a fade: catch, drop out, catch again, hold */
+@keyframes ctb-strike{
+  0%{ opacity:0; }
+  12%{ opacity:1; }
+  22%{ opacity:.15; }
+  34%{ opacity:1; }
+  44%{ opacity:.45; }
+  56%{ opacity:1; }
+  100%{ opacity:1; }
+}
+@keyframes ctb-room{
+  0%{ opacity:0; }
+  16%{ opacity:1; }
+  30%{ opacity:.3; }
+  56%{ opacity:1; }
+  100%{ opacity:1; }
+}
+@keyframes ctb-say{
+  from{ opacity:0; transform:translateY(14px); }
+  to{ opacity:1; transform:none; }
+}
+
+/* The "or reach us straight" card, sitting under the hero copy now that
+   the form has taken the second column. */
+.ct-direct{
+  margin-top:clamp(32px,4vw,52px); align-self:stretch;
   border:1px solid var(--line); border-radius:24px; padding:clamp(24px,2.8vw,34px);
   display:flex; flex-direction:column; gap:16px;
 }
-.ct-visual__label{
+.ct-direct__label{
   font-family:var(--f-mono); font-size:10.5px; letter-spacing:.18em;
   text-transform:uppercase; color:var(--muted);
 }
-.ct-visual__email{ display:flex; flex-direction:column; gap:4px; }
-.ct-visual__email span{ font-family:var(--f-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-.ct-visual__email b{
+.ct-direct__email{ display:flex; flex-direction:column; gap:4px; }
+.ct-direct__email span{ font-family:var(--f-mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+.ct-direct__email b{
   font-family:var(--f-display); font-weight:600; font-size:clamp(15px,1.4vw,18px);
   transition:color .3s var(--ease);
 }
-.ct-visual__email:hover b{ color:var(--accent); }
-.ct-visual__social.contact__social{ justify-content:flex-start; margin-top:4px; }
+.ct-direct__email:hover b{ color:var(--accent); }
+.ct-direct__social.contact__social{ justify-content:flex-start; margin-top:4px; }
 
+/* Stacked, the form still has to come before the "skip the form" card -
+   display:contents lets the copy's children reorder around the panel. */
 @media (max-width:940px){
-  .ct-form__grid{ grid-template-columns:1fr; }
+  .ct-hero__grid{ grid-template-columns:1fr; gap:0; }
+  .ct-hero__copy{ display:contents; }
+  .ct-hero__copy > .tag{ order:1; }
+  .ct-hero__title{ order:2; }
+  .ct-hero__form{ order:3; margin-top:clamp(32px,5vw,48px); }
+  .ct-direct{ order:4; }
+  .ct-offices{ order:5; }
 }
 @media (max-width:560px){
   .ctf__row{ grid-template-columns:1fr; }
   .ctf__row + .ctf__row{ margin-top:0; }
 }
 
-.ct-offices__grid{
-  margin-top:clamp(28px,4vh,44px);
-  display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 420px)); gap:20px;
+/* In the hero's left column now, so one card per row rather than the old
+   full-width auto-fit grid. */
+/* flex:1 for the same reason .ct-tip has it on the other side: whichever
+   column comes up short takes the slack into its last card, so the office
+   card and the note under the form finish on the same line. The card's
+   own copy stays put at the top of it - it is the address block that
+   grows, not the gaps between the lines (see .ct-office__addr). */
+.ct-offices{
+  flex:1; margin-top:16px; align-self:stretch;
+  display:grid; grid-template-columns:1fr; gap:16px;
 }
 .ct-office{
-  display:block; border:1px solid var(--line); border-radius:16px;
-  padding:clamp(22px,2.4vw,34px);
+  display:flex; flex-direction:column; align-items:flex-start;
+  border:1px solid var(--line); border-radius:24px;
+  padding:clamp(24px,2.8vw,34px);
   transition:border-color .4s var(--ease), transform .4s var(--ease), background .4s var(--ease);
 }
 .ct-office:hover{
@@ -144,8 +244,10 @@
   font-family:var(--f-display); font-weight:700; font-size:clamp(22px,2.2vw,32px);
   letter-spacing:-.02em;
 }
+/* the one part that absorbs a stretched card, so "Get directions" keeps
+   its own 20px off the address on a card that isn't stretched at all */
 .ct-office__addr{
-  margin-top:14px; max-width:36ch;
+  flex:1; margin-top:14px; max-width:36ch;
   font-size:14.5px; line-height:1.6; color:var(--muted);
 }
 .ct-office__link{

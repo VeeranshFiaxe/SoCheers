@@ -14,7 +14,14 @@ export function Who() {
         <div className="who__grid">
           <div className="who__copy">
             <p className="who__lede" data-split>
-              We are <span className="who__brand">SoCheers</span> - an independent, integrated creative agency.
+              {/* A hard break, not a non-breaking space: the line splitter
+                  (SplitText, see initSplits in lib/motion.ts) re-wraps this
+                  word by word to measure lines, and an nbsp does not survive
+                  that - a <br /> does. The name and the dash close the first
+                  line; "an" goes down with what it introduces. */}
+              We are <span className="who__brand">SoCheers</span> -{" "}
+              <br />
+              an independent, integrated creative agency.
             </p>
             <p className="who__pitch" data-split>
               We build brands consumers fall for. We make content people can&apos;t help but{" "}

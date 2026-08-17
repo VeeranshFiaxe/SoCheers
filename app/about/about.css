@@ -72,34 +72,42 @@
 }
 
 /* ============================================================
-   THE PANEL STACK
+   THE PANELS
 
-   Every section past the opener is a card. Each one carries its own
-   opaque background, a rounded top edge, and a shadow cast upward, and
-   each is pulled up by exactly its own corner radius so that edge lands
-   over the panel behind it. Scrolling then reads as one card sliding up
-   to cover the last rather than a background colour changing underfoot -
-   which is what lets this page walk black to white without ever needing
-   a veil, a wipe or a gradient seam to hide the change.
+   This was a deck: every section a rounded card, pinned and then climbed
+   over by the next one, all the way down the page. Repeated five times it
+   stopped being an effect and became the page's default state, and it put
+   a hard seam at every join on the way to the one place that wanted it.
 
-   Order matters twice over: the backgrounds step one shade lighter per
-   panel, and the z-index steps up to match, so a later card is always
-   the one on top. lib/about-motion.ts adds the depth - the covered
-   card's contents sink and dim as the next one arrives.
+   So the card is spent once, where it earns something: the founders panel
+   rises over the black opener on a curved edge, which is the page turning
+   from the opener to the body of itself. Everything after it is a plain
+   section scrolling into the next one - same off-white, no edge, nothing
+   climbing over anything.
+
+   The founders panel then holds for a screen once it lands, because the
+   join inside it has to play out uninterrupted (see the founders hold in
+   lib/about-motion.ts) - but that pin keeps its spacing, so it is a pause
+   in the scroll rather than one more card being covered.
    ============================================================ */
 .ab-stack{ position:relative; z-index:1; --panel-r:clamp(18px,2.4vw,40px); }
-.ab-panel{
-  position:relative;
+.ab-panel{ position:relative; overflow:hidden; }
+
+/* The one card. The rounded top edge, the shadow cast upward onto the
+   opener and the negative margin that lands that edge over it - the three
+   together are what read as a plane arriving above the page rather than a
+   background colour changing underfoot. Only this panel gets them; the
+   corner is only a corner because .ab-panel clips. */
+.ab-founders{
   border-radius:var(--panel-r) var(--panel-r) 0 0;
-  /* the corner is only a corner if what is inside it gets clipped */
-  overflow:hidden;
-  /* cast upward, onto the card being covered - this is most of what sells
-     the two as separate planes rather than two flat colour fields */
+  margin-top:calc(var(--panel-r) * -1);
   box-shadow:0 -30px 64px rgba(0,0,0,.5);
 }
-/* Each panel but the first eats its own radius, so the round edge sits on
-   the previous card instead of leaving a sliver of the page behind it. */
-.ab-panel + .ab-panel{ margin-top:calc(var(--panel-r) * -1); }
+/* the opener's contents, which sink and dim as that card climbs over them */
+.ab-intro > .wrap{ will-change:transform; }
+@media (prefers-reduced-motion:reduce){
+  .ab-intro > .wrap{ will-change:auto; transform:none !important; opacity:1 !important; }
+}
 
 /* Black opener, then straight to one consistent off-white for every panel
    after - no gray midpoint, and no pure #fff either: it read as too stark
@@ -110,36 +118,23 @@
 .ab-drives  { background:#f4f2ec; z-index:4; }
 .ab-space   { background:#f4f2ec; z-index:5; }
 
-/* The contents, not the card. GSAP scrubs this as the next panel climbs
-   over it, so the covered card recedes instead of just being hidden. */
-.ab-panel > .wrap{ will-change:transform; }
-
-@media (prefers-reduced-motion:reduce){
-  .ab-panel > .wrap{ will-change:auto; transform:none !important; opacity:1 !important; }
-}
 
 /* ---------- 2 · the intro line + the team artwork ---------- */
-/* This panel pins for one viewport's worth of scroll (see the panel-stack
-   block in lib/about-motion.ts) - scrolling further doesn't reveal more of
-   it, it just drags the next panel up over it. So everything here has to
-   actually fit inside that one screen with room to spare, not rely on
-   being centred in a box taller than the viewport: the old padding + a
-   vertically-centred grid was pushing the payoff line low enough to sit
-   right at (or past) that cut. Padding trimmed and the grid top-aligned
-   instead of centred, so the whole column sits higher, up near the tag,
-   with headroom below it. */
+/* This panel pins once its foot reaches the foot of the screen, and holds
+   there while the founders card climbs over it (see the founders card
+   block in lib/about-motion.ts). The pin starts at the bottom edge, so
+   the whole section has already been scrolled past by then and nothing
+   here is at risk of being cut off.
+
+   Centre-aligned, not top: the copy is two short lines and the artwork is
+   a tall portrait beside it, so top-aligning left the text sitting up by
+   itself with the whole lower half of the visual unanswered. Centred, the
+   two columns read as one row. */
 .ab-intro{ padding:clamp(64px,10vh,120px) 0; }
 .ab-intro__grid{
   display:grid; grid-template-columns:1fr 1.02fr;
-  gap:clamp(40px,5vw,84px); align-items:start;
+  gap:clamp(40px,5vw,84px); align-items:center;
   perspective:1400px;   /* depth for the [data-tilt] lean on the visual */
-}
-/* The section's own headline, right under the About page's hero and above
-   the discipline list it introduces. */
-.ab-intro__title{
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(26px,3.6vw,50px); line-height:1.06; letter-spacing:-.02em;
-  margin-bottom:clamp(30px,4.4vh,46px);
 }
 .ab-intro__line{
   font-family:var(--f-display); font-weight:600;
@@ -161,7 +156,11 @@
    to the figures at every width. */
 .ab-intro__visual{
   position:relative; aspect-ratio:1024/1536; transform-style:preserve-3d;
-  width:70%; margin-inline:auto;
+  /* a shade narrower than it was: the portrait ratio makes every point of
+     width cost half again as much height, and at 70% it stood so much
+     taller than the copy beside it that no vertical alignment read as
+     deliberate */
+  width:60%; margin-inline:auto;
 }
 .ab-intro__art{
   position:relative; z-index:1;
@@ -203,6 +202,10 @@
    stacked by padding, so the section's size tracks whatever room is
    actually available instead of a fixed guess that only fits on tall
    monitors. */
+/* Exactly one screen. The room the join needs is bought by the pin in
+   lib/about-motion.ts, not by extra height here: the panel is held for a
+   screen's worth of scroll with its space reserved, so it stands still
+   while the join plays and then scrolls on normally. */
 .ab-founders{
   min-height:100svh; display:flex; flex-direction:column; justify-content:center;
   padding:clamp(56px,8vh,96px) 0;
@@ -212,24 +215,43 @@
   margin-top:clamp(22px,3.6vh,40px);
   display:grid; grid-template-columns:repeat(2,max-content);
   justify-content:center; gap:clamp(28px,4vw,64px);
+  /* the depth the pair shot's tilt turns in, same figure the WHAT WE DO
+     grid uses so the two leans have the same strength of perspective */
+  perspective:1200px;
 }
 
 /* ---- the pair, in one frame ----
-   What the section opens on, sitting over the two portrait frames and the
-   exact size of one of them, so when it tears the halves are already in
-   the middle of where the two founders will end up.
+   What the section closes on: dead centre, the exact size of one portrait
+   frame, so the two halves can ride in on top of the two portraits as
+   those travel in to meet each other.
 
-   Everything here is written as the *end* of the split - the frame gone,
-   the portraits standing on their own - because that is what a
-   script-less or reduced-motion visitor should be handed. The engine sets
-   the start (lib/about-motion.ts) and the frame is only ever visible
-   while it is running. */
+   Everything here is written as the *start* of the join - the pair frame
+   not yet up, the two portraits standing apart with their write-ups
+   beside them - because that is also the state a script-less or
+   reduced-motion visitor is left in, and two founders introduced
+   separately is the more useful thing to be handed. The frame is brought
+   up by the timeline (lib/about-motion.ts) and is only ever visible
+   while that is running. */
 .founders__duo{
-  position:absolute; left:50%; top:0; z-index:3;
-  width:clamp(280px,24vw,400px); aspect-ratio:4/5;
-  transform:translateX(-50%);
+  /* Centred on margins rather than translateX(-50%), because the tilt
+     (data-tilt / initTilt in lib/motion.ts) writes the transform property
+     on this element every frame - a centring transform here would be the
+     first thing it overwrote. */
+  position:absolute; left:0; right:0; top:0; z-index:3;
+  width:clamp(280px,24vw,400px); margin-inline:auto; aspect-ratio:4/5;
+  /* the frame itself stays inert - the two halves inside it take the
+     pointer instead (see below), so nothing outside the picture is
+     catching hovers on its behalf */
   pointer-events:none;
   visibility:hidden; opacity:0;
+  transition:box-shadow .8s var(--ease);
+  /* deliberately NOT preserve-3d, which is where this differs from a
+     WHAT WE DO card: with the default flat treatment the whole subtree is
+     rasterised once and then transformed, so the two halves cannot drift
+     apart under a rotation however small the angle. The card can afford
+     preserve-3d because it wants its own copy standing off the surface;
+     here everything is one plane by definition. */
+  transform-style:flat;
 }
 /* Two whole copies of the photo, each clipped to its own side. A clip-path
    travels with the element it is set on, so a half stays exactly the half
@@ -238,9 +260,21 @@
 .founders__half{
   position:absolute; inset:0; overflow:hidden;
   border:1px solid var(--line); background:var(--panel);
+  /* Hit-testing respects clip-path, so each half only takes the pointer
+     over the side of the photograph it actually draws - which is what
+     makes hovering one founder in the joined shot possible at all. The
+     frame is visibility:hidden until the join brings it up, and hidden
+     elements take no pointer events, so this needs no state of its own. */
+  pointer-events:auto;
 }
-.founders__half--l{ clip-path:inset(0 50% 0 0); }
-.founders__half--r{ clip-path:inset(0 0 0 50%); }
+/* Each half is clipped a hair past the middle so the two overlap rather
+   than abut. Cut at exactly 50% they meet on a boundary that lands
+   between device pixels at most widths, and the panel behind shows
+   through as a pale hairline down the join. The overlap is invisible -
+   both halves are the same photograph, so the strip they share is
+   identical in each. */
+.founders__half--l{ clip-path:inset(0 calc(50% - 1px) 0 0); }
+.founders__half--r{ clip-path:inset(0 0 0 calc(50% - 1px)); }
 .founders__half img{
   position:absolute; inset:0; width:100%; height:100%;
   object-fit:cover;
@@ -251,6 +285,63 @@
   /* the same grade the portraits sit at, so the dissolve from one to the
      other is a change of picture and not a change of treatment */
   filter:grayscale(1) contrast(1.06) brightness(.92);
+  transition:filter .7s var(--ease);
+}
+/* Hovering either side of the joined shot brings the whole photograph
+   back into colour. It used to light only the half under the pointer,
+   which was the right gesture while the two portraits stand apart but the
+   wrong one here: once they have met this is one picture of two people,
+   and half a photograph in colour reads as a rendering fault rather than
+   as a founder being picked out. The halves are only ever two elements so
+   the tear can be two x tweens - the hover shouldn't know that.
+
+   The frame is pointer-events:none and the halves are auto, so the only
+   way this rule fires is a pointer actually over the picture; :hover on
+   an ancestor still tracks a hit on a descendant. Colour only, no scale:
+   the portraits can afford a zoom because each is a whole picture in its
+   own frame, but these two share an edge down the middle and scaling
+   either would pull that edge apart. */
+.founders__duo:hover .founders__half img,
+.founders__duo:focus-within .founders__half img{
+  filter:grayscale(0) contrast(1) brightness(1);
+}
+
+/* ---- the joined photograph, and the lift ----
+   One element carrying the whole picture (see AboutFounders in
+   components/AboutSections.tsx), sitting over the two halves at opacity 0
+   until a pointer is on the frame. From that moment the halves are not
+   what is on screen - so the scale and the lean below have no seam to
+   pull open, and the picture behaves like the single photograph it always
+   was. `.is-joined` is set by the timeline once the join has finished
+   (lib/about-motion.ts): nothing here should fire while the two halves
+   are still travelling towards each other. */
+.founders__whole{
+  position:absolute; inset:0; z-index:1;
+  width:100%; height:100%;
+  object-fit:cover; object-position:center 34%;
+  border:1px solid var(--line);
+  opacity:0; pointer-events:none;
+  filter:grayscale(1) contrast(1.06) brightness(.92);
+  transition:opacity .45s var(--ease), filter .7s var(--ease);
+}
+.founders__duo.is-joined:hover .founders__whole,
+.founders__duo.is-joined:focus-within .founders__whole{
+  opacity:1; filter:grayscale(0) contrast(1) brightness(1);
+}
+
+/* The lift. The lean and the push towards the reader are not written here
+   at all - they are the same eased, ticker-driven tilt the WHAT WE DO
+   cards run on (data-tilt on the frame; initTilt in lib/motion.ts), so
+   the picture turns with the cursor and settles rather than snapping
+   between two states, and the travel in z against .founders' perspective
+   is what reads as the zoom. What CSS still owns is the ground under it:
+   a close contact shadow and a long soft one, so the frame lifts off the
+   panel instead of just growing. */
+.founders__duo.is-joined:hover,
+.founders__duo.is-joined:focus-within{
+  box-shadow:
+    0 10px 22px -12px rgba(24,20,14,.34),
+    0 46px 90px -34px rgba(24,20,14,.46);
 }
 /* The photo at rest - name, role and bio live beside it in
    .founder__reveal, always on screen (see below), so the photo no longer
@@ -307,24 +398,17 @@
 }
 .founder--left .founder__reveal{ right:calc(100% + 24px); }
 .founder--right .founder__reveal{ left:calc(100% + 24px); }
+/* No card behind it. This used to be a dark slab with light type, which
+   was a window cut into an off-white panel for no reason beyond having
+   been inherited from the dark theme - and it took a block of overrides
+   to keep its own text legible against itself. On a light section the
+   write-up is just type: it inherits the panel's .is-light colours, so
+   name, role and bio are the same near-black as everything else here and
+   nothing needs a background, a border or a shadow to sit on. */
 .founder__revealIn{
   padding:clamp(24px,2.2vw,32px);
   display:flex; flex-direction:column; justify-content:center; align-items:center;
   text-align:center;
-  background:var(--bg); border:1px solid var(--line);
-  box-shadow:0 30px 70px rgba(0,0,0,.4);
-}
-@media (min-width:861px){
-  /* Explicit dark-theme values, undoing the ambient .is-light remap this
-     panel applies to --cream/--muted/--line: the card's own background
-     stays the dark var(--bg) at this width (--bg isn't one of the
-     properties .is-light touches), so its type has to keep the dark
-     theme's light-on-dark pair rather than the panel's own flipped one -
-     that mismatch was why the text had gone invisible. */
-  .founder__revealIn{
-    --cream:#f1ece1; --muted:rgba(241,236,225,.5); --line:rgba(241,236,225,.1);
-    color:var(--cream);
-  }
 }
 .founder__name{
   font-family:var(--f-display); font-weight:700;
@@ -343,45 +427,107 @@
   /* No off-screen room once the pair stacks to one column - so the panel
      just docks under the photo instead of sitting beside it, and the
      split has nowhere to happen: two frames stacked vertically cannot be
-     a photo torn down the middle, so the pair shot is dropped here rather
-     than played as a tear that does not land. */
+     a photo joined down the middle, so the pair shot is dropped here
+     rather than played as a join that does not land. */
   .founders__duo{ display:none; }
   .founder__reveal{ position:static; width:auto; transform:none; }
-  .founder__revealIn{
-    padding:0; margin-top:16px;
-    background:none; border:none; box-shadow:none;
-  }
+  .founder__revealIn{ padding:0; margin-top:16px; }
 }
 
-/* ---------- 4 · if you ask our people ---------- */
-/* Tightened deliberately: this section is meant to read in one screen, not
-   scroll through, so every gap here is smaller than its siblings' rather
-   than sharing their clamps. */
+/* ---------- 4 · if you ask our people ----------
+   Still built to read in one screen rather than scroll through, which is
+   what keeps the gaps here tighter than its siblings' - but it carries the
+   page's headline now, so it is a section with a top, a middle and a
+   bottom instead of a tag and two paragraphs. */
 .ab-people{
   padding:clamp(56px,8vh,96px) 0; min-height:100svh; display:flex; flex-direction:column; justify-content:center;
 }
-/* Copy column gets the bigger share now - at a near-even split the short
-   two-paragraph statement read as sparse next to a photo filling its
-   entire column edge to edge. */
-.ab-people__top{
-  margin-top:clamp(22px,3vh,36px);
-  display:grid; grid-template-columns:1.2fr 1fr; gap:clamp(28px,3.6vw,56px); align-items:start;
+/* The page's claim about itself, moved here from the intro. Set at the
+   scale that claim deserves - display face, tight tracking, near the top
+   of the section with only the tag above it - and short enough a measure
+   that it breaks into two or three lines rather than running flat across
+   the page. */
+.ab-people__title{
+  margin-top:clamp(16px,2.4vh,28px);
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(32px,5.2vw,76px); line-height:1.02; letter-spacing:-.03em;
+  max-width:17ch; text-wrap:balance;
 }
-/* The section's main copy now that the title has moved above it - what
-   used to be one paragraph behind a small "Why we exist" label is now the
-   statement itself, in two beats with real air between them. */
-.ab-people__copy{ display:flex; flex-direction:column; gap:clamp(28px,4vh,40px); }
-.ab-people__note{
-  max-width:58ch;
-  font-size:clamp(17px,1.6vw,23px); line-height:1.58; color:var(--muted);
+/* The turn in the sentence, in the site's own voice - the same accent
+   italic the home page gives its pitch and its name. It reads as the
+   second half answering the first rather than as one long claim. */
+.ab-people__title em{
+  color:var(--accent); font-weight:400; font-style:italic;
 }
 
-/* The group shot's crop window - no visible frame around it any more,
-   just the clip that lets the photo pan past its own edges (the pan
-   itself lives in lib/about-motion.ts). */
-.filmstrip__win{ position:relative; overflow:hidden; aspect-ratio:16/10; border-radius:12px; }
+/* Photo first and larger, copy second - the reverse of the intro above,
+   which puts its copy left and its artwork right. Two sections running
+   the same way round in a row is what made this one read as filler.
+
+   Top-aligned, not centred. Centring was an answer to the notes hanging
+   off the foot of the photo, but it left both of them floating against
+   the picture with nothing lining up: the first hairline landed somewhere
+   down the middle of the image and the numerals had no edge to answer to.
+   Started at the top, the rule over "01" is exactly the top edge of the
+   photograph, which is the one alignment in the row a reader can actually
+   see. The photo's column is a shade narrower too - the notes need the
+   width more than the picture does, and a slightly smaller shot is easier
+   to sit beside. */
+.ab-people__body{
+  margin-top:clamp(32px,4.6vh,60px);
+  display:grid; grid-template-columns:.96fr 1.04fr;
+  gap:clamp(28px,4vw,64px); align-items:start;
+}
+.ab-people__shot{ margin:0; }
+/* The group shot's crop window - no visible frame around it, just the clip
+   that lets the photo pan past its own edges (the pan itself lives in
+   lib/about-motion.ts). */
+.filmstrip__win{ position:relative; overflow:hidden; aspect-ratio:4/3; border-radius:14px; }
 /* Wider than its window on purpose: that overhang is the pan's travel. */
 .filmstrip__win img{ width:120%; max-width:none; will-change:transform; }
+/* A caption in the same mono the tags and the footer's meta use, split to
+   both edges of the photo - it gives the image a bottom edge to sit on
+   and stops the crop window from floating. */
+.ab-people__cap{
+  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  margin-top:14px; padding-top:12px; border-top:1px solid var(--line);
+  font-family:var(--f-mono); font-size:10px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--muted);
+}
+
+/* Two statements, indexed. The hairline and the numeral above each one
+   are the drivers' device further down the page, which is what makes
+   these read as part of the same argument instead of loose body copy -
+   and it gives the column a structure the eye can count. */
+/* Sized off the height of the picture beside them rather than left at a
+   body-copy default: two statements against a photograph that tall were
+   being out-argued by it. The gap grows with the column for the same
+   reason - it is what keeps the pair reading as two statements rather
+   than one block of text that happens to have a rule through it. */
+.ab-people__notes{
+  display:flex; flex-direction:column;
+  gap:clamp(28px,4.2vh,52px);
+}
+.ab-people__note{
+  /* no measure cap: the column is already narrow enough to keep the line
+     length readable, and a 46ch ceiling on top of it was ending every
+     line well short of the right edge and leaving a band of empty page */
+  border-top:1px solid var(--line);
+  padding-top:clamp(16px,2vh,24px);
+  font-size:clamp(17px,1.52vw,23px); line-height:1.55; color:var(--muted);
+}
+/* the numeral sits on the hairline, so it is the first thing level with
+   the top edge of the photograph */
+.ab-people__idx{
+  display:block; margin-bottom:12px;
+  font-family:var(--f-mono); font-style:normal;
+  font-size:11px; letter-spacing:.24em; color:var(--accent);
+}
+
+@media (max-width:860px){
+  .ab-people__body{ grid-template-columns:1fr; align-items:start; }
+  .ab-people__title{ max-width:none; }
+}
 
 /* ---------- 5 · what drives us (where the page turns light) ----------
    The panel's own top edge is the whole transition now, so this section
@@ -443,63 +589,158 @@
 .ab-drives__art img{ height:auto; will-change:transform; }
 
 /* ---------- 6 · the space ---------- */
-/* The last and lightest card in the stack: plain white, so the office grid
+/* The last and lightest card in the stack: plain white, so the office
    reads as photographs on paper and the page finishes as far from the
-   opener's black as it started from white. */
-.ab-space{ position:relative; padding:clamp(96px,15vh,170px) 0 clamp(90px,14vh,160px); }
+   opener's black as it started from white.
+
+   And it holds to exactly one screen. Title, copy, frame, caption and
+   rail are all meant to be taken in at once - the point of showing one
+   photograph at a time is undone if you have to scroll to find out how
+   many there are. That constraint is what sizes the frame: see --stage-h
+   below, which budgets the frame off the viewport height rather than
+   letting the column width decide how tall it comes out. */
+.ab-space{
+  position:relative;
+  min-height:100svh; display:flex; flex-direction:column; justify-content:center;
+  padding:clamp(44px,6.5vh,84px) 0;
+}
 .ab-space__title{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px,4.8vw,66px); line-height:1.0; letter-spacing:-.02em; text-transform:uppercase;
+  font-size:clamp(28px,4.2vw,58px); line-height:1.0; letter-spacing:-.02em; text-transform:uppercase;
 }
 .ab-space__copy{
-  margin-top:26px; max-width:52ch;
-  font-size:clamp(15px,1.35vw,21px); line-height:1.62; color:var(--muted);
+  margin-top:clamp(14px,2vh,24px); max-width:52ch;
+  font-size:clamp(14px,1.15vw,18px); line-height:1.58; color:var(--muted);
 }
-/* A jigsaw of eight unequal panels rather than a repeating grid - the
-   reference is a flat mosaic (a puzzle of rectangles, not tilted photos),
-   so this is built as eight named grid-areas of very different shapes
-   instead of a uniform cell size. Two stacked squares on the left, a tall
-   strip beside them, a wide strip up top, one big panel carrying most of
-   the middle, two stacked panels on the right, and a wide strip closing
-   the bottom-left corner. */
-.spacegrid{
-  margin-top:clamp(44px,7vh,84px);
-  display:grid;
-  grid-template-columns:1.3fr 1fr 2.1fr 1.75fr;
-  grid-template-rows:1fr 1.55fr 1.05fr;
-  grid-template-areas:
-    "a c d f"
-    "b c e h"
-    "g g e h";
-  aspect-ratio:4/3;
-  gap:4px;
+/* ---- the stage ----
+   One frame, ten photographs, a rail. This was a jigsaw of eight unequal
+   tiles: it showed the whole floor at once, and at mosaic size no single
+   shot was large enough to be worth the space it took. The frame here
+   never moves - only the picture inside it does - which is what makes the
+   section read as a projection rather than a gallery, and it is the one
+   arrangement that treats every photo identically no matter what shape
+   the originals turn out to be. Markup and state in
+   components/AboutStage.tsx. */
+/* --stage-h is the height budget the frame is allowed, and the width is
+   derived back out of it rather than the other way round: a 16:9 box
+   given the full column width comes out over half a wide screen tall, and
+   the rail then lands below the fold. Capping by height and letting
+   min() fall back to 100% means the frame is as large as the screen can
+   actually show, at every viewport, without the section ever needing to
+   scroll. The cap sits on .stage itself so the frame, the caption line
+   and the rail all share one width and line up on both edges. */
+.stage{
+  --stage-h:clamp(200px, 42svh, 560px);
+  width:min(100%, calc(var(--stage-h) * 16 / 9));
+  margin:clamp(20px,3vh,40px) auto 0;
 }
-.spacegrid__tile:nth-child(1){ grid-area:a; }
-.spacegrid__tile:nth-child(2){ grid-area:b; }
-.spacegrid__tile:nth-child(3){ grid-area:c; }
-.spacegrid__tile:nth-child(4){ grid-area:d; }
-.spacegrid__tile:nth-child(5){ grid-area:e; }
-.spacegrid__tile:nth-child(6){ grid-area:f; }
-.spacegrid__tile:nth-child(7){ grid-area:g; }
-.spacegrid__tile:nth-child(8){ grid-area:h; }
-/* The inner wrapper exists so hover's scale/brightness lives on an element
-   GSAP never touches - the figure carries [data-clip], and lib/motion.ts
-   writes its own inline transform for that entrance wipe, which would
-   silently overwrite (not combine with) a transform set here. */
-.spacegrid__tile{ position:relative; }
-.spacegrid__inner{
-  position:absolute; inset:0; overflow:hidden; background:var(--panel);
-  border:1px solid var(--line);
-  transition:transform .55s var(--ease);
+
+/* 16:9 and fixed, so the layout below it never shifts as the picture
+   changes - and so the eventual landscape originals land in a frame cut
+   to their own shape rather than being cropped again. */
+.stage__frame{
+  position:relative; overflow:hidden;
+  aspect-ratio:16/9; border-radius:14px;
+  background:var(--panel); border:1px solid var(--line);
 }
-.spacegrid__tile:hover{ z-index:4; }
-.spacegrid__tile:hover .spacegrid__inner{ transform:scale(1.045); }
-.spacegrid__tile img{
+/* Every frame is mounted and stacked; the active one is simply the one at
+   full opacity. A crossfade between two decoded images is instant, where
+   swapping a single src would blank the frame for as long as the next
+   file takes to arrive. */
+.stage__frame img{
   position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
-  filter:grayscale(.55) contrast(1.05) brightness(.9);
-  transition:filter .6s var(--ease), transform .8s var(--ease);
+  opacity:0; transition:opacity .55s var(--ease);
 }
-.spacegrid__tile:hover img{ filter:grayscale(0) contrast(1) brightness(1); transform:scale(1.06); }
+.stage__frame img.is-active{ opacity:1; }
+
+/* The hold, running out. Sat inside the frame on its bottom edge, above
+   the vignette so it is never dimmed by it. React replaces this node on
+   every change of frame (it is keyed on the index), which restarts the
+   animation from zero - so a manual pick visibly snaps the bar back to
+   empty rather than letting it finish the run it was already on. That is
+   the same render that starts the new timeout, so the bar and the clock
+   are started together and cannot drift.
+
+   transform, not width: a scaled hairline is composited, where animating
+   width relayouts the frame sixty times a second for six seconds. */
+.stage__prog{
+  position:absolute; left:0; right:0; bottom:0; z-index:2;
+  height:2px; background:var(--accent); pointer-events:none;
+  transform-origin:left; transform:scaleX(0);
+  animation:stageProg linear both;   /* duration is set inline, from DWELL_MS */
+}
+@keyframes stageProg{ from{ transform:scaleX(0) } to{ transform:scaleX(1) } }
+
+/* The one cinematic gesture: a soft darkening at the edges of the frame,
+   sat over the photograph rather than baked into it, so it holds however
+   the shot inside is exposed. No vignette on the thumbnails - at that
+   size it would just read as smudged corners. */
+.stage__frame::after{
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:radial-gradient(ellipse at center,
+    rgba(0,0,0,0) 52%, rgba(0,0,0,.10) 80%, rgba(0,0,0,.22) 100%);
+}
+
+/* Caption and counter at the two ends of one hairline, which is the
+   device .ab-people__cap already uses under the group shot - the two
+   sections then read as one page rather than two treatments. */
+.stage__meta{
+  display:flex; align-items:baseline; justify-content:space-between; gap:20px;
+  margin-top:12px; padding-top:10px; border-top:1px solid var(--line);
+  font-family:var(--f-mono); font-size:11px; letter-spacing:.18em;
+  text-transform:uppercase;
+}
+/* The animation is on the inner span, not the <p>: the <p> is the stable
+   element and the span is the one React replaces on every change (keyed
+   on the index), and only a fresh node restarts a CSS animation. Put it
+   on the <p> and the fade would play once, on first paint, and never
+   again. inline-block so the translate has something to move. */
+.stage__cap{ color:var(--cream); }
+.stage__cap span{ display:inline-block; animation:stageCap .5s var(--ease) both; }
+@keyframes stageCap{ from{ opacity:0; transform:translateY(4px) } to{ opacity:1; transform:none } }
+.stage__idx{ color:var(--muted); white-space:nowrap; }
+.stage__idx b{ color:var(--accent); font-weight:inherit; }
+.stage__idx i{ font-style:normal; margin:0 .4em; opacity:.5; }
+
+/* The rail is the entire navigation, and it is deliberately readable at a
+   glance: ten equal cells, so you can see how much there is without any
+   one of them being large enough to give the shot away. Equal columns
+   rather than a scroller - the whole point is that the count is visible. */
+.stage__rail{
+  margin-top:clamp(10px,1.4vh,16px);
+  display:grid; grid-template-columns:repeat(10,1fr); gap:6px;
+}
+.stage__thumb{
+  position:relative; overflow:hidden; display:block; padding:0;
+  aspect-ratio:16/9; border-radius:5px; cursor:pointer;
+  background:var(--panel); border:1px solid var(--line);
+  transition:border-color .4s var(--ease), transform .4s var(--ease);
+}
+.stage__thumb img{
+  width:100%; height:100%; object-fit:cover; display:block;
+  /* the unselected frames are held back rather than hidden: greyed and
+     dimmed, they read as the rest of the roll without competing with the
+     one that is actually being shown */
+  filter:grayscale(1) brightness(.78);
+  transition:filter .45s var(--ease);
+}
+.stage__thumb:hover{ transform:translateY(-2px); }
+.stage__thumb:hover img{ filter:grayscale(.2) brightness(.95); }
+.stage__thumb.is-active{ border-color:var(--accent); }
+.stage__thumb.is-active img{ filter:none; }
+.stage__thumb:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+/* The auto-advance is off entirely under reduced motion (AboutStage.tsx
+   folds it into the same `paused` flag as hover and off-screen), and the
+   progress hairline is not rendered at all - there is no hold left for it
+   to report. What is left here is the crossfade and the caption's lift,
+   which have nothing to run against once the frame only changes when you
+   ask it to. */
+@media (prefers-reduced-motion:reduce){
+  .stage__frame img,
+  .stage__cap span{ transition:none; animation:none; }
+  .stage__thumb:hover{ transform:none; }
+}
 
 /* ---------- the way onward ---------- */
 .ab-end{
@@ -519,14 +760,26 @@
   .abh__orb{ opacity:.6; }
   .ab-intro__line{ max-width:none; }
   .founders{ grid-template-columns:1fr; gap:52px; }
-  .ab-people__top{ grid-template-columns:1fr; }
   .drivers{ grid-template-columns:1fr; }
   .ab-drives{ padding-top:clamp(96px,15vh,150px); }
-  .spacegrid{
-    grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(4,1fr);
-    grid-template-areas:none;
-    aspect-ratio:4/5.4; gap:10px;
-  }
-  .spacegrid__tile{ grid-area:auto !important; }
+  /* The one-screen lock comes off here. On a phone the title, the copy
+     and a 16:9 frame cannot all be worth looking at inside 100svh -
+     something has to give, and forcing the fit would shrink the
+     photograph to the point where showing one at a time stops meaning
+     anything. So the section goes back to its own height and scrolls
+     normally; the desktop layout, where the constraint was the whole
+     point, is untouched. */
+  .ab-space{ min-height:0; display:block; padding:clamp(72px,11vh,120px) 0; }
+  /* width, not the --stage-h budget: this rule comes later in the file at
+     equal specificity, so it simply wins, and the height cap stops
+     mattering the moment the frame is allowed the full column. */
+  .stage{ width:100%; }
+  /* Ten cells across a phone leaves each thumbnail a few pixels wide, so
+     the rail wraps to two rows of five rather than shrinking. The frame
+     itself is untouched - it is the same 16:9 at every width, which is
+     the whole reason this layout replaced a mosaic that had to be
+     re-authored for narrow screens. */
+  .stage__rail{ grid-template-columns:repeat(5,1fr); gap:5px; }
+  .stage__meta{ font-size:10px; letter-spacing:.14em; }
   .ab-open__cue{ display:none; }
 }

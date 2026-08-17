@@ -68,12 +68,21 @@ const TUNE = {
   alphaHot: 0.82,        // ...and while it is being pushed around
 
   /* ---- colour + light ----
-     Cream off the page palette, not white. The mark is lit by the room
-     it sits in: a soft key from the upper left front, a little fall-off
-     with depth, and no grain that emits anything of its own. */
+     Two materials, one axis. `tone` is the mark's own cream off the page
+     palette and it is what the base is made of - the bottom of a bulb is
+     metal and metal takes the colour of the room it is in. `toneCore` is
+     the light *in* the glass, and how far a grain travels from one to the
+     other is FORM.tint in lib/particle-cloud.ts: the base sits at zero
+     and stays cream, the envelope carries a little of it, the ball inside
+     is all of it. Which is what a lit bulb looks like - the colour is in
+     the glass and the fitting underneath it is not.
+
+     Cool, not saturated: at full strength this lands on the core, which
+     is a fifth of the population seen through a shell, so a true blue
+     here reads as neon by the time it is on screen. */
   tone: "#efe9dd",
-  toneCore: "#cdeedd",   // the inner light, cream carrying the site's green
-  toneHot: "#fdf9ef",    // where the hand has just been
+  toneCore: "#a6c8ff",   // the inner light - soft, cold, barely off white
+  toneHot: "#eff4ff",    // where the hand has just been
   light: [-0.38, 0.52, 0.76] as const,
   keyFloor: 0.66,        // brightness of a grain facing fully away from the key
   depthDim: 0.6,         // brightness of the rearmost grains

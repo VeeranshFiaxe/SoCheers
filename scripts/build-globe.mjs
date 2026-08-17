@@ -41,11 +41,26 @@ const R = 100;
    locator map, not dead in the middle of its own planet. */
 const CENTRE = [79, 22];
 
+/* How close the camera is. At 1 the disc is a full hemisphere, which is a
+   planet with India as one detail on it; the subcontinent came out about a
+   thumbnail wide and the whole thing read as far away. Scaling the
+   projection past the sphere's own radius pulls the viewer in - the disc
+   still draws at r=R, it just holds a smaller cap of the world.
+   1.85 is India filling most of the face with its neighbours still around
+   it for context, which is what makes it read as a globe rather than a
+   map of one country. */
+const ZOOM = 1.85;
+
+/* Whatever falls outside the disc is clipped away by the sphere anyway, so
+   there is no reason to project it and ship it in the path string. The cap
+   the disc can actually show is asin(1/ZOOM) from the centre. */
+const CLIP = (Math.asin(1 / ZOOM) * 180) / Math.PI;
+
 const projection = geoOrthographic()
-  .scale(R)
+  .scale(R * ZOOM)
   .translate([0, 0])
   .rotate([-CENTRE[0], -CENTRE[1]])
-  .clipAngle(90);              // back of the globe is not drawn at all
+  .clipAngle(CLIP);            // everything past the disc's edge, dropped
 
 const path = geoPath(projection);
 
@@ -108,8 +123,9 @@ const ts = `/* ============================================================
    GENERATED - do not edit by hand. Run \`node scripts/build-globe.mjs\`
    to rebuild (d3-geo + Natural Earth 50m, both devDependencies).
 
-   Orthographic, radius ${R}, centred on ${CENTRE[0]}E ${CENTRE[1]}N, back
-   face clipped. Every path below is in the same coordinate space, so the
+   Orthographic, disc radius ${R}, projected at ${ZOOM}x that so the view
+   sits in close on India, centred on ${CENTRE[0]}E ${CENTRE[1]}N and
+   clipped ${CLIP.toFixed(1)}° out - the edge of what the disc can show. Every path below is in the same coordinate space, so the
    sphere is simply a circle of r=${R} at the origin and the pin needs no
    offset of its own.
    ============================================================ */

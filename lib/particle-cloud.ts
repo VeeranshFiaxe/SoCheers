@@ -46,6 +46,17 @@ export const FORM = {
      base is small on screen but wants to read solid, so it gets more
      grains per square unit than anything else. */
   mix: { shell: 0.58, bars: 0.2, core: 0.18 },
+  /* How far each part of the mark travels from the cream (TUNE.tone) to
+     the light in the glass (TUNE.toneCore), both in lib/particle-logo.ts.
+     This is the whole of "the bulb is coloured and its base is not": the
+     bars are absent from this list because they sit at zero, which is the
+     cream every other piece of the site is drawn in.
+
+     The shell is deliberately nowhere near the top of the range. Grains
+     pile up several deep through the limb, so a shell tinted as hard as
+     the core would draw a saturated ring round the silhouette and the
+     colour would stop reading as light held inside glass. */
+  tint: { shell: 0.4, core: 1, stray: 0.28 },
   grain: 1.9,          // world-space diameter of a middling grain
   spring: 7.6,         // 1/s^2 - pull toward home per unit of displacement
   springSpread: 0.5,   // +/- share of that, per grain, so nobody arrives in step
@@ -172,7 +183,7 @@ export function buildCloud(count: number): Cloud {
   for (let k = 0; k < nShell; k++) {
     const [dx, dy, dz] = shellDir();
     const r = GLASS.r + Math.max(-1, Math.min(1, bell() * 0.17)) * GLASS.t;
-    put(dx * r, GLASS.y + dy * r, dz * r, dx, dy, dz, size(0.78, 1.25), 0, 1, 1);
+    put(dx * r, GLASS.y + dy * r, dz * r, dx, dy, dz, size(0.78, 1.25), FORM.tint.shell, 1, 1);
   }
 
   /* ---------------------------------------------------------
@@ -235,7 +246,7 @@ export function buildCloud(count: number): Cloud {
     put(
       CORE.x + dx * r, CORE.y + u * r, CORE.z + dz * r,
       dx, u, dz,
-      size(0.85, 1.35), 0.85, 0.6, 0.9,
+      size(0.85, 1.35), FORM.tint.core, 0.6, 0.9,
     );
   }
 
@@ -255,7 +266,7 @@ export function buildCloud(count: number): Cloud {
     put(
       dx * r, GLASS.y + dy * r, dz * r,
       dx, dy, dz,
-      size(0.5, 0.95), 0, 0.6 * (1 - t * 0.7), 0.6,
+      size(0.5, 0.95), FORM.tint.stray, 0.6 * (1 - t * 0.7), 0.6,
     );
   }
 

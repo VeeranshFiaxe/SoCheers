@@ -70,15 +70,20 @@ export default function ParticleLogo() {
         preserveAspectRatio="xMidYMid meet"
         focusable="false"
       >
+        {/* The glass and the light in it carry the colour; the three bars
+            of the base do not, because they are the metal. Which is the
+            same division the particles make - see FORM.tint in
+            lib/particle-cloud.ts - so the crossfade does not change the
+            colour of anything halfway through. */}
         <circle
+          className="plogo__core"
           cx={MARK.blob.cx}
           cy={MARK.blob.cy}
           r={MARK.blob.r * 0.86}
-          fill="currentColor"
           opacity="0.22"
         />
         <g fill="none" stroke="currentColor" strokeLinecap="round">
-          <path d={RING} strokeWidth={MARK.stroke} />
+          <path className="plogo__glass" d={RING} strokeWidth={MARK.stroke} />
           {BARS.map((d) => <path key={d} d={d} strokeWidth={BAR_STROKE} />)}
         </g>
       </svg>

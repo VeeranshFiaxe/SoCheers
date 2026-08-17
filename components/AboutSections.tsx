@@ -1,5 +1,6 @@
 import AboutBulbs from "./AboutBulbs";
 import AboutSplash from "./AboutSplash";
+import AboutStage from "./AboutStage";
 import {
   ABOUT_IMG, ABOUT_INTRO, BELIEF, DRIVERS,
   FOUNDERS, SPACE_COPY, SPACE_SHOTS, WHY_WE_EXIST,
@@ -19,13 +20,16 @@ import {
    different, the behaviour is the site's. */
 export function AboutIntro() {
   return (
-    <section className="ab-panel ab-intro" data-sec="1" data-panel>
+    <section className="ab-panel ab-intro" data-sec="1">
       <div className="wrap ab-intro__grid">
         <div className="ab-intro__copy">
-          <h2 className="ab-intro__title" data-split>
-            An agency that leads, for those who lead.
-          </h2>
-          {/* Two separate split roots, not one paragraph with a nested
+          {/* The headline that used to open this section now opens the
+              people section instead - it is a claim about the company, and
+              it lands harder over the group shot than over a list of job
+              titles. What is left here is the list and its payoff, which
+              were always the pair.
+
+              Two separate split roots, not one paragraph with a nested
               inline payoff: SplitText clones a nested display:block tag
               onto every visual line it wraps to, so a margin set on the
               old inline <em> was duplicating itself between the green
@@ -55,26 +59,30 @@ export function AboutIntro() {
 
 /* 3 · the two of them, arriving as one.
 
-   The section opens on the single photo of the pair - and then tears it
-   down the middle as you keep scrolling: the two halves draw apart, each
-   one dissolving into that founder's own portrait as it goes, and the
-   write-ups slide in from the outer edges behind them. Which half becomes
-   which founder is not a decision the code makes - they are standing in
-   that order in the photograph (see ABOUT_IMG.foundersDuo).
+   The section opens on the two of them apart, one portrait each - and
+   puts them together as you keep scrolling: the two frames travel in to
+   meet in the middle, each one dissolving into its half of the pair shot
+   as it arrives, and the write-ups slide in from the sides to flank the
+   frame they now share. Which founder is which half is not a decision the
+   code makes - they are standing in that order in the photograph (see
+   ABOUT_IMG.foundersDuo).
 
    The halves are two full copies of the same image, each clipped to its
-   own side, rather than one image in a splitting frame: a clip-path
-   travels with the element it is on, so a half stays exactly the half it
-   started as no matter how far it is moved, and neither copy ever has to
-   be re-cropped mid-flight. All of the timing is in lib/about-motion.ts. */
+   own side, rather than one image in a joining frame: a clip-path travels
+   with the element it is on, so a half stays exactly the half it started
+   as no matter how far it is moved, and neither copy ever has to be
+   re-cropped mid-flight. All of the timing is in lib/about-motion.ts. */
 export function AboutFounders() {
   return (
-    <section className="ab-panel ab-founders is-light" id="founders" data-sec="2" data-panel>
+    <section className="ab-panel ab-founders is-light" id="founders" data-sec="2">
       <div className="wrap">
         <span className="tag" data-reveal>BUILT BY TWO</span>
 
         <div className="founders" data-founders>
-          <div className="founders__duo" data-founders-duo aria-hidden="true">
+          {/* data-tilt puts it on the same cursor-led lean the WHAT WE DO
+              cards have (initTilt in lib/motion.ts): ticker-driven, eased,
+              and the push towards the reader is what does the zoom. */}
+          <div className="founders__duo" data-founders-duo data-tilt aria-hidden="true">
             {(["l", "r"] as const).map((side) => (
               <span
                 className={`founders__half founders__half--${side}`}
@@ -84,6 +92,17 @@ export function AboutFounders() {
                 <img src={ABOUT_IMG.foundersDuo} alt="" />
               </span>
             ))}
+
+            {/* The same photograph a third time, whole, laid over the two
+                halves and invisible until the join has landed. The halves
+                exist so the arrival can be two x tweens; once they have
+                met there is nothing left for a seam to do but show, and
+                anything that lifts the picture - the hover's scale and
+                lean - would be the thing to show it. So the hover fades
+                this on top and it is that single element that moves. Same
+                src as the halves, so it is the same decoded image and not
+                a second download. */}
+            <img className="founders__whole" src={ABOUT_IMG.foundersDuo} alt="" />
           </div>
 
           {FOUNDERS.map((f, i) => (
@@ -124,24 +143,50 @@ export function AboutFounders() {
   );
 }
 
-/* 4 · the group shot, panning across its own crop window as you scroll -
-   see [data-film] in lib/about-motion.ts. The copy is the section's main
-   statement now: no more "Why we exist" label, just the two sentences it
-   was labelling, each its own paragraph. */
+/* 4 · who we are, answered.
+
+   The section used to be a tag, two grey paragraphs and a photo beside
+   them - true, and completely flat. It carries the page's claim about
+   itself now, so it is built like one: the headline that opened the intro
+   lands here at full size with its second clause in the accent italic the
+   site uses for its own voice, the group shot goes first and large with
+   the pan still running across it, and the two statements sit under
+   numbered hairlines rather than floating as loose body copy.
+
+   The numerals are indices, not labels - the "Why we exist" heading was
+   dropped on purpose and is not coming back. They are the same device the
+   drivers below use, which is what ties the two sections together. */
 export function AboutPeople() {
   return (
-    <section className="ab-panel ab-people is-light" data-sec="3" data-panel>
+    <section className="ab-panel ab-people is-light" data-sec="3">
       <div className="wrap">
         <span className="tag" data-reveal>IF YOU ASK OUR PEOPLE, WHO WE ARE?</span>
 
-        <div className="ab-people__top">
-          <div className="ab-people__copy">
-            <p className="ab-people__note" data-reveal>{WHY_WE_EXIST}</p>
-            <p className="ab-people__note" data-reveal>{BELIEF}</p>
-          </div>
+        {/* the em stays inline - a nested block tag gets cloned onto every
+            line SplitText wraps to, which is why it carries colour and
+            style but never a margin */}
+        <h2 className="ab-people__title" data-split>
+          An agency that leads, <em>for those who lead.</em>
+        </h2>
 
-          <div className="filmstrip__win" data-film>
-            <img src={ABOUT_IMG.people} alt="The SoCheers team together" data-film-img />
+        <div className="ab-people__body">
+          <figure className="ab-people__shot">
+            <div className="filmstrip__win" data-film>
+              <img src={ABOUT_IMG.people} alt="The SoCheers team together" data-film-img />
+            </div>
+            <figcaption className="ab-people__cap" data-reveal>
+              <span>The team, in one frame</span>
+              <span>Mumbai · Est. 2013</span>
+            </figcaption>
+          </figure>
+
+          <div className="ab-people__notes">
+            {[WHY_WE_EXIST, BELIEF].map((note, i) => (
+              <p className="ab-people__note" data-reveal key={i}>
+                <i className="ab-people__idx">{String(i + 1).padStart(2, "0")}</i>
+                {note}
+              </p>
+            ))}
           </div>
         </div>
       </div>
@@ -149,14 +194,13 @@ export function AboutPeople() {
   );
 }
 
-/* 5 · where the page turns light. Nothing special happens at this join any
-   more: every section is a panel in the stack (see .ab-panel in about.css),
-   each one a shade lighter than the last, and this is simply the step where
-   the ramp crosses over to cream. The old pixel veil was solving a hard
-   black-to-white cut that the stack no longer makes. */
+/* 5 · nothing special happens at this join. Every section past the opener
+   carries the same off-white (see .ab-panel in about.css) and scrolls into
+   the next one plainly - the old pixel veil was solving a hard
+   black-to-white cut that no longer happens here. */
 export function AboutDrives() {
   return (
-    <section className="ab-panel ab-drives is-light" data-sec="4" data-panel>
+    <section className="ab-panel ab-drives is-light" data-sec="4">
       <div className="wrap ab-drives__inner">
         <h2 className="ab-drives__title" data-split>What drives us?</h2>
 
@@ -179,29 +223,27 @@ export function AboutDrives() {
   );
 }
 
-/* 6 · the office - four rooms and the four people shots that stop it being
-   a page of doorways. The room-to-photo mapping is still unconfirmed, so
-   the four names run in the copy and no tile claims one. */
+/* 6 · the office - ten frames, shown one at a time.
+
+   This was a mosaic of eight photos in eight different shapes. It put the
+   whole floor on screen at once, which is both more than the section was
+   asked to reveal and less than any single photograph deserved - at
+   mosaic size no shot is big enough to be worth looking at.
+
+   It is one fixed frame now with a rail of thumbnails under it (see
+   components/AboutStage.tsx, which owns the state and so is the only
+   client component on this page). All four rooms are named in the
+   captions: the signs are legible in the source shots, and the whole
+   point of SPACE_COPY above is the four names, so hedging on them was
+   throwing away the joke. */
 export function AboutSpace() {
   return (
-    <section className="ab-panel ab-space is-light" data-sec="5" data-panel>
+    <section className="ab-panel ab-space is-light" data-sec="5">
       <div className="wrap">
         <h2 className="ab-space__title" data-split>The space.</h2>
         <p className="ab-space__copy" data-reveal>{SPACE_COPY}</p>
 
-        <div className="spacegrid">
-          {SPACE_SHOTS.map((s) => (
-            <figure className="spacegrid__tile" key={s.src} data-clip>
-              <div className="spacegrid__inner">
-                <img
-                  src={s.src}
-                  alt={s.alt}
-                  style={s.pos ? { objectPosition: s.pos } : undefined}
-                />
-              </div>
-            </figure>
-          ))}
-        </div>
+        <AboutStage shots={SPACE_SHOTS} />
       </div>
     </section>
   );

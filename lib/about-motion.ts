@@ -146,23 +146,28 @@ export function initAbout(): () => void {
         });
     }
 
-    /* -------------------------------------------------- the founders split
-       The section arrives as one photograph of the two of them and comes
-       apart as you keep scrolling: the frame tears down the middle, the
-       halves draw out to where each founder will stand, and as they go the
-       two portraits come up underneath them and the write-ups slide in
-       from the outer edges.
+    /* -------------------------------------------------- the founders join
+       The section arrives as two separate portraits, one for each founder,
+       and puts them together as you keep scrolling: the two frames travel
+       in to meet in the middle, the halves of the pair shot come in with
+       them and dissolve up over the top, and once the two of them are one
+       photograph again the write-ups slide in to flank it.
 
-       Scrubbed, not fired: the whole point is that the tear is something
-       the reader is doing with the scroll rather than something that
-       happens at them, and it has to be as reversible as the scroll is.
+       Two people who built the thing together, arriving separately and
+       ending up in the same frame - that is the order the section is
+       actually about, and it is the opposite of the tear this used to
+       play.
+
+       Scrubbed, not fired: the join is something the reader is doing with
+       the scroll rather than something that happens at them, and it has to
+       be as reversible as the scroll is.
 
        One number carries the geometry - `step`, half the distance between
-       the two portrait frames. Each half travels one step out, each frame
-       starts one step in, so the halves land exactly where the portraits
-       are and nothing has to be nudged by eye. Read from offsetLeft, which
-       transforms do not touch, so it stays true no matter where in the
-       tween a refresh lands. */
+       the two portrait frames. Each frame travels one step in, each half
+       starts one step out, so the halves ride exactly on top of the
+       portraits they are replacing and nothing has to be nudged by eye.
+       Read from offsetLeft, which transforms do not touch, so it stays
+       true no matter where in the tween a refresh lands. */
     const foundersMM = gsap.matchMedia();
 
     foundersMM.add("(min-width: 861px)", () => {
@@ -179,43 +184,108 @@ export function initAbout(): () => void {
 
       const step = () => (arts[1].offsetLeft - arts[0].offsetLeft) / 2;
 
-      /* about.css keeps the pair frame hidden - that is the state the page
-         ends in, and the one it has to be in if this never runs. Here it is
-         the state the page *starts* in, so it is turned on by hand and the
-         timeline is what takes it away again. */
-      gsap.set(duo, { autoAlpha: 1 });
+      /* The opening state, written down rather than left to the tweens to
+         imply. Every fromTo below is immediateRender:false, so none of
+         them touches anything until its own moment on the timeline - which
+         is what stops the section from flashing through a later frame of
+         the join while the page is still settling. This is the only thing
+         that paints before the timeline runs, and it is the same picture
+         about.css hands a script-less visitor: the two of them apart, the
+         pair frame not yet up, the write-ups off to the sides. */
+      const cardDir = (el: HTMLElement) => (el.closest(".founder--left") ? -1 : 1);
+      const setStart = () => {
+        gsap.set(arts, { x: 0 });
+        gsap.set(photos, { autoAlpha: 1, scale: 1.06 });
+        gsap.set(halves[0], { x: -step() });
+        gsap.set(halves[1], { x: step() });
+        gsap.set(duo, { autoAlpha: 0 });
+        cards.forEach((el) => gsap.set(el, { autoAlpha: 0, x: 150 * cardDir(el) }));
+      };
+      setStart();
 
+      /* Cued by the scroll, not driven by it. This was scrubbed, and a
+         scrub means the join only ever moves while the wheel is moving and
+         at whatever speed the wheel is moving - so it read as something
+         being dragged into place by hand, and it never finished unless you
+         kept going. It is a piece of choreography with a right speed of
+         its own, so the scroll's only job is to say when: the section pins
+         at full page, this fires once, and it plays all the way through on
+         its own timing whether you keep scrolling, stop, or sit still.
+
+         The founders hold at the foot of this file is what buys it the
+         room: the panel pins for a screen's worth of scroll, so the whole
+         thing plays out with the section standing still.
+
+         Reversed on the way back up rather than left standing, so scrolling
+         out and back in shows it again instead of handing back a section
+         that has already happened. */
       const tl = gsap.timeline({
+        paused: true,
+        /* nothing here writes to the page before its own moment - the
+           opening state above is what the section sits in until then */
+        defaults: { ease: "power2.out", immediateRender: false },
         scrollTrigger: {
-          trigger: section, start: "top 88%", end: "top 16%",
-          scrub: 1, invalidateOnRefresh: true,
+          trigger: section, start: "top top",
+          toggleActions: "play none none reverse",
+          invalidateOnRefresh: true,
+          /* the founders hold pins this same section, and a pin moves the
+             element into a spacer. Refreshing after it means this trigger
+             measures the page the pin has already made, instead of firing
+             off a start position that is about to move under it. */
+          refreshPriority: -1,
         },
       });
 
-      /* 1 · the pair, held. A slow settle out of a slight oversize, so the
-            first third of the window is a photograph being looked at
-            rather than a still frame waiting for its cue. */
-      tl.fromTo(duo, { scale: 1.05 }, { scale: 1, duration: 0.34, ease: "none" }, 0);
+      /* Seconds from here down, not fractions of a scroll window. 1 · a
+            beat on the two of them apart, settling out of a slight
+            oversize, before anything moves. */
+      tl.fromTo(photos, { scale: 1.06 }, { scale: 1, duration: 0.9, ease: "power2.out" }, 0);
 
-      /* 2 · the tear. Halves out, frames in from where the halves were -
-            the two moves are the same distance in opposite directions, so
-            each portrait is arriving exactly as its half leaves. */
-      tl.fromTo(halves[0], { x: 0 }, { x: () => -step(), duration: 0.44, ease: "power2.inOut" }, 0.34);
-      tl.fromTo(halves[1], { x: 0 }, { x: () => step(), duration: 0.44, ease: "power2.inOut" }, 0.34);
-      tl.fromTo(arts[0], { x: () => step() }, { x: 0, duration: 0.44, ease: "power2.inOut" }, 0.34);
-      tl.fromTo(arts[1], { x: () => -step() }, { x: 0, duration: 0.44, ease: "power2.inOut" }, 0.34);
+      /* 2 · the join. Frames in to the middle, halves in from where those
+            frames started - the two moves are the same distance in
+            opposite directions, so each half is riding on the portrait it
+            is about to replace the whole way in. The long inOut is the
+            whole character of it: slow to leave, slow to land, quick only
+            in the middle. */
+      tl.fromTo(arts[0], { x: 0 }, { x: () => step(), duration: 1.5, ease: "power2.inOut" }, 0.5);
+      tl.fromTo(arts[1], { x: 0 }, { x: () => -step(), duration: 1.5, ease: "power2.inOut" }, 0.5);
+      tl.fromTo(halves[0], { x: () => -step() }, { x: 0, duration: 1.5, ease: "power2.inOut" }, 0.5);
+      tl.fromTo(halves[1], { x: () => step() }, { x: 0, duration: 1.5, ease: "power2.inOut" }, 0.5);
 
-      tl.fromTo(photos, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, ease: "power1.out" }, 0.44);
-      tl.to(duo, { autoAlpha: 0, duration: 0.28, ease: "power1.in" }, 0.46);
+      /* the swap, under way while they are still travelling: the pair shot
+         comes up over the portraits (it sits above them - see the z-index
+         on .founders__duo) and the portraits go out from under it, so the
+         two of them fuse into one frame rather than one picture cutting to
+         another once the move has landed. */
+      tl.fromTo(duo, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.7, ease: "power1.out" }, 1.15);
+      tl.to(photos, { autoAlpha: 0, duration: 0.6, ease: "power1.in" }, 1.3);
 
-      /* 3 · and the write-ups, each from the side its founder stands on
-            (see .founder--left/--right in about.css). */
+      /* 3 · and the write-ups, each from the side its founder stands on,
+            flanking the frame the pair now share (see .founder--left/
+            --right in about.css - the panels travel in with their own
+            article, so they arrive already beside the joined photo).
+            Both on the same cue, not stepped: the stagger was small enough
+            to read as the second one lagging rather than as two people
+            being introduced in turn, and the section's whole point is that
+            they arrive together. */
       cards.forEach((el) => {
-        const dir = el.closest(".founder--left") ? -1 : 1;
         tl.fromTo(el,
-          { autoAlpha: 0, x: 120 * dir },
-          { autoAlpha: 1, x: 0, duration: 0.34, ease: "power2.out" }, 0.7);
+          { autoAlpha: 0, x: 150 * cardDir(el) },
+          { autoAlpha: 1, x: 0, duration: 0.9, ease: "power3.out" }, 2.05);
       });
+
+      /* The hover on the pair shot - the whole picture coming back into
+         colour and lifting off the panel (see .founders__duo.is-joined in
+         about.css) - only makes sense once they are one photograph. While
+         the halves are still travelling, this is off: a lift applied to
+         two frames mid-flight would be the one moment the join could be
+         seen for what it is. Read off progress rather than set on
+         complete, so scrolling back up takes it away again. */
+      const markJoined = () => duo.classList.toggle("is-joined", tl.progress() === 1);
+      tl.eventCallback("onUpdate", markJoined);
+      tl.eventCallback("onComplete", markJoined);
+
+      return () => duo.classList.remove("is-joined");
     });
 
     /* Stacked to one column there is no middle for a photo to tear along,
@@ -251,42 +321,70 @@ export function initAbout(): () => void {
       });
     });
 
-    /* -------------------------------------------------- the panel stack
-       Each panel pins in place - the section itself stops moving the
-       moment its top hits the viewport top - while pinSpacing:false keeps
-       its layout space from being reserved, so the next panel (already
-       sitting right below it in the document) is dragged up through the
-       viewport for the whole pin window instead of only meeting it at the
-       edge. That's what actually reads as "the next section slides up and
-       stacks on top" rather than the page just changing colour underfoot;
-       the rounded top edge and shadow from about.css are what sell the
-       covering card as a separate plane once it arrives.
+    /* -------------------------------------------------- the founders card
+       Two pins, one after the other, and they are not the same kind.
 
-       The pinned card's own contents drift up a little, shrink a little
-       and dim over that same window, so it reads as sinking away under
-       the new one rather than just sitting there inert while it's covered. */
-    gsap.utils.toArray<HTMLElement>("[data-panel]").forEach((panel, i, all) => {
-      // the last card has nothing after it to cover it, so it never pins
-      if (i === all.length - 1) return;
+       1 · the climb. The opener is pinned from the moment its foot reaches
+       the foot of the screen, and pinSpacing:false means its layout space
+       is not held - so the founders panel, sitting right under it in the
+       document, is drawn up through the viewport instead of only meeting
+       it at the edge. That travel over a section that has stopped moving
+       is the stack: a card rising over the page, its curved top edge and
+       shadow (see .ab-founders in about.css) selling it as a plane above
+       rather than a colour change underneath. The opener's own contents
+       drift up, shrink and dim as it goes, so it recedes under the card
+       instead of sitting there inert while it is covered.
 
-      const inner = panel.querySelector<HTMLElement>(":scope > .wrap");
+       Every panel used to do this to the one before it. Only this join
+       does now - which is the difference between a page with a moment in
+       it and a page made of the same trick five times.
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: panel,
-          start: "top top",
-          end: () => "+=" + window.innerHeight,
-          pin: true,
-          pinSpacing: false,
-          scrub: 0.6,
-          invalidateOnRefresh: true,
-        },
-      });
-      if (inner) {
-        tl.fromTo(inner,
-          { y: 0, scale: 1, autoAlpha: 1 },
-          { y: -64, scale: 0.94, autoAlpha: 0.35, ease: "none" }, 0);
+       2 · the hold, once the card has landed. The join inside the founders
+       panel is a fixed three seconds of choreography (see the founders
+       block above) and it needs the section to stand still while it plays.
+       pinSpacing stays ON for this one: the space is reserved, so nothing
+       below is pulled up over the top of it. The panel stops, the join
+       plays, and then the page scrolls on into the next section plainly.
+
+       Both are skipped under 861px, where the join does not run and the
+       panels are stacked to one column anyway. */
+    const holdMM = gsap.matchMedia();
+    holdMM.add("(min-width: 861px)", () => {
+      const opener = document.querySelector<HTMLElement>(".ab-intro");
+      const panel = document.querySelector<HTMLElement>(".ab-founders");
+      if (!panel) return;
+
+      if (opener) {
+        const climb = gsap.timeline({
+          scrollTrigger: {
+            trigger: opener,
+            /* its foot, not its head: the opener is content-height rather
+               than a fixed screen, so anchoring the climb to the bottom
+               edge is what makes the card start exactly at the fold no
+               matter how tall the copy above it runs */
+            start: "bottom bottom",
+            end: () => "+=" + window.innerHeight,
+            pin: true,
+            pinSpacing: false,
+            scrub: 0.6,
+            invalidateOnRefresh: true,
+          },
+        });
+        const inner = opener.querySelector<HTMLElement>(":scope > .wrap");
+        if (inner) {
+          climb.fromTo(inner,
+            { y: 0, scale: 1, autoAlpha: 1 },
+            { y: -64, scale: 0.94, autoAlpha: 0.35, ease: "none" }, 0);
+        }
       }
+
+      ScrollTrigger.create({
+        trigger: panel,
+        start: "top top",
+        end: () => "+=" + window.innerHeight,
+        pin: true,
+        invalidateOnRefresh: true,
+      });
     });
 
     /* -------------------------------------------------- the crowd

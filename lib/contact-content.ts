@@ -5,8 +5,6 @@
 export const CONTACT_HERO = {
   eyebrow: "Get in touch",
   lines: ["Got a brief?", "Or just want to say hi?"],
-  lede:
-    "Award-winning integrated creative agency. From crafting impactful campaigns to leveraging cutting-edge digital solutions, we push the envelope of possibilities to deliver the extraordinary.",
 } as const;
 
 export const OFFICES = [

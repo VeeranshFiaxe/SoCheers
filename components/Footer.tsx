@@ -207,7 +207,7 @@ function Globe() {
   return (
     <svg
       className="foot__globe-svg"
-      viewBox="-112 -112 224 224"
+      viewBox="-112 -164 224 276"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
       focusable="false"
@@ -268,9 +268,46 @@ function Globe() {
         strokeWidth="1.4"
       />
 
-      {/* the pin. The ring behind it is pushed outward on a loop by the
-          stylesheet - a location marker that never does anything is
-          indistinguishable from a full stop. */}
+      {/* the signpost. A pole driven into the sphere at GLOBE_PIN and a
+          plank on top of it, hand-lettered the way a stick in the ground
+          is - which is the whole point: this reads as somebody planting a
+          marker, not as a map service dropping one. The plank is tilted a
+          few degrees off level so it looks knocked in rather than placed,
+          and it lives above the rim, which is the headroom the viewBox
+          carries over the sphere (see .foot__globe for how that extra
+          height is taken back out of the row). */}
+      <g className="foot__sign" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+        {/* the pole, base first so the plank draws over its top */}
+        <line x1={GLOBE_PIN.x} y1={GLOBE_PIN.y} x2={GLOBE_PIN.x} y2={-124} strokeWidth="4" />
+        <g transform={`rotate(-5 ${GLOBE_PIN.x} -138)`}>
+          <rect
+            x={GLOBE_PIN.x - 60}
+            y={-154}
+            width="120"
+            height="32"
+            rx="2"
+            fill="var(--bg)"
+            strokeWidth="4"
+          />
+          <text
+            className="foot__sign-text"
+            x={GLOBE_PIN.x}
+            y={-138}
+            fill="currentColor"
+            stroke="none"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="19"
+            letterSpacing="2"
+          >
+            MUMBAI
+          </text>
+        </g>
+      </g>
+
+      {/* the pin at the foot of the pole. The ring behind it is pushed
+          outward on a loop by the stylesheet - a location marker that never
+          does anything is indistinguishable from a full stop. */}
       <circle
         className="foot__ping"
         cx={GLOBE_PIN.x}
@@ -386,11 +423,16 @@ export default function Footer() {
           under the bulb: the room is uncovered, the light dies, the mark
           turns over, and the question is already waiting there. */}
       <div className="foot__ask" data-foot-part>
-        <h2 className="foot__ask-title">Brief us. Or&nbsp;just say hi.</h2>
+        <h2 className="foot__ask-title">Let&rsquo;s make more&nbsp;happen.</h2>
         <ContactModal />
       </div>
 
-      {/* --- the floor of the room -------------------------------------- */}
+      {/* --- the floor of the room --------------------------------------
+          One line, end to end: where we are at one end, how to reach us
+          at the other, and nothing stacked above or below either of them.
+          The big "SoCheers / Making more happen" sign-off that used to
+          sit in the middle of this row is gone - the ask above already
+          says it, and the wordmark is in the legal line below. */}
       <div className="foot__base">
         <div className="foot__where" data-foot-part>
           <span className="foot__globe">
@@ -400,11 +442,6 @@ export default function Footer() {
             <b>Mumbai, India</b>
             <i>19.0760° N · 72.8777° E</i>
           </span>
-        </div>
-
-        <div className="foot__sign" data-foot-part>
-          <span className="foot__sign-name">SoCheers</span>
-          <span className="foot__sign-line">Making more happen</span>
         </div>
 
         {/* The accounts came off the ring when the ask took the space
@@ -435,8 +472,7 @@ export default function Footer() {
       </div>
 
       <div className="foot__legal" data-foot-part>
-        <span>© {new Date().getFullYear()} SoCheers Interactive Pvt. Ltd.</span>
-        <span>An independent, integrated creative agency</span>
+        <span>© {new Date().getFullYear()} SoCheers</span>
       </div>
     </footer>
   );
