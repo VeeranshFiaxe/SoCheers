@@ -22,15 +22,13 @@ export const ABOUT_IMG = {
   crowd: "/assets/about/crowd.jpg",
 } as const;
 
-/* The hero copy. This is the client's own line - it was painted into the
-   first version of the hero artwork - so it moves across as live type
-   rather than something invented to fill the space. Broken into lines here
-   because each one is masked and lifted separately in the entrance. */
+/* The hero copy, and there is almost none of it left. The opener used to
+   set the client's own line ("We turn ideas into impact.") at full size
+   with "Strategy. Creativity. All working together." beneath it; both are
+   out and the film opens the page on its own. What stays is the name in
+   the corner, which is the section's <h1>. */
 export const HERO = {
   eyebrow: "About SoCheers",
-  lines: ["We turn", "ideas into"],
-  accent: "impact.",
-  sub: ["Strategy. Creativity.", "All working together."],
   cta: "Let's build something great",
 } as const;
 

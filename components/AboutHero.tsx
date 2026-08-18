@@ -2,19 +2,15 @@ import { HERO } from "@/lib/about-content";
 
 /* 1 · the opener.
 
-   This used to be the film with a field of eleven blurred colour orbs
-   drifting over it and nothing else - no words at all. Two problems with
-   that: a dozen large-radius CSS blurs repainting every frame is the most
-   expensive thing on the page and it showed on anything but a fast
-   machine, and the graphics were carrying the whole opener on their own
-   while the client's own line ("We turn ideas into impact.") sat unused
-   in lib/about-content.ts.
+   The film, and one label. This carried the client's line ("We turn ideas
+   into impact.") at full size with a sub under it; both are gone, and what
+   is left is the footer row - the page's name bottom left, the scroll cue
+   bottom right, the film between them with nothing written across it.
 
-   So the treatment is inverted. The film is the only image, graded and
-   scrimmed so type can live on it, and what opens the page is the line
-   itself at full size. No blur filters, no per-frame colour field - the
-   only thing that moves is the video, the scroll parallax already on it,
-   and one hairline under the scroll cue. */
+   The name is the <h1>. It is the only heading the section has now, and a
+   page still needs one: it is set as a .tag like every other label on the
+   page rather than as a headline, so it reads as a caption and not as a
+   line of copy. */
 export default function AboutHero() {
   return (
     <section className="ab-open" data-sec="0">
@@ -35,15 +31,7 @@ export default function AboutHero() {
       <span className="ab-open__wash" aria-hidden="true" />
       <span className="ab-open__veil" aria-hidden="true" />
 
-      <div className="wrap ab-open__inner">
-        <span className="tag ab-open__eyebrow" data-reveal>{HERO.eyebrow}</span>
-
-        <h1 className="ab-open__title" data-split>
-          {HERO.lines.join(" ")} <em>{HERO.accent}</em>
-        </h1>
-
-        <p className="ab-open__sub" data-reveal>{HERO.sub.join(" ")}</p>
-      </div>
+      <h1 className="tag ab-open__eyebrow" data-reveal>{HERO.eyebrow}</h1>
 
       <div className="ab-open__cue" aria-hidden="true">
         <span>SCROLL</span>

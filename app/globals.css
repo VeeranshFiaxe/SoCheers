@@ -35,16 +35,17 @@
   --leaf:      #8cc752;
   --tangerine: #f06827;
 
-  /* --font-grotesk comes from next/font/google in app/layout.tsx.
-     The site runs on one face - Space Grotesk - and separates the roles
+  /* the --font-* variables come from next/font/google in app/layout.tsx.
+     The site runs on one face - Inter - and separates the roles
      by weight, not by family: 700 headings, 500 accents, 400 body.
      The role tokens stay, so every rule still reads the token that says
      what the text *is* rather than naming the font. */
-  --f-sans:    var(--font-grotesk), "Space Grotesk", sans-serif;
+  --f-sans:    var(--font-sans), "Inter", sans-serif;
   --f-display: var(--f-sans);
   --f-body:    var(--f-sans);
   --f-mono:    var(--f-sans);
-  --f-playful: var(--f-sans);
+  /* the one element that is not the sans - see app/layout.tsx */
+  --f-playful: var(--font-playful), "Caveat", cursive;
 
   --ease: cubic-bezier(.22,1,.36,1);
   --pad: clamp(20px, 5vw, 84px);
@@ -383,7 +384,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .hero__greet{
   position:absolute; top:20%; left:50%; transform:translate(-50%,-50%) rotate(-3deg);
   z-index:2; pointer-events:none;
-  font-family:var(--f-playful); font-weight:700; font-style:normal;
+  font-family:var(--f-display); font-weight:700; font-style:normal;
   font-size:clamp(22px,2.8vw,40px); color:#bfe3ff; letter-spacing:.01em;
   text-shadow:0 2px 18px rgba(47,160,232,.5);
 }
@@ -571,7 +572,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 }
 .meaning__num{
   flex:none; width:1.6em;
-  font-family:var(--f-playful); font-weight:500; font-size:clamp(20px,1.8vw,26px);
+  font-family:var(--f-mono); font-weight:500; font-size:clamp(20px,1.8vw,26px);
   letter-spacing:.02em; color:var(--accent); opacity:.65;
 }
 .meaning__text{
@@ -626,11 +627,10 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   font-weight:700; color:var(--cream);
   border-top:1px solid var(--line); padding-top:16px;
 }
-/* The name, set exactly as the pitch below it is: same face, same slant,
-   same 400. Space Grotesk ships no italic, so the slant here is the
-   browser's oblique - which is why the weight has to do the separating.
-   Dropping to 400 against the lede's 700 lets the name sit inside the
-   heavier sentence as a quoted thing rather than as part of the claim. */
+/* The name, set exactly as the pitch below it is: same face, same italic,
+   same 400. Dropping to 400 against the lede's 700 lets the name sit
+   inside the heavier sentence as a quoted thing rather than as part of
+   the claim, and at that weight the slant is unmistakable. */
 .who__brand{
   color:var(--accent); font-style:italic; font-weight:400;
 }
@@ -862,23 +862,27 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 /* ============================================================
    7 · AWARDS
    ============================================================ */
-/* Back at full size. The title was cut down when this section carried a
-   catalogue that had to share the screen with it; over a strip of moving
-   type there is nothing to share with, and the line can be the loudest
-   thing on the page again. */
-.awards__title{ font-family:var(--f-display); font-weight:700; font-size:clamp(44px,7.4vw,110px); line-height:1; letter-spacing:-.03em; margin-top:22px; }
+/* No title rule of its own. This ran at clamp(44px,7.4vw,110px) - close to
+   twice .sec__title - from a layout where it was the only thing in the
+   section; against WHO WE ARE, WHAT WE DO and the client wall it read as a
+   different page rather than as the next section. It takes the shared
+   .sec__title now (components/Sections.tsx). The strip below is what makes
+   this section loud; the heading does not have to do it too. */
 
 /* ---- the shows, going past ----
    One row, and typed so it cannot be mistaken for the client wall three
    sections above it. There the names are grey, mid-weight and set small
    with a green star between them; here they are cream caps at twice the
-   weight, each one struck through with a purple marker swipe.
+   weight, each one struck through with a marker swipe.
 
-   The purple is the brand's own #97509f (SoCheers Colors.jpg in the design
-   book, --purple in the tokens at the top of this file) and it is the only
-   place on the page it is used - which is what makes it read as this
-   section's colour rather than as a second accent competing with the
-   green.
+   The swipe is not one colour. The design book prints six solids (SoCheers
+   Colors.jpg - leaf, sky, tangerine, yellow, purple, pink, all six of them
+   tokens at the top of this file) and there are six shows, so the row runs
+   the palette once and hands each name its own. The colour arrives per
+   item as --swipe from components/Sections.tsx; the rules below only say
+   where it goes. This is the one place on the page the full palette is
+   spent, which is what keeps it reading as this section rather than as a
+   second accent competing with the green everywhere else.
 
    The swipe is a background, not a border or a pseudo-element: it can then
    be animated from a line to a full-height highlight on one property,
@@ -898,25 +902,37 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .amarquee__show{
   position:relative; display:inline-flex; align-items:center;
   transition:transform .45s var(--ease);
+  /* the fallback matters: --swipe is set per item in the markup, and a row
+     rendered without it should still be struck through rather than bare */
+  --swipe:var(--purple);
 }
 /* the name */
 .amarquee__show b{
   font-family:var(--f-display); font-weight:700; font-size:clamp(24px,3.4vw,54px);
   line-height:1; letter-spacing:-.02em; text-transform:uppercase; color:var(--cream);
-  /* the swipe: a band of purple sat across the lower third of the line,
-     grown to the full height of it on hover. Two stops of the same colour
-     rather than a solid background so only the size has to move. */
-  background:linear-gradient(var(--purple), var(--purple)) no-repeat 0 78% / 100% 26%;
+  /* the swipe: a band of this show's colour sat across the lower third of
+     the line, grown to the full height of it on hover. Two stops of the
+     same colour rather than a solid background so only the size has to
+     move. */
+  background:linear-gradient(var(--swipe), var(--swipe)) no-repeat 0 78% / 100% 26%;
   transition:background-size .4s var(--ease), background-position .4s var(--ease), color .35s;
   padding:0 .12em;
 }
-.amarquee__show:hover b{ background-size:100% 100%; background-position:0 100%; color:var(--cream); }
+/* Cream held against the purple, but the palette now includes yellow, leaf
+   and sky - cream on those is unreadable once the band is full height. The
+   type flips to the page's own near-black instead, which carries against
+   all six. Not var(--bg): that token is re-pointed under .is-light, and
+   this ink has to stay dark whatever the panel around it does. */
+.amarquee__show:hover b{ background-size:100% 100%; background-position:0 100%; color:#0b0b0c; }
 
-/* what sits between two shows: a purple dot on the baseline of the names,
-   not a star - the client wall already owns the star. */
+/* what sits between two shows: a dot on the baseline of the names, not a
+   star - the client wall already owns the star. It carries the colour of
+   the name it is pointing at, so the palette changes on the beat before
+   the eye reaches the next show. */
 .amarquee__dot{
   width:clamp(6px,.6vw,9px); height:clamp(6px,.6vw,9px); border-radius:50%;
-  background:var(--purple); flex:none; align-self:center;
+  --swipe:var(--purple);
+  background:var(--swipe); flex:none; align-self:center;
 }
 
 @media (max-width:560px){

@@ -23,20 +23,25 @@
 /* Graded down rather than left at full strength: the film is the ground
    the headline stands on now, not the subject, and at native contrast the
    type had to fight it for every line. */
+/* Nearer its own contrast than it was. The grade was pulled this far down
+   because the film was the ground a full-size headline stood on; with the
+   type out of the frame it can be the subject again. */
 .ab-open__media video{
   width:100%; height:100%; object-fit:cover; display:block;
-  filter:saturate(.72) contrast(1.04) brightness(.72);
+  filter:saturate(.88) contrast(1.02) brightness(.88);
 }
 
-/* The wash the type sits on - heaviest at the left edge where the words
-   are, gone by the right third so the film is still a film. */
+/* The wash. This used to be a heavy left-to-right gradient holding up a
+   headline that stood in the middle of the frame; there is no headline
+   now, so it comes from the foot instead - just enough under the two
+   corner labels to keep them legible, and the film is left alone
+   everywhere above them. */
 .ab-open__wash{
   position:absolute; inset:0; z-index:1; pointer-events:none;
-  background:linear-gradient(to right,
-    rgba(6,6,10,.86) 0%,
-    rgba(6,6,10,.66) 32%,
-    rgba(6,6,10,.22) 62%,
-    rgba(6,6,10,.10) 100%);
+  background:linear-gradient(to top,
+    rgba(6,6,10,.72) 0%,
+    rgba(6,6,10,.34) 18%,
+    rgba(6,6,10,0) 42%);
 }
 /* The hand-off downward: a firm, early commit to solid --bg so the art's
    navy is fully gone before the section ends and section 2 picks up on
@@ -51,23 +56,18 @@
 }
 
 /* ---------- the opener's type ----------
-   The client's own line, live rather than painted into artwork. One
-   measure, one accent, nothing else on the plate: the whole point of
-   dropping the colour field was that the words could carry the screen. */
-.ab-open__inner{ position:relative; z-index:2; width:100%; }
-.ab-open__eyebrow{ display:block; color:var(--accent); }
-.ab-open__title{
-  margin-top:clamp(18px,2.4vh,28px);
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(42px,7vw,116px); line-height:.96; letter-spacing:-.035em;
-  max-width:13ch; text-wrap:balance;
-}
-.ab-open__title em{
-  color:var(--accent); font-style:italic; font-weight:400;
-}
-.ab-open__sub{
-  margin-top:clamp(20px,3vh,34px); max-width:34ch;
-  font-size:clamp(15px,1.25vw,20px); line-height:1.62; color:rgba(241,236,225,.72);
+   One label, in the corner. The headline and the sub that used to stand
+   in the middle of this are gone (components/AboutHero.tsx), so there is
+   no measure to set and no stack to space - just the page's name sitting
+   on the same floor line as the scroll cue opposite it.
+
+   Both are pinned to the same bottom offset and to the same --pad the
+   .wrap uses, so the two read as one row across the foot of the film and
+   the name starts exactly where every line of copy further down the page
+   starts. */
+.ab-open__eyebrow{
+  position:absolute; left:var(--pad); bottom:clamp(48px,9vh,104px); z-index:2;
+  display:flex; align-items:center; margin:0;
 }
 
 .ab-open__cue{
@@ -998,14 +998,10 @@
 
 @media (max-width:860px){
   .ab-open{ height:92svh; align-items:flex-end; }
-  /* the type runs the full width of a phone, so the wash has to come from
-     under it rather than from the left */
-  .ab-open__wash{
-    background:linear-gradient(to top,
-      rgba(6,6,10,.9) 0%, rgba(6,6,10,.72) 46%, rgba(6,6,10,.28) 80%, rgba(6,6,10,.12) 100%);
-  }
-  .ab-open__inner{ padding-bottom:clamp(56px,10vh,96px); }
-  .ab-open__title{ max-width:none; }
+  /* The wash override and the .ab-open__inner padding that used to live
+     here were both propping up the headline, which is gone. The corner
+     label needs neither: the foot wash is already bottom-up at every
+     width, and the cue it shared the row with is hidden below. */
   .ab-intro__line{ max-width:none; }
   .drivers{ grid-template-columns:1fr; }
   .ab-drives{ padding-top:clamp(96px,15vh,150px); }
@@ -1039,4 +1035,7 @@
   .stage__ascii{ display:none; }
   .stage__frame{ box-shadow:0 18px 44px -14px rgba(0,0,0,.38); }
   .ab-open__cue{ display:none; }
+  /* nothing opposite it now, so it comes in off the foot of the screen
+     rather than sitting on a line with a gap where the cue was */
+  .ab-open__eyebrow{ bottom:clamp(34px,6vh,56px); }
 }

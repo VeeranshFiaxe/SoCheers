@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { CSSProperties, Fragment } from "react";
 import { AWARDS, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
 import ParticleLogo from "./ParticleLogo";
 import RollText from "./Roll";
@@ -112,6 +112,19 @@ export function Clients() {
   );
 }
 
+/* The design book's six solids (SoCheers Colors.jpg, and the tokens at the
+   top of globals.css), in the order they are printed there. There are six
+   awards, so the row runs the whole palette once per pass and each show
+   keeps its own colour on every repeat of the ticker. */
+const SWIPES = [
+  "var(--leaf)",
+  "var(--sky)",
+  "var(--tangerine)",
+  "var(--logo)",
+  "var(--purple)",
+  "var(--pink)",
+];
+
 export function Awards() {
   /* One row, going past. This spent a while as a catalogue - an index on
      the left, a still on the right - and the trouble with a catalogue is
@@ -137,7 +150,7 @@ export function Awards() {
     <section className="sec awards" id="awards" data-section data-sec="4">
       <div className="wrap">
         <span className="tag" data-reveal>RECOGNITION</span>
-        <h2 className="awards__title" data-split>EVERY WIN COUNTS</h2>
+        <h2 className="sec__title" data-split>Every win counts.</h2>
       </div>
 
       {/* The row is decoration as far as a screen reader is concerned -
@@ -155,10 +168,19 @@ export function Awards() {
             {[0, 1, 2, 3].map((copy) =>
               AWARDS.map((a, i) => (
                 <Fragment key={`${copy}-${i}`}>
-                  <span className="amarquee__show">
+                  <span
+                    className="amarquee__show"
+                    style={{ "--swipe": SWIPES[i % SWIPES.length] } as CSSProperties}
+                  >
                     <b>{a.name}</b>
                   </span>
-                  <span className="amarquee__dot" />
+                  {/* the dot takes the *next* name's colour, so it reads as
+                      the hinge between two shows rather than as a full stop
+                      on the one behind it */}
+                  <span
+                    className="amarquee__dot"
+                    style={{ "--swipe": SWIPES[(i + 1) % SWIPES.length] } as CSSProperties}
+                  />
                 </Fragment>
               )),
             )}
