@@ -233,7 +233,6 @@
 .ab-intro__grid{
   display:grid; grid-template-columns:1fr 1.02fr;
   gap:clamp(40px,5vw,84px); align-items:center;
-  perspective:1400px;   /* depth for the [data-tilt] lean on the visual */
 }
 .ab-intro__line{
   font-family:var(--f-display); font-weight:700;
@@ -250,20 +249,39 @@
    too big a jump between the two closely-related lines. */
 .ab-intro__payoff{ margin-top:.6em; }
 
-/* Three layers, back to front: burst, cutout, bulbs. The box is sized by
-   the artwork's own ratio so the bulb percentages keep their relationship
-   to the figures at every width. */
+/* Three layers, back to front: burst, figure, bulbs. The box keeps the
+   ratio the old artwork set, so the bulb percentages keep their
+   relationship to the figure at every width. The perspective and
+   preserve-3d that used to be on this pair went with data-tilt (see
+   AboutIntro in components/AboutSections.tsx) - nothing here is rotated
+   in CSS any more, the depth is real and inside the canvas. */
 .ab-intro__visual{
-  position:relative; aspect-ratio:1024/1536; transform-style:preserve-3d;
+  position:relative; aspect-ratio:1024/1536;
   /* a shade narrower than it was: the portrait ratio makes every point of
      width cost half again as much height, and at 70% it stood so much
      taller than the copy beside it that no vertical alignment read as
      deliberate */
   width:60%; margin-inline:auto;
 }
-.ab-intro__art{
-  position:relative; z-index:1;
-  object-fit:contain; height:100%;
+
+/* The 3D figure - components/AboutMan.tsx. It fills the box and frames
+   itself to the box's height, so the man stands the full height of the
+   art whatever column he is given. GSAP owns the wrapper's opacity and
+   transform through data-clip, the same reveal the cutout had; the
+   canvas fades in under that on its own once the model has arrived, so
+   a reveal that fires before the download lands does not wipe in an
+   empty rectangle. */
+.ab-man{
+  position:absolute; inset:0; z-index:1;
+  will-change:transform, opacity;
+}
+.ab-man__canvas{
+  display:block; width:100%; height:100%;
+  opacity:0; transition:opacity .9s var(--ease);
+}
+.ab-man[data-ready="1"] .ab-man__canvas{ opacity:1; }
+@media (prefers-reduced-motion:reduce){
+  .ab-man__canvas{ transition:none; }
 }
 
 /* Sized by insets, not a centring translate - lib/motion.ts owns this

@@ -7,8 +7,6 @@ export const ABOUT_IMG = {
      been stripped out, so the left half is open canvas and components/
      AboutHero.tsx sets live type over it. */
   opening: "/assets/about/about-hero.webp",
-  /* the team-at-work cutout that sits beside the intro line */
-  visual: "/assets/about/abt%20vis.png",
   founderSid: "/assets/about/founder-sid.jpg",
   founderMehul: "/assets/about/founder-mehul.jpg",
   /* The pair in one frame, and what the founders section builds towards.

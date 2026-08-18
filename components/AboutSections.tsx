@@ -1,4 +1,5 @@
 import AboutBulbs from "./AboutBulbs";
+import AboutMan from "./AboutMan";
 import AboutSplash from "./AboutSplash";
 import AboutStage from "./AboutStage";
 import {
@@ -14,10 +15,17 @@ import {
    sentence is the part that gets the accent.
 
    The visual carries three separate things, stacked back to front: the burst
-   behind, the cutout itself, and the bulbs over the top. data-splash and
+   behind, the figure itself, and the bulbs over the top. data-splash and
    data-clip are the home page's own hooks, so the burst gets the same
    cursor pull and mist-in the WHO WE ARE splash has - the gesture is
-   different, the behaviour is the site's. */
+   different, the behaviour is the site's.
+
+   The middle layer used to be a flat cutout of the team. It is now the
+   3D figure in AboutMan.tsx, which answers the cursor itself - so the
+   cursor-led lean the box used to carry (data-tilt) has come off it.
+   That lean is a CSS rotation of the whole plane, and running it under a
+   head that is already turning in 3D read as the photograph tipping
+   rather than the man moving. The figure does its own leaning now. */
 export function AboutIntro() {
   return (
     <section className="ab-panel ab-intro" data-sec="1">
@@ -40,16 +48,11 @@ export function AboutIntro() {
           </p>
         </div>
 
-        <div className="ab-intro__visual" data-tilt>
+        <div className="ab-intro__visual">
           <span className="ab-intro__splash" data-splash aria-hidden="true">
             <AboutSplash />
           </span>
-          <img
-            className="ab-intro__art"
-            src={ABOUT_IMG.visual}
-            alt="The SoCheers team at work"
-            data-clip
-          />
+          <AboutMan />
           <AboutBulbs />
         </div>
       </div>
