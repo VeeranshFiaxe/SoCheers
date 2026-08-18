@@ -47,7 +47,7 @@
 }
 .bl-tabs__btn{
   position:relative; z-index:1;
-  font-family:var(--f-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
   color:var(--muted); background:transparent; border:none; border-radius:100px;
   padding:11px 20px; cursor:pointer;
   transition:color .35s var(--ease);
@@ -105,7 +105,7 @@
   background:var(--panel);
 }
 .bl-paper__form-label{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.18em; text-transform:uppercase;
   color:var(--muted);
 }
 .bl-paper__form-row{ display:flex; gap:10px; flex-wrap:wrap; }
@@ -118,7 +118,7 @@
 .bl-paper__form-row input::placeholder{ color:var(--muted); }
 .bl-paper__submit{
   display:inline-flex; align-items:center; justify-content:center; gap:12px;
-  font-family:inherit; font-weight:600; font-size:15px;
+  font-family:inherit; font-weight:500; font-size:15px;
   background:var(--accent); color:#04140b; border:none; border-radius:10px;
   padding:14px 20px; cursor:pointer;
   transition:transform .3s var(--ease), gap .3s var(--ease);
@@ -139,7 +139,7 @@
 }
 .bl-topic:hover{ border-color:var(--accent); border-style:solid; transform:translateY(-4px); }
 .bl-topic__idx{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.2em; color:var(--accent);
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em; color:var(--accent);
 }
 .bl-topic__name{
   display:block; margin-top:12px;
@@ -154,7 +154,7 @@
 }
 .bl-end__back{
   display:inline-flex; align-items:center; gap:10px;
-  font-family:var(--f-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--muted); transition:color .35s, gap .35s var(--ease);
 }
 .bl-end__back:hover{ color:var(--cream); gap:16px; }

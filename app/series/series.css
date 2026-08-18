@@ -47,7 +47,7 @@
   position:fixed; left:calc(var(--pad) * .42); top:50%; z-index:400;
   transform:translateY(-50%);
   display:flex; flex-direction:column; align-items:center; gap:10px;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.28em;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.28em;
   color:var(--dim);
   opacity:0; transition:opacity .6s var(--ease);
   pointer-events:none;
@@ -151,7 +151,7 @@
 .s-stat__claim{ margin-top:22px; font-size:clamp(16px,1.4vw,21px); line-height:1.5; }
 .s-stat__src{
   display:inline-block; margin-top:16px;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.26em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.26em; text-transform:uppercase;
   color:var(--dim);
   border:1px dashed var(--faint); padding:6px 10px;
 }
@@ -193,7 +193,7 @@
   display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(18px,2.4vw,36px);
 }
 .s-step{ border-top:1px solid var(--line); padding-top:20px; }
-.s-step__n{ font-family:var(--f-mono); font-size:11px; letter-spacing:.28em; color:var(--accent); }
+.s-step__n{ font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.28em; color:var(--accent); }
 .s-step__title{ margin-top:14px; font-family:var(--f-display); font-weight:700; font-size:clamp(19px,1.7vw,26px); letter-spacing:-.02em; }
 .s-step__copy{ margin-top:12px; font-size:15px; line-height:1.62; color:var(--muted); }
 @media (max-width:820px){ .s-process__grid{ grid-template-columns:1fr; } }
@@ -211,7 +211,7 @@
 .s-card:not(.is-pending):hover .s-card__shot img{ transform:scale(1.05); }
 .s-card__foot{ margin-top:14px; display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
 .s-card__brand{ font-family:var(--f-display); font-weight:700; font-size:clamp(15px,1.2vw,19px); letter-spacing:-.01em; }
-.s-card__eps{ font-family:var(--f-mono); font-size:10px; letter-spacing:.2em; color:var(--muted); white-space:nowrap; }
+.s-card__eps{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; color:var(--muted); white-space:nowrap; }
 .s-card__premise{ margin-top:8px; font-size:14px; line-height:1.55; color:var(--muted); }
 @media (max-width:1000px){ .s-work__grid{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:560px){ .s-work__grid{ grid-template-columns:1fr; } }
@@ -239,7 +239,7 @@
 }
 .s-reel__cap{
   position:absolute; left:10px; right:10px; bottom:10px; z-index:2;
-  font-family:var(--f-mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.16em; text-transform:uppercase;
   color:rgba(255,255,255,.82);
 }
 .s-reel::after{
@@ -254,7 +254,7 @@
 .is-pending{ position:relative; }
 .is-pending::before{
   content:"PLACEHOLDER"; position:absolute; z-index:3; top:10px; left:10px;
-  font-family:var(--f-mono); font-size:8px; letter-spacing:.22em;
+  font-family:var(--f-mono); font-weight:500; font-size:8px; letter-spacing:.22em;
   padding:4px 7px; border-radius:3px;
   background:rgba(0,0,0,.62); color:#fff;
 }
@@ -271,14 +271,14 @@
 .s-cta__go{
   display:inline-flex; align-items:center; padding:16px 34px;
   border-radius:999px; background:var(--accent); color:#04140b;
-  font-weight:600; font-size:15px;
+  font-weight:500; font-size:15px;
 }
 /* "Shot with" is a label, not body copy, so it takes --dim rather than
    --muted - and the name beside it is the actual link, which is why it
    is the half that carries a rule under it. */
 .s-cta__alt{ display:inline-flex; align-items:center; gap:8px; color:var(--dim); font-size:14px; }
 .s-cta__alt b{
-  color:var(--cream); font-weight:600;
+  color:var(--cream); font-weight:500;
   border-bottom:1px solid var(--faint); padding-bottom:1px;
   transition:border-color .35s var(--ease);
 }
@@ -300,7 +300,7 @@
 .s-foot{ background:var(--bg); border-top:1px solid var(--line); padding:24px 0 36px; }
 .s-foot__in{
   display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--dim);
 }
 .s-foot__in a{
@@ -319,7 +319,7 @@
   padding:7px 8px; border-radius:999px;
   background:rgba(12,12,14,.82); border:1px solid rgba(241,236,225,.16);
   backdrop-filter:blur(14px);
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--dim);
   max-width:calc(100vw - 32px);
 }

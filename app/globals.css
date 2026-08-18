@@ -35,12 +35,16 @@
   --leaf:      #8cc752;
   --tangerine: #f06827;
 
-  /* the --font-* variables come from next/font/google in app/layout.tsx */
-  --f-display: var(--font-display), "Familjen Grotesk", sans-serif;
-  --f-body:    var(--font-body), "DM Sans", sans-serif;
-  --f-mono:    var(--font-mono), "Inter", sans-serif;
-  --f-playful: var(--font-playful), "Caveat", cursive;
-  --f-loader:  var(--font-loader), "Bricolage Grotesque", var(--f-display);
+  /* --font-grotesk comes from next/font/google in app/layout.tsx.
+     The site runs on one face - Space Grotesk - and separates the roles
+     by weight, not by family: 700 headings, 500 accents, 400 body.
+     The role tokens stay, so every rule still reads the token that says
+     what the text *is* rather than naming the font. */
+  --f-sans:    var(--font-grotesk), "Space Grotesk", sans-serif;
+  --f-display: var(--f-sans);
+  --f-body:    var(--f-sans);
+  --f-mono:    var(--f-sans);
+  --f-playful: var(--f-sans);
 
   --ease: cubic-bezier(.22,1,.36,1);
   --pad: clamp(20px, 5vw, 84px);
@@ -53,7 +57,7 @@ html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; ove
 
 body{
   background:var(--bg); color:var(--cream);
-  font-family:var(--f-body); font-weight:300;
+  font-family:var(--f-body); font-weight:400;
   overflow-x:hidden; cursor:none;
 }
 @media (hover:none){ body{ cursor:auto; } }
@@ -98,7 +102,7 @@ em{ font-style:italic; }
 .ln > i{ display:block; font-style:inherit; }
 
 .tag{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.3em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.3em; text-transform:uppercase;
   color:var(--accent); display:inline-flex; align-items:center; gap:.7em;
 }
 .tag::before{ content:""; width:24px; height:1px; background:var(--accent); display:inline-block; }
@@ -198,7 +202,7 @@ em{ font-style:italic; }
    mousemove proves the pointer is actually there - otherwise it just
    sits pinned over whatever renders in the page's top-left corner */
 .cursor.is-visible{ opacity:1; }
-.cursor__label{ font-family:var(--f-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#04140b; opacity:0; transform:scale(.6); transition:opacity .25s, transform .25s; white-space:nowrap; }
+.cursor__label{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#04140b; opacity:0; transform:scale(.6); transition:opacity .25s, transform .25s; white-space:nowrap; }
 .cursor.is-active{ width:82px; height:82px; background:var(--accent); mix-blend-mode:normal; }
 .cursor.is-active .cursor__label{ opacity:1; transform:scale(1); }
 .cursor-ring{
@@ -257,9 +261,9 @@ em{ font-style:italic; }
   -webkit-mask-image:url(/assets/logo/lockup-ink.png);
   mask-image:url(/assets/logo/lockup-ink.png);
 }
-.loader__count{ font-family:var(--f-mono); font-size:14px; color:var(--accent); margin-top:14px; letter-spacing:.2em; }
+.loader__count{ font-family:var(--f-mono); font-weight:500; font-size:14px; color:var(--accent); margin-top:14px; letter-spacing:.2em; }
 .loader__count i{ opacity:.6; font-style:normal; }
-.loader__tag{ font-family:var(--f-mono); font-size:10px; letter-spacing:.4em; color:var(--muted); margin-top:8px; }
+.loader__tag{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.4em; color:var(--muted); margin-top:8px; }
 .loader__sheet{ position:absolute; inset:0; background:var(--accent); transform:scaleY(0); transform-origin:bottom; z-index:1; }
 
 /* ============================================================
@@ -343,7 +347,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   transform:translate(-50%, -50%);
 }
 .nav__links a,
-.nav__links .nav__soon{ font-family:var(--f-mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+.nav__links .nav__soon{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
 /* A tab with nowhere to go yet (AI Work). It reads as one of the row, one
    step back: the page behind it does not exist, so it should not look like
    something you failed to click. */
@@ -353,7 +357,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .nav__links .nav__soon{ color:color-mix(in srgb, var(--nav-ink) 58%, transparent); }
 .nav__cta{
   display:inline-flex; align-items:center; gap:9px;
-  font-family:var(--f-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
   border:1px solid var(--cream); border-radius:40px; padding:11px 20px; position:relative; overflow:hidden;
 }
 .nav__cta span,.nav__cta svg{ position:relative; z-index:2; transition:transform .4s var(--ease); }
@@ -444,7 +448,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .hero__scroll{
   position:absolute; left:50%; bottom:26px; z-index:8; transform:translateX(-50%);
   display:flex; flex-direction:column; align-items:center; gap:10px;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.4em; color:rgba(255,255,255,.7);
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.4em; color:rgba(255,255,255,.7);
 }
 .hero__scroll-line{ width:1px; height:38px; background:rgba(255,255,255,.35); position:relative; overflow:hidden; }
 .hero__scroll-line::after{ content:""; position:absolute; top:-50%; left:0; width:100%; height:50%; background:var(--accent); animation:scrolldn 1.8s var(--ease) infinite; }
@@ -478,7 +482,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   position:absolute; right:calc(var(--pad) * .55); top:50%; z-index:3;
   writing-mode:vertical-rl; text-orientation:mixed;
   translate:0 -50%;                    /* not transform: GSAP owns y here */
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.55em;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.55em;
   text-transform:uppercase; color:rgba(241,236,225,.42);
   white-space:nowrap; pointer-events:none;
 }
@@ -544,7 +548,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 
 .meaning__phon{
   margin-top:14px;
-  font-family:var(--f-mono); font-size:clamp(12px,1.15vw,15px);
+  font-family:var(--f-mono); font-weight:500; font-size:clamp(12px,1.15vw,15px);
   letter-spacing:.2em; color:var(--accent);
 }
 .meaning__pos{
@@ -567,17 +571,17 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 }
 .meaning__num{
   flex:none; width:1.6em;
-  font-family:var(--f-playful); font-size:clamp(20px,1.8vw,26px);
+  font-family:var(--f-playful); font-weight:500; font-size:clamp(20px,1.8vw,26px);
   letter-spacing:.02em; color:var(--accent); opacity:.65;
 }
 .meaning__text{
-  font-family:var(--f-display); font-weight:600;
+  font-family:var(--f-display); font-weight:700;
   font-size:clamp(26px, min(4.6vw, 7.2vh), 64px); line-height:1.02; letter-spacing:-.025em;
   color:var(--cream);
 }
 .meaning__note{
   margin-top:clamp(14px,2vh,22px);
-  font-family:var(--f-mono); font-size:clamp(14px,1.3vw,17px);
+  font-family:var(--f-mono); font-weight:500; font-size:clamp(14px,1.3vw,17px);
   letter-spacing:.08em; font-style:italic; color:var(--muted); opacity:.7;
 }
 @media (max-width:860px){
@@ -619,15 +623,14 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   font-size:clamp(26px,3.2vw,48px); line-height:1.14; letter-spacing:-.015em;
 }
 .who__lede{
-  font-weight:600; color:var(--cream);
+  font-weight:700; color:var(--cream);
   border-top:1px solid var(--line); padding-top:16px;
 }
-/* The name, set exactly as the pitch below it is: same display face, same
-   italic, same 400. The weight is the whole reason it reads as italic -
-   Familjen Grotesk's italic is close to upright at the lede's 600, and at
-   400 the slant is unmistakable, which is why the pitch never needed help
-   and this did. Dropping to 400 also lets the name sit inside the heavier
-   sentence as a quoted thing rather than as part of the claim. */
+/* The name, set exactly as the pitch below it is: same face, same slant,
+   same 400. Space Grotesk ships no italic, so the slant here is the
+   browser's oblique - which is why the weight has to do the separating.
+   Dropping to 400 against the lede's 700 lets the name sit inside the
+   heavier sentence as a quoted thing rather than as part of the claim. */
 .who__brand{
   color:var(--accent); font-style:italic; font-weight:400;
 }
@@ -665,7 +668,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(38px,4vw,62px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--stat-accent, var(--accent)); }
 .stat__num i{ color:var(--cream); font-style:normal; }
-.stat__label{ font-family:var(--f-mono); font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
+.stat__label{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
 
 /* The visual stands on its own - no frame, no card, no surface of any
    kind. It is the mark held in the air as particles
@@ -825,7 +828,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
    must not do. */
 .cmarquee__track{ display:flex; align-items:center; gap:24px; width:max-content; white-space:nowrap; }
 .cmarquee__track span{
-  font-family:var(--f-display); font-weight:600; font-size:clamp(17px,2.05vw,31px);
+  font-family:var(--f-display); font-weight:700; font-size:clamp(17px,2.05vw,31px);
   letter-spacing:-.01em; color:var(--muted);
   transition:color .35s, transform .45s var(--ease);
 }
@@ -847,9 +850,9 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .tile__img img{ transform:scale(1.06); filter:grayscale(.45); transition:transform .8s var(--ease), filter .6s; }
 .tile__grid{ z-index:2; }
 .tile__meta{ position:absolute; left:0; bottom:0; z-index:4; width:100%; display:flex; align-items:baseline; gap:14px; padding:clamp(18px,1.6vw,28px); transform:translateZ(50px); }
-.tile__idx{ font-family:var(--f-mono); font-size:12px; color:var(--accent); letter-spacing:.1em; }
+.tile__idx{ font-family:var(--f-mono); font-weight:500; font-size:12px; color:var(--accent); letter-spacing:.1em; }
 .tile__name{ font-family:var(--f-display); font-weight:700; font-size:clamp(24px,2.4vw,38px); line-height:1; letter-spacing:-.02em; flex:1; }
-.tile__go{ font-family:var(--f-mono); font-size:12px; letter-spacing:.14em; color:var(--muted); opacity:0; transform:translateX(-10px); transition:opacity .4s, transform .4s var(--ease); }
+.tile__go{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.14em; color:var(--muted); opacity:0; transform:translateX(-10px); transition:opacity .4s, transform .4s var(--ease); }
 .tile:hover .tile__img img{ transform:scale(1.16); filter:grayscale(0); }
 .tile:hover .tile__go{ opacity:1; transform:translateX(0); }
 .tile:hover{ border-color:color-mix(in srgb, var(--accent) 55%, transparent); box-shadow:0 40px 80px rgba(0,0,0,.55); }
@@ -935,7 +938,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
    Contact page's own layout, and both of those own their spacing. */
 .contact__cta{
   display:inline-flex; align-items:center; gap:16px;
-  font-family:var(--f-display); font-weight:600; font-size:clamp(20px,2.4vw,34px);
+  font-family:var(--f-display); font-weight:700; font-size:clamp(20px,2.4vw,34px);
   background:var(--accent); color:#04140b; border:none; border-radius:60px; padding:20px 44px; position:relative; overflow:hidden;
 }
 .contact__cta span,.contact__cta svg{ position:relative; z-index:2; transition:transform .4s var(--ease); }
@@ -1007,7 +1010,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 }
 .cmodal__visual-tag{
   position:absolute; left:20px; bottom:20px; right:20px;
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.28em;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.28em;
   color:var(--accent);
 }
 
@@ -1024,7 +1027,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 }
 .cmodal__field{ display:flex; flex-direction:column; gap:6px; }
 .cmodal__field span{
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.2em;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--muted); text-align:left;
 }
 .cmodal__field input,
@@ -1042,7 +1045,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .cmodal__submit{
   margin-top:6px; align-self:flex-start;
   display:inline-flex; align-items:center; gap:12px;
-  font-family:var(--f-display); font-weight:600; font-size:16px;
+  font-family:var(--f-display); font-weight:700; font-size:16px;
   background:var(--accent); color:#04140b; border-radius:50px;
   padding:13px 26px;
   transition:transform .3s var(--ease), gap .3s var(--ease);
@@ -1228,7 +1231,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 }
 .ovt__label{
   position:absolute; left:26px; bottom:22px;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.34em;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.34em;
   text-transform:uppercase; color:rgba(255,255,255,.72);
   text-shadow:0 1px 12px rgba(0,0,0,.9);
   opacity:calc(var(--lit) * .9);
@@ -1397,7 +1400,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   top:calc(48vh + 78px);
   transform:translateX(-50%);
   display:flex; flex-direction:column; align-items:center; gap:9px;
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.28em;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.28em;
   text-transform:uppercase; color:rgba(11,11,12,.94); white-space:nowrap;
   text-shadow:none;
 }
@@ -1414,7 +1417,7 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   position:absolute; right:var(--pad); bottom:34px; z-index:7;
   padding:9px 2px; border:0; background:none; cursor:none;
   pointer-events:auto; opacity:0;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.28em;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.28em;
   text-transform:uppercase; color:rgba(241,236,225,.42);
   transition:color .35s var(--ease);
 }
@@ -1646,11 +1649,11 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 .foot__mail--l a{ align-items:flex-end; }
 .foot__mail--r a{ align-items:flex-start; }
 .foot__mail-label{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.22em;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.22em;
   text-transform:uppercase; color:var(--muted);
 }
 .foot__mail-addr{
-  font-family:var(--f-display); font-weight:600; font-size:clamp(16px,1.7vw,21px);
+  font-family:var(--f-display); font-weight:700; font-size:clamp(16px,1.7vw,21px);
   transition:color .3s var(--ease);
 }
 .foot__mail a:hover .foot__mail-addr{ color:var(--accent); }
@@ -1726,16 +1729,16 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 /* the plank's lettering - same mono as the place name beside it, so the
    marker reads as part of the line rather than as artwork next to it */
 .foot__sign-text{
-  font-family:var(--f-mono); font-weight:400;
+  font-family:var(--f-mono); font-weight:500;
   paint-order:stroke; text-transform:uppercase;
 }
 .foot__place{ display:flex; flex-direction:column; gap:6px; }
 .foot__place b{
-  font-family:var(--f-mono); font-weight:400; font-size:12px;
+  font-family:var(--f-mono); font-weight:500; font-size:12px;
   letter-spacing:.2em; text-transform:uppercase; color:var(--cream);
 }
 .foot__place i{
-  font-style:normal; font-family:var(--f-mono); font-size:10.5px;
+  font-style:normal; font-family:var(--f-mono); font-weight:500; font-size:10.5px;
   letter-spacing:.14em; color:var(--muted);
 }
 
@@ -1744,7 +1747,7 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
    only reads as one line if both of its ends are one line. */
 .foot__ends{
   display:flex; align-items:center; gap:clamp(16px, 2.4vw, 34px);
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.2em;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--muted);
 }
 .foot__ends-meta{ display:flex; align-items:center; gap:14px; }
@@ -1765,7 +1768,7 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   position:absolute; left:0; right:0; bottom:0; z-index:4;
   display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap;
   padding:15px var(--pad); border-top:1px solid var(--line);
-  font-family:var(--f-mono); font-size:10.5px; letter-spacing:.16em;
+  font-family:var(--f-mono); font-weight:500; font-size:10.5px; letter-spacing:.16em;
   text-transform:uppercase; color:var(--muted);
 }
 

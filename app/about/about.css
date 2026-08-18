@@ -73,7 +73,7 @@
 .ab-open__cue{
   position:absolute; right:var(--pad); bottom:clamp(48px,9vh,104px); z-index:2;
   display:flex; align-items:center; gap:12px;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.3em; color:var(--muted);
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.3em; color:var(--muted);
 }
 .ab-open__cue-line{
   width:54px; height:1px; background:var(--muted);
@@ -236,7 +236,7 @@
   perspective:1400px;   /* depth for the [data-tilt] lean on the visual */
 }
 .ab-intro__line{
-  font-family:var(--f-display); font-weight:600;
+  font-family:var(--f-display); font-weight:700;
   font-size:clamp(24px,3vw,46px); line-height:1.16; letter-spacing:-.015em;
 }
 .ab-intro__line em{
@@ -529,7 +529,7 @@
   text-wrap:balance;
 }
 .founder__role{
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.16em; text-transform:uppercase;
   color:var(--muted); margin-top:8px; padding-bottom:14px; border-bottom:1px solid var(--line);
 }
 /* Up from 14.5px with a longer leading. A bigger face on a wider measure
@@ -538,7 +538,7 @@
    paragraph and a poem. `pretty` cleans up the last line so a paragraph
    never ends on a single orphaned word. */
 .founder__bio{
-  font-family:var(--f-body); font-weight:300;
+  font-family:var(--f-body); font-weight:400;
   font-size:clamp(14px,1.05vw,16.5px); line-height:1.66; color:var(--muted);
   margin-top:14px; text-wrap:pretty;
 }
@@ -614,7 +614,7 @@
 .ab-people__cap{
   display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
   margin-top:14px; padding-top:12px; border-top:1px solid var(--line);
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.2em;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--muted);
 }
 
@@ -639,7 +639,7 @@
 /* the numeral sits on the hairline, at the head of its own column */
 .ab-people__idx{
   display:block; margin-bottom:12px;
-  font-family:var(--f-mono); font-style:normal;
+  font-family:var(--f-mono); font-weight:500; font-style:normal;
   font-size:11px; letter-spacing:.24em; color:var(--accent);
 }
 
@@ -661,13 +661,11 @@
    is used by three routes, and a rule in a route stylesheet only exists
    on the route that imports it: on /series and /ai-work the class matched
    nothing and cream type landed on a cream ground. */
-/* One heading face for the whole page. This was set in the playful script
-   (Caveat) while every other heading on the page - the opener, the
-   founders, the people claim, the space - is the display face. One
-   section in a handwriting font does not read as a tone-of-voice moment
-   in context; it reads as a different page. Same family, same weight,
-   same tracking as .ab-people__title and .ab-space__title now, and the
-   shared scale below is what actually enforces it. */
+/* One heading face for the whole page. This was once set in a handwriting
+   script while every other heading on the page - the opener, the founders,
+   the people claim, the space - was the display face; one section in a
+   different family read as a different page. The site is on a single face
+   now, and the shared scale below is what enforces the match. */
 .ab-drives__title{ text-align:center; }
 
 /* The page's heading scale, in one place. Every h2 on this page is the
@@ -693,7 +691,7 @@
 /* the display face again, not the script - same reason as the title
    above. The numeral keeps the accent; it is the index, not decoration. */
 .driver__head{
-  display:block; font-family:var(--f-display); font-weight:600;
+  display:block; font-family:var(--f-display); font-weight:700;
   font-size:clamp(18px,1.5vw,23px); letter-spacing:-.01em;
   color:var(--cream); margin-bottom:12px;
 }
@@ -924,7 +922,7 @@
 .stage__meta{
   display:flex; align-items:baseline; justify-content:space-between; gap:20px;
   margin-top:12px; padding-top:10px; border-top:1px solid var(--line);
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.18em;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.18em;
   text-transform:uppercase;
   text-shadow:0 0 8px #f4f2ec, 0 0 18px #f4f2ec;
 }
@@ -993,7 +991,7 @@
 }
 .ab-end__back{
   display:inline-flex; align-items:center; gap:10px;
-  font-family:var(--f-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--muted); transition:color .35s, gap .35s var(--ease);
 }
 .ab-end__back:hover{ color:var(--cream); gap:16px; }

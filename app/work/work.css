@@ -69,7 +69,7 @@
    size it sits on the baseline looking like a bracket. */
 .wk-lede__tags{
   list-style:none; display:flex; flex-wrap:wrap; align-items:center;
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
   color:var(--cream);
 }
 .wk-lede__tags li + li::before{
@@ -90,10 +90,10 @@
 .wk-lede__credits{
   margin-top:16px;
   display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 18px;
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.1em;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.1em;
   color:var(--cream);
 }
-.wk-lede__credits b{ font-weight:600; letter-spacing:.18em; }
+.wk-lede__credits b{ font-weight:700; letter-spacing:.18em; }
 .wk-lede__credits i{
   font-style:normal; text-transform:uppercase; letter-spacing:.18em;
   color:var(--dim);
@@ -109,7 +109,7 @@
   margin-top:26px;
   display:inline-flex; align-items:center; gap:11px; padding:13px 26px 13px 13px;
   border-radius:999px; background:var(--accent); color:#04140b;
-  font-weight:600; font-size:15px;
+  font-weight:500; font-size:15px;
 }
 .wk-lede__play{
   display:grid; place-items:center; width:30px; height:30px;
@@ -123,7 +123,7 @@
   padding-bottom:14px;
 }
 .wk-also__label{
-  font-family:var(--f-mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
   color:var(--cream);
 }
 .wk-also__nav{ display:flex; gap:7px; }
@@ -226,7 +226,7 @@
   display:inline-flex; align-items:baseline; gap:6px;
   transition:border-color .35s var(--ease), color .35s var(--ease), background .35s var(--ease);
 }
-.wk-tab sup{ font-family:var(--f-mono); font-size:9px; letter-spacing:.1em; opacity:.7; }
+.wk-tab sup{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.1em; opacity:.7; }
 .wk-tab:hover{ border-color:var(--cream); color:var(--cream); }
 .wk-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:#f4f2ec; }
 @media (hover:none){ .wk-tab{ cursor:pointer; } }
@@ -264,7 +264,7 @@
 }
 .wk-tile:hover .wk-tile__cap{ opacity:1; transform:none; }
 .wk-tile__cap b{ font-family:var(--f-display); font-size:15px; font-weight:700; letter-spacing:-.01em; }
-.wk-tile__cap span{ font-family:var(--f-mono); font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
+.wk-tile__cap span{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
 @media (hover:none){ .wk-tile__cap{ opacity:1; transform:none; } }
 
 /* Stand-in content says so, in the UI, so a screenshot cannot be
@@ -272,7 +272,7 @@
 .wk-tile.is-pending::before,
 .wk-poster.is-pending::before{
   content:"PLACEHOLDER"; position:absolute; z-index:3; top:10px; right:10px;
-  font-family:var(--f-mono); font-size:8px; letter-spacing:.22em;
+  font-family:var(--f-mono); font-weight:500; font-size:8px; letter-spacing:.22em;
   padding:4px 7px; border-radius:3px;
   background:rgba(0,0,0,.62); color:#fff;
 }

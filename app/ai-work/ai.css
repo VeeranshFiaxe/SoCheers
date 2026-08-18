@@ -67,7 +67,7 @@
 }
 .ai-hero__run{
   display:inline-block; margin-top:22px;
-  font-family:var(--f-mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.28em; text-transform:uppercase;
   color:var(--accent);
 }
 
@@ -97,7 +97,7 @@
    hierarchy: the client's own framing is that the story is the offer and
    the work is the default, so one of these is an invitation and the other
    is a way out. */
-.ai-gate__door--yes{ background:var(--accent); border-color:var(--accent); color:#04140b; font-weight:600; }
+.ai-gate__door--yes{ background:var(--accent); border-color:var(--accent); color:#04140b; font-weight:500; }
 .ai-gate__door--yes:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
 
 /* The collapse. Height rather than display, so the reveal has something
@@ -134,7 +134,7 @@
 }
 .ai-beat__n{
   position:absolute; left:0; top:.35em;
-  font-family:var(--f-mono); font-style:normal; font-size:11px; letter-spacing:.2em;
+  font-family:var(--f-mono); font-weight:500; font-style:normal; font-size:11px; letter-spacing:.2em;
   color:var(--accent);
 }
 /* The last beat is the turn, and it is set as the page's own voice rather
@@ -145,11 +145,11 @@
   margin-top:clamp(38px,6vh,64px); padding-top:26px; border-top:1px solid var(--line);
   display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
 }
-.ai-story__outline{ font-family:var(--f-mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
+.ai-story__outline{ font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
 .ai-story__go{
   display:inline-flex; align-items:center; gap:9px; padding:13px 24px;
   border-radius:999px; background:var(--cream); color:#f4f2ec;
-  font-size:14px; font-weight:600;
+  font-size:14px; font-weight:500;
 }
 
 /* ============================================================
@@ -168,7 +168,7 @@
   display:inline-flex; align-items:baseline; gap:6px;
   transition:border-color .35s var(--ease), color .35s var(--ease), background .35s var(--ease);
 }
-.ai-tab sup{ font-family:var(--f-mono); font-size:9px; letter-spacing:.1em; opacity:.7; }
+.ai-tab sup{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.1em; opacity:.7; }
 .ai-tab:hover{ border-color:var(--cream); color:var(--cream); }
 .ai-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:#f4f2ec; }
 @media (hover:none){ .ai-tab{ cursor:pointer; } }
@@ -212,7 +212,7 @@
 }
 .ai-tile:hover .ai-tile__cap{ opacity:1; transform:none; }
 .ai-tile__cap b{ font-family:var(--f-display); font-size:15px; font-weight:700; letter-spacing:-.01em; }
-.ai-tile__cap span{ font-family:var(--f-mono); font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
+.ai-tile__cap span{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
 /* Touch has no hover to reveal a caption with, so it is simply always up. */
 @media (hover:none){ .ai-tile__cap{ opacity:1; transform:none; } }
 
@@ -221,7 +221,7 @@
    badge is four lines. */
 .ai-tile.is-pending::before{
   content:"PLACEHOLDER"; position:absolute; z-index:3; top:12px; right:12px;
-  font-family:var(--f-mono); font-size:8px; letter-spacing:.22em;
+  font-family:var(--f-mono); font-weight:500; font-size:8px; letter-spacing:.22em;
   padding:4px 7px; border-radius:3px;
   background:rgba(0,0,0,.62); color:#fff;
 }
