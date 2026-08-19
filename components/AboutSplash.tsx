@@ -49,7 +49,12 @@ const SPECKS = [
   { a: 2, d: 250, r: 3, f: "var(--sp-pale)", o: 0.5 },
 ];
 
-export default function AboutSplash() {
+/* `uid` namespaces the filter and gradient ids. There are two of these
+   on the page now - one behind each figure either side of the intro copy -
+   and an SVG id is document-global: two copies sharing one set would be
+   duplicate ids in the document, and every filter reference in both would
+   resolve to whichever copy the parser saw first. */
+export default function AboutSplash({ uid = "ab" }: { uid?: string }) {
   return (
     <svg
       className="splash splash--burst"
@@ -60,14 +65,14 @@ export default function AboutSplash() {
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        <radialGradient id="ab-aura" cx="50%" cy="50%" r="50%">
+        <radialGradient id={`${uid}-aura`} cx="50%" cy="50%" r="50%">
           <stop offset="0%" stopColor="var(--sp-bright)" stopOpacity="0.5" />
           <stop offset="45%" stopColor="var(--sp-dark)" stopOpacity="0.28" />
           <stop offset="100%" stopColor="var(--sp-deep)" stopOpacity="0" />
         </radialGradient>
 
         {/* the outer mass: torn wide, then heavily eaten by grain */}
-        <filter id="ab-halo" x="-45%" y="-50%" width="190%" height="200%" colorInterpolationFilters="sRGB">
+        <filter id={`${uid}-halo`} x="-45%" y="-50%" width="190%" height="200%" colorInterpolationFilters="sRGB">
           <feTurbulence type="fractalNoise" baseFrequency="0.009 0.014" numOctaves={3} seed={61} result="n1" />
           <feDisplacementMap in="SourceGraphic" in2="n1" scale={104} xChannelSelector="R" yChannelSelector="G" result="d1" />
           <feGaussianBlur in="d1" stdDeviation="4" result="b1" />
@@ -81,7 +86,7 @@ export default function AboutSplash() {
         </filter>
 
         {/* the body: sprayed rather than poured, so barely any blur */}
-        <filter id="ab-body" x="-38%" y="-42%" width="176%" height="184%" colorInterpolationFilters="sRGB">
+        <filter id={`${uid}-body`} x="-38%" y="-42%" width="176%" height="184%" colorInterpolationFilters="sRGB">
           <feTurbulence type="fractalNoise" baseFrequency="0.012 0.017" numOctaves={3} seed={83} result="n1" />
           <feDisplacementMap in="SourceGraphic" in2="n1" scale={76} xChannelSelector="R" yChannelSelector="G" result="d1" />
           <feGaussianBlur in="d1" stdDeviation="1.6" result="b1" />
@@ -95,7 +100,7 @@ export default function AboutSplash() {
         </filter>
 
         {/* rays and spray: shredded lengthwise so they taper off */}
-        <filter id="ab-ray" x="-60%" y="-60%" width="220%" height="220%" colorInterpolationFilters="sRGB">
+        <filter id={`${uid}-ray`} x="-60%" y="-60%" width="220%" height="220%" colorInterpolationFilters="sRGB">
           <feTurbulence type="fractalNoise" baseFrequency="0.02 0.05" numOctaves={3} seed={47} result="n1" />
           <feDisplacementMap in="SourceGraphic" in2="n1" scale={40} xChannelSelector="R" yChannelSelector="G" result="d1" />
           <feTurbulence type="fractalNoise" baseFrequency="0.26" numOctaves={3} seed={7} result="g" />
@@ -108,7 +113,7 @@ export default function AboutSplash() {
         </filter>
 
         {/* the centre: hot, and the only part left nearly intact */}
-        <filter id="ab-core" x="-40%" y="-45%" width="180%" height="190%" colorInterpolationFilters="sRGB">
+        <filter id={`${uid}-core`} x="-40%" y="-45%" width="180%" height="190%" colorInterpolationFilters="sRGB">
           <feTurbulence type="fractalNoise" baseFrequency="0.017 0.023" numOctaves={2} seed={97} result="n1" />
           <feDisplacementMap in="SourceGraphic" in2="n1" scale={50} xChannelSelector="R" yChannelSelector="G" result="d1" />
           <feGaussianBlur in="d1" stdDeviation="1.2" result="b1" />
@@ -123,10 +128,10 @@ export default function AboutSplash() {
       </defs>
 
       {/* 0 · unfiltered aura, so the burst has something to sit in */}
-      <ellipse cx={C.x} cy={C.y} rx="300" ry="248" fill="url(#ab-aura)" />
+      <ellipse cx={C.x} cy={C.y} rx="300" ry="248" fill={`url(#${uid}-aura)`} />
 
       {/* 1 · rays, under the mass so they read as thrown from behind it */}
-      <g filter="url(#ab-ray)" opacity="0.8">
+      <g filter={`url(#${uid}-ray)`} opacity="0.8">
         {RAYS.map((r) => (
           <g key={`${r.a}-${r.d}`} transform={`rotate(${r.a} ${C.x} ${C.y})`}>
             <ellipse cx={C.x + r.d} cy={C.y} rx={r.l} ry={r.w} fill={r.f} />
@@ -135,14 +140,14 @@ export default function AboutSplash() {
       </g>
 
       {/* 2 · the dark outer mass */}
-      <g filter="url(#ab-halo)" opacity="0.88">
+      <g filter={`url(#${uid}-halo)`} opacity="0.88">
         <ellipse cx="286" cy="250" rx="196" ry="168" transform="rotate(-14 286 250)" fill="var(--sp-deep)" />
         <ellipse cx="368" cy="268" rx="180" ry="152" transform="rotate(12 368 268)" fill="var(--sp-deep)" />
         <ellipse cx="322" cy="206" rx="164" ry="118" transform="rotate(-4 322 206)" fill="var(--sp-dark)" />
       </g>
 
       {/* 3 · the green body */}
-      <g filter="url(#ab-body)">
+      <g filter={`url(#${uid}-body)`}>
         <ellipse cx="300" cy="252" rx="162" ry="132" transform="rotate(-12 300 252)" fill="var(--sp-mid)" />
         <ellipse cx="356" cy="262" rx="146" ry="120" transform="rotate(10 356 262)" fill="var(--sp-mid)" />
         <ellipse cx="326" cy="222" rx="128" ry="88" transform="rotate(-5 326 222)" fill="var(--sp-bright)" />
@@ -151,7 +156,7 @@ export default function AboutSplash() {
       </g>
 
       {/* 4 · spray thrown clear */}
-      <g filter="url(#ab-ray)">
+      <g filter={`url(#${uid}-ray)`}>
         {SPECKS.map((s) => (
           <g key={`${s.a}-${s.d}`} transform={`rotate(${s.a} ${C.x} ${C.y})`}>
             <circle cx={C.x + s.d} cy={C.y} r={s.r} fill={s.f} opacity={s.o} />
@@ -160,7 +165,7 @@ export default function AboutSplash() {
       </g>
 
       {/* 5 · the hot centre */}
-      <g filter="url(#ab-core)">
+      <g filter={`url(#${uid}-core)`}>
         <ellipse cx="318" cy="240" rx="112" ry="76" transform="rotate(-6 318 240)" fill="var(--sp-bright)" />
         <ellipse cx="326" cy="230" rx="62" ry="40" transform="rotate(-3 326 230)" fill="var(--sp-pale)" />
       </g>

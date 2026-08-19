@@ -20,13 +20,21 @@ export const ABOUT_IMG = {
   crowd: "/assets/about/crowd.jpg",
 } as const;
 
-/* The hero copy, and there is almost none of it left. The opener used to
-   set the client's own line ("We turn ideas into impact.") at full size
-   with "Strategy. Creativity. All working together." beneath it; both are
-   out and the film opens the page on its own. What stays is the name in
-   the corner, which is the section's <h1>. */
+/* The hero copy. The client's own line is back over the film - it was
+   stripped out when the opener became "the film and nothing else", and it
+   is the one sentence the page cannot open without: everything below it
+   (the disciplines, the drivers, the whole "what comes next" thread) is
+   an answer to it.
+
+   It sits near the top of the frame rather than in the middle, so the
+   film still has its own space underneath and the two corner labels keep
+   the floor to themselves. Split in two because the turn takes the accent
+   italic and a regex over the prose would break the first time someone
+   edits a word - the same convention ABOUT_INTRO uses below. */
 export const HERO = {
   eyebrow: "About SoCheers",
+  line: "We follow",
+  lineAccent: "the next big thing.",
   cta: "Let's build something great",
 } as const;
 

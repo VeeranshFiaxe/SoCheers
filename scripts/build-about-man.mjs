@@ -22,8 +22,9 @@
    So the cut goes at CUT_Y, the pinch, and the head pivots about a point
    just under it, inside the collar - which is also what keeps the join
    honest: the monitor's underside overhangs the collar, so at the angles
-   AboutMan.tsx actually drives (±20° or so) the seam stays covered and
-   no cap geometry is needed.
+   AboutMan.tsx actually drives (25° of yaw, 16° down, 10° up) the seam
+   stays covered and no cap geometry is needed. Nodding down covers it
+   further still, which is why that limit is the loosest of the three.
 
    Vertices sitting on the cut are locked before simplification, so the
    two halves keep matching boundaries and the seam cannot drift open.

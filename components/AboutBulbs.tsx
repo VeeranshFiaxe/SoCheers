@@ -44,10 +44,16 @@ function Bulb() {
   );
 }
 
-export default function AboutBulbs() {
+/* `pick` takes a slice of the ring by index. The intro is two figures
+   flanking the copy now rather than one artwork filling half the row, so
+   the eight positions are split between the two boxes - four each - and
+   the ring reads as one field of ideas over the whole composition instead
+   of two identical crowns of eight. */
+export default function AboutBulbs({ pick }: { pick?: number[] }) {
+  const bulbs = pick ? pick.map((i) => BULBS[i]).filter(Boolean) : BULBS;
   return (
     <span className="bulbs" aria-hidden="true">
-      {BULBS.map((b) => (
+      {bulbs.map((b) => (
         <i
           className="bulb"
           key={`${b.x}-${b.y}`}

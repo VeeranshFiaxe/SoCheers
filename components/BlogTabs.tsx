@@ -2,7 +2,6 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import { EMPTY_TABS, TABS, WHITEPAPERS, type TabId } from "@/lib/blog-content";
-import WhitepaperForm from "./WhitepaperForm";
 
 /* The three-way split the client asked for: Blogs / White Papers / Reports
    under one section instead of a page that's only ever called "Blogs".
@@ -61,20 +60,36 @@ export default function BlogTabs() {
         </div>
 
         {active === "whitepapers" ? (
-          <div className="bl-tabs__panel">
+          <div className="bl-tabs__panel bl-paper__list">
+            {/* Each paper is one card and the whole card is the link: no
+                email field in front of it and nothing embedded behind it -
+                the client's call is that these are open to every visitor,
+                so clicking a paper just opens the paper. New tab, because
+                the visitor is in the middle of the hub and shouldn't lose
+                their place to a PDF viewer. */}
             {WHITEPAPERS.map((wp) => (
-              <div className="bl-paper__card" key={wp.id}>
-                <div>
-                  <span className="tag">{wp.tag}</span>
-                  <h2 className="bl-paper__title">{wp.title}</h2>
-                  <p className="bl-paper__blurb">{wp.blurb}</p>
-                  <ul className="bl-paper__points">
-                    {wp.points.map((p) => <li key={p}>{p}</li>)}
-                  </ul>
-                </div>
+              <a
+                className="bl-paper__card"
+                key={wp.id}
+                href={wp.pdf}
+                target="_blank"
+                rel="noopener"
+                data-cursor="Open"
+              >
+                <span className="tag">{wp.tag}</span>
+                <h2 className="bl-paper__title">{wp.title}</h2>
+                <p className="bl-paper__blurb">{wp.blurb}</p>
+                <ul className="bl-paper__points">
+                  {wp.points.map((p) => <li key={p}>{p}</li>)}
+                </ul>
 
-                <WhitepaperForm formLabel={wp.formLabel} cta={wp.cta} />
-              </div>
+                <span className="bl-paper__open">
+                  <span>{wp.cta}</span>
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
+              </a>
             ))}
           </div>
         ) : (

@@ -354,11 +354,10 @@ export const SERIES_CTA = {
   copy:
     "If we can hold your attention over a concept for ninety seconds, imagine what a season does for your brand.",
   primary: { label: "Talk to us", href: "/contact" },
-  /* Confirmed by the client. The handle and the name do not match - the
-     account is @thisistheonefilms and the house is Tito Films - so the
-     label is written out rather than derived from the URL, and the two
-     are not to be "tidied up" into each other. */
-  secondary: { label: "Tito Films", href: "https://www.instagram.com/thisistheonefilms/" },
+  /* Confirmed by the client. Points at the house's own site rather than
+     the Instagram account it used to link to (@thisistheonefilms, which
+     never matched the name anyway). */
+  secondary: { label: "Tito Films", href: "https://www.titofilms.com/" },
 } as const;
 
 export const ART = (file: string) => `/assets/series/${file}`;

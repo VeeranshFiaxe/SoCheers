@@ -43,10 +43,12 @@ export const CONTACT_LINKS = {
    proper brief intake usually gets. The live site's own contact form
    renders client-side and isn't reachable from a plain fetch, so this is
    the generic version the client OK'd building in that case: nothing here
-   invents a field an agency brief form wouldn't have. */
+   invents a field an agency brief form wouldn't have.
+
+   No heading or eyebrow in here any more: the left column of the page
+   already says what this is, and repeating it over the fields only pushed
+   them down the panel. The fields start at the top of the sheet. */
 export const CONTACT_FORM = {
-  tag: "Start a brief",
-  title: "Tell us what you're building.",
   reasons: [
     "A brief",
     "A partnership",

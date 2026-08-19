@@ -41,15 +41,36 @@ const MODEL = "/assets/about/about-man.glb";
    at its centre) and still inside the bezel's opening. */
 const SCREEN = { x: 0.0075, y: 0.86, z: 0.182, w: 0.239, h: 0.194 };
 
-/* How far the head will go. Past about 20° of yaw the monitor's
-   underside stops covering the collar and the cut starts to show. */
-const MAX_YAW = 0.36;    // ~20°
-const MAX_PITCH = 0.17;  // ~10°
-const RESPONSE = 4.5;    // how hard the head chases the cursor
+/* How far the head will go, and it is not the same up as down.
+
+   Nodding down is the free direction: the monitor's front lip swings
+   toward the collar and covers the cut more than a level head does, so
+   it can be given real travel. Looking up is the direction that costs -
+   the lip lifts off the collar and starts to show the neck behind it -
+   so it keeps the shorter leash. Yaw sits between the two: 25° is as
+   far as the underside still overhangs the shoulders. All three were
+   walked up against renders of the actual seam rather than guessed. */
+const MAX_YAW = 0.44;     // ~25°
+const PITCH_DOWN = 0.28;  // ~16°
+const PITCH_UP = 0.17;    // ~10°
+const RESPONSE = 4.5;     // how hard the head chases the cursor
+
+/* Down and up are different distances, so the cursor maps onto them
+   separately rather than through one symmetrical range. */
+const pitchFor = (n: number) => n * (n > 0 ? PITCH_DOWN : PITCH_UP);
+
+/* How much of the screen the head spends its travel over. Above 1 it
+   reaches full deflection before the cursor reaches the edge of the
+   viewport, which is the difference between a head that turns and a
+   head you notice turning: most of the time the cursor is on the
+   paragraph immediately beside the figure, and at a straight 1:1 that
+   near-field movement was landing as a few degrees and reading as
+   nothing at all. */
+const GAIN = 1.35;
 
 /* The whole figure leans a fraction of what the head does. Small on
    purpose: this is weight shifting, not a second turn. */
-const BODY_FOLLOW = 0.16;
+const BODY_FOLLOW = 0.2;
 
 const vert = /* glsl */ `
   varying vec2 vUv;
@@ -111,8 +132,28 @@ const frag = /* glsl */ `
   }
 `;
 
-export default function AboutMan() {
+/* There are two of these now, one either side of the intro copy, and two
+   identical figures standing dead square is a mirror rather than a pair.
+   So each one is given:
+
+     · `turn` - a fixed yaw on the whole figure, in radians, which is how
+       the two are angled in towards the copy between them. It is put on
+       the body, not on the head: the head's own travel is measured from
+       whatever the shoulders are doing, so a turned figure still tracks
+       the cursor over its full range instead of spending half of it
+       getting back to square.
+     · `phase` - an offset into the idle sweep, so the two are never
+       caught doing the same thing at the same moment on a touch screen
+       or before the pointer has moved.
+
+   Both are read through a ref rather than closed over: the effect below
+   runs once and owns a render loop for the life of the component. */
+export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase?: number }) {
   const host = useRef<HTMLDivElement>(null);
+  const turnRef = useRef(turn);
+  const phaseRef = useRef(phase);
+  turnRef.current = turn;
+  phaseRef.current = phase;
 
   useEffect(() => {
     const el = host.current;
@@ -189,6 +230,9 @@ export default function AboutMan() {
       scene.add(key, fill, rim);
 
       const root = new THREE.Group();
+      /* set here as well as per frame, so the still that reduced motion
+         renders is already standing at its angle */
+      root.rotation.y = turnRef.current;
       scene.add(root);
 
       /* The pivot takes over the head node's placement so that the node
@@ -287,19 +331,20 @@ export default function AboutMan() {
           /* measured against the viewport, not the element: the head
              should keep following while the cursor is off reading the
              paragraph beside it, which is most of the time */
-          const dx = (px - (r.left + r.width / 2)) / (window.innerWidth / 2);
-          const dy = (py - (r.top + r.height / 2)) / (window.innerHeight / 2);
+          const dx = (px - (r.left + r.width / 2)) / (window.innerWidth / 2) * GAIN;
+          const dy = (py - (r.top + r.height / 2)) / (window.innerHeight / 2) * GAIN;
           wantYaw = Math.max(-1, Math.min(1, dx)) * MAX_YAW;
-          wantPitch = Math.max(-1, Math.min(1, dy)) * MAX_PITCH;
+          wantPitch = pitchFor(Math.max(-1, Math.min(1, dy)));
           reachY = Math.max(-2.5, Math.min(2.5, dx)) * MAX_YAW;
-          reachP = Math.max(-2.5, Math.min(2.5, dy)) * MAX_PITCH;
+          reachP = pitchFor(Math.max(-2.5, Math.min(2.5, dy)));
         } else {
           /* Never perfectly still: with no cursor to answer to - a
              touch screen, or a pointer that has not moved yet - the
              head keeps a slow sweep of its own, which reads as alive
              where a frozen figure reads as a failed asset. */
-          wantYaw = Math.sin(t * 0.34) * MAX_YAW * 0.5;
-          wantPitch = Math.sin(t * 0.23 + 1.1) * MAX_PITCH * 0.4;
+          const ph = phaseRef.current;
+          wantYaw = Math.sin(t * 0.34 + ph) * MAX_YAW * 0.55;
+          wantPitch = pitchFor(Math.sin(t * 0.23 + 1.1 + ph) * 0.45);
           reachY = wantYaw;
           reachP = wantPitch;
         }
@@ -311,12 +356,14 @@ export default function AboutMan() {
         pitch += (wantPitch + Math.sin(t * 0.37 + 0.6) * 0.008 - pitch) * k;
 
         pivot.rotation.set(pitch, yaw, -yaw * 0.1);
-        root.rotation.y = yaw * BODY_FOLLOW;
+        root.rotation.y = yaw * BODY_FOLLOW + turnRef.current;
         root.position.y = Math.sin(t * 0.8) * 0.004;   // breathing
 
+        /* normalised against the longer of the two pitch ranges; the
+           clamp takes care of the shorter one overshooting */
         look.set(
           (reachY - yaw) / MAX_YAW * 1.5,
-          -(reachP - pitch) / MAX_PITCH * 1.1,
+          -(reachP - pitch) / PITCH_DOWN * 1.1,
         ).clampScalar(-1, 1);
 
         blinkIn -= dt;

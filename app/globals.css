@@ -35,16 +35,16 @@
   --leaf:      #8cc752;
   --tangerine: #f06827;
 
-  /* the --font-* variables come from next/font/google in app/layout.tsx.
-     The site runs on one face - Inter - and separates the roles
+  /* the --font-* variables come from next/font in app/layout.tsx.
+     The site runs on one face - Satoshi - and separates the roles
      by weight, not by family: 700 headings, 500 accents, 400 body.
      The role tokens stay, so every rule still reads the token that says
      what the text *is* rather than naming the font. */
-  --f-sans:    var(--font-sans), "Inter", sans-serif;
+  --f-sans:    var(--font-sans), "Satoshi", sans-serif;
   --f-display: var(--f-sans);
   --f-body:    var(--f-sans);
   --f-mono:    var(--f-sans);
-  /* the one element that is not the sans - see app/layout.tsx */
+  /* the handful of places that are not the sans - see app/layout.tsx */
   --f-playful: var(--font-playful), "Caveat", cursive;
 
   --ease: cubic-bezier(.22,1,.36,1);
@@ -294,12 +294,21 @@ em{ font-style:italic; }
   padding:22px var(--pad);
   transition:transform .5s var(--ease);
   --nav-ink:var(--cream);
+  /* the capsule the links sit in - see .nav__links */
+  --nav-island:rgba(12,12,14,.72);
+  --nav-island-line:rgba(241,236,225,.15);
+  --nav-island-hover:rgba(241,236,225,.09);
 }
 /* The literal, not var(--cream): on a light *page* the token is already
    re-pointed to near-black (.bl-page, .ct-page, .is-light), but on the
    About page the panels are what is light and the fixed header is not
    inside them - so it has to name the colour itself. */
-.nav.is-on-light{ --nav-ink:#0b0b0c; }
+.nav.is-on-light{
+  --nav-ink:#0b0b0c;
+  --nav-island:rgba(255,255,255,.66);
+  --nav-island-line:rgba(11,11,12,.12);
+  --nav-island-hover:rgba(11,11,12,.06);
+}
 .nav__links a,
 .nav__links .nav__soon,
 .nav .nav__cta{ color:var(--nav-ink); transition:color .35s var(--ease), border-color .35s var(--ease); }
@@ -341,14 +350,42 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .overture:not(.is-done):not([data-idle]) ~ .nav .nav__logo{ opacity:0; }
 /* centred on the artwork's window, not on the viewport - --hero-cx is the
    window centre's offset from the viewport centre, set in lib/motion.ts */
+/* The links are one floating capsule, not a bare row - the same object
+   the Series page's treatment switcher is (.s-switch in
+   app/series/series.css), promoted from a review tool to the site's own
+   navigation: a tinted, blurred pill with the current page filled in
+   green inside it. It still centres on the artwork's window rather than
+   the viewport - --hero-cx is that offset, set in lib/motion.ts.
+
+   The tint follows the ground the header is over, same as the ink does:
+   smoked glass over black, frosted white over cream, both crossfading on
+   the same is-on-light switch so the capsule never sits as a dark slab on
+   the About page's light panels. */
 .nav__links{
-  display:flex; gap:clamp(20px,2.1vw,30px);
+  display:flex; align-items:center; gap:2px;
   position:absolute; top:50%;
   left:calc(50% + var(--hero-cx, 0px));
   transform:translate(-50%, -50%);
+  padding:5px; border-radius:999px;
+  background:var(--nav-island); border:1px solid var(--nav-island-line);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 30px rgba(0,0,0,.14);
+  transition:background .35s var(--ease), border-color .35s var(--ease);
 }
 .nav__links a,
-.nav__links .nav__soon{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.12em; text-transform:uppercase; }
+.nav__links .nav__soon{
+  font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+  display:inline-flex; align-items:center;
+  padding:9px 16px; border-radius:999px;
+  transition:background .32s var(--ease), color .35s var(--ease);
+}
+/* the clipped box is the label, one level in from the padded target -
+   see the note in components/Chrome.tsx */
+.nav__links a:hover{ background:var(--nav-island-hover); }
+.nav__links a:hover .roll__in{ transform:translateY(-100%); }
+/* the page you are on, filled in - the switcher's own active state */
+.nav__links a[aria-current="page"]{ background:var(--accent); color:#04140b; }
+.nav__links a[aria-current="page"] .roll__in > span:last-child{ color:#04140b; }
 /* A tab with nowhere to go yet (AI Work). It reads as one of the row, one
    step back: the page behind it does not exist, so it should not look like
    something you failed to click. */
@@ -384,8 +421,14 @@ a.nav__logo{ display:inline-flex; align-items:center; }
 .hero__greet{
   position:absolute; top:20%; left:50%; transform:translate(-50%,-50%) rotate(-3deg);
   z-index:2; pointer-events:none;
-  font-family:var(--f-display); font-weight:700; font-style:normal;
-  font-size:clamp(22px,2.8vw,40px); color:#bfe3ff; letter-spacing:.01em;
+  /* The one hand-written line on the home page - it is a greeting scrawled
+     on the artwork, not a heading, and the script face is what says that.
+     Same token the dictionary headword and the About page's asides use.
+     Bigger and looser than the sans it replaced: Caveat's lowercase runs
+     small against Satoshi at the same size, so matching the old optical
+     size means asking for a larger one. */
+  font-family:var(--f-playful); font-weight:700; font-style:normal;
+  font-size:clamp(30px,3.8vw,54px); color:#bfe3ff; letter-spacing:.015em;
   text-shadow:0 2px 18px rgba(47,160,232,.5);
 }
 @media (max-width:640px){ .hero__greet{ top:11%; } }

@@ -10,26 +10,48 @@ import {
 /* 1 · the opener lives in components/AboutHero.tsx - it carries enough
    markup and motion of its own to be worth its own file. */
 
-/* 2 · the intro line, with the team artwork alongside it. The disciplines
-   run as one long list on purpose - the point is the sprawl - and the payoff
-   sentence is the part that gets the accent.
+/* 2 · the intro line, with a figure standing either side of it.
 
-   The visual carries three separate things, stacked back to front: the burst
-   behind, the figure itself, and the bulbs over the top. data-splash and
-   data-clip are the home page's own hooks, so the burst gets the same
-   cursor pull and mist-in the WHO WE ARE splash has - the gesture is
-   different, the behaviour is the site's.
+   The disciplines run as one long list on purpose - the point is the
+   sprawl - and the payoff sentence is the part that gets the accent.
+
+   The copy is down the middle of the page now, not ranged left with the
+   artwork beside it. It was one column of text against one tall portrait,
+   which left the row lopsided at every width: the text ran short, the
+   figure ran tall, and no vertical alignment made the two read as one
+   thing. Centred and set on a measure that lands in four or five lines,
+   the copy is the axis of the section - and the space it used to leave
+   empty on one side is now a figure on each, watching the cursor from
+   both edges of the page.
+
+   Each side carries three layers, stacked back to front: the burst
+   behind, the figure itself, and its share of the bulbs over the top.
+   data-splash and data-clip are the home page's own hooks, so the bursts
+   get the same cursor pull and mist-in the WHO WE ARE splash has - the
+   gesture is different, the behaviour is the site's.
 
    The middle layer used to be a flat cutout of the team. It is now the
    3D figure in AboutMan.tsx, which answers the cursor itself - so the
    cursor-led lean the box used to carry (data-tilt) has come off it.
    That lean is a CSS rotation of the whole plane, and running it under a
    head that is already turning in 3D read as the photograph tipping
-   rather than the man moving. The figure does its own leaning now. */
+   rather than the man moving. The figure does its own leaning now.
+
+   The two are angled in towards the copy (`turn`) and started at
+   different points in their idle sweep (`phase`), so they read as two
+   people either side of a sentence rather than as one asset mirrored. */
 export function AboutIntro() {
   return (
     <section className="ab-panel ab-intro" data-sec="1">
       <div className="wrap ab-intro__grid">
+        <div className="ab-intro__visual ab-intro__visual--l">
+          <span className="ab-intro__splash" data-splash aria-hidden="true">
+            <AboutSplash uid="ab-l" />
+          </span>
+          <AboutMan turn={0.2} />
+          <AboutBulbs pick={[0, 1, 2, 6]} />
+        </div>
+
         <div className="ab-intro__copy">
           {/* The headline that used to open this section now opens the
               people section instead - it is a claim about the company, and
@@ -48,12 +70,12 @@ export function AboutIntro() {
           </p>
         </div>
 
-        <div className="ab-intro__visual">
+        <div className="ab-intro__visual ab-intro__visual--r">
           <span className="ab-intro__splash" data-splash aria-hidden="true">
-            <AboutSplash />
+            <AboutSplash uid="ab-r" />
           </span>
-          <AboutMan />
-          <AboutBulbs />
+          <AboutMan turn={-0.2} phase={2.1} />
+          <AboutBulbs pick={[3, 4, 5, 7]} />
         </div>
       </div>
 
@@ -165,9 +187,9 @@ export function AboutFounders() {
    them - true, and completely flat. It carries the page's claim about
    itself now, so it is built like one: the headline that opened the intro
    lands here at full size with its second clause in the accent italic the
-   site uses for its own voice, the group shot goes first and large with
-   the pan still running across it, and the two statements sit under
-   numbered hairlines rather than floating as loose body copy.
+   site uses for its own voice, the group shot runs large and uncut down
+   the middle of the page, and the two statements sit under numbered
+   hairlines rather than floating as loose body copy.
 
    The numerals are indices, not labels - the "Why we exist" heading was
    dropped on purpose and is not coming back. They are the same device the
@@ -175,21 +197,23 @@ export function AboutFounders() {
 export function AboutPeople() {
   return (
     <section className="ab-panel ab-people is-light" data-sec="3">
-      <div className="wrap">
-        {/* The statement, on its own, centred and with nothing beside it.
-            This section used to be a two-column row - headline and tag
-            hard left, a 4:3 photograph in one column and two paragraphs
-            in the other - and the three parts spent the whole section
-            competing: the claim never got a clear read because a picture
-            of forty people was sitting next to it, and the picture never
-            got looked at because it was cropped to a column.
+      <div className="wrap ab-people__body">
+        {/* The claim across the top, and under it one row: statement,
+            photograph, statement.
 
-            One thing at a time now. The claim, then the photograph at
-            full width as a single band, then the two statements under it
-            as a pair. Same content, read in order instead of all at
-            once. */}
+            The statements stood beside the claim for a version, which put
+            them next to the wrong thing - a heading two lines long left
+            them floating in the middle of a lot of white, and it squeezed
+            the claim itself into a narrow measure to make room. Beside the
+            picture they have something the height of a paragraph to stand
+            against, and the claim gets the width to set in two lines
+            instead of four.
+
+            The label is the client's full line again. It had been cut back
+            to "If you ask our people", which is half a sentence - it is
+            the question the section answers, so it asks all of it. */}
         <header className="ab-people__head">
-          <span className="tag" data-reveal>If you ask our people</span>
+          <span className="tag" data-reveal>If you ask our people, who we are?</span>
 
           {/* the em stays inline - a nested block tag gets cloned onto every
               line SplitText wraps to, which is why it carries colour and
@@ -199,24 +223,48 @@ export function AboutPeople() {
           </h2>
         </header>
 
-        <figure className="ab-people__shot">
-          <div className="filmstrip__win" data-film>
-            <img src={ABOUT_IMG.people} alt="The SoCheers team together" data-film-img />
-          </div>
+        {/* The numerals are indices, not labels - the same device the
+            drivers further down use, which is what makes these read as
+            part of one argument rather than as loose body copy. Written
+            out rather than mapped over an array, because the two are no
+            longer a list: one stands on each side of the photograph.
+
+            DOM order is the reading order of the row - left statement,
+            picture, right statement - so the markup and the layout agree
+            and nothing has to be re-sequenced for a screen reader. */}
+        <p className="ab-people__note ab-people__note--l" data-reveal>
+          <i className="ab-people__idx">01</i>
+          {WHY_WE_EXIST}
+        </p>
+
+        {/* Cropped at the top and nowhere else. The source is a 4:5
+            photograph of the entire company standing on a staircase
+            (public/assets/about/people.jpg), and shown whole it makes this
+            row deeper than a screen. Every earlier window - a 21:9 band, a
+            4:3 column - was cutting into the front of the group to save
+            that height, which is the one part of the picture worth
+            keeping. This one takes it all off the top instead: the frame
+            is 5:4 and the picture sits at the foot of it, so what goes is
+            ceiling and back rows and what stays is everyone in front.
+            See .ab-people__shot in about.css for the numbers.
+
+            The old scroll pan is still gone, and stays gone: it worked by
+            running the image wider than its window and sliding it
+            sideways, which on a crop aimed this precisely would simply
+            slide the group back out of frame. It arrives on the page's own
+            image reveal (data-clip) instead. */}
+        <figure className="ab-people__shot" data-clip>
+          <img src={ABOUT_IMG.people} alt="The SoCheers team together" />
           <figcaption className="ab-people__cap" data-reveal>
             <span>The team, in one frame</span>
             <span>Mumbai · Est. 2013</span>
           </figcaption>
         </figure>
 
-        <div className="ab-people__notes">
-          {[WHY_WE_EXIST, BELIEF].map((note, i) => (
-            <p className="ab-people__note" data-reveal key={i}>
-              <i className="ab-people__idx">{String(i + 1).padStart(2, "0")}</i>
-              {note}
-            </p>
-          ))}
-        </div>
+        <p className="ab-people__note ab-people__note--r" data-reveal>
+          <i className="ab-people__idx">02</i>
+          {BELIEF}
+        </p>
       </div>
     </section>
   );
@@ -230,6 +278,10 @@ export function AboutDrives() {
   return (
     <section className="ab-panel ab-drives is-light" data-sec="4">
       <div className="wrap ab-drives__inner">
+        {/* The question, and nothing under it. There was a hand-drawn
+            stroke ruled beneath this for a while; the three cards below
+            are already the section's flourish, and a second one directly
+            above them was the page talking over itself. */}
         <h2 className="ab-drives__title" data-split>What drives us?</h2>
 
         <div className="drivers">

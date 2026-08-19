@@ -2,15 +2,18 @@ import { HERO } from "@/lib/about-content";
 
 /* 1 · the opener.
 
-   The film, and one label. This carried the client's line ("We turn ideas
-   into impact.") at full size with a sub under it; both are gone, and what
-   is left is the footer row - the page's name bottom left, the scroll cue
-   bottom right, the film between them with nothing written across it.
+   The film, and one block of type standing on it. It ran for a while as
+   the film alone with nothing written across it, which left the page
+   opening on a mood rather than on a claim.
 
-   The name is the <h1>. It is the only heading the section has now, and a
-   page still needs one: it is set as a .tag like every other label on the
-   page rather than as a headline, so it reads as a caption and not as a
-   line of copy. */
+   The block is the page's name over the page's line, in that order and on
+   one left margin, sitting near the middle of the frame rather than up in
+   the corner - a label above a headline is how every other section on
+   this site introduces itself, and the opener had no reason to be the
+   exception. The name is still the <h1>: it is the page's title, where
+   the line under it is the page's argument.
+
+   The scroll cue keeps the bottom right to itself. */
 export default function AboutHero() {
   return (
     <section className="ab-open" data-sec="0">
@@ -26,12 +29,24 @@ export default function AboutHero() {
         </div>
       </div>
 
-      {/* two scrims, one job each: the side wash gives the type its
-          ground, the foot fade hands off to the panel below with no seam */}
+      {/* two scrims, one job each: the wash gives the type its ground,
+          the veil hands off to the panel below with no seam */}
       <span className="ab-open__wash" aria-hidden="true" />
       <span className="ab-open__veil" aria-hidden="true" />
 
-      <h1 className="tag ab-open__eyebrow" data-reveal>{HERO.eyebrow}</h1>
+      {/* One block, in normal flow - the section is a flex row centred on
+          its cross axis, so the stack finds the middle of the film on its
+          own and nothing here is positioned against an edge. */}
+      <div className="ab-open__intro">
+        <h1 className="tag ab-open__eyebrow" data-reveal>{HERO.eyebrow}</h1>
+
+        {/* the em stays inline: a nested block tag gets cloned onto every
+            visual line SplitText wraps to, so it can carry colour and
+            style but never a margin */}
+        <p className="ab-open__line" data-split>
+          {HERO.line} <em>{HERO.lineAccent}</em>
+        </p>
+      </div>
 
       <div className="ab-open__cue" aria-hidden="true">
         <span>SCROLL</span>

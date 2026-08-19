@@ -72,22 +72,33 @@ export function Nav({
       >
         <SoCheersLockup className="nav__logo-mark" />
       </a>
+      {/* The row is a pill - one floating capsule of links rather than
+          bare labels lying on the page, the same treatment the Series
+          page's Film / Stills / Text switcher wears. The label itself is
+          a nested span, not the link: [data-roll] clips its own box, so
+          the roll has to happen inside the capsule's padding rather than
+          across it, or the second copy of the word sits visible in the
+          padding below the first. Hover is read off the link so the whole
+          padded target rolls, not just the text. */}
       <nav className="nav__links">
         {NAV_LINKS.map((l) =>
           l.soon ? (
             /* no href at all rather than href="#": an empty hash is a link
                to the top of the page dressed up as a link to a section */
-            <span key={l.href} className="nav__soon" data-roll>
-              <RollText>{l.label}</RollText>
+            <span key={l.href} className="nav__soon">
+              <span className="nav__label" data-roll>
+                <RollText>{l.label}</RollText>
+              </span>
             </span>
           ) : (
             <a
               key={l.href}
               href={l.href.startsWith("#") ? to(l.href) : l.href}
-              data-roll
               aria-current={active && l.href === active ? "page" : undefined}
             >
-              <RollText>{l.label}</RollText>
+              <span className="nav__label" data-roll>
+                <RollText>{l.label}</RollText>
+              </span>
             </a>
           ),
         )}

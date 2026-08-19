@@ -93,12 +93,6 @@
   max-width:44ch; font-size:clamp(14.5px,1.1vw,17px); line-height:1.65; color:var(--muted);
 }
 
-.ctf .tag{ color:var(--accent); }
-.ctf__title{
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(24px,2.8vw,34px); line-height:1.1; letter-spacing:-.02em;
-  margin-top:10px; margin-bottom:26px;
-}
 .ctf__row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
 .ctf__row + .ctf__row{ margin-top:16px; }
 .ctf__field{ display:flex; flex-direction:column; gap:7px; margin-top:16px; }

@@ -139,15 +139,23 @@ const TUNE = {
      bigger than the far side, not so much that the object looks like it
      is being photographed with a wide angle. Both margins are multiples
      of the mark's own half-extent, so the framing follows the geometry
-     if the geometry ever changes: the object takes about four fifths of
+     if the geometry ever changes: the object takes about seven eighths of
      the frame's height, and the rest is room for it to be pushed around
      in. These describe the *frame* - the element's own box. The canvas
      hangs past it (--plogo-bleed in globals.css) and resize() widens the
      lens to match, which changes what is visible without moving or
-     resizing anything. */
+     resizing anything.
+
+     Tightened from 1.27/1.16: at the old margins the mark sat in a
+     noticeable ring of nothing inside its own box. Pulling the frame in
+     grows the bulb by about a tenth without touching the layout - the
+     element, the halo and the grid around it are all exactly where they
+     were, the lens is just closer. The side margin stays the looser of
+     the two on purpose: the canvas only bleeds top and bottom, so a
+     grain pushed sideways has no overhang to run into. */
   fov: 30,
-  frame: 1.27,
-  frameSide: 1.16,
+  frame: 1.15,
+  frameSide: 1.10,
 };
 
 /* Colours go to the GPU as plain triples in the space the framebuffer

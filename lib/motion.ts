@@ -45,6 +45,9 @@ export function initSite(): () => void {
   const splits: SplitText[] = [];
   const observers: IntersectionObserver[] = [];
   const intervals: number[] = [];
+  // anything that has to be undone by hand on teardown and is not an
+  // AbortController-able DOM listener (ScrollTrigger's own event bus)
+  const cleanups: (() => void)[] = [];
   let lenis: Lenis | null = null;
 
   const ctx = gsap.context(() => {
@@ -469,6 +472,16 @@ export function initSite(): () => void {
          the state being reversed out of), so the two have to be tracked
          separately or the reverse gesture has nothing listening for it. */
       let locked = true;
+      /* A short grace window opened the moment scrolling is handed back to
+         the page. Nothing may claim the gesture again until it lapses.
+         Without it the handover was a coin toss: Lenis is still carrying
+         the momentum of the flick that finished the crumble, and it settles
+         on the pin's end with sub-pixel wobble, so a single stray upward
+         frame - or one jitter tick from a trackpad - read as "the reader is
+         coming back up" and dragged the whole hero back onto the screen a
+         beat after it had fallen away. */
+      let handoff = 0;
+      const settling = () => performance.now() < handoff;
 
       /* The pin exists purely to hold the layout - a spacer exactly one
          viewport tall, cancelled out by .who's own -100vh margin (globals.css)
@@ -476,37 +489,83 @@ export function initSite(): () => void {
          does not drive anything: scrub is off, and the section only ever
          moves through this space in one jump (below), never by scrolling
          through it a pixel at a time. */
+      /* Both callbacks bail during a refresh. ScrollTrigger re-evaluates
+         every trigger's state on refresh and fires the crossings it thinks
+         it found, which on this pin is not a reader moving - it is a
+         remeasure. Acting on those is what let a late refresh re-lock the
+         pin, or reverse the hero out of a crumble that had already finished
+         (see `reassert` below for the other half). */
+      // ScrollTrigger.isRefreshing is real (it is set around refreshAll's
+      // own _updateAll pass, which is where those crossings come from) but
+      // it is missing from the shipped typings.
+      const refreshing = () =>
+        (ScrollTrigger as unknown as { isRefreshing?: boolean }).isRefreshing === true;
       const st = ScrollTrigger.create({
         trigger: hero, start: "top top", end: "+=100%", pin: true,
-        onEnter: () => { locked = true; lenis?.stop(); },
-        onEnterBack: () => { reclaim(); },
+        onEnter: () => { if (refreshing()) return; locked = true; lenis?.stop(); },
+        onEnterBack: () => { if (refreshing()) return; reclaim(); },
       });
       // the hero is on screen at rest as soon as it mounts - lock the page
       // right away rather than waiting for a scroll event to discover it
       lenis?.stop();
 
+      // hand scroll back to the page, seated just past where the pin ends -
+      // the crumble already carried the picture, so nothing visibly moves,
+      // and normal scroll just continues into WHO WE ARE. Just past, not
+      // exactly on it: the pin's end boundary is where onEnterBack lives,
+      // and landing dead on it left the reader one rounding error away from
+      // being pulled back inside.
+      const release = () => {
+        locked = false;
+        handoff = performance.now() + 700;
+        lenis?.scrollTo(st.end + 2, { immediate: true, force: true });
+        lenis?.start();
+        ScrollTrigger.update();
+      };
+
+      /* Late refreshes are the other half of the unreliability, and the
+         reason it only ever misbehaved on the first load or two. The hero
+         sequence is usually played before the page has finished loading, so
+         `window.load` and `fonts.ready` fire their ScrollTrigger.refresh()
+         either mid-sequence or seconds after the reader has been handed the
+         page back; a refresh remeasures the pin and restores scroll, and
+         where it put the reader decided what happened next. Rather than
+         leave that to the remeasure, the state we know to be true is
+         re-asserted on the far side of every refresh. */
+      const reassert = () => {
+        if (phase === "done" && !locked) {
+          handoff = performance.now() + 300;
+          lenis?.scrollTo(st.end + 2, { immediate: true, force: true });
+          lenis?.start();
+        } else if (locked) {
+          lenis?.stop();
+        }
+      };
+      ScrollTrigger.addEventListener("refresh", reassert);
+      cleanups.push(() => ScrollTrigger.removeEventListener("refresh", reassert));
+
       const play = (time: number, duration: number, onDone?: () => void) => {
+        // one clock on this timeline, ever. Two overlapping tweens on
+        // tl.time fight, and the loser's onComplete never runs - which left
+        // `busy` stuck true and the hero frozen wherever it happened to be.
+        gsap.killTweensOf(tl);
         busy = true;
         gsap.to(tl, {
-          time, duration, ease: "none",
+          time, duration, ease: "none", overwrite: true,
+          onInterrupt: () => { busy = false; },
           onComplete: () => { busy = false; cooldown = performance.now() + 420; onDone?.(); },
         });
       };
 
       const advance = () => {
         if (phase === "rest") { phase = "hold"; play(HOLD, 2.6); return; }
-        if (phase === "hold") {
-          phase = "done";
-          play(DONE, 1.5, () => {
-            // hand scroll back to the page, seated exactly where the pin
-            // ends - the crumble already carried the picture, so nothing
-            // visibly moves, and normal scroll just continues into WHO WE ARE
-            locked = false;
-            lenis?.scrollTo(st.end, { immediate: true, force: true });
-            lenis?.start();
-            ScrollTrigger.update();
-          });
-        }
+        if (phase === "hold") { phase = "done"; play(DONE, 1.5, release); return; }
+        // Already crumbled, yet still holding the scroll. Nothing is left to
+        // advance into and the pinned screen is empty, so this used to be a
+        // dead end - a reader stranded on the black wall with scrolling
+        // eaten. Whatever put us here, the answer is the same: give the
+        // page back.
+        if (locked) release();
       };
       const retreat = () => {
         if (phase === "hold") { phase = "rest"; play(REST, 1.5); return; }
@@ -523,7 +582,7 @@ export function initSite(): () => void {
          empty frame until a second one arrived, which is why it only ever
          looked right when you were already scrolling up from further down. */
       const reclaim = () => {
-        if (locked) return;
+        if (locked || settling()) return;
         locked = true;
         lenis?.stop();
         if (phase === "done" && !busy) retreat();
@@ -544,10 +603,14 @@ export function initSite(): () => void {
          momentum, so by the time that fires the reader has already been
          moved a chunk of the way into the empty frame. */
       const returning = (up: boolean) =>
-        !locked && up && phase === "done" && window.scrollY <= st.end;
+        !locked && !settling() && up && phase === "done" && window.scrollY <= st.end;
 
       const onWheel = (e: WheelEvent) => {
         if (!locked) {
+          // a real gesture, not the tail of the one that finished the
+          // crumble: coming back up costs the same deadzone as everything
+          // else, or momentum wobble reverses the hero on its own
+          if (Math.abs(e.deltaY) < 8) return;
           if (!returning(e.deltaY < 0)) return;
           e.preventDefault();
           reclaim();                     // starts the reverse itself
@@ -563,6 +626,7 @@ export function initSite(): () => void {
         const y = e.touches[0]?.clientY ?? touchY;
         const dy = touchY - y;
         if (!locked) {
+          if (Math.abs(dy) < 10) return;
           if (!returning(dy < 0)) return;
           e.preventDefault();
           reclaim();
@@ -652,6 +716,12 @@ export function initSite(): () => void {
       const frame = document.createElement("canvas");
       const fctx = frame.getContext("2d");
       let W = 0, H = 0, tw = 0, th = 0;
+      /* Whether the frame in hand is worth falling apart. A paint that ran
+         before the pin had a size, or before the photo had decoded, leaves
+         a canvas of flat black - and a grid of black grains falling on
+         black is indistinguishable from the hero simply blinking out, which
+         is exactly what "sometimes it doesn't crumble" looked like. */
+      let ready = false;
 
       const paint = () => {
         const pw = pin.offsetWidth, ph = pin.offsetHeight;
@@ -684,7 +754,8 @@ export function initSite(): () => void {
         fctx.beginPath();
         fctx.rect(bl, bt, bw, bh);
         fctx.clip();
-        if (photo.complete && photo.naturalWidth) fctx.drawImage(photo, ix, iy, iw, ih);
+        ready = !!(photo.complete && photo.naturalWidth);
+        if (ready) fctx.drawImage(photo, ix, iy, iw, ih);
 
         /* .hero__stage-vignette, redrawn here rather than approximated: the
            two gradients are laid down exactly as CSS stacks them, which is
@@ -722,6 +793,12 @@ export function initSite(): () => void {
          gets cheaper the further in it gets. */
       const state = { t: 0 };
       const render = () => {
+        /* Self-healing, because the frame is cut once and everything after
+           depends on it. Repaint if the last attempt produced nothing (the
+           pin had no size yet) or if it went out without the photo and the
+           photo has since arrived. Both conditions clear for good the first
+           time they are met, so this is not a per-frame cost. */
+        if (!W || (!ready && photo.complete && photo.naturalWidth)) paint();
         if (!W) return;
         const t = state.t;
         ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -759,8 +836,10 @@ export function initSite(): () => void {
       const remeasure = () => { paint(); render(); };
       on(window, "resize", remeasure);
       // the photo may still be in flight on a cold load - the frame is worth
-      // nothing until it is decoded, so redraw it once it lands
-      if (!photo.complete) photo.addEventListener("load", remeasure, { signal: ac.signal });
+      // nothing until it is decoded, so redraw it once it lands. Bound
+      // unconditionally: `complete` is also true for an image that failed,
+      // and a retry would land with nothing listening.
+      on(photo, "load", remeasure);
 
       /* The handover. The grid is a copy of the two layers under it, so
          swapping them is invisible - and the pin's own black has to go with
@@ -785,7 +864,13 @@ export function initSite(): () => void {
       tl.to(state, {
         t: 1, duration: dur, ease: "none",
         immediateRender: false,
-        onStart: render, onUpdate: render,
+        // cut the frame fresh the instant before it is handed the screen,
+        // not at boot. Everything the frame copies - the pin's size, where
+        // the stage came to rest, whether the photo has decoded - is only
+        // reliably settled here, and a frame measured against a layout the
+        // page has since moved on from is what made the handover flash.
+        onStart: () => { paint(); render(); },
+        onUpdate: render,
       }, at);
     }
 
@@ -1576,6 +1661,7 @@ export function initSite(): () => void {
   /* -------------------------------------------------- teardown */
   return () => {
     ac.abort();
+    cleanups.forEach((fn) => fn());
     tickers.forEach((fn) => gsap.ticker.remove(fn));
     observers.forEach((o) => o.disconnect());
     intervals.forEach((id) => window.clearInterval(id));

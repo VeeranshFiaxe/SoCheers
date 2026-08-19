@@ -253,19 +253,13 @@ export function initAbout(): () => void {
       });
     });
 
-    /* -------------------------------------------------- the group shot pan
-       The photo pans across its own crop window as you scroll. */
-    document.querySelectorAll<HTMLElement>("[data-film]").forEach((strip) => {
-      const img = strip.querySelector<HTMLElement>("[data-film-img]");
-      if (!img) return;
-      gsap.fromTo(img, { xPercent: 2 }, {
-        xPercent: -12, ease: "none",
-        scrollTrigger: {
-          trigger: strip, start: "top bottom", end: "bottom top",
-          scrub: 1, invalidateOnRefresh: true,
-        },
-      });
-    });
+    /* -------------------------------------------------- the group shot
+       Nothing to run. The photo used to pan across a crop window as you
+       scrolled, which only exists as a move if there is picture outside
+       the frame to slide to - and there is not any more: the group shot
+       is shown whole, at its own 4:5, with no window and no overhang
+       (see .ab-people__shot in about.css). It arrives on the shared
+       engine's image reveal like every other photograph on the page. */
 
     /* -------------------------------------------------- the founders hold
        There used to be a climb ahead of this: the intro was pinned at the

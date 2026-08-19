@@ -38,7 +38,14 @@ export const EMPTY_TABS: Record<Exclude<TabId, "whitepapers">, { title: string; 
 
 /* An array, not a single object, on purpose - the White Papers tab lists
    whatever's live in here. Right now that's one piece; adding the next one
-   live is just another entry. */
+   live is just another entry.
+
+   `pdf` is the whole point of the entry now. The paper used to sit behind
+   an email field; the client's call is that it's open to everyone, so the
+   card in the tab is simply a link to the file - no gate, no capture,
+   nothing to submit, and clicking a paper opens the paper. The path is a
+   plain public asset: drop the file at `public/assets/whitepapers/` under
+   the same name and the tab is live. */
 export const WHITEPAPERS = [
   {
     id: "parasocial-marketing",
@@ -51,8 +58,8 @@ export const WHITEPAPERS = [
       "Reading the signals that separate a genuine creator fit from a rented audience",
       "Building influencer partnerships that outlast a single campaign",
     ],
-    formLabel: "Enter your email to unlock the whitepaper",
-    cta: "Get the whitepaper",
+    pdf: "/assets/whitepapers/parasocial-marketing.pdf",
+    cta: "Open the paper",
   },
 ] as const;
 

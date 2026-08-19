@@ -42,9 +42,6 @@ export default function ContactForm() {
         setSentTo(typeof name === "string" ? name.trim().split(/\s+/)[0] : "");
       }}
     >
-      <span className="tag">{CONTACT_FORM.tag}</span>
-      <h2 className="ctf__title">{CONTACT_FORM.title}</h2>
-
       <div className="ctf__row">
         <label className="ctf__field">
           <span>Name</span>
