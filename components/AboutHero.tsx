@@ -6,8 +6,8 @@ import { HERO } from "@/lib/about-content";
    the film alone with nothing written across it, which left the page
    opening on a mood rather than on a claim.
 
-   The block is the page's name over the page's line, in that order and on
-   one left margin, sitting near the middle of the frame rather than up in
+   The block is the page's name over the page's line over the discipline
+   line, in that order and on one left margin, sitting near the middle of the frame rather than up in
    the corner - a label above a headline is how every other section on
    this site introduces itself, and the opener had no reason to be the
    exception. The name is still the <h1>: it is the page's title, where
@@ -45,6 +45,18 @@ export default function AboutHero() {
             style but never a margin */}
         <p className="ab-open__line" data-split>
           {HERO.line} <em>{HERO.lineAccent}</em>
+        </p>
+
+        {/* What the claim above is made of. Back under the headline where
+            it opened the first build of this page: the line says what the
+            work is for, this says what it takes, and the disciplines it
+            names are the thread the rest of the page pulls on. Its own
+            spans so each line reveals as a line rather than the block
+            fading in as one lump. */}
+        <p className="ab-open__sub">
+          {HERO.sub.map((line) => (
+            <span key={line} data-reveal>{line}</span>
+          ))}
         </p>
       </div>
 

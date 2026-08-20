@@ -12,6 +12,19 @@ import { useEffect, useRef } from "react";
    So turning the head here is one rotation on one node - there is no
    skinning, no bone lookup and no per-frame matrix surgery.
 
+   It is a torso, not a whole man. There were two of these standing at
+   the edges of the page at about 190px each, and at that size the one
+   thing the figure is for - a head turning to watch you - was a few
+   pixels of movement happening twice in the reader's peripheral vision.
+   There is one now, in the middle of the frame, at roughly three times
+   the width, cropped to the shoulders. The legs are not framed out here;
+   they are gone at bake time (FLOOR_Y in the build script), so nothing
+   pays to download or transform a pair of trousers that ends up below
+   the canvas. The last stretch of jacket fades out into the panel rather
+   than ending on a cut edge - that fade is a CSS mask on the canvas, in
+   about.css, because it costs nothing and a shader would have to be told
+   about the framing to do the same job.
+
    The face is not in the scan. The screen is blank grey geometry, so
    the eyes are drawn here instead, as one shader-shaded quad hung in
    front of the glass and parented to the same pivot. That is the
@@ -50,10 +63,19 @@ const SCREEN = { x: 0.0075, y: 0.86, z: 0.182, w: 0.239, h: 0.194 };
    so it keeps the shorter leash. Yaw sits between the two: 25° is as
    far as the underside still overhangs the shoulders. All three were
    walked up against renders of the actual seam rather than guessed. */
+/* These three are the seam's numbers, not the composition's, and the
+   crop does not change them: how far the monitor can swing before its
+   underside stops overhanging the collar is a fact about the geometry.
+   The amplification the bigger figure wanted is bought below instead -
+   in GAIN, in BODY_FOLLOW and in SWAY - all of which move the whole
+   figure rather than the head against the body, so the join stays as
+   covered as it was. */
 const MAX_YAW = 0.44;     // ~25°
 const PITCH_DOWN = 0.28;  // ~16°
 const PITCH_UP = 0.17;    // ~10°
-const RESPONSE = 4.5;     // how hard the head chases the cursor
+/* Chasing harder than it used to. At the old size the softer pull read
+   as weight; at this size it read as lag. */
+const RESPONSE = 5.6;
 
 /* Down and up are different distances, so the cursor maps onto them
    separately rather than through one symmetrical range. */
@@ -66,11 +88,25 @@ const pitchFor = (n: number) => n * (n > 0 ? PITCH_DOWN : PITCH_UP);
    paragraph immediately beside the figure, and at a straight 1:1 that
    near-field movement was landing as a few degrees and reading as
    nothing at all. */
-const GAIN = 1.35;
+/* Raised with the crop. The figure is in the middle of the frame now and
+   the copy is arranged around it, so the cursor spends its time out at
+   the edges of the viewport rather than on a column beside the figure -
+   and it should have run out of head to turn well before it gets
+   there. */
+const GAIN = 2.1;
 
-/* The whole figure leans a fraction of what the head does. Small on
-   purpose: this is weight shifting, not a second turn. */
-const BODY_FOLLOW = 0.2;
+/* The whole figure turns with the head, and it is no longer a token
+   amount. With the legs gone there is nothing planted on a floor to
+   argue with it: a torso is free to rotate at the waist, so it does. At
+   full deflection the head's own 25° and the body's 11° under it read as
+   about 36° of figure, which is the amplification the tighter crop was
+   for - and none of it is spent at the neck, so the seam is no closer to
+   showing than it was.
+
+   SWAY goes with it: a shoulder that comes round also comes across a
+   little. Small, in scan units, against a frame 1.52 tall. */
+const BODY_FOLLOW = 0.45;
+const SWAY = 0.045;
 
 const vert = /* glsl */ `
   varying vec2 vUv;
@@ -273,18 +309,28 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
 
       /* ---------------------------------------------------- framing */
 
-      const FRAME_H = 2.24;   // the figure is 2 tall; this leaves it air
+/* The crop, in the scan's own units. The torso runs from the crown at
+   y=1 down to the cut at y=-0.289, and the frame is a shade taller than
+   that and centred a shade above its middle: 0.36 ± 0.76 puts the crown
+   about 8% down from the top edge, which is enough air for the monitor
+   to nod into without ever touching it, and leaves the cut sitting below
+   the point the canvas has already faded to nothing (see the mask on
+   .ab-man__canvas). Neither number is free to move on its own - raising
+   the frame without moving the mask would bring the open edge back into
+   view. */
+      const FRAME_H = 1.52;
+      const FRAME_Y = 0.36;
       function resize() {
         const w = el!.clientWidth, h = el!.clientHeight;
         if (!w || !h) return;
         renderer.setSize(w, h, false);
         camera.aspect = w / h;
-        /* Fit by height and let width fall where it may - the figure is
-           a third as wide as it is tall, so height is always the
+        /* Fit by height and let width fall where it may - the torso is
+           half as wide as the frame is tall, so height is always the
            binding constraint and solving for it keeps the framing
            identical at every column width. */
-        camera.position.set(0, 0.04, (FRAME_H / 2) / Math.tan((camera.fov * Math.PI) / 360));
-        camera.lookAt(0, 0.04, 0);
+        camera.position.set(0, FRAME_Y, (FRAME_H / 2) / Math.tan((camera.fov * Math.PI) / 360));
+        camera.lookAt(0, FRAME_Y, 0);
         camera.updateProjectionMatrix();
       }
       resize();
@@ -343,7 +389,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
              head keeps a slow sweep of its own, which reads as alive
              where a frozen figure reads as a failed asset. */
           const ph = phaseRef.current;
-          wantYaw = Math.sin(t * 0.34 + ph) * MAX_YAW * 0.55;
+          wantYaw = Math.sin(t * 0.34 + ph) * MAX_YAW * 0.62;
           wantPitch = pitchFor(Math.sin(t * 0.23 + 1.1 + ph) * 0.45);
           reachY = wantYaw;
           reachP = wantPitch;
@@ -357,6 +403,8 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
 
         pivot.rotation.set(pitch, yaw, -yaw * 0.1);
         root.rotation.y = yaw * BODY_FOLLOW + turnRef.current;
+        /* the shoulder that comes round comes across with it */
+        root.position.x = (yaw / MAX_YAW) * SWAY;
         root.position.y = Math.sin(t * 0.8) * 0.004;   // breathing
 
         /* normalised against the longer of the two pitch ranges; the
@@ -448,6 +496,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
       data-clip
       role="img"
       aria-label="A figure in a suit with a vintage computer monitor for a head, watching the cursor"
+      data-man
     />
   );
 }

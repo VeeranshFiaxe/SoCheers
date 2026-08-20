@@ -10,73 +10,91 @@ import {
 /* 1 · the opener lives in components/AboutHero.tsx - it carries enough
    markup and motion of its own to be worth its own file. */
 
-/* 2 · the intro line, with a figure standing either side of it.
+/* 2 · the claim, with the figure standing inside it.
 
-   The disciplines run as one long list on purpose - the point is the
-   sprawl - and the payoff sentence is the part that gets the accent.
+   This was figure / copy / figure: a centred paragraph with a 190px man
+   at each edge. Three tracks, two of them the same asset mirrored, and
+   the middle one doing all the reading. Nothing in it was the subject,
+   and the one thing the figure exists for - a head that turns to watch
+   the cursor - was happening twice at a size where its full 25° of yaw is
+   a handful of pixels.
 
-   The copy is down the middle of the page now, not ranged left with the
-   artwork beside it. It was one column of text against one tall portrait,
-   which left the row lopsided at every width: the text ran short, the
-   figure ran tall, and no vertical alignment made the two read as one
-   thing. Centred and set on a measure that lands in four or five lines,
-   the copy is the axis of the section - and the space it used to leave
-   empty on one side is now a figure on each, watching the cursor from
-   both edges of the page.
+   It is one band now. "We are" set enormous and edge to edge, the figure
+   standing in the gap between the two words, and the seven disciplines
+   hung off the band's baseline as fine print. The band runs behind him,
+   not around him: the inner ends of both words go under his shoulders and
+   your eye closes them, which is the whole device - the type and the
+   figure are in one space rather than in neighbouring ones.
 
-   Each side carries three layers, stacked back to front: the burst
-   behind, the figure itself, and its share of the bulbs over the top.
-   data-splash and data-clip are the home page's own hooks, so the bursts
-   get the same cursor pull and mist-in the WHO WE ARE splash has - the
-   gesture is different, the behaviour is the site's.
+   Not a word of the copy changed. The sentence was always a claim
+   followed by its evidence ("We are: strategists, producers, ..."), and
+   all that happened is that the two halves stopped being set at the same
+   size. See ABOUT_INTRO in lib/about-content.ts, which keeps the whole
+   sentence alongside the pieces and hands the whole one to a screen
+   reader - a word set in space with fragments round its baseline is a
+   picture of a sentence, not a sentence, and reading this frame in DOM
+   order would give an ordering nobody wrote.
 
-   The middle layer used to be a flat cutout of the team. It is now the
-   3D figure in AboutMan.tsx, which answers the cursor itself - so the
-   cursor-led lean the box used to carry (data-tilt) has come off it.
-   That lean is a CSS rotation of the whole plane, and running it under a
-   head that is already turning in 3D read as the photograph tipping
-   rather than the man moving. The figure does its own leaning now.
+   The panel is one viewport tall and centred in it, so the band, the
+   figure, the fine print and the payoff are one held image rather than
+   something you assemble by scrolling. The figure is sized off the
+   viewport's height rather than its width for the same reason: it is the
+   tallest thing here, so it is what decides whether the composition fits,
+   and a width-derived size would have overflowed the moment someone
+   opened a short window.
 
-   The two are angled in towards the copy (`turn`) and started at
-   different points in their idle sweep (`phase`), so they read as two
-   people either side of a sentence rather than as one asset mirrored. */
+   data-splash is the home page's own hook, so the burst behind the figure
+   gets the same cursor pull the WHO WE ARE splash has. data-band and
+   data-meta are this page's, and lib/about-motion.ts uses them to push
+   the two halves of the band out from behind him as the section arrives. */
 export function AboutIntro() {
   return (
     <section className="ab-panel ab-intro" data-sec="1">
-      <div className="wrap ab-intro__grid">
-        <div className="ab-intro__visual ab-intro__visual--l">
-          <span className="ab-intro__splash" data-splash aria-hidden="true">
-            <AboutSplash uid="ab-l" />
-          </span>
-          <AboutMan turn={0.2} />
-          <AboutBulbs pick={[0, 1, 2, 6]} />
+      <div className="wrap ab-intro__stage">
+        {/* the sentence the band is a picture of */}
+        <p className="sr-only">{ABOUT_INTRO.list}</p>
+
+        <span className="ab-intro__splash" data-splash aria-hidden="true">
+          <AboutSplash uid="ab-c" />
+        </span>
+
+        {/* Full bleed, and a flex row rather than one string with a wide
+            word-space: the gap between the two words has to be a fraction
+            of the figure standing in it, and the two halves have to be
+            addressable so each can be pushed out from behind him on its
+            own side. */}
+        <div className="ab-intro__band" aria-hidden="true">
+          <span className="ab-intro__word" data-band>{ABOUT_INTRO.bandA}</span>
+          <i className="ab-intro__slot" />
+          <span className="ab-intro__word" data-band>{ABOUT_INTRO.bandB}</span>
         </div>
 
-        <div className="ab-intro__copy">
-          {/* The headline that used to open this section now opens the
-              people section instead - it is a claim about the company, and
-              it lands harder over the group shot than over a list of job
-              titles. What is left here is the list and its payoff, which
-              were always the pair.
-
-              Two separate split roots, not one paragraph with a nested
-              inline payoff: SplitText clones a nested display:block tag
-              onto every visual line it wraps to, so a margin set on the
-              old inline <em> was duplicating itself between the green
-              text's own wrapped lines, not just before them. */}
-          <p className="ab-intro__line" data-split>{ABOUT_INTRO.list}</p>
-          <p className="ab-intro__line ab-intro__payoff" data-split>
-            <em>{ABOUT_INTRO.payoff}</em>
-          </p>
+        <div className="ab-intro__figure">
+          <AboutMan />
+          <AboutBulbs />
         </div>
 
-        <div className="ab-intro__visual ab-intro__visual--r">
-          <span className="ab-intro__splash" data-splash aria-hidden="true">
-            <AboutSplash uid="ab-r" />
-          </span>
-          <AboutMan turn={-0.2} phase={2.1} />
-          <AboutBulbs pick={[3, 4, 5, 7]} />
-        </div>
+        {/* The fine print, ranged to the right under the band. It is the
+            detail behind the claim, not the claim, and this is the
+            register it belongs in.
+
+            It sits under the band rather than on its baseline, which is
+            where the reference hangs its equivalent block, because "We
+            are" is five glyphs: sized to reach across the frame it stands
+            almost as tall as the torso, and there is no clear air left at
+            the baseline for anything to be tucked into. Under it there
+            is, and the block still reads as hung off the band rather than
+            as a paragraph of its own. */}
+        <p className="ab-intro__note" data-meta aria-hidden="true">
+          {ABOUT_INTRO.note}
+        </p>
+
+        {/* Still its own split root, and still the line that takes the
+            accent - it is the sentence the band and the fine print above
+            it have been building to. */}
+        <p className="ab-intro__payoff" data-split>
+          <em>{ABOUT_INTRO.payoff}</em>
+        </p>
       </div>
 
       {/* The hand-off from black to cream, and the whole of it - there is

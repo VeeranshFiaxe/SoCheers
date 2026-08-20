@@ -30,18 +30,49 @@ export const ABOUT_IMG = {
    film still has its own space underneath and the two corner labels keep
    the floor to themselves. Split in two because the turn takes the accent
    italic and a regex over the prose would break the first time someone
-   edits a word - the same convention ABOUT_INTRO uses below. */
+   edits a word - the same convention ABOUT_INTRO uses below.
+
+   `sub` is the discipline line that ran under the headline in the first
+   build of this page and is back where it was: the headline is the claim
+   and this is what the claim is made of, which is also the thread the
+   whole page below follows. Two strings rather than one sentence because
+   it sets as two stacked lines - where it breaks is a decision, not a
+   wrap. */
 export const HERO = {
   eyebrow: "About SoCheers",
-  line: "We follow",
-  lineAccent: "the next big thing.",
+  line: "We turn ideas into",
+  lineAccent: "impact.",
+  sub: ["Strategy. Creativity. Production.", "All working together."],
   cta: "Let's build something great",
 } as const;
 
 /* Split where it is set, not at render time: the payoff sentence takes the
    accent and the discipline list does not, and a regex over the prose would
    quietly break the moment someone edits a word. */
+/* The words are exactly the two sentences they have always been. What
+   changed is which of them is set at which size.
+
+   The panel is built on one band of type running edge to edge with the
+   figure standing in front of it, so the middle of the band goes behind
+   him and your eye completes it. That needs an opening big enough to
+   carry the whole frame and a block of fine print to hang off its
+   baseline - and this sentence already had both, run together at one
+   size: "We are:" is the claim and the seven job titles after it are the
+   evidence. So the band takes the opening, the list becomes the fine
+   print, and nothing is rewritten to make it fit.
+
+   `list` and `payoff` are untouched and are what the page hands a screen
+   reader. `bandA` / `bandB` / `note` are the same sentence broken where
+   the layout breaks it, kept as their own constants rather than sliced
+   off `list` at render time by a regex over the colon: where a sentence
+   is allowed to come apart is a design decision, and a regex would make
+   it look like a parsing rule that any future edit could quietly break.
+   The three of them must still read back as `list` - if you edit one,
+   edit `list` with it. */
 export const ABOUT_INTRO = {
+  bandA: "We",
+  bandB: "are",
+  note: "AI-native strategists, producers, researchers, creatives, filmmakers, animators, and copywriters.",
   list: "We are: AI-native strategists, producers, researchers, creatives, filmmakers, animators, and copywriters.",
   payoff: "One team, many disciplines, all chasing what comes next.",
 } as const;

@@ -103,7 +103,7 @@
   margin:0;
   max-width:min(14ch, 66vw);
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(40px,min(6.4vw,9.4vh),104px);
+  font-size:clamp(44px,min(7vw,10.2vh),114px);
   line-height:1.02; letter-spacing:-.034em;
   color:var(--cream); text-wrap:balance;
 }
@@ -112,8 +112,25 @@
 .ab-open__line em{
   color:var(--accent); font-weight:400; font-style:italic;
 }
+/* The disciplines, under the claim. Mono, small and widely tracked - the
+   same fine-print voice the tag above the headline is set in, so the
+   block reads as label / claim / evidence top to bottom rather than as
+   three competing sizes. Stacked rather than run together: two short
+   lines hold the headline's own left margin, where one long one would
+   run out past the measure the headline is set to. */
+.ab-open__sub{
+  margin:clamp(20px,3vh,34px) 0 0;
+  display:flex; flex-direction:column; gap:6px;
+}
+.ab-open__sub span{
+  font-family:var(--f-mono); font-weight:500;
+  font-size:clamp(11px,.95vw,13px); letter-spacing:.22em;
+  text-transform:uppercase; color:rgba(241,236,225,.72);
+}
+
 @media (max-width:860px){
   .ab-open__line{ max-width:min(12ch, 90vw); }
+  .ab-open__sub span{ letter-spacing:.16em; }
 }
 
 .ab-open__cue{
@@ -189,9 +206,6 @@
    through most of an empty frame with a gradient in it before anything
    else arrived. The band does the same thing in a third of the distance -
    the ramp is the same shape, it is simply spent faster. */
-.ab-intro{ padding:clamp(64px,10vh,120px) 0 clamp(190px,26vh,330px); }
-/* above the bridge, so the intro copy is never washed by it */
-.ab-intro > .wrap{ position:relative; z-index:1; }
 
 /* ============================================================
    THE BRIDGE  ·  black to cream
@@ -340,118 +354,211 @@
   -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.16) 0%, rgba(0,0,0,.1) 34%, rgba(0,0,0,.045) 64%, transparent 100%);
   mask-image:linear-gradient(to bottom, rgba(0,0,0,.16) 0%, rgba(0,0,0,.1) 34%, rgba(0,0,0,.045) 64%, transparent 100%);
 }
-/* Figure, copy, figure. The middle column is the wide one and it is the
-   only one carrying text; the two outside it are the same width as each
-   other, so the row is symmetrical about the page's centre line and the
-   copy sits on that line rather than merely somewhere between two
-   things.
+/* ============================================================
+   2 · THE INTRO  ·  one band, with the figure standing inside it
 
-   `minmax(0, …)` on the middle track because a grid column sized off a
-   fraction still refuses to go below the width of its longest unbroken
-   word by default, and one long discipline name was widening the whole
-   track at narrow widths. */
-/* The two figures are given fixed side tracks rather than a share of the
-   row, and the copy takes everything else. They were a third of the width
-   each, which is what was squeezing the list into six short lines: the
-   sentence is the section, and the figures are what stands either side of
-   it - so they get only the width they need to be read as figures. */
-.ab-intro__grid{
-  display:grid;
-  grid-template-columns:clamp(112px,14vw,196px) minmax(0,1fr) clamp(112px,14vw,196px);
-  gap:clamp(16px,2.6vw,48px); align-items:center;
+   "We are" set edge to edge with the man in the gap between the two
+   words, the seven disciplines hung off the band's baseline as fine
+   print, and the payoff underneath. The band runs behind him: the inner
+   ends of both words go under his shoulders and the eye closes them.
+
+   Three numbers hold the whole thing together and everything else is
+   derived from them:
+
+     --fig-h   the figure's height, and the reason it is height and not
+               width: the figure is the tallest thing on the panel, so it
+               is what decides whether the composition fits one screen. A
+               width-derived size looks right on a wide monitor and falls
+               out of the bottom of a short window, which is the failure
+               this layout cannot have.
+     --fig     its width, which is --fig-h through the camera's own 4:5
+               framing (see FRAME_H in components/AboutMan.tsx).
+     --band-fs the band's type size, in vw rather than svh, because the
+               band's job is to reach both edges of the screen whatever
+               shape it is. The two do drift apart on odd aspect ratios,
+               and that is correct: the figure should always fit and the
+               band should always bleed.
+   ============================================================ */
+
+/* Exactly one screen, and centred in it rather than stacked by padding -
+   the band, the figure, the fine print and the payoff are one held image,
+   and something you have to scroll to assemble is not that. The bottom
+   padding is not spacing, it is the length of the bridge below (see
+   .ab-bridge), so the content has to sit clear of the band the page
+   changes colour in. */
+.ab-intro{
+  min-height:100svh;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:clamp(48px,7vh,92px) 0 clamp(160px,21vh,285px);
 }
-/* Centred, and no measure of its own - the middle track is the measure.
-   The two paragraphs are sized against it rather than against each other:
-   the list is the big type and lands in three lines, the payoff is set
-   small enough to hold on one. That difference in scale is not decoration,
-   it is what buys the single line - at one size, a 55-character sentence
-   cannot fit a measure that breaks a 104-character one into three. */
-/* The scale is set once, here, and the two paragraphs below are sized in
-   em against it - so `.6em` on the payoff means six-tenths of the list,
-   which is the relationship the layout depends on, rather than six-tenths
-   of whatever the document happens to inherit. */
-.ab-intro__copy{ text-align:center; font-size:clamp(24px,3vw,46px); }
-.ab-intro__line{
+/* above the bridge, so nothing here is ever washed by it */
+.ab-intro > .wrap{ position:relative; z-index:1; }
+
+.ab-intro__stage{
+  --fig-h:clamp(300px, 46svh, 620px);
+  --fig:calc(var(--fig-h) * 0.8);
+  /* Sized to reach most of the way across the frame rather than off both
+     edges of it. "We are" is five glyphs, so every extra percent of width
+     buys a lot of height: at full bleed the caps stood 64% as tall as the
+     whole figure, which left the band no room to clear the monitor at the
+     top and still finish inside the torso at the bottom. At this size it
+     spans about 87% of the viewport - which is where the first of the
+     three references sets its own line - and the two constraints below
+     both hold.
+
+     The ceiling is the figure's own height rather than a pixel value, and
+     that is the whole trick. Both terms have to be here: on a normal
+     window the vw term binds and the band reaches across the frame, and
+     on a very wide one the figure has stopped growing (--fig-h is capped)
+     while vw has not, so without the second term the band would keep
+     climbing until it was standing over the monitor. 0.72 is not chosen,
+     it is what falls out of the two constraints on --band-y below. */
+  --band-fs:min(20.5vw, calc(var(--fig-h) * 0.72));
+  /* Where the band crosses the figure, as a fraction of its height, and
+     it is pinned between two hard edges rather than chosen by eye.
+
+     The monitor's underside sits at 33% of this box, and the caps must
+     start below it: the face is the one thing on the panel you are meant
+     to look at, and a word across the eyes costs more than it buys. The
+     caps must also finish inside the torso, above the point the canvas
+     has faded out, or the band ends against bare panel instead of against
+     him. At 0.60 the cap-top lands at 34% and the baseline at 86%, which
+     satisfies both with nothing to spare - so this number and --band-fs
+     move together or not at all. */
+  --band-y:calc(var(--fig-h) * 0.60);
+  position:relative;
+}
+
+/* The figure. The only thing here in normal flow, so it is what gives the
+   stage its height and everything else can be hung off it. */
+.ab-intro__figure{
+  position:relative; z-index:2;
+  width:var(--fig); height:var(--fig-h);
+  margin-inline:auto;
+  pointer-events:none;
+}
+
+/* Full bleed. 100vw off the stage's own centre line, which is the page's,
+   and the word pair is allowed to overrun that - .ab-panel clips, so the
+   ends run off both edges instead of being fitted between them. Type this
+   size that stops short of the edge reads as a headline; type that leaves
+   the frame reads as something the frame is a window onto. */
+.ab-intro__band{
+  position:absolute; z-index:1;
+  top:var(--band-y); left:50%;
+  width:100vw; margin-left:-50vw;
+  transform:translateY(-50%);
+  display:flex; justify-content:center; align-items:baseline;
+  pointer-events:none;
+}
+.ab-intro__word{
   font-family:var(--f-display); font-weight:700;
-  font-size:1em; line-height:1.16; letter-spacing:-.015em;
-  text-wrap:balance;
+  font-size:var(--band-fs); line-height:.78;
+  letter-spacing:-.035em; text-transform:uppercase;
+  white-space:nowrap; color:var(--cream);
+  /* each half is pushed out from the middle by lib/about-motion.ts */
+  will-change:transform, opacity;
 }
-.ab-intro__line em{
+/* The gap the figure stands in. Narrower than he is, so both words finish
+   underneath him rather than beside him - about a sixth of his width
+   disappears at each shoulder, which is enough for the eye to have to
+   close the pair and not so much that either word stops being readable. */
+.ab-intro__slot{ flex:0 0 calc(var(--fig) * 0.68); }
+
+/* The fine print, hung off the band's baseline and out to the right of
+   the figure. 0.34em below the band's centre line is where the cap
+   baseline falls at this line-height, and translateY(-100%) sets the
+   block on it - so the list sits on the same line the band does rather
+   than merely near it, which is the detail that makes the pairing read as
+   typeset instead of stacked.
+
+   Left-ranged inside a block pushed right: ragging the text itself right
+   would put the list's own edge against the screen's, and four lines of
+   right-ranged prose is harder to read than four left-ranged ones for
+   nothing gained. */
+.ab-intro__note{
+  width:min(46ch, 48%); margin:clamp(14px, 2.2svh, 30px) 0 0 auto;
+  /* Ranged right as a block, left-ranged as text. Ragging the prose
+     itself right would put the list's own edge against the screen's, and
+     four lines of right-ranged text is harder to read than four
+     left-ranged ones for nothing gained. */
+  text-align:left;
+  font-family:var(--f-body); font-weight:400;
+  font-size:clamp(11px, .95vw, 14px); line-height:1.5;
+  letter-spacing:.005em; color:var(--muted);
+  will-change:transform, opacity;
+}
+
+/* The payoff, under the whole arrangement and the line that takes the
+   accent. Pushed down off the figure rather than off the band, so it
+   keeps its distance from the thing directly above it at every height. */
+.ab-intro__payoff{
+  margin-top:clamp(22px, 4svh, 56px);
+  text-align:center;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(16px, 1.55vw, 26px); line-height:1.25;
+  letter-spacing:-.01em;
+}
+.ab-intro__payoff em{
   color:var(--accent);
   font-weight:400; font-style:italic; text-wrap:balance;
 }
-/* The payoff is now its own split root (see AboutIntro in
-   AboutSections.tsx), so this margin lands once, on the paragraph itself -
-   not on the inline em nested inside it. A lighter touch than
-   .who__pitch's on the home page: a full blank line here was reading as
-   too big a jump between the two closely-related lines. */
-.ab-intro__payoff{ margin-top:1em; }
-/* The payoff, at about three-fifths of the list above it and on one line.
-   `nowrap` only where the arithmetic holds: at this size the sentence is
-   comfortably inside the middle track from 1101px up, and below that the
-   track gets narrow enough that forcing one line would push the type off
-   its own column. */
-.ab-intro__payoff{ font-size:.6em; }
-@media (min-width:1101px){
-  .ab-intro__payoff{ white-space:nowrap; }
-}
-
-/* Three layers, back to front: burst, figure, bulbs. The box keeps the
-   ratio the old artwork set, so the bulb percentages keep their
-   relationship to the figure at every width. The perspective and
-   preserve-3d that used to be on this pair went with data-tilt (see
-   AboutIntro in components/AboutSections.tsx) - nothing here is rotated
-   in CSS any more, the depth is real and inside the canvas. */
-/* One box per figure, and they are the full width of their own column
-   now rather than a fraction of a much wider one - the column is already
-   the narrow part of the row. The portrait ratio is the model's own
-   framing (see FRAME_H in components/AboutMan.tsx), so the box shape and
-   the camera agree and the figure never stands in a box taller than it
-   needs. */
-.ab-intro__visual{
-  position:relative; aspect-ratio:1024/1536;
-  width:100%; max-width:196px; margin-inline:auto;
-}
-/* the bulbs are sized in px, so they have to be told the box shrank -
-   at the old scale four of them ringing a 196px figure read as balloons */
-.ab-intro__visual .bulbs{ --bulb-k:.6; }
-/* Nudged apart, and down. The two boxes are the tallest things in the row
-   and dropping them a little below the copy's centre line stops the three
-   columns reading as one flat band; the outward pull puts each figure
-   nearer its own edge of the page, which is where the space actually is
-   once the copy has been pulled into the middle. */
-.ab-intro__visual--l{ transform:translate(-16%, 3%); }
-.ab-intro__visual--r{ transform:translate(16%, 3%); }
-@media (prefers-reduced-motion:reduce){
-  .ab-intro__visual--l,
-  .ab-intro__visual--r{ transform:none; }
-}
 
 /* The 3D figure - components/AboutMan.tsx. It fills the box and frames
-   itself to the box's height, so the man stands the full height of the
-   art whatever column he is given. GSAP owns the wrapper's opacity and
-   transform through data-clip, the same reveal the cutout had; the
-   canvas fades in under that on its own once the model has arrived, so
-   a reveal that fires before the download lands does not wipe in an
-   empty rectangle. */
+   itself to the box's height, so the torso stands the full height of the
+   art whatever the row gives it. GSAP owns the wrapper's opacity and
+   transform through data-clip, the same reveal the old cutout had; the
+   canvas fades in under that on its own once the model has arrived, so a
+   reveal that fires before the download lands does not wipe in an empty
+   rectangle. */
 .ab-man{
   position:absolute; inset:0; z-index:1;
   will-change:transform, opacity;
 }
+/* The mask on the canvas is structural, not decoration. The model is cut
+   off at the waist at bake time (FLOOR_Y in scripts/build-about-man.mjs),
+   and a cut through a photogrammetry scan is an open shell - from below
+   you would be looking up inside the jacket. This fade reaches nothing
+   well above where the geometry stops, so the open edge is never on
+   screen and the figure reads as dissolving into the panel rather than as
+   ending. It is a mask rather than a gradient overlay because the panel
+   behind it is not one flat colour: the splash burst sits between the two,
+   and an opaque scrim would have flattened it.
+
+   The percentages are tied to the camera. FRAME_H 1.52 centred on y=0.36
+   puts the cut at 92.7% down the canvas and the jacket hem at 85.5%, so
+   the ramp is spent between 70% and 90% - clear of the hem at the top and
+   clear of the cut at the bottom. Move the framing and these move with
+   it. */
 .ab-man__canvas{
   display:block; width:100%; height:100%;
   opacity:0; transition:opacity .9s var(--ease);
+  -webkit-mask-image:linear-gradient(to bottom, #000 0 70%, transparent 90%);
+  mask-image:linear-gradient(to bottom, #000 0 70%, transparent 90%);
 }
 .ab-man[data-ready="1"] .ab-man__canvas{ opacity:1; }
 @media (prefers-reduced-motion:reduce){
   .ab-man__canvas{ transition:none; }
 }
 
+/* The bulbs ring the head, which is the top third of the figure's box -
+   they are sized in px, so they have to be told what box they are ringing,
+   and this frame is close to the width the full-size ring was tuned for. */
+.ab-intro__figure .bulbs{ --bulb-k:.85; }
+
 /* Sized by insets, not a centring translate - lib/motion.ts owns this
-   element's transform and drags it toward the cursor. */
+   element's transform and drags it toward the cursor.
+
+   Behind everything, and sized off the figure rather than off the stage:
+   the burst is what the man is standing in front of, and spread across
+   the full width of the row it would have stopped being behind him and
+   started being a background for the whole panel. */
 .ab-intro__splash{
   position:absolute; z-index:0; pointer-events:none;
-  left:-30%; right:-30%; top:-26%; bottom:-26%;
+  left:50%; top:calc(var(--fig-h) * 0.44);
+  width:calc(var(--fig) * 1.9); aspect-ratio:1;
+  margin-left:calc(var(--fig) * -0.95);
+  margin-top:calc(var(--fig) * -0.95);
   will-change:transform;
   /* cooler and a touch brighter than the home-page splash, to sit with the
      green already printed into the artwork */
@@ -477,9 +584,10 @@
 .bulb svg{ width:100%; height:auto; display:block; }
 @media (max-width:1100px){
   .bulbs{ --bulb-k:.8; }
-  /* the copy keeps the middle and the figures give up what little width
-     they have left - the sentence is the thing this layout is for */
-  .ab-intro__visual{ max-width:150px; }
+  /* The fine print gives up its share first. At this width the space
+     between the figure and the right edge is what runs out, and a list
+     squeezed to twelve characters a line is worse than a smaller one. */
+  .ab-intro__note{ width:min(30ch, 34%); }
 }
 
 /* ---------- 3 · the founders ---------- */
@@ -1370,21 +1478,36 @@
      a phone put it straight into the veil the section hands off with. */
   .ab-open{ height:92svh; align-items:center; }
   .ab-open__intro{ transform:none; }
-  /* Three columns will not fit a phone: at that width the copy gets
-     about eighteen characters a line and the two figures get eighty
-     pixels each. So the row folds - the copy takes the full width on the
-     first line and the two of them stand side by side underneath it,
-     which keeps the one thing the arrangement is for (a figure either
-     side of the sentence, both still watching the cursor) and drops only
-     the horizontal part of it. */
-  .ab-intro__grid{
-    grid-template-columns:repeat(2,1fr);
-    gap:clamp(20px,5vw,36px) clamp(12px,3vw,24px);
+  /* The band survives the fold and the fine print does not.
+
+     The band is the one thing on this panel that works at any width: two
+     words with a man in the gap needs a gap, not a grid, and a phone has
+     one. It only needs its own numbers - a narrower slot, because at
+     74vw of figure the desktop gap would push both words most of the way
+     off screen, and a type size that reaches the edges rather than a
+     third of the way past them.
+
+     The fine print gives up its corner and centres: ranged right against
+     a phone's edge it is a column of text with no counterweight on the
+     other side of it, which reads as a mistake rather than as placement.
+     Centred under a centred figure it is simply the caption it always
+     was. */
+  .ab-intro__stage{
+    --fig-h:clamp(260px, 42svh, 400px);
+    --band-fs:min(17vw, calc(var(--fig-h) * 0.44));
+    /* Raised, because the band is a much smaller share of the figure at
+       this width - 390px of screen only pays for so much type, and left
+       at the desktop 0.60 the strip crossed him at the waist, where there
+       is nothing to read it against. At 0.52 it is back on the chest. */
+    --band-y:calc(var(--fig-h) * 0.52);
   }
-  .ab-intro__copy{ grid-column:1 / -1; grid-row:1; max-width:26ch; margin-inline:auto; }
-  .ab-intro__visual{ max-width:128px; }
-  .ab-intro__visual--l{ grid-column:1; grid-row:2; transform:translateX(-2%); }
-  .ab-intro__visual--r{ grid-column:2; grid-row:2; transform:translateX(2%); }
+  /* and a narrower gap to stand in, so the pair still reaches the edges
+     once the type has given up two thirds of its size */
+  .ab-intro__slot{ flex-basis:calc(var(--fig) * 0.44); }
+  .ab-intro__note{
+    width:100%; margin-inline:0;
+    text-align:center; font-size:clamp(11px, 3vw, 13px);
+  }
   .drivers{ grid-template-columns:1fr; }
   .ab-drives{ padding-top:clamp(96px,15vh,150px); }
   /* The one-screen lock comes off here. On a phone the title, the copy

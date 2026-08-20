@@ -39,9 +39,27 @@ export const OVERTURE_WALLS = [
   /* Horizontal on purpose: this wall is held long enough to be read as a
      picture, and the tall 9:16 art that used to sit here (creativity 7,
      now down in the fast tail) lost most of itself to the crop on a wide
-     screen. */
-  { img: "/assets/SC Website Revamp/01. Home/Wall 3.jpg", label: "Attitude" },
-  { img: IMG.photoshop, label: "Craft" },
+     screen. Wall 3 - the cat - came out of this slot; Wall 2 is promoted
+     up from the fast tail to take it, being the strongest of the three
+     landscape walls and one that survives being looked at rather than
+     glimpsed.
+
+     Walls 4-7 were delivered as landscape art saved rotated into a
+     portrait box, and have been turned 90deg back the right way up in
+     the asset folder itself rather than with a CSS transform - a wall is
+     a textured plane in a 3D stack (lib/overture-motion.ts) and rotating
+     the picture on it would rotate the plane. They read as landscape from
+     here on, so this slot has more than three candidates now if the
+     running order is ever re-cut. */
+  { img: "/assets/SC Website Revamp/01. Home/Wall 2.jpg", label: "Attention" },
+  /* The fourth wall, and the second of the two the sequence is still slow
+     enough to actually look at. Wall 6 - the engraved ship - rather than
+     the Photoshop screen that used to be here: it is the same beat about
+     craft, made by hand rather than on a screen, and it is the one of the
+     four newly-turned walls that holds up at this size without going
+     quiet. The Photoshop frame is not lost, it swaps down into the slot
+     this came out of, so the run is exactly as long as it was. */
+  { img: "/assets/SC Website Revamp/01. Home/Wall 6.jpg", label: "Craft" },
   { img: IMG.brain, label: "Strategy" },
   { img: IMG.bootPhone, label: "Content" },
   { img: "/assets/who-culture.jpg", label: "Us" },
@@ -51,11 +69,17 @@ export const OVERTURE_WALLS = [
      stop getting their own impact thud: at this speed a sound per wall
      started reading as more walls than were actually on screen. */
   { img: "/assets/SC Website Revamp/01. Home/Wall 1.jpg", label: "Planning" },
-  { img: "/assets/SC Website Revamp/01. Home/Wall 2.jpg", label: "Audience" },
-  { img: "/assets/SC Website Revamp/01. Home/Wall 8.jpg", label: "Pulse" },
+  /* Wall 5, into the slot Wall 2 left on its way up the stack. It is the
+     last of the eight walls that wasn't already in here - which is why
+     the beat Wall 8 (the op-art) used to hold is simply gone rather than
+     refilled: there was one spare wall for two slots, and repeating an
+     image inside one sequence is worse than one fewer beat in a tail
+     that is texture anyway. FALL/OVERLAP in lib/overture-motion.ts index
+     by position and clamp, so a shorter list just ends sooner. */
+  { img: "/assets/SC Website Revamp/01. Home/Wall 5.jpg", label: "Focus" },
   { img: IMG.creativity, label: "Creativity" },
   { img: "/assets/SC Website Revamp/01. Home/Wall 4.jpg", label: "Reverie" },
-  { img: "/assets/SC Website Revamp/01. Home/Wall 6.jpg", label: "Voyage" },
+  { img: IMG.photoshop, label: "Retouch" },
   { img: "/assets/SC Website Revamp/01. Home/Wall 7.jpg", label: "Horizon" },
 ] as const;
 

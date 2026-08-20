@@ -1,24 +1,38 @@
-/* Lightbulbs popping in and out of the airspace around the group - ideas
+/* Lightbulbs popping in and out of the airspace around the figure - ideas
    arriving, one after another, never all at once.
 
-   Positions are hand-placed into the gaps the artwork leaves: above the
-   heads and out to either side, clear of the faces and of the bulb already
-   drawn into the illustration. They are percentages of the visual box, so
-   they hold their relationship to the figures at any width - and they ring
-   the group wide, right out to its edges, rather than crowding the middle.
+   Positions are percentages of the figure's box, so they hold their
+   relationship to it at any width. They were placed against a full-length
+   figure in a tall narrow column and have been re-placed against the
+   torso crop that replaced it (see FLOOR_Y in scripts/build-about-man.mjs
+   and FRAME_H in components/AboutMan.tsx): in that frame the monitor
+   spans roughly x 36-64% and y 8-33%, and the shoulders reach out to
+   x 22-78% below it. So the ring goes round the head and out along the
+   tops of the shoulders, which is where the empty corners of the frame
+   now are - the old set clustered at the vertical extremes of a portrait
+   box that no longer exists and would have sat half of them over the
+   jacket and half off the top.
+
+   None are placed below about a quarter of the way down. Two things are
+   under there and neither wants a bulb over it: the band of type crosses
+   the chest, with its cap-tops at roughly 31% of this box (see --band-y
+   in about.css), and below that the canvas is already fading out into the
+   panel, where a bulb popping in over a dissolve reads as a hole in it.
+   So the whole ring goes in the airspace around the monitor, which is
+   where the composition leaves room for it anyway.
 
    The pop itself lives in lib/about-motion.ts - each bulb gets its own
    looping timeline on an index-derived offset so they never fall into step.
    `s` is the rendered width in px at the largest breakpoint. */
 const BULBS = [
-  { x: 1, y: 25, s: 28 },
-  { x: 23, y: 1, s: 23 },
-  { x: 46, y: 5, s: 32 },
-  { x: 68, y: 0, s: 21 },
-  { x: 88, y: 17, s: 29 },
-  { x: 97, y: 45, s: 22 },
-  { x: 1, y: 66, s: 25 },
-  { x: 82, y: 68, s: 19 },
+  { x: 13, y: 13, s: 28 },
+  { x: 29, y: 1, s: 23 },
+  { x: 48, y: -5, s: 32 },
+  { x: 67, y: -1, s: 21 },
+  { x: 86, y: 9, s: 29 },
+  { x: 95, y: 25, s: 22 },
+  { x: 3, y: 26, s: 25 },
+  { x: 76, y: 19, s: 19 },
 ];
 
 function Bulb() {
@@ -44,16 +58,13 @@ function Bulb() {
   );
 }
 
-/* `pick` takes a slice of the ring by index. The intro is two figures
-   flanking the copy now rather than one artwork filling half the row, so
-   the eight positions are split between the two boxes - four each - and
-   the ring reads as one field of ideas over the whole composition instead
-   of two identical crowns of eight. */
-export default function AboutBulbs({ pick }: { pick?: number[] }) {
-  const bulbs = pick ? pick.map((i) => BULBS[i]).filter(Boolean) : BULBS;
+/* There is one figure on the panel now rather than two flanking the copy,
+   so the whole ring goes on it - the `pick` slice that used to hand four
+   positions to each of the two boxes has nothing left to divide. */
+export default function AboutBulbs() {
   return (
     <span className="bulbs" aria-hidden="true">
-      {bulbs.map((b) => (
+      {BULBS.map((b) => (
         <i
           className="bulb"
           key={`${b.x}-${b.y}`}

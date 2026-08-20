@@ -54,10 +54,24 @@
 }
 .ct-hero__copy,
 .ct-hero__form{ display:flex; flex-direction:column; align-items:stretch; }
+/* Two lines, and each one is a whole question: "Got a brief?" over "Or
+   just want to say hi?". It used to be set at hero scale inside a 14ch
+   measure, which is narrower than the second question is long - so it
+   broke mid-phrase and left "to say hi?" hanging on a third line.
+
+   The fix is the measure and the size, not a nowrap: the column governs
+   the width now (max-width:none) and the type is sized so the longer
+   question clears it with room to spare. Deliberately not white-space:
+   nowrap - [data-split] gives every line its own overflow:hidden mask to
+   rise out of (see lib/motion.ts), so a line that outgrows the column
+   would be clipped rather than wrapped. Sized to fit, it wraps as a last
+   resort instead of losing a word. text-wrap:balance goes with it: its
+   whole job is to even out line lengths, which is the break this is
+   trying not to have. */
 .ct-hero__title{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(38px,4.6vw,72px); line-height:.98; letter-spacing:-.03em;
-  max-width:14ch; margin-top:22px; text-wrap:balance;
+  font-size:clamp(24px,3vw,52px); line-height:1.04; letter-spacing:-.03em;
+  max-width:none; margin-top:22px;
 }
 .ct-hero__title em{
   color:var(--accent); font-style:italic; font-weight:400; display:block;

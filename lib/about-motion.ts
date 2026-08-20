@@ -62,7 +62,7 @@ export function initAbout(): () => void {
         });
 
         // nothing ticks while the artwork is off screen
-        const host = bulbs[0].closest(".ab-intro__visual") || bulbs[0].parentElement;
+        const host = bulbs[0].closest(".ab-intro__figure") || bulbs[0].parentElement;
         if (host) {
           ScrollTrigger.create({
             trigger: host, start: "top 92%", end: "bottom 8%",
@@ -70,6 +70,96 @@ export function initAbout(): () => void {
           });
         } else {
           loops.forEach((tl) => tl.play());
+        }
+      }
+    }
+
+    /* -------------------------------------------------- the band
+       "We are" coming out from behind the figure.
+
+       The panel is one band of type running edge to edge with the man
+       standing in the gap between its two words (see AboutIntro in
+       components/AboutSections.tsx). This is the move that says the type
+       is behind him rather than around him: both halves start closed up
+       against his centre, where his own body hides them, and slide out to
+       the places CSS has already put them - so the first thing you see is
+       a man, and the claim arrives out of him.
+
+       Nothing is positioned here. The layout is CSS and the tween only
+       reads where CSS landed, so the phone fold that halves the gap and
+       drops the type size needs no matching branch in this file.
+
+       Fired once on entry rather than scrubbed. It is an arrival, not a
+       state: the words come out from behind him and are then simply there
+       to be read, and tying them to the scrollbar would pull them back
+       into his chest every time someone scrolled up to re-read the
+       payoff. */
+    {
+      const stage = document.querySelector<HTMLElement>(".ab-intro__stage");
+      const fig = stage?.querySelector<HTMLElement>(".ab-intro__figure");
+      const halves = gsap.utils.toArray<HTMLElement>("[data-band]", stage || document);
+      const meta = gsap.utils.toArray<HTMLElement>("[data-meta]", stage || document);
+
+      if (fig && halves.length) {
+        if (prefersReduced) {
+          gsap.set([...halves, ...meta], { autoAlpha: 1 });
+        } else {
+          /* Hidden from script, not from CSS: a visitor whose bundle never
+             arrives should be looking at the sentence, not at an empty
+             panel with a man standing in it. */
+          gsap.set([...halves, ...meta], { autoAlpha: 0 });
+
+          const play = () => {
+            const f = fig.getBoundingClientRect();
+            const cx = f.left + f.width / 2;
+
+            /* Measured in one pass before a single tween is built -
+               reading a rect after the first fromTo has written a
+               transform would be measuring a word already moved. Each
+               half is sent back to the figure's centre line and then a
+               little further, so the two overlap behind him at the start
+               and there is no frame where the pair sits legible in the
+               middle of the panel looking like a mistake. */
+            const seeded = halves.map((el) => {
+              const r = el.getBoundingClientRect();
+              return { el, dx: (cx - (r.left + r.width / 2)) * 1.06 };
+            });
+
+            const tl = gsap.timeline();
+            tl.fromTo(seeded.map((h) => h.el),
+              {
+                x: (i: number) => seeded[i].dx,
+                autoAlpha: 0, filter: "blur(14px)",
+              },
+              {
+                x: 0, autoAlpha: 1, filter: "blur(0px)",
+                duration: 1.25, ease: "power3.out", stagger: 0.06,
+              });
+
+            /* The fine print is the detail behind the claim, so it lands
+               after it rather than with it. */
+            if (meta.length) {
+              tl.fromTo(meta,
+                { y: 18, autoAlpha: 0 },
+                { y: 0, autoAlpha: 1, duration: 0.8, ease: "power2.out" },
+                0.55);
+            }
+
+            /* nothing on this panel is left holding a compositor layer for
+               an animation that finished */
+            tl.set([...halves, ...meta], { clearProps: "transform,filter" });
+          };
+
+          ScrollTrigger.create({
+            trigger: stage!, start: "top 72%", once: true,
+            /* fonts decide how wide each half is, and its width is half of
+               where it has to travel from - measuring before they swap
+               would build the move out of the fallback's metrics */
+            onEnter: () => {
+              if (document.fonts?.ready) document.fonts.ready.then(play, play);
+              else play();
+            },
+          });
         }
       }
     }

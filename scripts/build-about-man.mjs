@@ -53,13 +53,40 @@ const OUT = "public/assets/about/about-man.glb";
 const CUT_Y = 0.617;
 const PIVOT = [0.002, 0.6, 0.039];
 
+/* Where the figure stops. The page shows a torso now, not a whole man -
+   the figure stands in the middle of the frame at four times the size it
+   used to be at the edge of one, and at that scale a full-length body is
+   mostly trouser doing nothing while the part that acts (the shoulders
+   and the head on top of them) is too small to read.
+
+   So the legs come off here rather than being framed out at runtime.
+   Cropping with the camera would still have downloaded them, uploaded
+   them to the GPU and transformed them every frame to be drawn off the
+   bottom of a canvas nobody can see.
+
+   Where it cuts is read off the same silhouette the neck cut was. Below
+   the shoulders the slices hold a depth of ~0.44 all the way down the
+   jacket; at y=-0.18 the depth collapses to 0.33 and one slice further to
+   0.28, which is the jacket hem ending and the trousers carrying on
+   alone. FLOOR_Y sits below that, so the hem is kept whole and what the
+   cut actually runs through is plain trouser - and the canvas fades that
+   last stretch out to nothing anyway (see .ab-man__canvas in about.css),
+   so the open edge is never on screen. */
+const FLOOR_Y = -0.28;
+
 /* Triangle budgets. The head is a box with a bezel - hard surfaces, flat
    panels, and almost nothing that a triangle earns its keep on - so it
    takes the harder cut. The body is cloth: the lapel roll, the sleeve
    creases and the trouser break are the whole reason the figure reads as
    photographed rather than modelled, and they go first if pushed. */
 const HEAD_TRIS = 16000;
-const BODY_TRIS = 58000;
+/* The body is a torso now (see FLOOR_Y), not a whole figure, so the old
+   58k would have been the legs' share handed to the jacket. It is a
+   smaller surface shown larger, so it does not simply scale down by the
+   share of height that went: 40k over the torso alone is a finer mesh per
+   square inch than 58k was over the whole man, which is what the new
+   framing asks for. */
+const BODY_TRIS = 40000;
 
 /* Texture budgets. Albedo carries the read, so it keeps the most.
    The normal map is fabric weave at this size and survives half.
@@ -121,11 +148,32 @@ const prim = src.meshes[0].primitives[0];
 const POS = readAccessor(prim.attributes.POSITION);
 const NRM = readAccessor(prim.attributes.NORMAL);
 const UV = readAccessor(prim.attributes.TEXCOORD_0);
-const IDX = Uint32Array.from(readAccessor(prim.indices));
+const RAW_IDX = Uint32Array.from(readAccessor(prim.indices));
 const VCOUNT = POS.length / 3;
 
 console.log(`source  ${(statSync(SRC).size / 1048576).toFixed(2)}MB  ` +
-  `${VCOUNT.toLocaleString()} verts  ${(IDX.length / 3).toLocaleString()} tris`);
+  `${VCOUNT.toLocaleString()} verts  ${(RAW_IDX.length / 3).toLocaleString()} tris`);
+
+/* ------------------------------------------------------------- the floor */
+
+/* The legs go before anything else looks at the mesh, so every step below
+   - the seam scan, the split, both decimations, the vertex compaction -
+   is working on the figure that actually ships. By centroid, for the same
+   reason the head split is: a triangle is a piece of surface and belongs
+   wholly on one side of a cut. */
+const IDX = (() => {
+  const keep = [];
+  for (let t = 0; t < RAW_IDX.length; t += 3) {
+    const y = (POS[RAW_IDX[t] * 3 + 1] + POS[RAW_IDX[t + 1] * 3 + 1] +
+      POS[RAW_IDX[t + 2] * 3 + 1]) / 3;
+    if (y >= FLOOR_Y) keep.push(RAW_IDX[t], RAW_IDX[t + 1], RAW_IDX[t + 2]);
+  }
+  return Uint32Array.from(keep);
+})();
+
+console.log(`torso   legs cut at y=${FLOOR_Y}  ` +
+  `${(IDX.length / 3).toLocaleString()} tris kept ` +
+  `(${(100 - (IDX.length / RAW_IDX.length) * 100).toFixed(1)}% dropped)`);
 
 /* ------------------------------------------------------------- the split */
 
