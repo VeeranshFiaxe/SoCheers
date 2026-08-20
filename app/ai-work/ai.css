@@ -198,19 +198,33 @@
 .ai-gate__door--yes{ background:var(--accent); border-color:var(--accent); color:#04140b; font-weight:500; }
 .ai-gate__door--yes:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
 
-/* The collapse. 1fr -> 0fr on a single-row grid, rather than a height
-   animation: the panel's height is not knowable in CSS and animating to
-   `auto` does not interpolate, so the grid row is the one way to get a
-   real collapse out of content nobody measured. `inert` on the same
-   element (see components/AiGate.tsx) is what takes it out of reach
-   while it is shut. */
+/* The collapse. A single grid row taken from full to nothing, rather
+   than a height animation: the panel's height is not knowable in CSS and
+   animating to `auto` does not interpolate, so the grid row is the one
+   way to get a real collapse out of content nobody measured. `inert` on
+   the same element (see components/AiGate.tsx) is what takes it out of
+   reach while it is shut.
+
+   minmax(0, Nfr) rather than the plain `1fr -> 0fr` this is usually
+   written as, and the difference is the whole bug it was written to fix:
+   a bare `0fr` track still takes its *automatic minimum size*, which is
+   the min-content height of what is in it. On a paragraph that reads as
+   a panel that will not quite shut; under a wall of ninety images it was
+   a shut gate with fifteen thousand pixels of invisible page hanging off
+   the bottom of it. Naming the minimum as 0 is what actually collapses
+   the track, and minmax interpolates the same way, so the transition is
+   unchanged.
+
+   The min-height on the child is still required - it stops the item
+   itself refusing to shrink inside the track - but on its own it was
+   never enough. */
 .ai-hold{
   overflow:hidden;
-  display:grid; grid-template-rows:1fr;
+  display:grid; grid-template-rows:minmax(0,1fr);
   transition:grid-template-rows .75s var(--ease), opacity .5s var(--ease);
 }
 .ai-hold > *{ min-height:0; }
-.ai-hold[data-collapsed]{ grid-template-rows:0fr; opacity:0; }
+.ai-hold[data-collapsed]{ grid-template-rows:minmax(0,0fr); opacity:0; }
 @media (prefers-reduced-motion:reduce){ .ai-hold{ transition:none; } }
 
 /* ============================================================
