@@ -3,6 +3,7 @@ import "./ai.css";
 import { Nav, Overlays } from "@/components/Chrome";
 import AiMotion from "@/components/AiMotion";
 import AiGate from "@/components/AiGate";
+import AiThoughts from "@/components/AiThoughts";
 import AiStory from "@/components/AiStory";
 import AiGrid from "@/components/AiGrid";
 import { AI_HERO } from "@/lib/ai-content";
@@ -37,43 +38,43 @@ export default function AiWork() {
         <section className="ai-hero">
           <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>
 
+          {/* The reference treatment, and it is the ground the hero is set
+              on rather than an object in the corner of it: the figure
+              stands in the middle of the section and the noise coming out
+              of his head covers the whole width. Decoration, and it says
+              so - see components/AiThoughts.tsx. */}
+          <AiThoughts />
+
           <div className="wrap ai-hero__in">
-            <span className="tag" data-reveal>{AI_HERO.eyebrow}</span>
+            <div className="ai-hero__copy">
+              <span className="tag" data-reveal>{AI_HERO.eyebrow}</span>
 
-            {/* The look-and-feel reference from the call, used as a
-                graphic and never as content: it is aria-hidden, it says
-                nothing the English does not, and removing it costs the
-                page no meaning. A decorative script that nobody on the
-                team can proof is not a place to put a sentence. */}
-            <span className="ai-hero__kana" aria-hidden="true">{AI_HERO.kana}</span>
+              <h1 className="ai-hero__title" data-split>
+                {/* Hard break, not a balanced wrap: the first sentence has to
+                    finish on its own line ("make it" included) so the accent
+                    sentence gets the whole bottom line to itself.
 
-            <h1 className="ai-hero__title" data-split>
-              {/* Hard break, not a balanced wrap: the first sentence has to
-                  finish on its own line ("make it" included) so the accent
-                  sentence gets the whole bottom line to itself.
+                    The space before the break is not cosmetic: initSplits()
+                    in lib/motion.ts builds the screen-reader copy of this
+                    heading from textContent, which drops the break element
+                    entirely - without it the two sentences run together as
+                    one word. */}
+                {AI_HERO.lines[0]}{" "}<br />
+                <em>{AI_HERO.lines[1]}</em>
+              </h1>
 
-                  The space before the break is not cosmetic: initSplits()
-                  in lib/motion.ts builds the screen-reader copy of this
-                  heading from textContent, which drops the break element
-                  entirely - without it the two sentences run together as
-                  one word. */}
-              {AI_HERO.lines[0]}{" "}<br />
-              <em>{AI_HERO.lines[1]}</em>
-            </h1>
-
-            <p className="ai-hero__lede" data-reveal>{AI_HERO.lede}</p>
-            <span className="ai-hero__run" data-reveal>{AI_HERO.runtime}</span>
+              <p className="ai-hero__lede" data-reveal>{AI_HERO.lede}</p>
+            </div>
           </div>
         </section>
 
-        {/* The fork, and the story it guards. AiGate renders the story on
-            the server whatever happens and only collapses it once it is
-            live on the client - see the note at the top of the file. */}
-        <AiGate>
-          <AiStory />
-        </AiGate>
-
-        <AiGrid />
+        {/* The fork, and everything it guards. Both the story and the
+            wall are handed to AiGate rather than rendered after it: until
+            a door is picked, the page ends at the question - which is how
+            the scroll stops there without anything hijacking the wheel.
+            Both panels are still in the server's HTML; the collapse only
+            applies once the component is live. See components/AiGate.tsx. */}
+        <AiGate story={<AiStory />} work={<AiGrid />} />
       </main>
 
       <AiMotion />

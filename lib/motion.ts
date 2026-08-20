@@ -22,6 +22,26 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 
 type Grid = { tiles: HTMLElement[]; cols: number; rows: number };
 
+/* The live scroller, for the one case an anchor cannot cover.
+
+   Every a[href^="#"] on the site is bound to Lenis down in initLenis, so
+   a link is still the way to move the page and this is not a second
+   route to the same thing. What it is for is a scroll that has to happen
+   *after* something else does - components/AiGate.tsx opens a panel and
+   then goes to it, and an anchor would have left for the target's old
+   position on the click that started the expansion.
+
+   Module-level rather than passed around: initSite() owns one scroller
+   for the life of the page, and a caller that fires before it boots (or
+   after reduced motion has declined to build one) simply falls through
+   to the native scroll rather than needing to know. */
+let active: Lenis | null = null;
+
+export function smoothTo(target: HTMLElement, duration = 1.2): void {
+  if (active) active.scrollTo(target, { duration });
+  else target.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 export function initSite(): () => void {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canHover = window.matchMedia("(hover:hover)").matches;
@@ -59,6 +79,7 @@ export function initSite(): () => void {
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         smoothWheel: true,
       });
+      active = lenis;
       lenis.on("scroll", ScrollTrigger.update);
       addTicker((time: number) => lenis?.raf(time * 1000));
       gsap.ticker.lagSmoothing(0);
@@ -1668,6 +1689,7 @@ export function initSite(): () => void {
     splits.forEach((s) => s.revert());
     lenis?.destroy();
     lenis = null;
+    active = null;
     ScrollTrigger.getAll().forEach((st) => st.kill());
     ctx.revert();
     document.documentElement.classList.remove("is-foot");

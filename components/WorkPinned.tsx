@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { PINNED } from "@/lib/work-content";
+import { PINNED, PINNED_DWELL } from "@/lib/work-content";
 
 /* ============================================================
    SECTION A - the pinned stage, and it is the whole opening screen.
@@ -34,6 +34,18 @@ import { PINNED } from "@/lib/work-content";
 
    ---- why every frame is mounted ----
 
+   ---- the dwell ----
+
+   The stage advances itself on PINNED_DWELL and shows how long is left
+   on the selected poster, because a rail that moves on its own with no
+   warning reads as a page glitching rather than as a reel playing. The
+   clock stops the moment the reader is involved - pointer over the
+   stage, focus inside it, tab in the background - and any manual pick
+   restarts it from zero rather than dropping the reader into the tail
+   end of the previous frame's turn.
+
+   ---- why every frame is mounted ----
+
    All five heroes are in the DOM and cross-faded, one at full opacity.
    Swapping a single <img>'s src decodes on click and flashes white on
    the frame the reader just asked for. Five large images is the cost;
@@ -42,12 +54,49 @@ import { PINNED } from "@/lib/work-content";
    ============================================================ */
 export default function WorkPinned() {
   const [i, setI] = useState(0);
+  /* `held` is every reason the clock might be stopped at once, not a
+     boolean, because they overlap: a reader can hover the stage, tab
+     away and come back, and a single flag would resume the reel while
+     the pointer is still sitting on it. */
+  const [held, setHeld] = useState({ hover: false, focus: false, hidden: false });
+  const [ticking, setTicking] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
   const active = PINNED[i];
+  const paused = held.hover || held.focus || held.hidden;
 
   const go = useCallback((n: number) => {
     setI((prev) => (n + PINNED.length) % PINNED.length);
   }, []);
+
+  /* Reduced motion turns the reel off rather than speeding it up or
+     cross-fading it faster. Someone who has asked for less movement has
+     not asked for the same movement on a different schedule, and the
+     rail is fully operable by hand without it. */
+  useEffect(() => {
+    const q = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const set = () => setTicking(!q.matches);
+    set();
+    q.addEventListener("change", set);
+    return () => q.removeEventListener("change", set);
+  }, []);
+
+  /* A background tab should not burn through all five frames and land
+     the reader back on a stage that has moved on without them. */
+  useEffect(() => {
+    const onVis = () => setHeld((h) => ({ ...h, hidden: document.hidden }));
+    onVis();
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  /* `i` is in the deps on purpose: picking a poster by hand tears down
+     the pending timer and starts a fresh full turn, so a manual choice
+     is never cut short by whatever was left on the previous one. */
+  useEffect(() => {
+    if (!ticking || paused) return;
+    const t = window.setTimeout(() => go(i + 1), PINNED_DWELL);
+    return () => window.clearTimeout(t);
+  }, [i, ticking, paused, go]);
 
   /* Arrow keys walk the wall once it has focus. Tabbing through five
      posters to reach the last one is not what anyone expects of a rail. */
@@ -65,7 +114,14 @@ export default function WorkPinned() {
   }, [i]);
 
   return (
-    <section className="wk-stage" aria-label="Featured work">
+    <section
+      className="wk-stage"
+      aria-label="Featured work"
+      onPointerEnter={() => setHeld((h) => ({ ...h, hover: true }))}
+      onPointerLeave={() => setHeld((h) => ({ ...h, hover: false }))}
+      onFocusCapture={() => setHeld((h) => ({ ...h, focus: true }))}
+      onBlurCapture={() => setHeld((h) => ({ ...h, focus: false }))}
+    >
       {/* the frames, stacked */}
       {PINNED.map((c, n) => (
         <div
@@ -146,6 +202,22 @@ export default function WorkPinned() {
               >
                 <span className="wk-poster__shot">
                   <img src={c.thumb} alt="" loading="lazy" />
+                  {/* The turn left on this frame. Keyed on `i` so React
+                      replaces the node on every change and the animation
+                      runs from zero - restarting a CSS animation on a
+                      surviving element is otherwise a class-toggle and a
+                      reflow read, and it drops a frame every time. */}
+                  {n === i && ticking && (
+                    <span
+                      className="wk-poster__clock"
+                      key={i}
+                      aria-hidden="true"
+                      style={{
+                        animationDuration: `${PINNED_DWELL}ms`,
+                        animationPlayState: paused ? "paused" : "running",
+                      }}
+                    />
+                  )}
                 </span>
                 <span className="wk-poster__name">{c.brand}</span>
               </button>

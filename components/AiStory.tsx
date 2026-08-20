@@ -6,7 +6,10 @@ import { ASHOK } from "@/lib/ai-content";
    Server component - it is six paragraphs and a heading, and there is
    nothing on this page for a client bundle to do.
 
-   Set as a numbered column rather than as a full-bleed set piece. The
+   Set as a plain column rather than as a full-bleed set piece, and the
+   beats are not numbered: an index down the left turns six paragraphs
+   into a list of points, which is a document, and this is meant to read
+   as somebody telling you about a bloke they know. The
    restraint is the point: the page's argument is that everyone's output
    looks the same because everyone reached for the same generator, and a
    story making that case should not itself arrive as six screens of
@@ -27,9 +30,8 @@ export default function AiStory() {
         </h2>
 
         <div className="ai-story__beats">
-          {ASHOK.beats.map((b) => (
-            <p className="ai-beat" data-reveal key={b.n}>
-              <i className="ai-beat__n">{b.n}</i>
+          {ASHOK.beats.map((b, i) => (
+            <p className="ai-beat" data-reveal key={i}>
               {b.copy}
             </p>
           ))}

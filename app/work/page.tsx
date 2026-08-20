@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./work.css";
 import { Nav, Overlays } from "@/components/Chrome";
+import Footer from "@/components/Footer";
 import WorkMotion from "@/components/WorkMotion";
 import WorkPinned from "@/components/WorkPinned";
 import WorkGrid from "@/components/WorkGrid";
@@ -43,13 +44,24 @@ export default async function Work() {
       <Overlays />
       <Nav variant="sub" active="/work" />
 
-      <main id="top" className="wk-page">
+      {/* The room under the page. Same three parts the home page needs and
+          in the same upside-down order - the footer has to come first so
+          it is underneath, and .foot-run is one screen of nothing for the
+          page to scroll off through, because a fixed element adds no
+          height of its own. The whole sequence is initFooter() in
+          lib/motion.ts, which initSite() already runs on this route and
+          which returns quietly when the markup is not there - so this is
+          markup only, and there is no motion code behind it. */}
+      <Footer />
+
+      <main id="top" className="wk-page" data-foot-lift>
         {/* The work opens the page. There is no copy hero over this: the
             stage fills the first screen and everything it has to say is
             written on the frame - see components/WorkPinned.tsx. */}
         <WorkPinned />
         <WorkGrid assets={assets} />
       </main>
+      <div className="foot-run" data-foot-run aria-hidden="true" />
 
       <WorkMotion />
     </>

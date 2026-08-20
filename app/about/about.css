@@ -49,16 +49,38 @@
       rgba(6,6,10,.24) 14%,
       rgba(6,6,10,0) 34%);
 }
-/* The hand-off downward: a firm, early commit to solid --bg so the art's
-   navy is fully gone before the section ends and section 2 picks up on
-   flat colour with no seam. */
+/* The hand-off downward, into section 2.
+
+   It used to commit to solid --bg at 9% off the floor and run the whole
+   climb in four stops. Two things were wrong with that. The bottom tenth
+   of the opener was flat black, and the top of the next panel is flat
+   black too, so the two of them together made a dead band across the
+   join that read as a seam even though there is no edge there at all -
+   the eye finds the place where an image stops having detail. And four
+   stops over an alpha ramp is not enough: alpha is not perceptually
+   linear over a photograph, so the middle of the climb went dark much
+   faster than the ends and the film looked like it was being switched
+   off rather than fading.
+
+   Now it starts higher, finishes lower and is stopped throughout. The
+   commit to solid is at 2% instead of 9%, so the flat band is a fifth of
+   what it was, and the stops are crowded through the middle where the
+   ramp was accelerating. Same distance, same destination, no step. */
 .ab-open__veil{
   position:absolute; inset:0; z-index:1; pointer-events:none;
   background:linear-gradient(to top,
-    var(--bg) 0%, var(--bg) 9%,
-    rgba(11,11,12,.72) 24%,
-    rgba(11,11,12,.22) 46%,
-    rgba(11,11,12,0) 68%);
+    var(--bg) 0%, var(--bg) 2%,
+    rgba(11,11,12,.94) 8%,
+    rgba(11,11,12,.86) 13%,
+    rgba(11,11,12,.75) 19%,
+    rgba(11,11,12,.62) 26%,
+    rgba(11,11,12,.48) 34%,
+    rgba(11,11,12,.35) 43%,
+    rgba(11,11,12,.23) 52%,
+    rgba(11,11,12,.13) 62%,
+    rgba(11,11,12,.06) 72%,
+    rgba(11,11,12,.02) 80%,
+    rgba(11,11,12,0) 88%);
 }
 
 /* ---------- the opener's type ----------
@@ -256,13 +278,37 @@
      was the ramp doing most of its lightening in the last third, so the
      paper arrived instead of emerging. That is fixed in the stops below
      (crowded at the pale end, where the eye is sharpest), so the distance
-     can come back down without the step coming back with it. */
-  display:block; height:clamp(210px,30vh,380px); pointer-events:none;
-  /* Warm ash, not grey. Hand-stopped so it holds the black through the
-     first fifth and then spends most of its travel in the middle, where
-     the grain is densest - the two are doing their work in the same
-     place. The last stop is exactly the panel colour below, which is
-     what makes the join between the two sections unfindable.
+     can come back down without the step coming back with it.
+
+     Down again, and by a third: 32vh was long enough that the join read
+     as its own empty section between two real ones. The ramp is what has
+     to stay smooth, not the band, and the ramp has kept its length by
+     taking back the dead hold above it (see the stops). */
+  display:block; height:var(--bridge-h); pointer-events:none;
+  /* Warm ash, not grey. The last stop is exactly the panel colour below,
+     which is what makes the join between the two sections unfindable.
+
+     The band is a third shorter than it was and the ramp inside it is
+     barely shorter at all, which is the whole trick. It used to hold flat
+     near-black through its first ninth before starting to lighten - that
+     hold existed because the payoff was sitting inside the top of the
+     band and had to be read off something dark. The payoff moved up out
+     of the band two rounds ago and the hold stayed behind, so a ninth of
+     the height was being spent on black drawn over black. It reads as
+     exactly what the shortening was asked to remove: dead dark space
+     above a gradient.
+
+     So the hold is gone and the tuned ramp below is the same sequence of
+     colours it always was, its positions rescaled to start at 3% instead
+     of 11%. Shorter band, near-identical run of colour, and the dark tail
+     above it cut.
+
+     Banding is not a risk at this length and would not have been at twice
+     it: the ramp moves about 233 levels of red over 165 to 275 pixels, so
+     every 8-bit step is under a pixel wide. What makes a gradient band is
+     a small colour range spread over a long distance, which is the
+     opposite of this one. The two grain layers below are the belt to that
+     brace.
 
      The pale end is stopped much more finely than the dark end. A ramp
      climbing at a constant rate is not perceptually constant: the eye
@@ -273,23 +319,38 @@
      and there is no point you can name as the moment it turned white. */
   background:linear-gradient(to bottom,
     rgba(11,11,12,0) 0%,
-    #0b0b0c 10%,
-    #131110 20%,
-    #1c1917 27%,
-    #292420 34%,
-    #3a332c 41%,
-    #4e453b 48%,
-    #655b4d 55%,
-    #7e7362 62%,
-    #978b77 69%,
-    #ada28d 75%,
-    #c0b5a1 80.5%,
-    #d0c6b4 85%,
-    #ddd5c5 89%,
-    #e7e1d4 92.5%,
-    #eeeae0 95.5%,
-    #f2efe8 98%,
-    #f4f2ec 100%);
+    #0b0b0c 3.0%,
+    #100e0e 7.4%,
+    #141211 11.7%,
+    #191614 16.1%,
+    #1f1b18 20.4%,
+    #26211c 24.8%,
+    #2e2823 29.2%,
+    #372f28 33.0%,
+    #41382f 36.8%,
+    #4b4136 40.6%,
+    #564b3e 44.4%,
+    #615546 48.2%,
+    #6d5f4f 52.0%,
+    #786a58 55.3%,
+    #847561 58.6%,
+    #90806b 61.9%,
+    #9b8b75 65.1%,
+    #a6967f 68.4%,
+    #b1a189 71.7%,
+    #bbac94 74.9%,
+    #c5b69e 77.7%,
+    #cec0a9 80.4%,
+    #d6cab3 83.1%,
+    #ddd2bd 85.8%,
+    #e3dac6 88.0%,
+    #e8e0ce 90.2%,
+    #ece5d6 92.2%,
+    #efeadd 94.0%,
+    #f1ede3 95.6%,
+    #f3f0e8 97.3%,
+    #f4f1eb 98.9%,
+    #f4f2ec 100.0%);
 }
 
 /* The two grain layers. Each is one tiling SVG of thresholded fractal
@@ -309,20 +370,26 @@
      spread over: at the old opacity, packed into a third of the height,
      it stopped reading as the paper coming through and started reading
      as a texture laid over the join. */
-  opacity:.34;
+  /* up with the shortening. Grain is a proportion of the distance it is
+     spread over, so the same opacity across a shorter band is less
+     dither per unit of colour change - and dither is the thing actually
+     keeping a compressed ramp free of edges. */
+  opacity:.40;
   /* Fades in earlier and dies out later than it did, and both ends are
      given a long run rather than a short one - this layer is the only
      thing happening while the ramp is still nearly black, so it has to be
      established before there is any lightness to explain it. */
-  -webkit-mask-image:linear-gradient(to bottom, transparent 8%, rgba(0,0,0,.6) 26%, #000 44%, #000 62%, rgba(0,0,0,.45) 78%, transparent 90%);
-  mask-image:linear-gradient(to bottom, transparent 8%, rgba(0,0,0,.6) 26%, #000 44%, #000 62%, rgba(0,0,0,.45) 78%, transparent 90%);
+  /* and spread over the whole band now that the band is all ramp - it
+     used to fade in at 8%, which was where the old dead hold ended */
+  -webkit-mask-image:linear-gradient(to bottom, transparent 1%, rgba(0,0,0,.6) 20%, #000 40%, #000 62%, rgba(0,0,0,.45) 80%, transparent 93%);
+  mask-image:linear-gradient(to bottom, transparent 1%, rgba(0,0,0,.6) 20%, #000 40%, #000 62%, rgba(0,0,0,.45) 80%, transparent 93%);
 }
 /* 2 · and the dark leaving, as finer grain thinning out on the paper.
       This is what stops the foot of the bridge arriving as a clean edge
       of flat cream - it gives the transition a tail. */
 .ab-bridge__b{
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' result='t'/%3E%3CfeComponentTransfer in='t' result='m'%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 1'/%3E%3C/feComponentTransfer%3E%3CfeFlood flood-color='%230b0b0c' result='f'/%3E%3CfeComposite in='f' in2='m' operator='in'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23b)'/%3E%3C/svg%3E");
-  opacity:.28;
+  opacity:.33;
   /* The hand-off proper: the picture stops being black-with-white-dots and
      becomes white-with-black-dots, and only then loses the dots. The tail
      is the long part on purpose - it thins by halves down the last third
@@ -350,101 +417,223 @@
   height:clamp(96px,13vh,170px); pointer-events:none;
   background-repeat:repeat; background-size:320px 320px;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='320' height='320'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch' result='t'/%3E%3CfeComponentTransfer in='t' result='m'%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 1'/%3E%3C/feComponentTransfer%3E%3CfeFlood flood-color='%230b0b0c' result='f'/%3E%3CfeComposite in='f' in2='m' operator='in'/%3E%3C/filter%3E%3Crect width='320' height='320' filter='url(%23b)'/%3E%3C/svg%3E");
-  opacity:.28;
+  opacity:.33;
   -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.16) 0%, rgba(0,0,0,.1) 34%, rgba(0,0,0,.045) 64%, transparent 100%);
   mask-image:linear-gradient(to bottom, rgba(0,0,0,.16) 0%, rgba(0,0,0,.1) 34%, rgba(0,0,0,.045) 64%, transparent 100%);
 }
 /* ============================================================
-   2 · THE INTRO  ·  one band, with the figure standing inside it
+   2 · THE INTRO  ·  a title card
 
-   "We are" set edge to edge with the man in the gap between the two
-   words, the seven disciplines hung off the band's baseline as fine
-   print, and the payoff underneath. The band runs behind him: the inner
-   ends of both words go under his shoulders and the eye closes them.
+   Five layers, and the order of them is the design. Back to front: a
+   field of the discipline words at near-zero opacity, the burst, "We are"
+   set enormous at head height in two halves, the figure standing in the
+   gap between them, and the two halves of the list hung either side of
+   his chest.
 
-   Three numbers hold the whole thing together and everything else is
-   derived from them:
+   The occluder is his head, not his chest. That is the difference between
+   this and the version before it: type across the body leaves letters
+   lying over him, type behind the head is simply gone in the middle and
+   the face is never crossed. Everything below follows from that one
+   decision, because the head is a known size in a known place.
 
-     --fig-h   the figure's height, and the reason it is height and not
-               width: the figure is the tallest thing on the panel, so it
-               is what decides whether the composition fits one screen. A
-               width-derived size looks right on a wide monitor and falls
-               out of the bottom of a short window, which is the failure
-               this layout cannot have.
-     --fig     its width, which is --fig-h through the camera's own 4:5
-               framing (see FRAME_H in components/AboutMan.tsx).
-     --band-fs the band's type size, in vw rather than svh, because the
-               band's job is to reach both edges of the screen whatever
-               shape it is. The two do drift apart on odd aspect ratios,
-               and that is correct: the figure should always fit and the
-               band should always bleed.
+   Four numbers hold it together and each is derived, not chosen:
+
+     --fig-h    the figure's height, and the reason it is height and not
+                width: he is the tallest thing here, so he is what decides
+                whether the composition fits one screen. A width-derived
+                size looks right on a wide monitor and falls out of the
+                bottom of a short window, which is the failure this
+                layout cannot have.
+     --fig      his width, which is --fig-h through the camera's own 4:5
+                framing (see FRAME_H in components/AboutMan.tsx).
+     --band-y   20.7% of the canvas, which is where the monitor's centre
+                falls: frame top 1.12, height 1.52, monitor spanning
+                y 0.612 to 1.000 in the scan's units. Not a taste value -
+                move the camera and this moves with it.
+     --band-fs  sized so the caps clear the top of the stage by a little
+                and their baseline lands across the chest.
    ============================================================ */
 
-/* Exactly one screen, and centred in it rather than stacked by padding -
-   the band, the figure, the fine print and the payoff are one held image,
-   and something you have to scroll to assemble is not that. The bottom
-   padding is not spacing, it is the length of the bridge below (see
-   .ab-bridge), so the content has to sit clear of the band the page
+/* Exactly one screen, and centred in it rather than stacked by padding.
+   The bottom padding is not spacing, it is the length of the bridge below
+   (see .ab-bridge), so the content has to sit clear of the band the page
    changes colour in. */
+/* The top padding is nav clearance and nothing else. The nav floats over
+   this panel at about 72px, and the claim is the tallest thing that comes
+   near it, so there has to be enough room above the type that the two are
+   never reading as one stack. The bottom padding is not spacing either -
+   it is the length of the bridge below (see .ab-bridge), so the content
+   has to sit clear of the band the page changes colour in.
+
+   Both were cut back to buy the figure its height. The bridge in
+   particular was running to 285px, which on a short window was a third of
+   the screen spent on a gradient while the man it sits under was being
+   squeezed to fit what was left. The ramp is the same shape over a
+   shorter distance. */
+/* The section is one screen and the composition is centred in it. Both
+   paddings are structural rather than spacing.
+
+   The top one is nav clearance: the nav floats over this panel at about
+   72px and the claim is the tallest thing that comes near it.
+
+   The bottom one is the bridge's run-up, and it is much larger than it
+   was. This is not a bigger gap between the sections - the section is
+   still exactly one screen - it is the composition sitting higher inside
+   that screen so the bridge has somewhere to do its work. It was 14vh
+   against a bridge of 30vh, which meant the ramp started better than a
+   hundred pixels above the bottom of the copy and the payoff was being
+   read off a mid-brown wash rather than off black. Now the bridge starts
+   below the copy, not through it. */
 .ab-intro{
-  min-height:100svh;
+  /* The bridge's height, named once. It is used three times below - the
+     section's height, the section's bottom padding and the bridge's own
+     height - and those three have to agree or the ramp climbs through the
+     copy, which is exactly what was happening when they were three
+     separate clamps. */
+  --bridge-h:clamp(165px, 21vh, 275px);
+
+  /* A full screen for the composition, and the bridge underneath it.
+
+     It was min-height:100svh, which sounds like a full screen and is not
+     one: the bridge lives inside the section, so 30vh of that 100 was
+     always the transition to the next panel and the composition only ever
+     got the remaining 70%. That is why it kept reading as something
+     wedged between two sections rather than as a section - it literally
+     was one, occupying two thirds of a screen with black above and a
+     gradient below.
+
+     Adding the bridge's height back on top is what makes the arithmetic
+     honest. The content box is now (100svh - the nav clearance), so when
+     the section's top reaches the top of the window the composition fills
+     the window, and the bridge begins at the fold rather than a third of
+     the way up it. */
+  /* His height, and the section's is worked out from it - so it is
+     declared here rather than on the stage inside. Two ceilings, and the
+     second only bites on a narrow, tall window: 58vw caps him at about
+     46% of the frame across, so there is always a margin either side
+     worth hanging the two halves of the list in. On any normal landscape
+     window the svh term is the smaller of the two and the vw term is not
+     in play. */
+  --fig-h:min(clamp(380px, 80svh, 1100px), 58vw);
+  --fig:calc(var(--fig-h) * 0.8);
+
+  /* max(), not a flat 100svh, and the max is the point.
+
+     The composition should own four fifths of whatever it is standing in,
+     so the first term asks for exactly that much room. On a normal window
+     that lands on a full screen. On a tall narrow one - a tablet held
+     upright - he is capped by width rather than height and cannot grow to
+     fill a full screen, so asking for one would buy nothing but two
+     hundred pixels of empty black above him and the same below. There the
+     first term is smaller and the section simply stops being as tall.
+
+     The second term is the floor that stops the same logic shrinking the
+     section into a strip on a short window. */
+  min-height:calc(max(var(--fig-h) / 0.8, 62svh) + var(--bridge-h));
   display:flex; flex-direction:column; justify-content:center;
-  padding:clamp(48px,7vh,92px) 0 clamp(160px,21vh,285px);
+  padding:clamp(80px,11vh,140px) 0 var(--bridge-h);
 }
 /* above the bridge, so nothing here is ever washed by it */
 .ab-intro > .wrap{ position:relative; z-index:1; }
 
 .ab-intro__stage{
-  --fig-h:clamp(300px, 46svh, 620px);
-  --fig:calc(var(--fig-h) * 0.8);
-  /* Sized to reach most of the way across the frame rather than off both
-     edges of it. "We are" is five glyphs, so every extra percent of width
-     buys a lot of height: at full bleed the caps stood 64% as tall as the
-     whole figure, which left the band no room to clear the monitor at the
-     top and still finish inside the torso at the bottom. At this size it
-     spans about 87% of the viewport - which is where the first of the
-     three references sets its own line - and the two constraints below
-     both hold.
+  /* --fig-h and --fig are declared on .ab-intro, which needs them to work
+     out its own height, and inherit down to here. */
+  /* Where the claim's own centre line sits, as a fraction of his height.
 
-     The ceiling is the figure's own height rather than a pixel value, and
-     that is the whole trick. Both terms have to be here: on a normal
-     window the vw term binds and the band reaches across the frame, and
-     on a very wide one the figure has stopped growing (--fig-h is capped)
-     while vw has not, so without the second term the band would keep
-     climbing until it was standing over the monitor. 0.72 is not chosen,
-     it is what falls out of the two constraints on --band-y below. */
-  --band-fs:min(20.5vw, calc(var(--fig-h) * 0.72));
-  /* Where the band crosses the figure, as a fraction of its height, and
-     it is pinned between two hard edges rather than chosen by eye.
+     It was 0.207, which is the monitor's exact centre - and centring the
+     type on the head is what forced it to clip against the top of the
+     panel, because half the cap-height has to fit into the 20.7% above
+     it and there is not that much room. Dropped to 0.28 there is: the
+     caps now start 3% of his height below the top of the stage instead of
+     4% above it, so nothing is cut off and the nav has clear air under it.
 
-     The monitor's underside sits at 33% of this box, and the caps must
-     start below it: the face is the one thing on the panel you are meant
-     to look at, and a word across the eyes costs more than it buys. The
-     caps must also finish inside the torso, above the point the canvas
-     has faded out, or the band ends against bare panel instead of against
-     him. At 0.60 the cap-top lands at 34% and the baseline at 86%, which
-     satisfies both with nothing to spare - so this number and --band-fs
-     move together or not at all. */
-  --band-y:calc(var(--fig-h) * 0.60);
+     The occlusion does not depend on this number, which is why it was
+     free to move. What hides the inner end of each word is horizontal -
+     the gap is narrower than he is - so it works anywhere the type
+     overlaps him vertically. The claim now spans from 3% to 53% of his
+     height, against a monitor at 8-33% and shoulders below that, so the
+     top half of each inner edge goes behind his head and the bottom half
+     behind his shoulders, which are wider still. */
+  --band-y:calc(var(--fig-h) * 0.28);
+  /* Two terms, and both are needed. On a normal window the vw term binds
+     and the claim reaches across the frame. On a very wide one the figure
+     has stopped growing (--fig-h is capped) while vw has not, and without
+     the second term the type would keep climbing until it stood taller
+     than the man it is meant to be behind.
+
+     0.694 is not chosen, it is what falls out of --band-y: half a
+     cap-height is 0.36 of the font size, and 0.28 - 0.36 x 0.694 leaves
+     the cap-top 3% of his height below the top of the stage. The two move
+     together or not at all - raise this and the claim starts clipping
+     against the nav, lower it and it stops reaching the edges. */
+  --band-fs:min(24vw, calc(var(--fig-h) * 0.694));
   position:relative;
 }
 
 /* The figure. The only thing here in normal flow, so it is what gives the
-   stage its height and everything else can be hung off it. */
+   stage its height and every other layer can be hung off it. */
 .ab-intro__figure{
-  position:relative; z-index:2;
+  position:relative; z-index:3;
   width:var(--fig); height:var(--fig-h);
   margin-inline:auto;
   pointer-events:none;
 }
 
-/* Full bleed. 100vw off the stage's own centre line, which is the page's,
-   and the word pair is allowed to overrun that - .ab-panel clips, so the
-   ends run off both edges instead of being fitted between them. Type this
-   size that stops short of the edge reads as a headline; type that leaves
-   the frame reads as something the frame is a window onto. */
+/* ---------- the field of words ---------- */
+/* Full bleed and clipped on all four sides: rows wider than any screen,
+   each slid a different fraction of its own width so the joins never
+   stack into a visible column. It is texture and nothing else - at this
+   opacity it reads as tone, and the moment it becomes legible it starts
+   competing with the claim it is sitting behind.
+
+   Static by design. No animation, no transform after first paint, one
+   flat layer - a full-frame field of type that repaints on scroll is the
+   most expensive thing that could possibly be on this panel and it would
+   be buying a texture nobody is looking at. */
+.ab-intro__ghost{
+  position:absolute; z-index:0; inset:0;
+  display:flex; flex-direction:column; justify-content:center;
+  overflow:hidden; pointer-events:none;
+  font-family:var(--f-display); font-weight:700;
+  /* Eight rows at 12.5svh of line is 100svh of type, in a section that is
+     now a full screen plus the bridge - so the block is comfortably
+     shorter than the box it is centred in and no row can be caught by an
+     edge. The size is in svh rather than vw for exactly that reason: what
+     the rows have to fit inside is a height, so that is what they are
+     measured against.
+
+     Both terms are needed, and the --fig-h one is the one that stops the
+     rows being cut. The section's height is derived from --fig-h now, and
+     on a tall narrow window that comes out well short of a screen - so a
+     block sized purely in svh was taller than the section it had to fit
+     inside and the end rows were sliced by its edge again, which is the
+     exact bug this field started with. Tying it to the same number the
+     section is tied to means the two can no longer drift apart. */
+  font-size:clamp(30px, min(12.5svh, calc(var(--fig-h) * 0.155)), 150px); line-height:1;
+  letter-spacing:-.02em;
+  color:var(--cream); opacity:.075;
+  /* And the ends go out to nothing rather than simply stopping. This is
+     the join at both ends of the panel: the field emerges from the black
+     the opener finishes on instead of starting on a hard row of type, and
+     it has gone again well before the bridge begins to lighten, so the
+     ramp is not climbing through a field of letters. */
+  -webkit-mask-image:linear-gradient(to bottom, transparent 0%, #000 15%, #000 66%, transparent 90%);
+  mask-image:linear-gradient(to bottom, transparent 0%, #000 15%, #000 66%, transparent 90%);
+}
+.ab-intro__ghostRow{
+  display:block; white-space:nowrap;
+  transform:translateX(var(--gx, 0));
+}
+
+/* ---------- the claim ---------- */
+/* 100vw off the stage's own centre line, which is the page's, and the
+   pair is allowed to overrun it - .ab-panel clips, so the ends leave the
+   frame instead of being fitted between its edges. Type this size that
+   stops short of the edge reads as a headline; type that leaves the frame
+   reads as something the frame is a window onto. */
 .ab-intro__band{
-  position:absolute; z-index:1;
+  position:absolute; z-index:2;
   top:var(--band-y); left:50%;
   width:100vw; margin-left:-50vw;
   transform:translateY(-50%);
@@ -454,76 +643,159 @@
 .ab-intro__word{
   font-family:var(--f-display); font-weight:700;
   font-size:var(--band-fs); line-height:.78;
-  letter-spacing:-.035em; text-transform:uppercase;
+  /* the site's own display tracking, not a tighter one picked for this
+     panel: .stat__num, .tile__name and .wcard__name all set -.02em, and
+     the largest type on the site is the last place that should be quietly
+     running its own value */
+  letter-spacing:-.02em; text-transform:uppercase;
   white-space:nowrap; color:var(--cream);
-  /* each half is pushed out from the middle by lib/about-motion.ts */
+  /* each half is pushed out from behind his head by lib/about-motion.ts */
   will-change:transform, opacity;
 }
-/* The gap the figure stands in. Narrower than he is, so both words finish
-   underneath him rather than beside him - about a sixth of his width
-   disappears at each shoulder, which is enough for the eye to have to
-   close the pair and not so much that either word stops being readable. */
-.ab-intro__slot{ flex:0 0 calc(var(--fig) * 0.68); }
+/* The gap his head stands in, and it is deliberately narrower than the
+   head is. The monitor is 27.6% of --fig across (measured off the baked
+   model, not guessed), so a 14% gap puts about 7% of --fig of each word
+   behind it - roughly thirty pixels at a normal window. Set the gap equal
+   to the head and the words would merely touch its edges; set it much
+   smaller and the claim stops being readable as two words. */
+.ab-intro__slot{ flex:0 0 calc(var(--fig) * 0.14); }
 
-/* The fine print, hung off the band's baseline and out to the right of
-   the figure. 0.34em below the band's centre line is where the cap
-   baseline falls at this line-height, and translateY(-100%) sets the
-   block on it - so the list sits on the same line the band does rather
-   than merely near it, which is the detail that makes the pairing read as
-   typeset instead of stacked.
+/* ---------- the evidence ---------- */
+/* Two halves of one list, either side of his chest, centred in their own
+   blocks and set identically so the pair reads as one line of small type
+   interrupted by a man rather than as two separate notes. 0.62 of his
+   height puts them below the claim's baseline, which now falls at 0.53,
+   and still above the point the canvas starts fading out. */
+/* Read off a field of type rather than off flat black, which is what
+   they were losing to: --muted is half-opacity cream, and half-opacity
+   cream over letters that are themselves cream is two greys of nearly
+   the same value. Three things fix it, in the order they matter.
 
-   Left-ranged inside a block pushed right: ragging the text itself right
-   would put the list's own edge against the screen's, and four lines of
-   right-ranged prose is harder to read than four left-ranged ones for
-   nothing gained. */
-.ab-intro__note{
-  width:min(46ch, 48%); margin:clamp(14px, 2.2svh, 30px) 0 0 auto;
-  /* Ranged right as a block, left-ranged as text. Ragging the prose
-     itself right would put the list's own edge against the screen's, and
-     four lines of right-ranged text is harder to read than four
-     left-ranged ones for nothing gained. */
-  text-align:left;
-  font-family:var(--f-body); font-weight:400;
-  font-size:clamp(11px, .95vw, 14px); line-height:1.5;
-  letter-spacing:.005em; color:var(--muted);
+   The colour comes up first - these are the only real information on the
+   panel and they were set fainter than the decoration behind them, which
+   is the wrong way round. Medium rather than regular, too: at twelve
+   pixels weight buys more legibility than size does, and size is not
+   available here.
+
+   Then a scrim, which is the part worth explaining. It is a radial
+   gradient of the panel's own colour on a pseudo-element behind the
+   text, spread wider than the text and fading to nothing at its edges -
+   so the field of type dims where the copy sits and there is no box, no
+   edge and nothing to notice. A rectangular panel behind small copy
+   would read as a UI element dropped onto a poster.
+
+   A text-shadow is deliberately not doing this job. At twelve pixels a
+   shadow dark enough to lift the text off the field is also thick enough
+   to thicken the letterforms, and small type over texture goes muddy
+   long before it goes legible. The one below is a hairline, for the
+   edges of the glyphs only, and does none of the separating. */
+.ab-intro__cred{
+  position:absolute; z-index:2;
+  top:calc(var(--fig-h) * 0.62);
+  width:min(24ch, 26%);
+  text-align:center;
+  font-family:var(--f-body); font-weight:500;
+  font-size:clamp(12px, .98vw, 15px); line-height:1.55;
+  letter-spacing:.005em;
+  color:color-mix(in srgb, var(--cream) 88%, transparent);
+  text-shadow:0 1px 3px rgba(11,11,12,.55);
   will-change:transform, opacity;
 }
+.ab-intro__cred::before{
+  content:""; position:absolute; z-index:-1;
+  /* wider than it is tall, and well outside the text on every side: the
+     falloff has to be long enough that no part of it reads as an edge */
+  left:-28%; right:-28%; top:-55%; bottom:-55%;
+  background:radial-gradient(ellipse at center,
+    rgba(11,11,12,.92) 0%,
+    rgba(11,11,12,.86) 32%,
+    rgba(11,11,12,.62) 54%,
+    rgba(11,11,12,.32) 72%,
+    rgba(11,11,12,.12) 86%,
+    rgba(11,11,12,0) 100%);
+  pointer-events:none;
+}
+.ab-intro__cred--l{ left:0; }
+.ab-intro__cred--r{ right:0; }
 
-/* The payoff, under the whole arrangement and the line that takes the
-   accent. Pushed down off the figure rather than off the band, so it
-   keeps its distance from the thing directly above it at every height. */
+/* ---------- the payoff ---------- */
+/* Pulled back up into the dissolve at the foot of the figure, so the
+   panel ends on him rather than under him. The negative is a fraction of
+   his height rather than a pixel value, so the overlap is the same
+   fraction of the dissolve at every size. */
+/* Moved up hard, and that is a legibility fix before it is a
+   compositional one. It was sitting at the foot of the panel, which is
+   where the bridge starts - so an accent green line was being read off a
+   warm mid-brown ramp, which is the single worst background it could
+   have had. Pulled back up into the dissolve at the foot of the figure it
+   is on black again, and the whole of the bridge's run is below it
+   instead of behind it.
+
+   The same scrim as the credits, wider and softer because the line is
+   wider. Both of them use the panel colour rather than plain black, so
+   the dimming reads as the field receding rather than as a shadow. */
+/* Positioned against his height rather than pulled up off the bottom of
+   it by a negative margin. The negative margin worked but was quietly
+   lying about the layout: it shortened the stage's box without shortening
+   the figure inside it, so the figure hung below its own parent by about
+   ninety pixels and every sum that used the stage's height to work out
+   where the copy ended was wrong by that much. At 0.80 of his height the
+   line sits in the dissolve at his feet, the stage is exactly as tall as
+   he is, and the distance down to the bridge is a number that can be
+   read straight off the two. */
 .ab-intro__payoff{
-  margin-top:clamp(22px, 4svh, 56px);
+  position:absolute; z-index:4;
+  top:calc(var(--fig-h) * 0.80); left:0; right:0;
   text-align:center;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(16px, 1.55vw, 26px); line-height:1.25;
+  font-size:clamp(17px, 1.65vw, 28px); line-height:1.25;
   letter-spacing:-.01em;
+}
+.ab-intro__payoff::before{
+  content:""; position:absolute; z-index:-1;
+  left:50%; width:min(150%, 1100px); transform:translateX(-50%);
+  top:-40%; bottom:-70%;
+  background:radial-gradient(ellipse at center,
+    rgba(11,11,12,.94) 0%,
+    rgba(11,11,12,.88) 30%,
+    rgba(11,11,12,.66) 50%,
+    rgba(11,11,12,.36) 68%,
+    rgba(11,11,12,.14) 84%,
+    rgba(11,11,12,0) 100%);
+  pointer-events:none;
 }
 .ab-intro__payoff em{
   color:var(--accent);
   font-weight:400; font-style:italic; text-wrap:balance;
+  /* the accent is a light green on near-black, so its shadow is the
+     panel colour rather than a darker green - a tinted shadow under a
+     saturated colour reads as a printing misregistration */
+  text-shadow:0 1px 4px rgba(11,11,12,.6);
 }
 
-/* The 3D figure - components/AboutMan.tsx. It fills the box and frames
-   itself to the box's height, so the torso stands the full height of the
-   art whatever the row gives it. GSAP owns the wrapper's opacity and
-   transform through data-clip, the same reveal the old cutout had; the
-   canvas fades in under that on its own once the model has arrived, so a
-   reveal that fires before the download lands does not wipe in an empty
-   rectangle. */
+/* ---------- the figure itself ---------- */
+/* components/AboutMan.tsx. It fills the box and frames itself to the
+   box's height, so the torso stands the full height of the art whatever
+   the row gives it. GSAP owns the wrapper's opacity and transform through
+   data-clip, the same reveal the old cutout had; the canvas fades in
+   under that on its own once the model has arrived, so a reveal that
+   fires before the download lands does not wipe in an empty rectangle. */
 .ab-man{
   position:absolute; inset:0; z-index:1;
   will-change:transform, opacity;
 }
-/* The mask on the canvas is structural, not decoration. The model is cut
-   off at the waist at bake time (FLOOR_Y in scripts/build-about-man.mjs),
-   and a cut through a photogrammetry scan is an open shell - from below
-   you would be looking up inside the jacket. This fade reaches nothing
-   well above where the geometry stops, so the open edge is never on
-   screen and the figure reads as dissolving into the panel rather than as
-   ending. It is a mask rather than a gradient overlay because the panel
-   behind it is not one flat colour: the splash burst sits between the two,
-   and an opaque scrim would have flattened it.
+/* The mask on the canvas is structural, not decoration, and it now has
+   two jobs. The model is cut off at the waist at bake time (FLOOR_Y in
+   scripts/build-about-man.mjs), and a cut through a photogrammetry scan
+   is an open shell - from below you would be looking up inside the
+   jacket. This fade reaches nothing well above where the geometry stops,
+   so the open edge is never on screen. It is also what makes him leave
+   the composition instead of standing in it: the reference crops its
+   figure on the frame edge, and this dissolve is that crop.
+
+   It is a mask rather than a gradient overlay because the panel behind it
+   is not one flat colour - the burst and the field of type both sit
+   between the two, and an opaque scrim would have flattened them.
 
    The percentages are tied to the camera. FRAME_H 1.52 centred on y=0.36
    puts the cut at 92.7% down the canvas and the jacket hem at 85.5%, so
@@ -541,24 +813,27 @@
   .ab-man__canvas{ transition:none; }
 }
 
-/* The bulbs ring the head, which is the top third of the figure's box -
-   they are sized in px, so they have to be told what box they are ringing,
-   and this frame is close to the width the full-size ring was tuned for. */
-.ab-intro__figure .bulbs{ --bulb-k:.85; }
+/* The bulbs have moved down onto the shoulders. Their old home was the
+   airspace around the monitor, which is now where the claim is - and a
+   bulb popping on over a letter reads as a rendering fault, not as an
+   idea. They are sized in px, so they also have to be told the box got
+   considerably bigger. */
+.ab-intro__figure .bulbs{ --bulb-k:1; }
 
 /* Sized by insets, not a centring translate - lib/motion.ts owns this
    element's transform and drags it toward the cursor.
 
-   Behind everything, and sized off the figure rather than off the stage:
-   the burst is what the man is standing in front of, and spread across
-   the full width of the row it would have stopped being behind him and
-   started being a background for the whole panel. */
+   Tight behind him and centred on his chest rather than on the stage: the
+   burst is what the man is standing in front of, and spread across the
+   full width of the panel it would stop being behind him and start being
+   a background for the whole section - which is the field of type's job,
+   one layer further back. */
 .ab-intro__splash{
-  position:absolute; z-index:0; pointer-events:none;
-  left:50%; top:calc(var(--fig-h) * 0.44);
-  width:calc(var(--fig) * 1.9); aspect-ratio:1;
-  margin-left:calc(var(--fig) * -0.95);
-  margin-top:calc(var(--fig) * -0.95);
+  position:absolute; z-index:1; pointer-events:none;
+  left:50%; top:calc(var(--fig-h) * 0.42);
+  width:calc(var(--fig) * 1.55); aspect-ratio:1;
+  margin-left:calc(var(--fig) * -0.775);
+  margin-top:calc(var(--fig) * -0.775);
   will-change:transform;
   /* cooler and a touch brighter than the home-page splash, to sit with the
      green already printed into the artwork */
@@ -583,11 +858,11 @@
 }
 .bulb svg{ width:100%; height:auto; display:block; }
 @media (max-width:1100px){
-  .bulbs{ --bulb-k:.8; }
-  /* The fine print gives up its share first. At this width the space
-     between the figure and the right edge is what runs out, and a list
-     squeezed to twelve characters a line is worse than a smaller one. */
-  .ab-intro__note{ width:min(30ch, 34%); }
+  .bulbs{ --bulb-k:.85; }
+  /* The two halves of the list give up their share first. What runs out
+     at this width is the space either side of the figure, and the figure
+     is the thing the panel is for - so the type narrows rather than him. */
+  .ab-intro__cred{ width:min(20ch, 23%); }
 }
 
 /* ---------- 3 · the founders ---------- */
@@ -1487,27 +1762,62 @@
      off screen, and a type size that reaches the edges rather than a
      third of the way past them.
 
-     The fine print gives up its corner and centres: ranged right against
-     a phone's edge it is a column of text with no counterweight on the
-     other side of it, which reads as a mistake rather than as placement.
-     Centred under a centred figure it is simply the caption it always
-     was. */
+     The claim and the figure survive the fold. The two halves of the
+     list do not: a phone is about as wide as he is, so there is no
+     "either side of him" left to hang them in, and forced into the
+     margins they would be four characters a line.
+
+     So they come out of the margins and go into flow underneath him, in
+     order, still centred and still the same size as each other - the pair
+     reads as one small line broken over two rather than as two notes. The
+     stage becomes a flex column to do it, and the order puts them back
+     after the figure they sit in front of in the markup.
+
+     The band keeps its place at his head and only its numbers change: a
+     narrower gap, because at this width the desktop gap would push both
+     words most of the way off screen, and a size that reaches the edges
+     rather than a quarter of the way past them. */
+  /* On .ab-intro, not on the stage: the section derives its own height
+     from --fig-h, so overriding it further in would leave the section
+     sized for a figure that is no longer there.
+
+     The desktop rule caps his height against 58vw so there is width left
+     either side of him for the two halves of the list. Here there is
+     nothing to make room for - they stack underneath him - so that cap
+     comes off and is replaced by one that only stops him touching both
+     edges. Left as it was, 58vw of a phone made him 226px tall: the
+     constraint was still being paid for after the thing it was protecting
+     had moved.
+
+     The height floor rises too. On a phone the stage carries the list and
+     the payoff in flow underneath him rather than hung off him, so the
+     composition is a good deal taller than he is and needs the room. */
+  .ab-intro{
+    --fig-h:min(clamp(300px, 54svh, 470px), 88vw);
+    min-height:calc(max(var(--fig-h) / 0.52, 74svh) + var(--bridge-h));
+  }
   .ab-intro__stage{
-    --fig-h:clamp(260px, 42svh, 400px);
-    --band-fs:min(17vw, calc(var(--fig-h) * 0.44));
-    /* Raised, because the band is a much smaller share of the figure at
-       this width - 390px of screen only pays for so much type, and left
-       at the desktop 0.60 the strip crossed him at the waist, where there
-       is nothing to read it against. At 0.52 it is back on the chest. */
-    --band-y:calc(var(--fig-h) * 0.52);
+    /* same relationship as the desktop rule, solved against the phone's
+       --band-y so the caps clear the top by the same 3% */
+    --band-fs:min(19vw, calc(var(--fig-h) * 0.694));
+    display:flex; flex-direction:column; align-items:center;
   }
-  /* and a narrower gap to stand in, so the pair still reaches the edges
-     once the type has given up two thirds of its size */
-  .ab-intro__slot{ flex-basis:calc(var(--fig) * 0.44); }
-  .ab-intro__note{
-    width:100%; margin-inline:0;
-    text-align:center; font-size:clamp(11px, 3vw, 13px);
+  .ab-intro__slot{ flex-basis:calc(var(--fig) * 0.20); }
+  .ab-intro__figure{ order:1; }
+  .ab-intro__cred{
+    order:2; position:static;
+    width:min(34ch, 100%); text-align:center;
+    font-size:clamp(11px, 2.8vw, 13px);
   }
+  .ab-intro__cred--l{ margin-top:clamp(10px, 2svh, 22px); }
+  /* back into flow: there is no figure to hang it off here, the two
+     halves of the list are stacked under him instead */
+  .ab-intro__payoff{
+    order:3; position:static; margin-top:clamp(14px, 2.4svh, 30px);
+  }
+  /* the field of words thins out: at this size the rows are only three
+     or four tokens wide and start reading as words rather than as tone */
+  .ab-intro__ghost{ font-size:clamp(26px, 9vw, 46px); opacity:.055; }
   .drivers{ grid-template-columns:1fr; }
   .ab-drives{ padding-top:clamp(96px,15vh,150px); }
   /* The one-screen lock comes off here. On a phone the title, the copy

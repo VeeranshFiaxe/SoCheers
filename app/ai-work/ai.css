@@ -15,34 +15,38 @@
 /* ============================================================
    THE HERO
 
-   The Japanese-styled reference from the call, read as composition
-   rather than as decoration to copy: one enormous vertical column of
-   characters set as a graphic against the corner, the English holding
-   the centre, and a lot of empty ground. The kana never overlaps the
-   headline - it is the thing the headline is set against.
+   The client's reference, read as composition rather than as something
+   to trace: a figure standing under a swarm of speech bubbles, all of
+   them talking at him at once. The words are in components/AiThoughts
+   .tsx and the man is components/AiFigure.tsx; what happens here is the
+   framing.
+
+   The stage is the section's ground, not an object in the corner of it.
+   The figure stands in the middle of the hero, the field of bubbles
+   covers the whole width, and the copy is set into the bottom-left
+   corner - the one part of the composition the fan is written to leave
+   clear (see AI_THOUGHTS in lib/ai-content.ts). Nothing has to be
+   dimmed to keep the headline readable, because nothing is put on top
+   of it.
    ============================================================ */
 .ai-hero{
-  position:relative; min-height:92svh;
-  display:flex; align-items:center;
-  padding:clamp(120px,20vh,200px) 0 clamp(70px,10vh,110px);
+  position:relative; min-height:100svh;
+  display:flex; align-items:flex-end;
+  padding:clamp(120px,18vh,190px) 0 clamp(56px,8vh,96px);
   overflow:hidden;
 }
-.ai-hero__in{ position:relative; z-index:2; }
-
-.ai-hero__kana{
-  position:absolute; z-index:0; pointer-events:none; user-select:none;
-  right:calc(var(--pad) * .5); top:50%; transform:translateY(-50%);
-  writing-mode:vertical-rl;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(90px,20vw,280px); line-height:.9; letter-spacing:.04em;
-  /* an outline rather than a fill: filled at this size it stops being a
-     backdrop and starts competing with the headline for the same read */
-  color:transparent;
-  -webkit-text-stroke:1px rgba(241,236,225,.14);
+.ai-hero__in{ position:relative; z-index:2; width:100%; }
+.ai-hero__copy{
+  position:relative; z-index:2; max-width:min(46ch, 52%);
+  /* The copy sits in front of a figure and eighteen bubbles, and on the
+     odd narrow viewport one of them will pass behind a line of it. The
+     type carries its own shadow (below) rather than the column carrying
+     a scrim: a panel behind the headline would put a hard rectangle in
+     the middle of the composition to solve a problem that only happens
+     at a few widths. */
+  padding:0 clamp(14px,2vw,26px) clamp(10px,1.6vw,22px) 0;
 }
-@media (max-width:820px){
-  .ai-hero__kana{ right:auto; left:var(--pad); top:auto; bottom:-4%; transform:none; font-size:34vw; }
-}
+@media (max-width:1100px){ .ai-hero__copy{ max-width:none; } }
 
 /* The break between the two sentences is a <br> in the markup, so the box
    only has to be wide enough for the longer of them (24ch) - and balancing
@@ -50,35 +54,128 @@
 .ai-hero__title{
   margin-top:26px; max-width:25ch;
   font-family:var(--f-display); font-weight:700;
-  /* Ceiling is 80px rather than 102px because the line is now a fixed
-     24 characters wide: at 102px that single line runs the full content
-     width and straight under the kana column on the right. */
-  font-size:clamp(30px,5vw,80px); line-height:1.04; letter-spacing:-.035em;
+  font-size:clamp(30px,4.6vw,76px); line-height:1.04; letter-spacing:-.035em;
+  text-shadow:0 2px 30px rgba(11,11,12,.75);
 }
 .ai-hero__title em{ color:var(--accent); }
-/* Phones: hold the sentence on one line by giving up size rather than
-   letting "make it" wrap away from it. */
-@media (max-width:560px){
-  .ai-hero__title{ font-size:clamp(24px,7vw,34px); }
-}
 .ai-hero__lede{
-  margin-top:clamp(20px,3vh,32px); max-width:50ch;
+  margin-top:clamp(20px,3vh,32px); max-width:46ch;
   font-size:clamp(15px,1.2vw,19px); line-height:1.6; color:var(--muted);
+  text-shadow:0 2px 24px rgba(11,11,12,.8);
 }
-.ai-hero__run{
-  display:inline-block; margin-top:22px;
-  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.28em; text-transform:uppercase;
-  color:var(--accent);
+
+/* ---------- the stage: one figure, and the noise over him ---------- */
+.ai-stage{ position:absolute; inset:0; z-index:1; pointer-events:none; }
+
+/* The figure is anchored to the bottom edge of the section and cropped
+   from the top by whatever height the hero has - the drawing is built
+   for that (see components/AiFigure.tsx), so the crop is framing rather
+   than damage. Centred a little right of middle: dead centre would put
+   his head directly over the end of the headline. */
+.ai-stage__man{
+  position:absolute; left:58%; bottom:0;
+  width:min(46vw,620px); height:min(72%,660px);
+  transform:translateX(-50%);
+}
+.ai-figure{
+  display:block; width:100%; height:100%;
+  /* dies out into the page rather than ending on the section's edge */
+  -webkit-mask-image:linear-gradient(to bottom, #000 0 86%, transparent 100%);
+  mask-image:linear-gradient(to bottom, #000 0 86%, transparent 100%);
+}
+
+/* The field the bubbles are placed in - their x/y are percentages of
+   this box, not of the section, so the fan keeps its shape at any width.
+   It stops short of the bottom because that is where the head and the
+   headline both are. */
+.ai-thoughts{ position:absolute; inset:0 0 42% 0; z-index:2; }
+
+.ai-bubble{
+  position:absolute; left:var(--x); top:var(--y);
+  /* Placement, parallax, and the angle are on the individual transform
+     properties rather than on `transform` - which leaves `transform`
+     free for the drift keyframes below. Two animations on one element,
+     no shared property, nothing to fight over. */
+  translate:
+    calc(-50% + (var(--mx, 0) * var(--d) * -30px))
+    calc(-50% + (var(--my, 0) * var(--d) * -22px));
+  rotate:var(--r);
+
+  display:inline-flex; align-items:center; white-space:nowrap;
+  padding:.62em 1.05em; border-radius:999px;
+  font-size:calc(clamp(11px, 1.05vw, 15px) * var(--s));
+  font-weight:500; letter-spacing:-.01em; line-height:1;
+
+  opacity:0;
+  animation:
+    ai-bubble-in .8s var(--in) var(--ease) both,
+    ai-drift var(--dur) var(--delay) ease-in-out infinite alternate;
+}
+/* the two dots that make a pill a thought rather than a label. They hang
+   on the inside edge, so the whole fan points back down at the head */
+.ai-bubble::before,
+.ai-bubble::after{
+  content:""; position:absolute;
+  border-radius:50%; background:inherit; border:inherit;
+}
+.ai-bubble::before{ width:.5em; height:.5em; bottom:-.62em; }
+.ai-bubble::after{ width:.3em; height:.3em; bottom:-1.35em; }
+.ai-bubble[data-tail="l"]::before{ left:1.1em; }
+.ai-bubble[data-tail="l"]::after{ left:.6em; }
+.ai-bubble[data-tail="r"]::before{ right:1.1em; }
+.ai-bubble[data-tail="r"]::after{ right:.6em; }
+
+.ai-bubble[data-tone="hot"]{ background:var(--accent); color:#04140b; font-weight:700; }
+.ai-bubble[data-tone="cream"]{ background:var(--cream); color:#0b0b0c; }
+.ai-bubble[data-tone="ghost"]{
+  background:transparent; border:1px solid rgba(241,236,225,.22); color:rgba(241,236,225,.62);
+}
+
+@keyframes ai-bubble-in{
+  from{ opacity:0; }
+  to{ opacity:1; }
+}
+@keyframes ai-drift{
+  from{ transform:translate3d(0,4px,0); }
+  to{ transform:translate3d(0,-10px,0); }
+}
+
+@media (max-width:900px){
+  .ai-hero{ min-height:92svh; padding-top:clamp(130px,20vh,180px); }
+  /* one column of copy over a backdrop that has stopped competing with
+     it, and eight fewer bubbles in the field */
+  .ai-stage{ opacity:.62; }
+  .ai-stage__man{ left:62%; width:min(78vw,420px); height:min(58%,460px); }
+  .ai-thoughts{ inset:0 0 46% 0; }
+  .ai-bubble[data-small]{ display:none; }
+  .ai-hero__title{ font-size:clamp(28px,7vw,42px); }
+  .ai-hero__lede{ max-width:38ch; }
+}
+@media (max-width:560px){
+  .ai-hero__title{ font-size:clamp(24px,7.4vw,34px); }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .ai-bubble{ animation:ai-bubble-in .01s both; }
 }
 
 /* ============================================================
    THE FORK
+
+   Until a door is picked there is nothing below this section - see
+   components/AiGate.tsx for why the scroll is stopped by the page being
+   short rather than by anything touching the wheel.
    ============================================================ */
+/* No reserved height while it is shut, and nothing padding it out into a
+   screen of its own: the fork is a question and two buttons, and the
+   page ending directly underneath them is the whole mechanism. A held
+   half-screen of black under the doors reads as a section that failed to
+   load, not as an invitation. */
 .ai-gate{
   border-top:1px solid var(--line);
-  padding:clamp(54px,9vh,96px) 0;
+  padding:clamp(54px,9vh,96px) 0 clamp(60px,10vh,104px);
 }
-.ai-gate__in{ display:flex; flex-direction:column; align-items:center; text-align:center; }
+.ai-gate__in{ display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; }
 .ai-gate__q{
   max-width:36ch;
   font-family:var(--f-display); font-weight:700;
@@ -89,10 +186,11 @@
 .ai-gate__door{
   display:inline-flex; align-items:center; padding:14px 26px;
   border:1px solid var(--faint); border-radius:999px;
-  font-size:14px; color:var(--muted);
-  transition:border-color .4s var(--ease), color .4s var(--ease), background .4s var(--ease);
+  font:inherit; font-size:14px; color:var(--muted); background:none; cursor:none;
+  transition:border-color .4s var(--ease), color .4s var(--ease), background .4s var(--ease), opacity .4s var(--ease);
 }
 .ai-gate__door:hover{ border-color:var(--cream); color:var(--cream); }
+@media (hover:none){ .ai-gate__door{ cursor:pointer; } }
 /* The funny door is the one with the colour on it, and that is the whole
    hierarchy: the client's own framing is that the story is the offer and
    the work is the default, so one of these is an invitation and the other
@@ -100,13 +198,12 @@
 .ai-gate__door--yes{ background:var(--accent); border-color:var(--accent); color:#04140b; font-weight:500; }
 .ai-gate__door--yes:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
 
-/* The collapse. Height rather than display, so the reveal has something
-   to animate; `inert` on the same element (see components/AiGate.tsx) is
-   what actually takes it out of reach while it is shut. */
-/* 1fr -> 0fr on a single-row grid, rather than a height animation: the
-   story's height is not knowable in CSS and animating to `auto` does not
-   interpolate, so the grid row is the one way to get a real collapse out
-   of content nobody measured. */
+/* The collapse. 1fr -> 0fr on a single-row grid, rather than a height
+   animation: the panel's height is not knowable in CSS and animating to
+   `auto` does not interpolate, so the grid row is the one way to get a
+   real collapse out of content nobody measured. `inert` on the same
+   element (see components/AiGate.tsx) is what takes it out of reach
+   while it is shut. */
 .ai-hold{
   overflow:hidden;
   display:grid; grid-template-rows:1fr;
@@ -128,14 +225,11 @@
   text-wrap:balance;
 }
 .ai-story__beats{ margin-top:clamp(34px,5vh,56px); display:flex; flex-direction:column; gap:clamp(20px,3vh,32px); }
+/* No index down the left. Numbering six paragraphs turns a story into a
+   list of points, and the whole reason this is a story is that a list of
+   points was the wrong way to make the argument. */
 .ai-beat{
-  position:relative; padding-left:52px;
   font-size:clamp(16px,1.3vw,19px); line-height:1.66; color:var(--muted);
-}
-.ai-beat__n{
-  position:absolute; left:0; top:.35em;
-  font-family:var(--f-mono); font-weight:500; font-style:normal; font-size:11px; letter-spacing:.2em;
-  color:var(--accent);
 }
 /* The last beat is the turn, and it is set as the page's own voice rather
    than as more narration. */
@@ -194,14 +288,57 @@
    element stays mounted so its image is never re-decoded when the reader
    comes back to the segment. */
 .ai-tile[hidden]{ display:none; }
-.ai-tile img{ transition:transform .8s var(--ease); }
+.ai-tile img{ width:100%; height:100%; object-fit:cover; transition:transform .8s var(--ease); }
 .ai-tile:hover img{ transform:scale(1.04); }
 
-.ai-tile__play{
-  position:absolute; top:12px; left:12px; z-index:2;
-  display:grid; place-items:center; width:30px; height:30px;
-  border-radius:50%; background:rgba(0,0,0,.45); color:#fff;
+/* ---------- films ---------- */
+/* Nothing is fetched for a film until it is asked for, so what sits in
+   the tile until then is the title, set as a card. It is treated as a
+   piece of type rather than as a placeholder for a missing image: a wall
+   of dark cards among the stills reads as an index of the films, which
+   is what it is. */
+.ai-tile__film{
+  position:absolute; inset:0; z-index:1;
+  width:100%; height:100%; object-fit:cover; display:block;
 }
+.ai-tile__card{
+  position:absolute; inset:0; z-index:2;
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between;
+  padding:clamp(14px,1.4vw,20px); gap:14px;
+  font:inherit; text-align:left; cursor:none;
+  border:0; border-radius:inherit;
+  background:
+    radial-gradient(120% 90% at 22% 8%, rgba(47,229,137,.13), transparent 58%),
+    linear-gradient(165deg, #16161a, #0a0a0b 72%);
+  color:var(--cream);
+  transition:opacity .45s var(--ease), background .45s var(--ease);
+}
+/* Kept clickable while it is invisible - a card with pointer-events off
+   would fire its own mouseleave the moment the film started, and stop
+   the thing it had just started. */
+.ai-tile[data-playing] .ai-tile__card{ opacity:0; }
+.ai-tile__card:hover{ background:linear-gradient(165deg, #1c1c21, #0d0d0f 72%); }
+@media (hover:none){ .ai-tile__card{ cursor:pointer; } }
+
+.ai-tile__kind{
+  font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--accent);
+}
+.ai-tile__name{ display:flex; flex-direction:column; gap:3px; }
+.ai-tile__name b{
+  font-family:var(--f-display); font-weight:700; font-size:clamp(15px,1.3vw,19px); letter-spacing:-.02em;
+}
+.ai-tile__name span{ font-size:13px; line-height:1.35; color:var(--muted); }
+
+.ai-tile__play{
+  position:absolute; top:clamp(14px,1.4vw,20px); right:clamp(14px,1.4vw,20px);
+  display:grid; place-items:center; width:30px; height:30px;
+  border-radius:50%; border:1px solid var(--faint); color:var(--cream);
+  transition:background .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
+}
+.ai-tile__card:hover .ai-tile__play{ background:var(--accent); border-color:var(--accent); color:#04140b; }
+
+/* ---------- stills ---------- */
 .ai-tile__cap{
   position:absolute; left:0; right:0; bottom:0; z-index:2;
   padding:34px 14px 14px;
@@ -215,16 +352,6 @@
 .ai-tile__cap span{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
 /* Touch has no hover to reveal a caption with, so it is simply always up. */
 @media (hover:none){ .ai-tile__cap{ opacity:1; transform:none; } }
-
-/* Same placeholder flag the Series page uses, restated here rather than
-   shared: the two pages will not stay light at the same time, and a
-   badge is four lines. */
-.ai-tile.is-pending::before{
-  content:"PLACEHOLDER"; position:absolute; z-index:3; top:12px; right:12px;
-  font-family:var(--f-mono); font-weight:500; font-size:8px; letter-spacing:.22em;
-  padding:4px 7px; border-radius:3px;
-  background:rgba(0,0,0,.62); color:#fff;
-}
 
 @media (prefers-reduced-motion:reduce){
   .ai-tile img{ transition:none; }

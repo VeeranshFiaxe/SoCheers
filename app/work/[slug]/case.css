@@ -1,8 +1,11 @@
 /* ============================================================
    ONE CASE.
 
-   A single narrative column with visuals breaking out of it - the rhythm
-   of the reference the client gave, not its content.
+   The frame, then the article, then the way on - the reference's own
+   order. The article is a rail and a reading column: Back, the
+   contents of the page and the one action ride alongside the writing
+   instead of sitting above it, so a reader four screens down still has
+   the way out and the shape of the page in front of them.
 
    ---- the rule this file exists to honour ----
 
@@ -18,38 +21,163 @@
    the block, one direction only.
    ============================================================ */
 
-.cs-page{ background:var(--bg); }
+.cs-page{ position:relative; background:var(--bg); }
+.cs-page{ --dim:rgba(241,236,225,.68); }
 
-/* ---- the head ---- */
-.cs-head{ padding:clamp(120px,18vh,180px) 0 clamp(40px,7vh,80px); }
+/* ============================================================
+   THE FRAME
+
+   Short of the full screen on purpose. The stage on /work fills the
+   viewport because it is the page; this one is the top of a page that
+   is mostly reading, and a full-height frame here means every case
+   opens with a screen that has to be scrolled past before a single
+   word appears.
+   ============================================================ */
+.cs-hero{
+  position:relative; isolation:isolate;
+  min-height:clamp(420px,72vh,760px);
+  display:flex; align-items:flex-end;
+  padding:clamp(120px,18vh,180px) 0 clamp(34px,5vh,56px);
+  overflow:hidden;
+}
+.cs-hero__frame{ position:absolute; inset:0; z-index:0; }
+
+/* Three washes, same three jobs as the stage's: a floor for the type,
+   a left-hand pull so the title has a ground over a bright picture, and
+   a top veil that keeps the fixed header legible over any frame. */
+.cs-hero__scrim{
+  position:absolute; inset:0; z-index:1;
+  background:
+    linear-gradient(to top, rgba(4,4,5,.94), rgba(4,4,5,.5) 34%, transparent 68%),
+    linear-gradient(to right, rgba(4,4,5,.7), transparent 62%),
+    linear-gradient(to bottom, rgba(4,4,5,.6), transparent 22%);
+}
+
+.cs-hero__in{
+  position:relative; z-index:2; width:100%;
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:clamp(20px,4vw,60px); flex-wrap:wrap;
+}
+.cs-hero__title{ max-width:22ch; }
+.cs-hero__brand{
+  display:block;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+  color:var(--accent);
+}
+/* Upper case and carrying the slash, same as the section headings on
+   /work - the mark is defined once, in work.css, which this page also
+   loads. See the note over it there. */
+.cs-hero__h{
+  margin-top:14px;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(36px,6.4vw,96px); line-height:.96; letter-spacing:-.04em;
+  text-transform:uppercase;
+  text-wrap:balance;
+}
+.cs-hero__tags{
+  margin-top:18px; list-style:none; display:flex; flex-wrap:wrap; align-items:center;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--cream);
+}
+.cs-hero__tags li + li::before{
+  content:""; display:inline-block; vertical-align:middle;
+  width:1px; height:11px; margin:0 12px;
+  background:rgba(241,236,225,.35);
+}
+.cs-hero__go{
+  display:inline-flex; align-items:center; gap:11px; padding:13px 26px 13px 13px;
+  border-radius:999px; background:var(--accent); color:#04140b;
+  font-weight:500; font-size:15px;
+}
+.cs-hero__play{
+  display:grid; place-items:center; width:30px; height:30px;
+  border-radius:50%; background:rgba(4,20,11,.16);
+}
+
+/* ============================================================
+   THE ARTICLE - rail and column
+   ============================================================ */
+.cs-article{
+  position:relative; isolation:isolate;
+  padding:clamp(48px,8vh,96px) 0 clamp(80px,13vh,150px);
+}
+/* The hairlines run behind the reading column and the rail beside it.
+   Both need a layer above them or the rules would cross the type. */
+.cs-article > .wrap{ position:relative; z-index:1; }
+.cs-article__in{
+  display:grid; grid-template-columns:minmax(0,232px) minmax(0,1fr);
+  gap:clamp(28px,5vw,80px);
+  align-items:start;
+}
+
+/* ---- the rail ---- */
+.cs-rail{ position:relative; }
+/* Sticky, and the offset clears the fixed header. `max-height` plus its
+   own scroll is not decoration: a case with eight headings on a short
+   laptop screen would otherwise push the contact link off the bottom of
+   a box that cannot scroll, because a sticky element taller than the
+   viewport simply stops sticking. */
+.cs-rail__in{
+  position:sticky; top:clamp(96px,14vh,132px);
+  max-height:calc(100svh - clamp(120px,18vh,170px));
+  overflow-y:auto; scrollbar-width:none;
+  display:flex; flex-direction:column; align-items:flex-start; gap:clamp(22px,3.4vh,34px);
+}
+.cs-rail__in::-webkit-scrollbar{ display:none; }
+
 .cs-back{
   display:inline-flex; align-items:center; gap:7px;
   font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
-  color:rgba(241,236,225,.68);
+  color:var(--dim);
   transition:color .35s var(--ease), gap .35s var(--ease);
 }
 .cs-back:hover{ color:var(--accent); gap:12px; }
 
-.cs-brand{
-  display:block; margin-top:34px;
-  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.28em; text-transform:uppercase;
-  color:var(--accent);
+.cs-toc{ width:100%; border-top:1px solid var(--line); padding-top:18px; }
+.cs-toc__h{
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--muted);
 }
-.cs-title{
-  margin-top:14px; max-width:18ch;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(34px,6vw,92px); line-height:1.0; letter-spacing:-.035em;
-  text-wrap:balance;
+.cs-toc ul{ list-style:none; margin-top:14px; display:flex; flex-direction:column; }
+/* The marker is a rule that fills in on the current section rather than
+   a dot or a bold weight - a weight change reflows the list every time
+   the reader crosses a heading, which on a sticky rail is movement in
+   the corner of the eye for the whole page. */
+.cs-toc__link{
+  display:block; padding:9px 0 9px 16px; position:relative;
+  font-size:14px; line-height:1.35; color:var(--muted);
+  transition:color .35s var(--ease);
 }
-.cs-meta{
-  margin-top:22px; list-style:none; display:flex; flex-wrap:wrap;
-  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
-  color:rgba(241,236,225,.68);
+.cs-toc__link::before{
+  content:""; position:absolute; left:0; top:10px; bottom:10px; width:1px;
+  background:var(--faint);
+  transition:background .35s var(--ease);
 }
-.cs-meta li + li::before{ content:"·"; margin:0 10px; color:var(--faint); }
-.cs-intro{
-  margin-top:26px; max-width:56ch;
-  font-size:clamp(16px,1.35vw,20px); line-height:1.6; color:var(--muted);
+.cs-toc__link:hover{ color:var(--cream); }
+.cs-toc__link[aria-current]{ color:var(--cream); }
+.cs-toc__link[aria-current]::before{ background:var(--accent); width:2px; }
+
+.cs-rail__cta{
+  display:inline-flex; align-items:center; padding:12px 24px;
+  border:1px solid var(--faint); border-radius:999px;
+  font-size:14px; color:var(--cream);
+  transition:border-color .35s var(--ease), background .35s var(--ease), color .35s var(--ease);
+}
+.cs-rail__cta:hover{ background:var(--accent); border-color:var(--accent); color:#04140b; }
+
+/* ---- narrow ----
+   Below this the rail cannot sit beside the column and leave the column
+   a readable measure, so it goes back to being a row above it: Back and
+   the action side by side, and no contents list. A table of contents
+   that has to be scrolled past to reach the thing it indexes is not
+   doing its job. */
+@media (max-width:980px){
+  .cs-article__in{ grid-template-columns:1fr; gap:clamp(22px,3vh,32px); }
+  .cs-rail__in{
+    position:static; max-height:none; overflow:visible;
+    flex-direction:row; align-items:center; justify-content:space-between; width:100%;
+  }
+  .cs-toc{ display:none; }
 }
 
 /* ============================================================
@@ -60,7 +188,7 @@
    ============================================================ */
 .cs-body{
   --col:760px;
-  padding-bottom:clamp(80px,13vh,150px);
+  min-width:0;
 }
 /* Every direct child is centred on the column by default. A block that
    wants the full width overrides its own max-width and nothing else, so
@@ -68,12 +196,34 @@
 .cs-body > *{
   max-width:var(--col);
   margin:clamp(46px,7vh,90px) auto 0;
-  padding:0 var(--pad);
+}
+/* The first thing in the column has the frame above it, not another
+   block, so it does not carry a block's worth of space. */
+.cs-body > *:first-child{ margin-top:0; }
+
+.cs-lede{
+  font-size:clamp(17px,1.5vw,22px); line-height:1.55; color:var(--cream);
+  max-width:52ch;
 }
 
+/* The article's own headings carry the mark too, at their scale. The
+   run of them down the page is what makes the slash read as a system
+   rather than as a flourish on the title - one marked heading is
+   decoration, five is a structure the reader can follow.
+
+   `scroll-margin-top` is what makes the contents list land correctly:
+   without it an anchor jump puts the heading under the fixed header and
+   the reader arrives mid-paragraph on a page that looks like it went to
+   the wrong place. */
 .cs-copy__h{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(22px,2.6vw,36px); line-height:1.1; letter-spacing:-.025em;
+  text-transform:uppercase;
+  scroll-margin-top:clamp(96px,14vh,132px);
+}
+.cs-copy__h::before{
+  content:"/"; display:inline-block; margin-right:.18em;
+  color:var(--accent); font-weight:700;
 }
 .cs-copy__p{
   margin-top:16px; font-size:clamp(16px,1.25vw,19px); line-height:1.68; color:var(--muted);
@@ -84,10 +234,13 @@
 .cs-shot__in, .cs-board__in{
   overflow:hidden; border-radius:12px; background:var(--panel);
 }
-.cs-shot--bleed{
-  max-width:none; padding:0;
-}
-.cs-shot--bleed .cs-shot__in{ border-radius:0; }
+/* "Bleed" inside a column beside a rail means the width of the column,
+   not the width of the window - a picture that escaped the article
+   would run under the sticky rail and cover it. It is still the widest
+   thing on the page and still breaks the reading measure, which is the
+   whole job. */
+.cs-shot--bleed{ max-width:none; }
+.cs-shot--bleed .cs-shot__in{ border-radius:12px; }
 
 .cs-duo__in{
   display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.2vw,18px);
@@ -95,6 +248,7 @@
 .cs-duo__in img{ border-radius:12px; aspect-ratio:4/5; }
 @media (max-width:640px){ .cs-duo__in{ grid-template-columns:1fr; } }
 
+.cs-video{ max-width:none; scroll-margin-top:clamp(96px,14vh,132px); }
 .cs-video video{
   width:100%; height:auto; display:block; border-radius:12px; background:#000;
 }
@@ -102,15 +256,14 @@
 /* A board is an artboard - tall, dense, and read by looking closely. It
    gets the full width it can take and a light ground, because these are
    almost always laid out for white. */
-.cs-board{ max-width:1100px; }
+.cs-board{ max-width:none; }
 .cs-board__in{ background:#f4f2ec; }
 
 .cs-body figcaption{
   margin-top:12px;
   font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.18em; text-transform:uppercase;
-  color:rgba(241,236,225,.68);
+  color:var(--dim);
 }
-.cs-shot--bleed figcaption{ padding:0 var(--pad); }
 
 /* ---- numbers ---- */
 .cs-stats{
@@ -126,9 +279,10 @@
 .cs-stat span{
   display:block; margin-top:8px;
   font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; text-transform:uppercase;
-  color:rgba(241,236,225,.68);
+  color:var(--dim);
 }
 
+.cs-quote{ border-left:2px solid var(--accent); padding-left:clamp(20px,2.4vw,34px); }
 .cs-quote p{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(21px,2.6vw,34px); line-height:1.28; letter-spacing:-.02em;
@@ -137,24 +291,52 @@
 .cs-quote cite{
   display:block; margin-top:16px; font-style:normal;
   font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; text-transform:uppercase;
-  color:rgba(241,236,225,.68);
+  color:var(--dim);
 }
 
-/* ---- the way on ---- */
-.cs-next{ border-top:1px solid var(--line); padding:clamp(50px,8vh,90px) 0 clamp(70px,11vh,120px); }
+/* ============================================================
+   THE WAY ON
+
+   The same card the browse wall uses, at a third of the width. Not a
+   near-copy: a reader who learned what a work card looks like on /work
+   should not have to learn a second one at the bottom of a case.
+   ============================================================ */
+.cs-next{
+  position:relative; isolation:isolate;
+  border-top:1px solid var(--line);
+  padding:clamp(50px,8vh,90px) 0 clamp(70px,11vh,120px);
+}
+.cs-next > .wrap{ position:relative; z-index:1; }
 .cs-next__in{
+  margin-top:clamp(22px,3.4vh,36px);
   display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(12px,1.6vw,24px);
 }
 .cs-next__card{
-  border:1px solid var(--faint); border-radius:12px; padding:24px;
-  display:flex; flex-direction:column; gap:6px;
-  transition:border-color .4s var(--ease), transform .4s var(--ease);
+  position:relative; display:block; overflow:hidden; border-radius:14px;
+  background:var(--panel); aspect-ratio:4/3; isolation:isolate;
 }
-.cs-next__card:hover{ border-color:var(--accent); transform:translateY(-3px); }
-.cs-next__card b{ font-family:var(--f-display); font-size:19px; font-weight:700; letter-spacing:-.015em; }
-.cs-next__card span{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:rgba(241,236,225,.68); }
+.cs-next__shot{ position:absolute; inset:0; z-index:0; display:block; }
+.cs-next__card img{ transition:transform .9s var(--ease); }
+.cs-next__card:hover img{ transform:scale(1.05); }
+.cs-next__card::after{
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to top, rgba(4,4,5,.88), rgba(4,4,5,.24) 46%, transparent 70%);
+}
+.cs-next__cap{
+  position:absolute; left:0; right:0; bottom:0; z-index:2;
+  padding:clamp(16px,1.8vw,24px);
+  display:flex; flex-direction:column; gap:6px; color:var(--cream);
+}
+.cs-next__cap b{
+  font-family:var(--f-display); font-weight:700; font-size:clamp(16px,1.3vw,20px);
+  letter-spacing:.01em; text-transform:uppercase; line-height:1.1;
+}
+.cs-next__cap span{
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:rgba(241,236,225,.72);
+}
 @media (max-width:760px){ .cs-next__in{ grid-template-columns:1fr; } }
 
 @media (prefers-reduced-motion:reduce){
-  .cs-next__card:hover{ transform:none; }
+  .cs-next__card img, .cs-next__card:hover img{ transition:none; transform:none; }
 }

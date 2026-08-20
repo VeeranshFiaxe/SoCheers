@@ -50,29 +50,45 @@ export const HERO = {
    accent and the discipline list does not, and a regex over the prose would
    quietly break the moment someone edits a word. */
 /* The words are exactly the two sentences they have always been. What
-   changed is which of them is set at which size.
+   changed is which of them is set at which size, and where each lands.
 
-   The panel is built on one band of type running edge to edge with the
-   figure standing in front of it, so the middle of the band goes behind
-   him and your eye completes it. That needs an opening big enough to
-   carry the whole frame and a block of fine print to hang off its
-   baseline - and this sentence already had both, run together at one
-   size: "We are:" is the claim and the seven job titles after it are the
-   evidence. So the band takes the opening, the list becomes the fine
-   print, and nothing is rewritten to make it fit.
+   The panel is built on one band of type at head height with the figure
+   standing in front of it, so the monitor eclipses the middle of the band
+   and only its outer ends survive. That needs an opening short enough to
+   carry at that size, two small blocks to flank him, and a field of words
+   behind the lot - and this sentence already had all three in it, run
+   together at one size: "We are:" is the claim and the seven job titles
+   after it are the evidence.
+
+     bandA / bandB  the claim, either side of his head
+     credL / credR  the evidence, split in half and hung either side of
+                    his chest. Concatenated with a space they are the
+                    list exactly, comma for comma.
+     ghost          the same list again as loose tokens, for the field of
+                    type behind everything. Every token appears verbatim
+                    in `list`, which is why "AI-native" is one of them
+                    rather than being folded into "strategists" - the
+                    field is set from the copy, not from a paraphrase of
+                    it. It carries no meaning at 7% opacity and is not
+                    meant to be read; it is there so the frame has type in
+                    it edge to edge instead of black.
 
    `list` and `payoff` are untouched and are what the page hands a screen
-   reader. `bandA` / `bandB` / `note` are the same sentence broken where
-   the layout breaks it, kept as their own constants rather than sliced
-   off `list` at render time by a regex over the colon: where a sentence
-   is allowed to come apart is a design decision, and a regex would make
-   it look like a parsing rule that any future edit could quietly break.
-   The three of them must still read back as `list` - if you edit one,
+   reader. The pieces are kept as their own constants rather than sliced
+   off `list` at render time by a regex over the punctuation: where a
+   sentence is allowed to come apart is a design decision, and a regex
+   would make it look like a parsing rule that any future edit could
+   quietly break. They must still read back as `list` - if you edit one,
    edit `list` with it. */
 export const ABOUT_INTRO = {
   bandA: "We",
   bandB: "are",
-  note: "AI-native strategists, producers, researchers, creatives, filmmakers, animators, and copywriters.",
+  credL: "AI-native strategists, producers, researchers,",
+  credR: "creatives, filmmakers, animators, and copywriters.",
+  ghost: [
+    "AI-NATIVE", "STRATEGISTS", "PRODUCERS", "RESEARCHERS",
+    "CREATIVES", "FILMMAKERS", "ANIMATORS", "COPYWRITERS",
+  ],
   list: "We are: AI-native strategists, producers, researchers, creatives, filmmakers, animators, and copywriters.",
   payoff: "One team, many disciplines, all chasing what comes next.",
 } as const;

@@ -1,9 +1,11 @@
 /* ============================================================
    WORK - the pinned stage and the browse wall.
 
-   The stage is the opening screen and it is dark, because it is a
-   photograph; the wall under it is cream. Same palette and the same
-   .is-light token remap every other route uses (globals.css).
+   Both sections are dark, and that is the point of this file's most
+   recent change. The wall under the stage used to be a cream .is-light
+   panel, so the page turned into a sheet of paper the moment anyone
+   scrolled past the first screen. One page of work, one ground: the
+   pictures are the only light on it.
    ============================================================ */
 
 .wk-page{ position:relative; background:var(--bg); }
@@ -179,11 +181,39 @@
 /* The selected poster says so with a ring, not only with opacity -
    opacity alone is not a state anyone can point at on a call. */
 .wk-poster[aria-selected="true"] .wk-poster__shot{ box-shadow:0 0 0 2px var(--accent); }
+/* The turn left on the selected frame - see the note in
+   components/WorkPinned.tsx. It sits inside the shot rather than under
+   the name so that it reads as belonging to the picture that is
+   currently up, and it is the only moving thing on the wall. The
+   animation's duration and play state are set inline from
+   PINNED_DWELL and the pause flags; the shape is here. */
+.wk-poster__clock{
+  position:absolute; left:0; right:0; bottom:0; height:2px; z-index:2;
+  transform-origin:left center;
+  background:var(--accent);
+  animation-name:wk-clock; animation-timing-function:linear; animation-fill-mode:forwards;
+}
+@keyframes wk-clock{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+
 .wk-poster__name{
   font-size:11px; line-height:1.3; color:rgba(241,236,225,.78);
   text-align:center;
 }
-.wk-poster[aria-selected="true"] .wk-poster__name{ color:var(--cream); }
+.wk-poster[aria-selected="true"] /* The turn left on the selected frame - see the note in
+   components/WorkPinned.tsx. It sits inside the shot rather than under
+   the name so that it reads as belonging to the picture that is
+   currently up, and it is the only moving thing on the wall. The
+   animation's duration and play state are set inline from
+   PINNED_DWELL and the pause flags; the shape is here. */
+.wk-poster__clock{
+  position:absolute; left:0; right:0; bottom:0; height:2px; z-index:2;
+  transform-origin:left center;
+  background:var(--accent);
+  animation-name:wk-clock; animation-timing-function:linear; animation-fill-mode:forwards;
+}
+@keyframes wk-clock{ from{ transform:scaleX(0); } to{ transform:scaleX(1); } }
+
+.wk-poster__name{ color:var(--cream); }
 @media (hover:none){ .wk-poster{ cursor:pointer; opacity:1; } }
 
 /* ---- narrow ----
@@ -203,22 +233,85 @@
 }
 
 /* ============================================================
-   SECTION B - THE BROWSE WALL
+   THE SLASH
+
+   The mark in front of a heading, after the reference. It is a real
+   glyph in a pseudo-element rather than a character typed into the copy,
+   for two reasons that both matter: the copy is the client's and is not
+   ours to punctuate, and a "/" sitting in the text is a "/" a screen
+   reader announces before every title on the page.
+
+   `display:inline-block` is what stops it from being the thing that sets
+   the line's leading - a slash is a tall glyph, and at heading size an
+   inline one drags the first line's box down and knocks the heading out
+   of alignment with everything beside it.
    ============================================================ */
-.wk-browse{
-  background:#f4f2ec;
-  padding:clamp(80px,13vh,150px) 0 clamp(90px,15vh,170px);
-}
-.wk-browse__title{
-  margin-top:24px; max-width:18ch;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(28px,4.4vw,62px); line-height:1.02; letter-spacing:-.03em;
+.wk-browse__title::before,
+.cs-hero__h::before{
+  content:"/"; display:inline-block;
+  margin-right:.16em;
+  color:var(--accent); font-weight:700;
 }
 
-.wk-tabs{
-  margin-top:clamp(28px,4vh,44px); display:flex; gap:8px; flex-wrap:wrap;
+/* ============================================================
+   SECTION B - THE BROWSE WALL
+
+   Same ground as the stage above it. The only separation between the
+   two is a hairline and the space around it - the wall does not
+   announce itself as a different kind of page.
+   ============================================================ */
+.wk-browse{
+  position:relative; isolation:isolate;
+  background:var(--bg);
+  border-top:1px solid var(--line);
+  padding:clamp(80px,13vh,150px) 0 clamp(90px,15vh,170px);
+}
+/* The lines sit under everything and the content sits on top. Both need
+   saying: .grid-lines is absolute at z-index 0, and without a z-index on
+   the wrap the tiles would be in the same layer and the hairlines would
+   cross them. */
+.wk-browse > .wrap{ position:relative; z-index:1; }
+
+/* ---- the marked grid ----
+
+   The base .grid-lines (globals.css) is four plain hairlines, and it is
+   shared with the AI Work and Contact heroes - so the node markers are a
+   modifier rather than an addition to it. Two pages that never asked for
+   diamonds should not grow them because the Work page wanted texture.
+
+   One node per line, at the top edge, which is where the vertical rule
+   meets the section's own border - a marker floating at an intersection
+   that is not drawn reads as a speck of dust rather than as structure. */
+.grid-lines--mark i{ position:relative; }
+.grid-lines--mark i::before{
+  content:""; position:absolute; top:-4px; left:50%;
+  width:7px; height:7px; margin-left:-3.5px;
+  background:var(--bg); border:1px solid var(--line);
+  transform:rotate(45deg);
+}
+
+/* The title, set the way the section headings on this tab are now set:
+   upper case, tight, and carrying the slash. Sentence case at this size
+   on a black page reads as a paragraph that happens to be large; the
+   caps are what make it a heading you see before you read it. */
+.wk-browse__title{
+  margin-top:24px; max-width:16ch;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(34px,5.6vw,82px); line-height:.96; letter-spacing:-.035em;
+  text-transform:uppercase;
+}
+
+/* The tabs and the count share a row and a rule under them: the count
+   is the tabs' answer, and putting it anywhere else makes the reader
+   look for the connection. It drops under on a narrow screen rather
+   than squeezing the tabs, because the tabs are the control. */
+.wk-filter{
+  margin-top:clamp(28px,4vh,44px);
+  display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
+  flex-wrap:wrap;
   border-bottom:1px solid var(--line); padding-bottom:18px;
 }
+.wk-tabs{ display:flex; gap:8px; flex-wrap:wrap; }
 .wk-tab{
   font:inherit; cursor:none; background:none;
   border:1px solid var(--faint); border-radius:999px;
@@ -228,58 +321,104 @@
 }
 .wk-tab sup{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.1em; opacity:.7; }
 .wk-tab:hover{ border-color:var(--cream); color:var(--cream); }
-.wk-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:#f4f2ec; }
+.wk-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:var(--bg); }
 @media (hover:none){ .wk-tab{ cursor:pointer; } }
 
-/* Columns rather than a grid: the assets are a mix of orientations and
-   the browser packs them without anything being cropped to fit a cell.
-   Full reasoning in components/AiGrid.tsx. */
+.wk-count{
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dim); white-space:nowrap;
+}
+
+/* Two to a row, one frame each. The columns-and-ragged-heights version
+   this replaced is described in components/WorkGrid.tsx along with what
+   it costs to give it up. */
 .wk-grid{
   margin-top:clamp(26px,4vh,42px);
-  column-count:3; column-gap:clamp(12px,1.4vw,20px);
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(14px,2vw,30px);
 }
-@media (max-width:1000px){ .wk-grid{ column-count:2; } }
-@media (max-width:600px){ .wk-grid{ column-count:1; } }
+@media (max-width:760px){ .wk-grid{ grid-template-columns:1fr; } }
 
 .wk-tile{
-  position:relative; display:block; margin:0 0 clamp(12px,1.4vw,20px);
-  break-inside:avoid; border-radius:12px; overflow:hidden;
+  position:relative; display:block; margin:0;
+  overflow:hidden; border-radius:14px;
   background:var(--panel);
+  aspect-ratio:16/9;
+  isolation:isolate;
 }
-.wk-tile[hidden]{ display:none; }
-.wk-tile img{ transition:transform .8s var(--ease); }
+.wk-tile__shot{ position:absolute; inset:0; z-index:0; display:block; }
+.wk-tile img{ transition:transform .9s var(--ease); }
 .wk-tile:hover img{ transform:scale(1.04); }
-.wk-tile__play{
-  position:absolute; top:12px; left:12px; z-index:2;
-  display:grid; place-items:center; width:30px; height:30px;
-  border-radius:50%; background:rgba(0,0,0,.45); color:#fff;
+
+/* The caption sits on the picture, always visible. It used to appear on
+   hover, which on a wall this size meant the brand names - the one
+   thing a reader is scanning for - were invisible until the pointer
+   found them, and invisible full stop on a touch screen. The wash is
+   what makes that safe over an unknown photograph. */
+.wk-tile::after{
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:linear-gradient(to top, rgba(4,4,5,.88), rgba(4,4,5,.28) 42%, transparent 68%);
 }
 .wk-tile__cap{
   position:absolute; left:0; right:0; bottom:0; z-index:2;
-  padding:34px 14px 14px;
-  background:linear-gradient(to top, rgba(0,0,0,.72), transparent);
-  color:#fff; display:flex; flex-direction:column; gap:2px;
-  opacity:0; transform:translateY(8px);
-  transition:opacity .45s var(--ease), transform .45s var(--ease);
+  padding:clamp(18px,2.2vw,28px);
+  display:flex; flex-direction:column; gap:8px;
+  color:var(--cream);
 }
-.wk-tile:hover .wk-tile__cap{ opacity:1; transform:none; }
-.wk-tile__cap b{ font-family:var(--f-display); font-size:15px; font-weight:700; letter-spacing:-.01em; }
-.wk-tile__cap span{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.18em; text-transform:uppercase; opacity:.75; }
-@media (hover:none){ .wk-tile__cap{ opacity:1; transform:none; } }
+.wk-tile__cap b{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(17px,1.5vw,22px); line-height:1.1; letter-spacing:.01em;
+  text-transform:uppercase;
+}
+.wk-tile__cats{
+  display:flex; flex-wrap:wrap; align-items:center;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:rgba(241,236,225,.72);
+}
+/* A rule between categories rather than a bullet, same reasoning as the
+   genre row on the stage. */
+.wk-tile__cats span + span::before{
+  content:""; display:inline-block; vertical-align:middle;
+  width:1px; height:10px; margin:0 10px;
+  background:rgba(241,236,225,.32);
+}
+
+.wk-tile__play{
+  position:absolute; top:14px; left:14px; z-index:2;
+  display:grid; place-items:center; width:32px; height:32px;
+  border-radius:50%; background:rgba(4,4,5,.5); color:var(--cream);
+  border:1px solid rgba(241,236,225,.24);
+}
+
+/* Only the cards that go somewhere carry it, and it is the whole of the
+   affordance - see the note in components/WorkGrid.tsx. */
+.wk-tile__go{
+  position:absolute; top:14px; right:14px; z-index:2;
+  display:grid; place-items:center; width:38px; height:38px;
+  border-radius:50%; background:var(--accent); color:#04140b;
+  transform:translateY(-6px) scale(.86); opacity:0;
+  transition:transform .45s var(--ease), opacity .45s var(--ease);
+}
+.wk-tile:hover .wk-tile__go,
+.wk-tile:focus-visible .wk-tile__go{ transform:none; opacity:1; }
+@media (hover:none){ .wk-tile__go{ transform:none; opacity:1; } }
 
 /* Stand-in content says so, in the UI, so a screenshot cannot be
    mistaken for finished work. */
-.wk-tile.is-pending::before,
+.wk-tile.is-pending .wk-tile__cap::after,
 .wk-poster.is-pending::before{
-  content:"PLACEHOLDER"; position:absolute; z-index:3; top:10px; right:10px;
+  content:"PLACEHOLDER";
   font-family:var(--f-mono); font-weight:500; font-size:8px; letter-spacing:.22em;
   padding:4px 7px; border-radius:3px;
   background:rgba(0,0,0,.62); color:#fff;
 }
+.wk-tile.is-pending .wk-tile__cap::after{ align-self:flex-start; margin-top:2px; }
+.wk-poster.is-pending::before{ position:absolute; z-index:3; top:10px; right:10px; }
 
 @media (prefers-reduced-motion:reduce){
   .wk-stage__frame, .wk-poster{ transition:none; }
   .wk-tile img{ transition:none; }
   .wk-tile:hover img{ transform:none; }
+  .wk-tile__go{ transition:none; transform:none; opacity:1; }
   .wk-poster:hover{ transform:none; }
 }

@@ -10,7 +10,7 @@ import {
 /* 1 · the opener lives in components/AboutHero.tsx - it carries enough
    markup and motion of its own to be worth its own file. */
 
-/* 2 · the claim, with the figure standing inside it.
+/* 2 · the claim, with the figure standing in front of it.
 
    This was figure / copy / figure: a centred paragraph with a 190px man
    at each edge. Three tracks, two of them the same asset mirrored, and
@@ -19,50 +19,89 @@ import {
    the cursor - was happening twice at a size where its full 25° of yaw is
    a handful of pixels.
 
-   It is one band now. "We are" set enormous and edge to edge, the figure
-   standing in the gap between the two words, and the seven disciplines
-   hung off the band's baseline as fine print. The band runs behind him,
-   not around him: the inner ends of both words go under his shoulders and
-   your eye closes them, which is the whole device - the type and the
-   figure are in one space rather than in neighbouring ones.
+   It is a title card now, and the order of the layers is the whole
+   design. Back to front:
+
+     · a field of the discipline words, huge and nearly invisible, running
+       off all four edges. It is texture, not copy - it is what stops the
+       frame being black behind everything else.
+     · the burst, tight behind him.
+     · "We are" set enormous at head height, in two halves with a gap
+       between them.
+     · the figure, big, and the important part: his head sits in that gap
+       and eclipses the inner end of each word. The band is behind him,
+       not around him, and because the occluder is the monitor rather than
+       the chest, the face - the thing the whole model exists for - is
+       never crossed by a letter.
+     · the seven disciplines, split in half and hung either side of his
+       chest, small and symmetrical.
+
+   He is sized off the viewport's height and runs out of the bottom of the
+   composition rather than standing clear of it, so the frame reads as a
+   crop of something larger. The canvas fade does the work the frame edge
+   does in the reference (see the mask on .ab-man__canvas), and the payoff
+   is pulled back up into that dissolve rather than sitting below it.
 
    Not a word of the copy changed. The sentence was always a claim
-   followed by its evidence ("We are: strategists, producers, ..."), and
-   all that happened is that the two halves stopped being set at the same
-   size. See ABOUT_INTRO in lib/about-content.ts, which keeps the whole
-   sentence alongside the pieces and hands the whole one to a screen
-   reader - a word set in space with fragments round its baseline is a
-   picture of a sentence, not a sentence, and reading this frame in DOM
-   order would give an ordering nobody wrote.
+   followed by its evidence, and all that happened is that its parts
+   stopped being set at the same size. See ABOUT_INTRO in
+   lib/about-content.ts, which keeps the whole sentence alongside the
+   pieces and hands the whole one to a screen reader - a word set in space
+   with fragments round it is a picture of a sentence, not a sentence, and
+   reading this frame in DOM order would give an ordering nobody wrote.
 
-   The panel is one viewport tall and centred in it, so the band, the
-   figure, the fine print and the payoff are one held image rather than
-   something you assemble by scrolling. The figure is sized off the
-   viewport's height rather than its width for the same reason: it is the
-   tallest thing here, so it is what decides whether the composition fits,
-   and a width-derived size would have overflowed the moment someone
-   opened a short window.
-
-   data-splash is the home page's own hook, so the burst behind the figure
-   gets the same cursor pull the WHO WE ARE splash has. data-band and
-   data-meta are this page's, and lib/about-motion.ts uses them to push
-   the two halves of the band out from behind him as the section arrives. */
+   data-splash is the home page's own hook, so the burst gets the same
+   cursor pull the WHO WE ARE splash has. data-band and data-meta are this
+   page's, and lib/about-motion.ts uses them to push the two halves of the
+   claim out from behind his head as the section arrives. */
 export function AboutIntro() {
   return (
     <section className="ab-panel ab-intro" data-sec="1">
+      {/* Hung on the section, not on the stage.
+
+          It was inside the stage, which is only as tall as the figure -
+          so eight rows of type were being laid into a box far shorter
+          than they needed and the ones at each end were sliced through
+          the middle by its edge. On the section it has the whole screen
+          to sit in, the rows are sized so all eight fit whole, and a mask
+          takes the top and bottom ones out to nothing instead of cutting
+          them. That mask is also doing the join at both ends of the
+          panel: the field emerges out of the black the opener finishes
+          on, and has gone again before the bridge starts lightening.
+
+          Rotated one word per row rather than repeated, so no two rows
+          start on the same token and the field never lines up into
+          columns. Static: no animation, no repaint, one flat layer. */}
+      <div className="ab-intro__ghost" aria-hidden="true">
+        {ABOUT_INTRO.ghost.map((_, row) => (
+          <span
+            className="ab-intro__ghostRow"
+            key={row}
+            /* each row slid a different fraction of its own width, so
+               the joins between repeats never stack vertically */
+            style={{ "--gx": `${-8 * ((row * 3) % 7)}%` } as React.CSSProperties}
+          >
+            {[...ABOUT_INTRO.ghost.slice(row), ...ABOUT_INTRO.ghost.slice(0, row)]
+              .join(" ")
+              /* twice over, so the row is wider than any screen and its
+                 ends are always off-frame */
+              .repeat(2)}
+          </span>
+        ))}
+      </div>
+
       <div className="wrap ab-intro__stage">
-        {/* the sentence the band is a picture of */}
+        {/* the sentence every layer below is a picture of */}
         <p className="sr-only">{ABOUT_INTRO.list}</p>
 
         <span className="ab-intro__splash" data-splash aria-hidden="true">
           <AboutSplash uid="ab-c" />
         </span>
 
-        {/* Full bleed, and a flex row rather than one string with a wide
-            word-space: the gap between the two words has to be a fraction
-            of the figure standing in it, and the two halves have to be
-            addressable so each can be pushed out from behind him on its
-            own side. */}
+        {/* A flex row rather than one string with a wide word-space: the
+            gap has to be a fraction of the head standing in it, and the
+            two halves have to be addressable so each can be pushed out
+            from behind him on its own side. */}
         <div className="ab-intro__band" aria-hidden="true">
           <span className="ab-intro__word" data-band>{ABOUT_INTRO.bandA}</span>
           <i className="ab-intro__slot" />
@@ -74,24 +113,21 @@ export function AboutIntro() {
           <AboutBulbs />
         </div>
 
-        {/* The fine print, ranged to the right under the band. It is the
-            detail behind the claim, not the claim, and this is the
-            register it belongs in.
-
-            It sits under the band rather than on its baseline, which is
-            where the reference hangs its equivalent block, because "We
-            are" is five glyphs: sized to reach across the frame it stands
-            almost as tall as the torso, and there is no clear air left at
-            the baseline for anything to be tucked into. Under it there
-            is, and the block still reads as hung off the band rather than
-            as a paragraph of its own. */}
-        <p className="ab-intro__note" data-meta aria-hidden="true">
-          {ABOUT_INTRO.note}
+        {/* The evidence, either side of his chest. Two halves of one list,
+            not two lists - they are centred in their own blocks and set
+            at the same size so the pair reads as one line of small type
+            interrupted by a man. */}
+        <p className="ab-intro__cred ab-intro__cred--l" data-meta aria-hidden="true">
+          {ABOUT_INTRO.credL}
+        </p>
+        <p className="ab-intro__cred ab-intro__cred--r" data-meta aria-hidden="true">
+          {ABOUT_INTRO.credR}
         </p>
 
         {/* Still its own split root, and still the line that takes the
-            accent - it is the sentence the band and the fine print above
-            it have been building to. */}
+            accent - it is the sentence everything above it has been
+            building to. Pulled up into the dissolve at the foot of the
+            figure so the panel ends on him rather than under him. */}
         <p className="ab-intro__payoff" data-split>
           <em>{ABOUT_INTRO.payoff}</em>
         </p>

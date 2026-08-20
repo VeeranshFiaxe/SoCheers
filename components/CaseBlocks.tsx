@@ -35,7 +35,10 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
             return (
               <div className="cs-copy" key={key}>
                 {b.heading && (
-                  <h2 className="cs-copy__h" data-split>{b.heading}</h2>
+                  /* The id is what the rail's contents list points at,
+                     and it is the block's index - the same rule
+                     caseHeadings() uses, so the two cannot drift. */
+                  <h2 className="cs-copy__h" id={`heading-${i}`} data-split>{b.heading}</h2>
                 )}
                 <p className="cs-copy__p" data-reveal>{b.body}</p>
               </div>
@@ -71,9 +74,17 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
              on a page they are still reading is the behaviour the client
              already told us fails, in the note about video competing
              with text for the same attention. */
+          /* `id="film"` is what the hero's one action points at. Only
+             the first video carries it - a case with two films has one
+             that is *the* film, and it is the one the page opens with. */
           case "video":
             return (
-              <figure className="cs-video" key={key} data-reveal>
+              <figure
+                className="cs-video"
+                key={key}
+                id={blocks.findIndex((o) => o.type === "video") === i ? "film" : undefined}
+                data-reveal
+              >
                 <video src={b.src} poster={b.poster} controls preload="none" playsInline />
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>

@@ -2,37 +2,32 @@
    arriving, one after another, never all at once.
 
    Positions are percentages of the figure's box, so they hold their
-   relationship to it at any width. They were placed against a full-length
-   figure in a tall narrow column and have been re-placed against the
-   torso crop that replaced it (see FLOOR_Y in scripts/build-about-man.mjs
-   and FRAME_H in components/AboutMan.tsx): in that frame the monitor
-   spans roughly x 36-64% and y 8-33%, and the shoulders reach out to
-   x 22-78% below it. So the ring goes round the head and out along the
-   tops of the shoulders, which is where the empty corners of the frame
-   now are - the old set clustered at the vertical extremes of a portrait
-   box that no longer exists and would have sat half of them over the
-   jacket and half off the top.
+   relationship to it at any width. They have moved twice, and both times
+   for the same reason: they go wherever the composition is not.
 
-   None are placed below about a quarter of the way down. Two things are
-   under there and neither wants a bulb over it: the band of type crosses
-   the chest, with its cap-tops at roughly 31% of this box (see --band-y
-   in about.css), and below that the canvas is already fading out into the
-   panel, where a bulb popping in over a dissolve reads as a hole in it.
-   So the whole ring goes in the airspace around the monitor, which is
-   where the composition leaves room for it anyway.
+   They used to ring the head, which was the empty part of a tall portrait
+   box. It is not empty any more - the claim now sits at head height and
+   its caps run from a little above the top of the frame down to about 45%
+   of it (see --band-y and --band-fs in about.css), and a bulb popping on
+   over a letter reads as a rendering fault rather than as an idea. So the
+   ring has come down onto the shoulders and the outer air beside them,
+   between the claim's baseline and the point the canvas begins fading out
+   at 70%. Everything here sits in that band.
+
+   There are five rather than eight. The panel carries a field of type, a
+   burst, a claim, a figure and two blocks of small copy already; eight
+   more things blinking on and off over the top of that is not a layer, it
+   is noise.
 
    The pop itself lives in lib/about-motion.ts - each bulb gets its own
    looping timeline on an index-derived offset so they never fall into step.
    `s` is the rendered width in px at the largest breakpoint. */
 const BULBS = [
-  { x: 13, y: 13, s: 28 },
-  { x: 29, y: 1, s: 23 },
-  { x: 48, y: -5, s: 32 },
-  { x: 67, y: -1, s: 21 },
-  { x: 86, y: 9, s: 29 },
-  { x: 95, y: 25, s: 22 },
-  { x: 3, y: 26, s: 25 },
-  { x: 76, y: 19, s: 19 },
+  { x: 3, y: 51, s: 26 },
+  { x: 18, y: 63, s: 21 },
+  { x: 72, y: 66, s: 19 },
+  { x: 84, y: 54, s: 28 },
+  { x: 96, y: 62, s: 22 },
 ];
 
 function Bulb() {

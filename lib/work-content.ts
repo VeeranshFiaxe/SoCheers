@@ -44,6 +44,27 @@ export const WORK_CATEGORIES = [
 
 export type CategoryId = (typeof WORK_CATEGORIES)[number]["id"];
 
+/* Tag -> label, for the tile captions. The wall reads tags because the
+   CDN sends tags, but "fashion" is not what a card should say under a
+   brand name, and an asset carrying a tag nobody planned a filter for
+   gets its own tag back rather than nothing - a card with a blank
+   category row is worse than one naming a category we forgot. */
+const CAT_LABEL = new Map<string, string>(
+  WORK_CATEGORIES.map((c) => [c.id, c.label]),
+);
+export const catLabel = (tag: string) => CAT_LABEL.get(tag) ?? tag;
+
+/* How long each pinned frame holds before the stage moves itself on.
+   Six seconds: long enough to read the brand, the credits row and the
+   line under them at a glance, which is the most this composition asks
+   anyone to do, and short enough that all five have had their turn
+   before a reader who is going to scroll has scrolled.
+
+   It lives here rather than in the component because it is a pacing
+   decision the client will have an opinion about, and this file is
+   where every other such decision on the Work tab already is. */
+export const PINNED_DWELL = 6000;
+
 /* ------------------------------------------------------------------
    SECTION A - the pinned stage.
 
@@ -326,6 +347,17 @@ export type CaseStudy = {
   /* the row under the title - same idea as PinnedCase.meta */
   meta: string[];
   intro: string;
+  /* The opening frame. The reference opens every case on the work
+     itself at full width with the title sitting on it, and that is the
+     one thing a case page cannot be missing - unlike a board or a set
+     of numbers, there is no version of this page that reads as finished
+     without a picture at the top. So it is required, not optional. */
+  hero: string;
+  /* Set when the case has a film. It turns the hero into the poster for
+     it and puts the one action on the frame; without it the hero is a
+     still and there is no button, which is the same absence rule the
+     block list follows. */
+  film?: string;
   blocks: CaseBlock[];
   pending?: boolean;
 };
@@ -350,14 +382,19 @@ export const CASES: CaseStudy[] = [
     title: "PENDING - campaign title",
     meta: ["PENDING", "Entertainment", "Film · Social"],
     intro: LOREM,
+    hero: "/assets/work-entertainment.png",
+    film: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
     pending: true,
     blocks: [
-      { type: "copy", heading: "The brief", body: LOREM },
-      { type: "image", src: "/assets/work-entertainment.png", w: 1600, h: 900, bleed: true, caption: "PENDING - caption" },
-      { type: "copy", heading: "The idea", body: LOREM },
+      { type: "copy", heading: "The client", body: LOREM },
+      { type: "copy", heading: "The challenge", body: LOREM },
       { type: "duo", a: "/assets/series/kink.jpg", b: "/assets/series/binge.jpg", caption: "PENDING - caption" },
+      { type: "copy", heading: "Our approach", body: LOREM },
+      { type: "image", src: "/assets/work-entertainment.png", w: 1600, h: 900, bleed: true, caption: "PENDING - caption" },
+      { type: "copy", heading: "The execution", body: LOREM },
       { type: "video", src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", caption: "PENDING - the case film" },
       { type: "board", src: "/assets/series/close-band.jpg", w: 1252, h: 495, caption: "PENDING - the case board" },
+      { type: "copy", heading: "The outcome", body: LOREM },
       { type: "stats", items: [
         { figure: "00M", label: "PENDING - reach" },
         { figure: "00%", label: "PENDING - engagement" },
@@ -372,12 +409,16 @@ export const CASES: CaseStudy[] = [
     title: "Made in India",
     meta: ["PENDING", "Lifestyle", "Film · Social"],
     intro: LOREM,
+    hero: "/assets/work-lifestyle.jpg",
+    film: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
     pending: true,
     blocks: [
-      { type: "copy", heading: "The brief", body: LOREM },
+      { type: "copy", heading: "The client", body: LOREM },
+      { type: "copy", heading: "The challenge", body: LOREM },
       { type: "image", src: "/assets/work-lifestyle.jpg", w: 1600, h: 1000, bleed: true },
-      { type: "copy", heading: "The idea", body: LOREM },
+      { type: "copy", heading: "Our approach", body: LOREM },
       { type: "video", src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/wardrobe.jpg" },
+      { type: "copy", heading: "The outcome", body: LOREM },
       { type: "stats", items: [
         { figure: "00M", label: "PENDING - reach" },
         { figure: "00%", label: "PENDING - engagement" },
@@ -390,27 +431,32 @@ export const CASES: CaseStudy[] = [
     title: "Broadway Bombay",
     meta: ["PENDING", "Lifestyle", "Content · Social"],
     intro: LOREM,
+    hero: "/assets/series/open-wide.jpg",
     pending: true,
     blocks: [
-      { type: "copy", heading: "The brief", body: LOREM },
+      { type: "copy", heading: "The client", body: LOREM },
+      { type: "copy", heading: "The challenge", body: LOREM },
       { type: "duo", a: "/assets/series/open-wide.jpg", b: "/assets/series/night-scroll.jpg" },
-      { type: "copy", body: LOREM },
+      { type: "copy", heading: "Our approach", body: LOREM },
       { type: "board", src: "/assets/series/close-band.jpg", w: 1252, h: 495 },
     ],
   },
   {
     /* the deliberately thin one - no board, no video, no stats, no
-       quote. If this page reads as finished, the template works. */
+       quote, and only two headings, so the sidebar's contents list is
+       proved at the length where it stops being worth having. If this
+       page reads as finished, the template works. */
     slug: "odyssey",
     brand: "Odyssey",
     title: "PENDING - campaign title",
     meta: ["PENDING", "Lifestyle", "Campaign"],
     intro: LOREM,
+    hero: "/assets/brain-DH7sqVir.jpg",
     pending: true,
     blocks: [
-      { type: "copy", heading: "The brief", body: LOREM },
+      { type: "copy", heading: "The client", body: LOREM },
       { type: "image", src: "/assets/brain-DH7sqVir.jpg", w: 1600, h: 900, bleed: true },
-      { type: "copy", body: LOREM },
+      { type: "copy", heading: "The challenge", body: LOREM },
     ],
   },
   {
@@ -419,18 +465,44 @@ export const CASES: CaseStudy[] = [
     title: "EOSS",
     meta: ["PENDING", "Fashion & Beauty", "Campaign · Social"],
     intro: LOREM,
+    hero: "/assets/photoshop-face-BOtm4GGN.jpg",
     pending: true,
     blocks: [
-      { type: "copy", heading: "The brief", body: LOREM },
+      { type: "copy", heading: "The client", body: LOREM },
+      { type: "copy", heading: "The challenge", body: LOREM },
       { type: "image", src: "/assets/photoshop-face-BOtm4GGN.jpg", w: 1200, h: 1500 },
-      { type: "copy", heading: "The idea", body: LOREM },
+      { type: "copy", heading: "Our approach", body: LOREM },
       { type: "duo", a: "/assets/series/mokai-2.jpg", b: "/assets/series/mokai-3.jpg" },
+      { type: "copy", heading: "The outcome", body: LOREM },
       { type: "quote", text: "PENDING - a line from the client or the press.", who: "PENDING - attribution" },
     ],
   },
 ];
 
+/* The sidebar that rides alongside a case, and the only two lines on it
+   that are not the case's own headings. The contents list is built from
+   the copy blocks at render time rather than written per case - a
+   hand-kept list of anchors is a list that goes stale the first time
+   somebody reorders the blocks. */
+export const CASE_NAV = {
+  back: "All work",
+  contents: "Navigation",
+  cta: "Start a project",
+} as const;
+
 export const findCase = (slug: string) => CASES.find((c) => c.slug === slug);
+
+/* The contents list for the rail, derived from the blocks rather than
+   written out. The id is the block's own index and not a counter over
+   the headings, so it stays the same rule in both places that need it -
+   here and in the renderer - and neither has to know how many headings
+   came before it. */
+export const caseHeadings = (blocks: CaseBlock[]) =>
+  blocks.flatMap((b, i) =>
+    b.type === "copy" && b.heading
+      ? [{ id: `heading-${i}`, label: b.heading }]
+      : [],
+  );
 
 /* The copy hero this page used to open with is gone - the stage is the
    first thing on the page now and the work introduces itself. What was
@@ -439,4 +511,9 @@ export const findCase = (slug: string) => CASES.find((c) => c.slug === slug);
 export const WORK_BROWSE = {
   eyebrow: "Everything else",
   title: "By the room it was made for.",
+  /* The count under the filter. It is a live number rather than a
+     sentence about how much work there is, which is the one thing a
+     filtered wall owes the reader: a tab that returns four things
+     should say four before they have to count the tiles. */
+  count: (n: number) => `${n} ${n === 1 ? "piece" : "pieces"} of work`,
 } as const;

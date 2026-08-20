@@ -77,13 +77,15 @@ export function initAbout(): () => void {
     /* -------------------------------------------------- the band
        "We are" coming out from behind the figure.
 
-       The panel is one band of type running edge to edge with the man
-       standing in the gap between its two words (see AboutIntro in
+       The panel is a title card: "We are" set enormous at head height in
+       two halves, with the man standing in the gap between them and his
+       monitor eclipsing the inner end of each (see AboutIntro in
        components/AboutSections.tsx). This is the move that says the type
-       is behind him rather than around him: both halves start closed up
-       against his centre, where his own body hides them, and slide out to
-       the places CSS has already put them - so the first thing you see is
-       a man, and the claim arrives out of him.
+       is behind him rather than around him. Both halves start closed up
+       behind his head, where it genuinely hides them - the gap they sit
+       in is narrower than the monitor is - and slide out to the places
+       CSS has already put them. So the first thing you see is a man, and
+       the claim comes out from behind him.
 
        Nothing is positioned here. The layout is CSS and the tween only
        reads where CSS landed, so the phone fold that halves the gap and
@@ -122,7 +124,7 @@ export function initAbout(): () => void {
                middle of the panel looking like a mistake. */
             const seeded = halves.map((el) => {
               const r = el.getBoundingClientRect();
-              return { el, dx: (cx - (r.left + r.width / 2)) * 1.06 };
+              return { el, dx: (cx - (r.left + r.width / 2)) * 1.04 };
             });
 
             const tl = gsap.timeline();
@@ -136,8 +138,10 @@ export function initAbout(): () => void {
                 duration: 1.25, ease: "power3.out", stagger: 0.06,
               });
 
-            /* The fine print is the detail behind the claim, so it lands
-               after it rather than with it. */
+            /* The two halves of the list are the detail behind the claim,
+               so they land after it rather than with it - and together,
+               not staggered, because they are one line of type that
+               happens to have a man in the middle of it. */
             if (meta.length) {
               tl.fromTo(meta,
                 { y: 18, autoAlpha: 0 },
