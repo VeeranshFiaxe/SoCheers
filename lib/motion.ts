@@ -521,6 +521,13 @@ export function initSite(): () => void {
       // it is missing from the shipped typings.
       const refreshing = () =>
         (ScrollTrigger as unknown as { isRefreshing?: boolean }).isRefreshing === true;
+      /* .who is pulled up a screen to sit under this pin, and that margin is
+         only ever correct while the spacer below exists to cancel it - so the
+         two are claimed on adjacent lines and never by separate guesses. See
+         `html.is-pinned .who` in globals.css: keyed off a media query instead,
+         the margin survived every load where this function did not run and
+         buried the section under the hero. */
+      document.documentElement.classList.add("is-pinned");
       const st = ScrollTrigger.create({
         trigger: hero, start: "top top", end: "+=100%", pin: true,
         onEnter: () => { if (refreshing()) return; locked = true; lenis?.stop(); },
@@ -1646,28 +1653,60 @@ export function initSite(): () => void {
     /* -------------------------------------------------- boot */
     document.documentElement.classList.remove("no-js");
 
-    readGrids();
-    initLenis();
-    initOvertureBridge();               // must follow initLenis: it stops it
-    initCursor();
-    initSpotlight();
-    initTilt();
-    initSplash();
-    initMagnetic();
+    /* Every step below is independent, and several of them are the only
+       thing that will ever un-hide a piece of the page. Run bare and in a
+       row, the first one to throw takes every later one with it - so one bad
+       frame in, say, the cursor rig used to cost the hero its pin (and with
+       it the WHO WE ARE section, dragged under the hero by a margin whose
+       spacer was never built) and every [data-split] heading on the page,
+       which sit at visibility:hidden until initSplits() reaches them. None
+       of those failures announced itself; the section simply was not there.
+       Isolated, a broken step costs its own feature and nothing else, and
+       says so in the console. */
+    const step = (name: string, fn: () => void) => {
+      try { fn(); } catch (err) { console.error(`[socheers] ${name} failed`, err); }
+    };
 
-    initHero();
-    initMeaning();
-    initSplits();
-    initReveals();
-    initTiles();
-    initWCardCycle();
-    initCounters();
-    initNav();
-    initTopLinks();
-    initMarquees();
-    initFooter();
+    step("readGrids", readGrids);
+    step("initLenis", initLenis);
+    step("initOvertureBridge", initOvertureBridge);   // must follow initLenis: it stops it
+    step("initCursor", initCursor);
+    step("initSpotlight", initSpotlight);
+    step("initTilt", initTilt);
+    step("initSplash", initSplash);
+    step("initMagnetic", initMagnetic);
 
-    runLoader();
+    step("initHero", initHero);
+    step("initMeaning", initMeaning);
+    step("initSplits", initSplits);
+    step("initReveals", initReveals);
+    step("initTiles", initTiles);
+    step("initWCardCycle", initWCardCycle);
+    step("initCounters", initCounters);
+    step("initNav", initNav);
+    step("initTopLinks", initTopLinks);
+    step("initMarquees", initMarquees);
+    step("initFooter", initFooter);
+
+    step("runLoader", runLoader);
+
+    /* The backstop, for the copy that a stylesheet hides and a script is
+       supposed to bring back. [data-split] waits on document.fonts.ready and
+       .meaning waits on initHero, so anything that strands either promise -
+       or an isolated failure above - leaves real text invisible with no way
+       out. Nothing here runs on a healthy load: by four seconds every one of
+       these has long since been revealed, and the check is a computed style
+       read, not a write. */
+    const watchdog = window.setTimeout(() => {
+      document
+        .querySelectorAll<HTMLElement>("[data-split], [data-meaning]")
+        .forEach((el) => {
+          if (getComputedStyle(el).visibility !== "hidden") return;
+          console.warn("[socheers] revealing stranded element", el);
+          gsap.set(el, { autoAlpha: 1 });
+        });
+    }, 4000);
+    cleanups.push(() => window.clearTimeout(watchdog));
 
     on(window, "load", () => ScrollTrigger.refresh());
     if (document.fonts && document.fonts.ready) {
@@ -1693,6 +1732,7 @@ export function initSite(): () => void {
     ScrollTrigger.getAll().forEach((st) => st.kill());
     ctx.revert();
     document.documentElement.classList.remove("is-foot");
+    document.documentElement.classList.remove("is-pinned");
     document.documentElement.classList.add("no-js");
   };
 }

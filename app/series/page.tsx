@@ -3,11 +3,8 @@ import "./series.css";
 import { Nav, Overlays } from "@/components/Chrome";
 import SeriesMotion from "@/components/SeriesMotion";
 import SeriesStory from "@/components/SeriesStory";
-import SeriesSwitch from "@/components/SeriesSwitch";
-import { SeriesCta, SeriesExamples, SeriesProcess, SeriesReels } from "@/components/SeriesEnd";
-import {
-  CONCEPT, DEFAULT_TREATMENT, isTreatment, SERIES_CTA,
-} from "@/lib/series-content";
+import { SeriesClose, SeriesFeed } from "@/components/SeriesFeed";
+import { CONCEPT, SERIES_CTA } from "@/lib/series-content";
 
 export const metadata: Metadata = {
   title: `${CONCEPT.title} · SoCheers`,
@@ -18,43 +15,47 @@ export const metadata: Metadata = {
 /* ============================================================
    SERIES.
 
-   One page, one scroll, no click-through. The Netflix pattern - a wall of
-   preview tiles you pick from - was proposed for this tab and turned
-   down, and the reason is worth keeping written down: a tile wall asks
-   the reader to choose what to look at, and the argument here only lands
-   in order. You cannot skip to the middle of an insight.
+   One page, one scroll, two components - the story you read, and the
+   episodes as links out. That is the brief, verbatim, and it is worth
+   keeping written down what it replaced.
 
-   ---- the treatment ----
+   ---- what came out, and why ----
 
-   `?t=film | still | type` picks the direction; anything else falls back
-   to DEFAULT_TREATMENT. It is read on the server and written onto <main>
-   as a data attribute, so the whole page arrives already in the right
-   direction - no flash, no client state, and the URL is shareable, which
-   is the point of a thing built for a client to review async.
+   1. THE NETFLIX WALL. A grid of preview tiles you pick from was
+      proposed for this tab early and turned down. A tile wall asks the
+      reader to choose what to look at, and the argument here only lands
+      in order - you cannot skip to the middle of an insight.
+
+   2. THE THREE TREATMENTS. The page carried a `?t=film|still|type`
+      switcher so the client could compare directions on one URL. The
+      direction is now chosen: cinematic, scroll-driven, footage over
+      stills. Keeping the two that lost would be three pages drifting
+      apart, so they are deleted rather than commented out.
+
+   3. THE PROCESS AND THE EXAMPLE SEASONS. Two evidence sections that
+      sat between the story and the feed. The revamped brief is two
+      components; the how-it-gets-made belongs in a deck or on /contact,
+      and the seasons *are* the feed.
 
    ---- what is not real yet ----
 
-   The stat, the four example seasons, the reel links and the Tito Films
-   URL are all marked PENDING in lib/series-content.ts. The imagery is
-   lifted from the client's own deck and is placeholder for the same
-   reason - it is their reference, not their licence.
+   The stat and the eight Instagram links are marked PENDING in
+   lib/series-content.ts and are visibly marked in the UI too. The
+   imagery is lifted from the client's own deck and is placeholder for
+   the same reason - it is their reference, not their licence. Series
+   footage does not exist in this repo at all: every beat can carry an
+   mp4, three currently do, and the note over FILM in the content file
+   says what to drop in when the cuts land.
    ============================================================ */
-export default async function Series({
-  searchParams,
-}: {
-  searchParams: Promise<{ t?: string }>;
-}) {
-  const { t } = await searchParams;
-  const treatment = isTreatment(t) ? t : DEFAULT_TREATMENT;
-
+export default function Series() {
   return (
     <>
       <Overlays />
       <Nav variant="sub" active="/series" />
 
-      <main id="top" className="s-page" data-treatment={treatment}>
+      <main id="top" className="s-page">
         {/* The episode rail. Fixed, hairline, and only alive while the
-            story is - see initSeries() in lib/series-motion.ts. */}
+            story is - see episodeRail() in lib/series-motion.ts. */}
         <aside className="s-rail" aria-hidden="true">
           <span className="s-rail__label">EP</span>
           <span className="s-rail__num" data-s-num>01</span>
@@ -63,18 +64,13 @@ export default async function Series({
           </span>
         </aside>
 
-        <SeriesStory treatment={treatment} />
+        {/* one - the story */}
+        <SeriesStory />
 
-        {/* Past here the page is the same in every direction - the story
-            is the thing being compared, the evidence under it is not. */}
-        <SeriesProcess />
-        <SeriesExamples />
-        <SeriesReels />
-        <SeriesCta />
+        {/* two - the episodes, as links */}
+        <SeriesFeed />
 
-        {/* REVIEW TOOL - comes out with the treatment decision. See the
-            note at the top of components/SeriesSwitch.tsx. */}
-        <SeriesSwitch active={treatment} />
+        <SeriesClose />
       </main>
 
       {/* The production house, at the foot of the page by name, because

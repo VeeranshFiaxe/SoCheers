@@ -511,6 +511,11 @@ a.nav__logo{ display:inline-flex; align-items:center; }
   pointer-events:none;                 /* only the speaker takes the pointer */
   visibility:hidden;                   /* motion.ts reveals it; no flash on load */
 }
+/* ...but only while there is a motion.ts to do the revealing. Without this
+   the entry is hidden by a stylesheet and un-hidden by a script, so a load
+   where the script never runs loses the definition entirely and nothing
+   about the page says why. */
+html.no-js .meaning{ visibility:visible; }
 /* Weighted to the left, where the type sits, and thin on the right so the
    crowd stays legible - the photo is meant to still read as the photo. The
    two layers multiply, so these stay low: .82 over .55 is already ~.92. */
@@ -642,11 +647,20 @@ a.nav__logo{ display:inline-flex; align-items:center; }
    over, so the falling grains uncover this rather than black. The pin
    spacer is 100vh + the trigger's end offset, so at pin release this
    section's top lands precisely at the top of the viewport and the handoff
-   costs no jump. Only when the pin actually exists: with reduced motion
-   there is no pin, and the section would simply cover the hero. */
-@media (prefers-reduced-motion: no-preference){
-  .who{ margin-top:-100vh; }
-}
+   costs no jump.
+
+   Only when the pin actually exists, and `is-pinned` is the only honest
+   answer to that: it is written by initHero() in lib/motion.ts on the very
+   line before ScrollTrigger builds the spacer, so the margin and the space
+   it is cancelling always arrive together. A media query cannot know that.
+   Keyed off prefers-reduced-motion it was a standing bet that the engine
+   would boot - and on any load where it did not (a chunk that 404s after a
+   deploy, a blocked script, a throw anywhere earlier in boot) the margin
+   still applied with no spacer under it, so this whole section was dragged
+   a screen up and parked underneath .hero, which is opaque black at a
+   higher z-index. WHO WE ARE was still in the DOM, still laid out, simply
+   covered - which is exactly what "it doesn't load for some people" was. */
+html.is-pinned .who{ margin-top:-100vh; }
 /* Tighter than the shared .sec rhythm, and deliberately so: this is the
    section the hero's own frame crumbles onto, so it is read as one screen
    rather than scrolled into. Everything down to the counts has to sit

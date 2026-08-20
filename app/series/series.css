@@ -1,22 +1,34 @@
 /* ============================================================
    SERIES - "The Continuity Kink"
 
-   One narrative, three treatments. Everything that differs between them
-   is in the [data-treatment] blocks near the bottom of this file; the
-   markup is identical in all three (see components/SeriesStory.tsx).
+   One narrative, one direction. The page used to carry three treatments
+   behind a query parameter so the client could compare them; that
+   decision is made - cinematic, scroll-driven, footage over stills - and
+   the two that lost are gone rather than commented out.
+
+   ---- how this file is organised ----
+
+   1. the ground and the rail
+   2. the beat - the frame every shot is built inside
+   3. the eight shots, in the order they appear in the story
+   4. the plate, the feed, the way out, the credit
+
+   Everything in (3) is a mechanic with a partner in lib/series-motion
+   .ts. The CSS puts the pieces on the screen at their finished size and
+   position; the scroll is what moves them. So a shot with JavaScript off
+   is a composed frame rather than a pile of half-transformed boxes, and
+   the two files never disagree about where anything ends up.
 
    The page runs on the site's own palette - black ground, cream type,
-   the green accent - and the only thing it adds is a projector warmth on
-   the story half, because a page arguing for cinema should not be lit
-   like a spec sheet.
+   the green accent - and the only thing it adds is a colder black under
+   the footage, because everything on this page is a graded night frame
+   and the site's warm black under cool footage reads as a printing error
+   rather than as a room.
    ============================================================ */
 
 .s-page{
   position:relative;
-  background:var(--bg);
-  /* the film half is deliberately a shade colder than the site's black:
-     everything on it is a graded night frame, and a warm ground under
-     cool footage reads as a printing error rather than as a room */
+  background:var(--film);
   --film:#050506;
   --grade:rgba(5,5,6,.55);
 }
@@ -24,23 +36,18 @@
 /* ---- small type on black ----
 
    --muted is rgba(cream,.5), which lands at about 4.8:1 on this ground.
-   That is fine where it is used everywhere else on the site - body copy
-   at 15px and up, where the reader has word shapes and a full stroke
-   weight to work with. It is not fine for the mono labels: 10-11px, all
-   caps, tracked out past .16em, one pixel of stroke and no word shape
-   left to recognise. The same colour that reads as "secondary" at 16px
-   reads as "not there" at 10.
+   Fine for body copy at 15px and up, where the reader has word shapes
+   and a full stroke to work with. Not fine for the mono labels: 10-11px,
+   all caps, tracked out past .16em, one pixel of stroke and no word
+   shape left to recognise. The same colour that reads as "secondary" at
+   16px reads as "not there" at 10.
 
-   So the small type gets its own token at .68, a little over 8:1, and
-   --muted keeps doing its job at the sizes it was picked for. Declared
-   on both roots because the credit line sits outside <main>.
-
-   If more of these turn up on other pages, this belongs in globals.css
-   next to --muted rather than being copied a third time. */
+   So small type gets its own token at .68, a little over 8:1. Declared
+   on both roots because the credit line sits outside <main>. */
 .s-page, .s-foot{ --dim:rgba(241,236,225,.68); }
 
 /* ============================================================
-   THE EPISODE RAIL
+   1 · THE EPISODE RAIL
    Fixed hairline down the left edge, alive only while the story is.
    ============================================================ */
 .s-rail{
@@ -63,42 +70,87 @@
   position:absolute; inset:0; background:var(--accent);
   transform:scaleY(0); transform-origin:top;
 }
-@media (max-width:900px){ .s-rail{ display:none; } }
+@media (max-width:1100px){ .s-rail{ display:none; } }
 
 /* ============================================================
-   THE BEATS
+   2 · THE BEAT
 
-   Every beat is a stacking context of its own with the picture pinned
-   behind and the type in the normal flow over it. The picture is drawn
-   116% tall so the parallax in lib/series-motion.ts has 8% of travel
-   each way and can never expose an edge - if that number changes, the
-   yPercent in initSeries() changes with it.
+   Every beat is a full screen with a stage pinned behind it and the type
+   in front. What changes between shots is what is on the stage and where
+   the type sits on top of it - never the type's own scale, because a
+   story that resets its type size every screen reads as a deck of slides
+   rather than as one piece.
    ============================================================ */
 .sbeat{
   position:relative; isolation:isolate;
+  min-height:100svh;
   display:flex; align-items:center;
-  padding:clamp(90px,16vh,190px) 0;
+  padding:clamp(90px,15vh,180px) 0;
   background:var(--film);
+  overflow:hidden;
 }
-.sbeat__art{ position:absolute; inset:0; z-index:0; overflow:hidden; }
-.sbeat__art img,
-.sbeat__art video{
-  position:absolute; left:0; top:-8%;
-  width:100%; height:116%;
-  object-fit:cover;
-  will-change:transform;
-}
-.sbeat__scrim{
-  position:absolute; inset:0;
-  background:
-    linear-gradient(to right, var(--grade), rgba(5,5,6,.15) 62%, rgba(5,5,6,.4)),
-    linear-gradient(to bottom, rgba(5,5,6,.5), transparent 22%, transparent 72%, rgba(5,5,6,.75));
-}
-.sbeat__type{ position:relative; z-index:1; }
 
-/* The line. One scale for the whole story, because a story that changes
-   type size between beats reads as a deck rather than as one voice - the
-   `weight` on a beat changes how much room it gets, never how big it is. */
+.sbeat__stage{ position:absolute; inset:0; z-index:0; }
+
+/* the frame that fills a stage. 100% and object-fit rather than a
+   background-image: the scroll scales and shifts these, and a background
+   position tween cannot be handed to the compositor. */
+/* No will-change here on purpose. There are fifteen of these and each
+   one is the size of the screen; promoting all of them up front is
+   somewhere north of fifty megabytes of compositor memory for the sake
+   of a transform the browser already promotes for the length of the
+   tween. The small, many-of-them elements below do take it - those are
+   cheap layers and they move constantly. */
+.sfill{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+}
+.sfill--ghost{ opacity:.2; filter:grayscale(1) contrast(1.1); }
+
+/* ---- the scrims ----
+
+   Not decoration. Every frame on this page is a graded night interior
+   and the type over it is cream: without a ground the line survives on
+   the dark half of the picture and disappears on the lamp. Three
+   weights, because a wall of twelve windows needs more help than one
+   held frame does. */
+.sscrim{
+  position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:
+    linear-gradient(to right, var(--grade), rgba(5,5,6,.12) 62%, rgba(5,5,6,.38)),
+    linear-gradient(to bottom, rgba(5,5,6,.55), transparent 24%, transparent 64%, rgba(5,5,6,.8)),
+    radial-gradient(120% 90% at 50% 50%, transparent 40%, rgba(5,5,6,.5));
+}
+.sscrim--heavy{ background:linear-gradient(to right, rgba(5,5,6,.9), rgba(5,5,6,.72) 55%, rgba(5,5,6,.6)), linear-gradient(to bottom, rgba(5,5,6,.6), rgba(5,5,6,.2) 30%, rgba(5,5,6,.75)); }
+.sscrim--band{ background:linear-gradient(to right, rgba(5,5,6,.82), rgba(5,5,6,.3) 60%, rgba(5,5,6,.55)); }
+.sscrim--low{ background:linear-gradient(to bottom, rgba(5,5,6,.7), transparent 30%, transparent 52%, rgba(5,5,6,.92)); }
+
+/* ---- the gate ----
+
+   The letterbox, and the one piece of motion every shot shares: it opens
+   as a beat arrives and part-closes as it leaves. Real elements rather
+   than a gradient because the scroll scales them, and scaleY off the
+   outer edge is a compositor job where height would be layout - twice,
+   on fifteen sections.
+
+   At rest they are scaled to .12, so what is left is a hairline of black
+   top and bottom. That is the letterbox the whole page is framed by. */
+.sgate{
+  position:absolute; left:0; right:0; z-index:3;
+  height:26vh; background:var(--film);
+  pointer-events:none;
+  transform:scaleY(.12);
+}
+.sgate--t{ top:0; transform-origin:top; }
+.sgate--b{ bottom:0; transform-origin:bottom; }
+
+/* ---- the type ----
+   Over the gate, always. A closing letterbox that wipes the sentence
+   under it is a nice effect exactly once and a legibility bug on every
+   short viewport after that. */
+.sbeat__type{ position:relative; z-index:4; width:100%; }
+
 .sbeat__line{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(30px,4.6vw,68px); line-height:1.04; letter-spacing:-.03em;
@@ -112,41 +164,193 @@
   color:var(--muted);
 }
 
-/* ---- the four weights ----
-   Room on the page, and nothing else. */
-.sbeat[data-weight="open"]{ min-height:100svh; padding-top:clamp(140px,22vh,240px); }
-.sbeat[data-weight="open"] .sbeat__line{ font-size:clamp(38px,6.4vw,104px); max-width:15ch; }
-.sbeat[data-weight="full"]{ min-height:100svh; }
-.sbeat[data-weight="turn"]{ min-height:78svh; }
-.sbeat[data-weight="turn"] .sbeat__line{ max-width:24ch; }
-.sbeat[data-weight="quiet"]{ min-height:64svh; }
-
-/* The verticals. Phone footage composed as a phone rather than stretched
-   across a widescreen box - covering a 9:16 frame into a 16:9 hole throws
-   away three quarters of the picture, which on the one beat that is
-   *about* the phone is the wrong three quarters. */
-.sbeat[data-tall] .sbeat__art{
-  left:auto; right:var(--pad); width:min(30vw,340px);
-  top:50%; height:min(78vh,620px); transform:translateY(-50%);
-  border-radius:18px; box-shadow:0 40px 90px rgba(0,0,0,.55);
+/* ---- the slate ----
+   The chip burned into the corner of the frame, the way the client's
+   references label theirs. Bottom right: the nav owns the top of the
+   screen and the episode rail owns the left edge. */
+.sbeat__slate{
+  position:absolute; z-index:5;
+  right:var(--pad); bottom:clamp(24px,4.5vh,50px);
+  display:flex; align-items:center; gap:.8em;
+  font-family:var(--f-mono); font-weight:500;
+  font-size:10px; letter-spacing:.24em; text-transform:uppercase;
+  color:var(--dim);
 }
-.sbeat[data-tall] .sbeat__scrim{ background:linear-gradient(to bottom, transparent 55%, rgba(5,5,6,.5)); }
-.sbeat[data-tall] .sbeat__type{ max-width:56%; }
+.sbeat__slate b{ color:var(--accent); font-weight:500; }
+@media (max-width:700px){ .sbeat__slate{ display:none; } }
+
+/* ============================================================
+   3 · THE EIGHT SHOTS
+   ============================================================ */
+
+/* ---- TITLE ---------------------------------------------------
+   The card. One frame, the line at title size low in the frame, the
+   gate doing the rest. Three beats use it and they are the three that
+   name something: the cold open, the kink, the end card.
+   ------------------------------------------------------------- */
+.sbeat[data-shot="title"]{ align-items:flex-end; padding-bottom:clamp(80px,13vh,150px); }
+.sbeat[data-shot="title"] .sbeat__line{
+  font-size:clamp(38px,6.6vw,110px); max-width:15ch; letter-spacing:-.04em;
+}
+/* the one line of copy a title card gets is a strapline, not body copy -
+   it is set as a caption under the title rather than as a paragraph */
+.sbeat[data-shot="title"] .sbeat__copy{
+  max-width:40ch; color:var(--cream); font-size:clamp(16px,1.35vw,21px);
+}
+
+/* ---- MOSAIC --------------------------------------------------
+   The wall. Twelve windows for abundance, nine for noise. The tiles are
+   square-ish and gapped rather than bleeding into each other, because
+   the point is that these are separate streams, all open at once.
+   ------------------------------------------------------------- */
+.smos{
+  position:absolute; inset:-5%;
+  display:grid; grid-template-columns:repeat(4,1fr);
+  grid-auto-rows:1fr; gap:clamp(5px,.6vw,11px);
+}
+.smos[data-jitter]{ grid-template-columns:repeat(3,1fr); }
+.smos__win{
+  position:relative; overflow:hidden; border-radius:3px;
+  background:var(--panel);
+}
+.smos__win img,
+.smos__win video{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+}
+.sbeat[data-shot="mosaic"] .sbeat__line{ max-width:16ch; }
+@media (max-width:760px){
+  .smos{ grid-template-columns:repeat(3,1fr); }
+  .smos[data-jitter]{ grid-template-columns:repeat(2,1fr); }
+}
+
+/* ---- APERTURE ------------------------------------------------
+   The squeeze. The stage starts as the whole screen and is clipped down
+   to a phone as the beat is read - see apertures() in series-motion.ts
+   for the geometry. The rounding on the clip is the phone; there is no
+   picture of a handset anywhere, because a device mockup dates a page
+   the moment the hardware does.
+
+   The type sits at the bottom of a taller beat, so the closed frame is
+   never on top of the sentence that explains it.
+   ------------------------------------------------------------- */
+.sbeat[data-shot="aperture"]{ min-height:118svh; align-items:flex-end; }
+/* the open state is also the no-JavaScript state: the frame simply
+   never closes, and the beat is a held full-bleed like any other */
+.sap{ position:absolute; inset:0; clip-path:inset(0% 0% 0% 0%); }
+.sbeat[data-shot="aperture"] .sbeat__copy{ max-width:46ch; }
+
+/* ---- STRIP ---------------------------------------------------
+   The reference the client sent - a poster cut into horizontal frames -
+   as a shot. Four bands, each holding its own crop and each travelling
+   at its own rate.
+
+   The pictures are 118% wide inside their bands so there is 9% of travel
+   each way and an edge can never show; the 9 in strips() is half of that
+   overhang and the arithmetic is not a coincidence.
+   ------------------------------------------------------------- */
+.sstrip{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  gap:clamp(3px,.5vh,7px);
+  padding:clamp(4vh,7vh,9vh) 0;
+}
+.sstrip__band{
+  position:relative; flex:1 1 0; overflow:hidden;
+  transform-origin:center;
+}
+.sstrip__band img,
+.sstrip__band video{
+  position:absolute; top:0; left:-9%;
+  width:118%; height:100%; object-fit:cover;
+  will-change:transform;
+}
+.sbeat[data-shot="strip"] .sbeat__line{ max-width:17ch; }
+
+/* ---- REEL ----------------------------------------------------
+   Eight verticals in a row, closing into a stack as the beat is read.
+   The row is allowed to run off both edges of the screen - it is eight
+   episodes, and a row that fits is a row that has been counted.
+   ------------------------------------------------------------- */
+.sreel{
+  position:absolute; left:0; right:0; top:46%;
+  transform:translateY(-50%);
+  display:flex; justify-content:center; align-items:center;
+  gap:clamp(6px,1vw,16px);
+}
+.sreel__ep{
+  position:relative; flex:0 0 auto;
+  width:clamp(72px,11vw,140px); aspect-ratio:9/16;
+  border-radius:8px; overflow:hidden;
+  background:var(--panel);
+  box-shadow:0 24px 60px rgba(0,0,0,.5);
+  will-change:transform;
+}
+/* the stack has to fan the right way when they overlap - later episodes
+   in front, so the row reads as a hand of cards being closed rather than
+   as a deck being dealt backwards */
+.sreel__ep:nth-child(1){ z-index:1; }
+.sreel__ep:nth-child(2){ z-index:2; }
+.sreel__ep:nth-child(3){ z-index:3; }
+.sreel__ep:nth-child(4){ z-index:4; }
+.sreel__ep:nth-child(5){ z-index:5; }
+.sreel__ep:nth-child(6){ z-index:6; }
+.sreel__ep:nth-child(7){ z-index:7; }
+.sreel__ep:nth-child(8){ z-index:8; }
+.sreel__ep img,
+.sreel__ep video{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.sreel__n{
+  position:absolute; z-index:2; left:8px; bottom:7px;
+  font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.18em;
+  color:rgba(255,255,255,.9);
+  text-shadow:0 1px 6px rgba(0,0,0,.8);
+}
+.sbeat[data-shot="reel"]{ align-items:flex-end; }
+
+/* ---- PHONE ---------------------------------------------------
+   One vertical held at the ratio it was shot at. Covering 9:16 footage
+   into a widescreen hole throws away three quarters of the picture, and
+   on the beat that is about what people watch on their phones that is
+   the wrong three quarters to lose.
+   ------------------------------------------------------------- */
+.sphone{
+  position:absolute; right:var(--pad); top:50%;
+  transform:translateY(-50%);
+  width:min(30vw,340px); aspect-ratio:9/16;
+  border-radius:20px; overflow:hidden;
+  box-shadow:0 40px 90px rgba(0,0,0,.6);
+}
+/* the glass, and the only thing on this page that is a shine: a held
+   vertical with no highlight on it reads as a cropped photograph rather
+   than as a screen */
+.sphone__glass{
+  position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:linear-gradient(196deg, rgba(255,255,255,.11), transparent 34%, transparent 76%, rgba(5,5,6,.45));
+}
+.sbeat[data-shot="phone"] .sbeat__type{ max-width:min(56%, 60ch); }
 @media (max-width:900px){
-  .sbeat[data-tall] .sbeat__art{ position:relative; right:auto; margin:0 auto 30px; width:min(70vw,300px); height:auto; aspect-ratio:9/16; transform:none; top:auto; }
-  .sbeat[data-tall]{ flex-direction:column; }
-  .sbeat[data-tall] .sbeat__type{ max-width:none; }
+  .sbeat[data-shot="phone"]{ min-height:118svh; align-items:flex-end; }
+  .sphone{
+    right:auto; left:50%; top:29%;
+    transform:translate(-50%,-50%);
+    width:min(62vw,260px);
+  }
+  .sbeat[data-shot="phone"] .sbeat__type{ max-width:none; }
 }
 
-/* ---- the stat ----
-   Marked as provisional in the UI as well as in the source. A number on a
-   page like this is the one thing a reader will repeat, so a placeholder
-   that looks finished is worse than no placeholder at all. */
+/* ---- FIGURE --------------------------------------------------
+   The stat. The only beat where the picture is deliberately almost gone:
+   a number is the one thing on a page like this that a reader repeats
+   out loud, so it gets a screen with nothing competing.
+
+   Marked provisional in the UI as well as in the source. A placeholder
+   that looks finished is worse than no placeholder at all.
+   ------------------------------------------------------------- */
 .s-stat{ max-width:34ch; }
 .s-stat__figure{
   display:block; font-family:var(--f-display); font-weight:700;
   font-size:clamp(72px,15vw,200px); line-height:.86; letter-spacing:-.05em;
   color:var(--accent);
+  font-variant-numeric:tabular-nums;
 }
 .s-stat__claim{ margin-top:22px; font-size:clamp(16px,1.4vw,21px); line-height:1.5; }
 .s-stat__src{
@@ -156,98 +360,115 @@
   border:1px dashed var(--faint); padding:6px 10px;
 }
 
-/* ---- the name plate ----
-   The last frame of the story: black, nothing on it but the title, held
+/* ---- the ruler (held + ticks) --------------------------------
+   Twelve months drawn under the sentence about twelve months, and the
+   return to January drawn last, once December has been reached.
+   ------------------------------------------------------------- */
+.sruler{ margin-top:clamp(26px,4vh,44px); max-width:min(560px,100%); }
+.sruler__line{ display:block; position:relative; height:1px; background:var(--faint); }
+.sruler__line i{
+  position:absolute; inset:0; background:var(--accent);
+  transform:scaleX(0); transform-origin:left;
+}
+.sruler__marks{
+  display:flex; justify-content:space-between; margin-top:10px;
+  font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.14em;
+  color:var(--dim);
+}
+.sruler__loop{
+  display:inline-flex; align-items:center; gap:9px; margin-top:14px;
+  color:var(--accent);
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+}
+.sruler__loop em{ font-style:normal; }
+@media (max-width:620px){
+  /* twelve three-letter marks under 560px is a grey smear - quarters
+     carry the same idea and stay readable */
+  .sruler__marks b:not(:nth-child(3n+1)){ display:none; }
+}
+
+/* ============================================================
+   4 · THE PLATE, THE FEED, THE WAY OUT
+   ============================================================ */
+
+/* The last frame of the story: black, nothing on it but the title, held
    for one screen. It is the end card of an episode. */
 .s-plate{
-  min-height:72svh; display:grid; place-items:center;
+  min-height:78svh; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:18px;
   background:var(--bg); text-align:center; padding:0 var(--pad);
 }
 .s-plate__mark{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(34px,7vw,110px); line-height:1; letter-spacing:-.04em;
+  font-size:clamp(34px,7.4vw,116px); line-height:1; letter-spacing:-.04em;
   text-wrap:balance;
 }
+.s-plate__sub{
+  font-family:var(--f-mono); font-weight:500; font-size:10px;
+  letter-spacing:.34em; text-transform:uppercase; color:var(--dim);
+}
 
-/* ============================================================
-   AFTER THE STORY
-   Cream sections. `.is-light` re-points the palette tokens (globals.css),
-   so nothing below restates a colour.
-   ============================================================ */
-/* The literal, not var(--cream): .is-light has already re-pointed that
-   token to near-black for the type inside these sections. Same off-white
-   the About page's panels use, so the two pages agree on what "light"
-   means. */
-.s-process, .s-work, .s-reels{ background:#f4f2ec; }
-.s-process{ padding:clamp(90px,15vh,170px) 0; }
-.s-work, .s-reels{ padding:0 0 clamp(90px,15vh,170px); }
-
-.s-process__title, .s-work__title{
+/* ---- the feed ----
+   Component two. Dark, like everything above it - the page used to turn
+   cream here for a set of evidence sections that no longer exist, and a
+   single light band under a black story now reads as a different site.
+   ------------------------------------------------------------- */
+.s-feed{
+  background:var(--bg);
+  padding:clamp(80px,14vh,160px) 0 clamp(60px,10vh,120px);
+  border-top:1px solid var(--line);
+}
+.s-feed__title{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(28px,4.4vw,62px); line-height:1.02; letter-spacing:-.03em;
   margin-top:24px; max-width:18ch; text-wrap:balance;
 }
+.s-feed__note{ margin-top:16px; color:var(--muted); font-size:15px; }
 
-.s-process__grid{
-  margin-top:clamp(40px,6vh,70px);
-  display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(18px,2.4vw,36px);
-}
-.s-step{ border-top:1px solid var(--line); padding-top:20px; }
-.s-step__n{ font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.28em; color:var(--accent); }
-.s-step__title{ margin-top:14px; font-family:var(--f-display); font-weight:700; font-size:clamp(19px,1.7vw,26px); letter-spacing:-.02em; }
-.s-step__copy{ margin-top:12px; font-size:15px; line-height:1.62; color:var(--muted); }
-@media (max-width:820px){ .s-process__grid{ grid-template-columns:1fr; } }
-
-/* ---- the four seasons ---- */
-.s-work__grid{
-  margin-top:clamp(40px,6vh,70px);
-  display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(14px,1.6vw,24px);
-}
-.s-card{ display:block; }
-.s-card__shot{
-  aspect-ratio:9/13; overflow:hidden; border-radius:12px; background:var(--panel);
-}
-.s-card__shot img{ transition:transform .8s var(--ease); }
-.s-card:not(.is-pending):hover .s-card__shot img{ transform:scale(1.05); }
-.s-card__foot{ margin-top:14px; display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.s-card__brand{ font-family:var(--f-display); font-weight:700; font-size:clamp(15px,1.2vw,19px); letter-spacing:-.01em; }
-.s-card__eps{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; color:var(--muted); white-space:nowrap; }
-.s-card__premise{ margin-top:8px; font-size:14px; line-height:1.55; color:var(--muted); }
-@media (max-width:1000px){ .s-work__grid{ grid-template-columns:repeat(2,1fr); } }
-@media (max-width:560px){ .s-work__grid{ grid-template-columns:1fr; } }
-
-/* ---- the feed rail ----
-   Scrolls with the finger. Snap points so a flick lands on a post rather
-   than between two of them. */
-.s-reels__rail{
-  margin-top:clamp(24px,4vh,40px);
-  display:flex; gap:clamp(12px,1.4vw,20px);
-  overflow-x:auto; scroll-snap-type:x mandatory;
-  padding:0 var(--pad) 14px;
+/* Scrolls with the finger, and with the page - see feed() in
+   lib/series-motion.ts. Snap points so a flick lands on an episode
+   rather than between two of them. */
+.s-feed__rail{
+  margin-top:clamp(28px,5vh,52px);
+  display:flex; gap:clamp(10px,1.2vw,20px);
+  /* proximity, not mandatory: the page writes scrollLeft on this rail
+     while it is on screen, and a mandatory snap re-snaps every one of
+     those writes - which reads as the rail shivering rather than
+     travelling. Proximity still lands a flick on an episode. */
+  overflow-x:auto; scroll-snap-type:x proximity;
+  padding:0 var(--pad) 16px;
   scrollbar-width:none;
 }
-.s-reels__rail::-webkit-scrollbar{ display:none; }
-.s-reel{
-  position:relative; flex:0 0 auto; width:min(58vw,240px); aspect-ratio:9/16;
-  border-radius:14px; overflow:hidden; scroll-snap-align:start;
+.s-feed__rail::-webkit-scrollbar{ display:none; }
+
+.s-ep{
+  position:relative; flex:0 0 auto;
+  width:min(58vw,236px); aspect-ratio:9/16;
+  border-radius:12px; overflow:hidden; scroll-snap-align:center;
   background:var(--panel);
 }
-.s-reel__badge{
-  position:absolute; top:10px; right:10px; z-index:2; color:#fff;
-  display:grid; place-items:center; width:26px; height:26px;
-  border-radius:50%; background:rgba(0,0,0,.4);
-}
-.s-reel__cap{
-  position:absolute; left:10px; right:10px; bottom:10px; z-index:2;
-  font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.16em; text-transform:uppercase;
-  color:rgba(255,255,255,.82);
-}
-.s-reel::after{
+.s-ep__shot{ position:absolute; inset:0; }
+.s-ep__shot img{ transition:transform .8s var(--ease); }
+.s-ep:not(.is-pending):hover .s-ep__shot img{ transform:scale(1.06); }
+.s-ep::after{
   content:""; position:absolute; inset:0; z-index:1;
-  background:linear-gradient(to top, rgba(0,0,0,.6), transparent 42%);
+  background:linear-gradient(to top, rgba(0,0,0,.72), transparent 46%);
 }
-.s-reel:not(.is-pending) img{ transition:transform .8s var(--ease); }
-.s-reel:not(.is-pending):hover img{ transform:scale(1.06); }
+.s-ep__glyph{
+  position:absolute; top:10px; right:10px; z-index:2; color:#fff;
+  display:grid; place-items:center; width:27px; height:27px;
+  border-radius:50%; background:rgba(0,0,0,.42);
+  transition:background .35s var(--ease), color .35s var(--ease);
+}
+.s-ep:not(.is-pending):hover .s-ep__glyph{ background:var(--accent); color:#04140b; }
+.s-ep__slate{
+  position:absolute; left:12px; right:12px; bottom:12px; z-index:2;
+  display:flex; flex-direction:column; gap:4px;
+  font-family:var(--f-mono); font-weight:500;
+  font-size:9px; letter-spacing:.2em; text-transform:uppercase;
+}
+.s-ep__slate b{ color:var(--accent); font-weight:500; }
+.s-ep__slate em{ font-style:normal; color:rgba(255,255,255,.86); letter-spacing:.12em; }
 
 /* Anything still carrying stand-in content says so, in the UI, in a way
    that survives a screenshot going into a deck. */
@@ -260,7 +481,7 @@
 }
 
 /* ---- the way out ---- */
-.s-cta{ background:var(--bg); padding:clamp(100px,18vh,200px) 0; text-align:center; }
+.s-cta{ background:var(--bg); padding:clamp(70px,12vh,140px) 0 clamp(90px,16vh,180px); text-align:center; }
 .s-cta__title{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(32px,5.6vw,84px); line-height:1.02; letter-spacing:-.035em;
@@ -285,18 +506,11 @@
 .s-cta__alt:hover b{ border-color:var(--accent); }
 
 /* ---- the credit line ----
-
-   The last thing on the page and, until this pass, the least readable
-   thing on it: 10px mono tracked out to .22em in --muted is a row of
-   one-pixel strokes at about 4.8:1, with the tracking pulling the
-   letters far enough apart that there are no word shapes left to read
-   by either. Both halves of that are fixed here - the colour goes to
-   --dim, and the type gets a point bigger with the tracking eased off.
-
-   The Tito Films half is a link and now looks like one. It was the same
-   grey as the plain text next to it with nothing but a hover to tell
-   them apart, which is no use at all to anyone who is not already
-   pointing at it. */
+   The last thing on the page. 10px mono tracked to .22em in --muted is a
+   row of one-pixel strokes at about 4.8:1 with no word shapes left to
+   read by, so the colour goes to --dim and the type gets a point bigger
+   with the tracking eased off. The Tito Films half is a link and now
+   looks like one. */
 .s-foot{ background:var(--bg); border-top:1px solid var(--line); padding:24px 0 36px; }
 .s-foot__in{
   display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
@@ -311,129 +525,15 @@
 .s-foot__in a:hover{ color:var(--accent); border-color:var(--accent); }
 
 /* ============================================================
-   THE SWITCHER  (review tool - comes out with the decision)
+   REDUCED MOTION
+
+   The scroll half is already handled in lib/series-motion.ts - every
+   shot either sets its finished state and returns, or does not run. This
+   is the CSS half: the hover pushes, and the gate, which is a transform
+   the stylesheet sets rather than the script.
    ============================================================ */
-.s-switch{
-  position:fixed; left:50%; bottom:20px; transform:translateX(-50%); z-index:500;
-  display:flex; align-items:center; gap:4px;
-  padding:7px 8px; border-radius:999px;
-  background:rgba(12,12,14,.82); border:1px solid rgba(241,236,225,.16);
-  backdrop-filter:blur(14px);
-  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--dim);
-  max-width:calc(100vw - 32px);
-}
-.s-switch__label{ padding:0 8px; }
-.s-switch__opt{
-  padding:7px 13px; border-radius:999px; color:rgba(241,236,225,.72);
-  transition:background .3s var(--ease), color .3s var(--ease);
-}
-.s-switch__opt:hover{ color:#f1ece1; }
-.s-switch__opt[aria-current]{ background:var(--accent); color:#04140b; }
-/* the explanation of the current direction, for the person reviewing -
-   hidden on narrow screens, where the three names are the whole budget */
-.s-switch__note{ padding:0 12px 0 6px; max-width:34ch; letter-spacing:.06em; text-transform:none; font-size:10px; line-height:1.4; }
-@media (max-width:960px){ .s-switch__note{ display:none; } }
-
-/* ============================================================
-   ===================  THE THREE TREATMENTS  =================
-
-   Everything above is shared. Each block below is one direction, and
-   deleting the two that lose is a clean cut - no other rule in this file
-   is conditional on the treatment.
-   ============================================================ */
-
-/* ---- 1 · FILM ------------------------------------------------
-   Footage full-bleed, type held over it, the frame doing the work. The
-   closest thing to the deck and the most expensive to fill: every beat
-   needs a frame good enough to hold a screen on its own.
-
-   The one rule the client set from experience: never ask a reader to
-   watch and read at the same time. So there is exactly one moving
-   picture on the page, on the opening beat, where the only type is a
-   title - every other beat is a held still. `still: true` in the content
-   file is what says so, and BeatArt() honours it by rendering an <img>.
-
-   No rules of its own: film is what the shared block above already
-   describes, which is deliberate - the direction closest to the deck
-   should be the one the base stylesheet draws, so the other two read as
-   departures from it.
-   ------------------------------------------------------------- */
-
-/* ---- 2 · STILLS ----------------------------------------------
-   No video anywhere. The photograph stops being a background and becomes
-   a plate in a spread: contained, offset to one side, with the type on
-   the page's own ground beside it rather than on top of it.
-
-   Which is the trade this direction is making - it is the most legible
-   of the three and the least cinematic, and the client should see that
-   plainly rather than have it argued.
-   ------------------------------------------------------------- */
-.s-page[data-treatment="still"] .sbeat{
-  background:var(--bg);
-  display:grid; grid-template-columns:1fr 1fr; align-items:center;
-  gap:clamp(24px,4vw,70px);
-  padding-inline:var(--pad);
-  min-height:auto;
-}
-.s-page[data-treatment="still"] .sbeat[data-weight="open"]{ min-height:88svh; }
-.s-page[data-treatment="still"] .sbeat__art{
-  position:relative; inset:auto; order:2;
-  aspect-ratio:4/5; border-radius:14px;
-}
-.s-page[data-treatment="still"] .sbeat[data-tall] .sbeat__art{
-  right:auto; width:auto; height:auto; transform:none; top:auto; aspect-ratio:9/14;
-}
-.s-page[data-treatment="still"] .sbeat__scrim{ display:none; }
-.s-page[data-treatment="still"] .sbeat__type{ order:1; padding:0; max-width:none; }
-.s-page[data-treatment="still"] .sbeat__line{ max-width:16ch; }
-/* alternate which side the plate falls on, so a column of six frames
-   does not read as a table */
-.s-page[data-treatment="still"] .sbeat:nth-child(even) .sbeat__art{ order:1; }
-.s-page[data-treatment="still"] .sbeat:nth-child(even) .sbeat__type{ order:2; }
-/* the beats with no picture keep the whole width rather than leaving a
-   hole where one would have been */
-.s-page[data-treatment="still"] .sbeat:not(:has(.sbeat__art)){ grid-template-columns:1fr; }
-@media (max-width:900px){
-  .s-page[data-treatment="still"] .sbeat{ grid-template-columns:1fr; }
-  .s-page[data-treatment="still"] .sbeat__art,
-  .s-page[data-treatment="still"] .sbeat:nth-child(even) .sbeat__art{ order:2; }
-  .s-page[data-treatment="still"] .sbeat__type,
-  .s-page[data-treatment="still"] .sbeat:nth-child(even) .sbeat__type{ order:1; }
-}
-
-/* ---- 3 · TYPE ------------------------------------------------
-   Nothing but words on a solid ground. No images are rendered at all in
-   this direction (BeatArt returns null), so it is also the fast one -
-   worth saying out loud, because if the client picks it the page loads
-   in a fraction of what the other two do.
-
-   Each beat is a full screen with the line centred, so scrolling reads
-   as turning cards rather than as moving down a document.
-   ------------------------------------------------------------- */
-.s-page[data-treatment="type"] .sbeat{
-  min-height:92svh; background:var(--bg);
-  align-items:center; justify-content:center; text-align:center;
-  border-top:1px solid var(--line);
-}
-.s-page[data-treatment="type"] .sbeat:first-child{ border-top:0; }
-.s-page[data-treatment="type"] .sbeat__line{
-  max-width:22ch; margin-inline:auto;
-  font-size:clamp(34px,6vw,92px);
-}
-.s-page[data-treatment="type"] .sbeat__copy{ margin-inline:auto; }
-.s-page[data-treatment="type"] .s-stat{ margin-inline:auto; }
-/* every other screen inverts, so the stack has a pulse to it and the
-   reader can feel the beats going by without a picture to count */
-.s-page[data-treatment="type"] .sbeat:nth-child(3n+2){ background:var(--cream); color:#0b0b0c; }
-.s-page[data-treatment="type"] .sbeat:nth-child(3n+2) .sbeat__copy{ color:rgba(11,11,12,.62); }
-.s-page[data-treatment="type"] .sbeat:nth-child(3n+2) .tag{ color:oklch(0.55 0.17 152); }
-.s-page[data-treatment="type"] .sbeat:nth-child(3n+2) .tag::before{ background:oklch(0.55 0.17 152); }
-
-/* ---- reduced motion ----
-   The parallax is already skipped in lib/series-motion.ts; this is the
-   CSS half - the hover pushes on the cards and the reels. */
 @media (prefers-reduced-motion:reduce){
-  .s-card__shot img, .s-reel img{ transition:none; }
-  .s-card:hover .s-card__shot img, .s-reel:hover img{ transform:none; }
+  .s-ep__shot img{ transition:none; }
+  .s-ep:hover .s-ep__shot img{ transform:none; }
+  .sfill{ will-change:auto; }
 }
