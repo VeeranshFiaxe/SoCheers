@@ -521,18 +521,81 @@ export function initSite(): () => void {
       // it is missing from the shipped typings.
       const refreshing = () =>
         (ScrollTrigger as unknown as { isRefreshing?: boolean }).isRefreshing === true;
-      /* .who is pulled up a screen to sit under this pin, and that margin is
-         only ever correct while the spacer below exists to cancel it - so the
-         two are claimed on adjacent lines and never by separate guesses. See
-         `html.is-pinned .who` in globals.css: keyed off a media query instead,
-         the margin survived every load where this function did not run and
-         buried the section under the hero. */
-      document.documentElement.classList.add("is-pinned");
+      /* Nothing in here may run until everything it reaches for exists.
+         ScrollTrigger evaluates a trigger the moment it is created and
+         fires whatever crossings it finds, and every one of these
+         callbacks calls a `const` declared further down this function -
+         so a crossing found during create() is a ReferenceError out of
+         the temporal dead zone, thrown from inside ScrollTrigger.create.
+         boot()'s step() catches it and the page carries on looking almost
+         fine: the pin is half-built, the scroll was never taken, no
+         gesture is ever listened for, and the sequence simply cannot be
+         played. Which is the failure being chased here - it depends on
+         where the browser put the reader on load, so it is per-machine
+         and per-visit rather than per-build. The initial state is asserted
+         by hand below anyway (locked, held, Lenis stopped), so there is
+         nothing for a crossing to tell us at this point. */
+      let wired = false;
       const st = ScrollTrigger.create({
         trigger: hero, start: "top top", end: "+=100%", pin: true,
-        onEnter: () => { if (refreshing()) return; locked = true; lenis?.stop(); },
-        onEnterBack: () => { if (refreshing()) return; reclaim(); },
+        onEnter: () => { if (!wired || refreshing()) return; locked = true; hold(); lenis?.stop(); },
+        onEnterBack: () => { if (!wired || refreshing()) return; reclaim(); },
+        /* Forward out of the pin while we still think we own the scroll.
+           With the clamp below in place this should be unreachable, but if
+           anything ever gets the reader past the hero without the sequence
+           having been played - a scroll the browser refused to let us
+           cancel, an extension, an in-page find - the page must not be left
+           with Lenis stopped and the hero frozen half-told. Settle the
+           timeline on its end state and hand the scroll back. */
+        onLeave: () => {
+          if (!wired || refreshing() || !locked) return;
+          gsap.killTweensOf(tl);
+          tl.time(DONE);
+          phase = "done";
+          busy = false;
+          release();
+        },
       });
+
+      /* The margin and the space it cancels, claimed together and only once
+         the space is real. ScrollTrigger wraps a pinned trigger in its own
+         .pin-spacer, so the presence of that wrapper is the one honest
+         answer to "is there 100vh of spare scroll under the hero" - and it
+         is the answer `html.is-pinned .who { margin-top:-100vh }` in
+         globals.css is betting on. Claimed before the pin was built, that
+         bet was blind: any load where the pin did not come out the other
+         side (an older browser, a throw inside ScrollTrigger, a layout it
+         refused to spacer) still got the margin, and WHO WE ARE was dragged
+         a screen up and parked under the hero's opaque black. That is the
+         "the section just isn't there" report. Now the class cannot exist
+         without the spacer, and it leaves with it. */
+      const spaced = () => hero.parentElement?.classList.contains("pin-spacer") === true;
+      const claimPin = () => {
+        document.documentElement.classList.toggle("is-pinned", spaced());
+        if (!spaced()) console.warn("[socheers] hero pin has no spacer - WHO WE ARE left in place");
+      };
+      claimPin();
+      // the spacer is torn down and rebuilt across refreshes; re-answer with it
+      ScrollTrigger.addEventListener("refresh", claimPin);
+      cleanups.push(() => {
+        ScrollTrigger.removeEventListener("refresh", claimPin);
+        document.documentElement.classList.remove("is-pinned");
+      });
+      /* Where the page is held while the sequence owns the screen. Not
+         always the pin's start: coming back up into a finished hero
+         re-takes the lock from wherever the reader already is, and yanking
+         them to the top of the pin to do it would be a jump. Anywhere
+         inside the pin shows the same fixed hero, so the anchor is
+         whatever position the lock was taken at, kept inside the pin's own
+         range - and re-clamped after every refresh, since that range moves
+         with the viewport. */
+      let anchor = 0;
+      const hold = (y?: number) => {
+        const lo = st.start, hi = Math.max(lo, st.end - 2);
+        anchor = Math.min(Math.max(y ?? lo, lo), hi);
+      };
+      hold();
+
       // the hero is on screen at rest as soon as it mounts - lock the page
       // right away rather than waiting for a scroll event to discover it
       lenis?.stop();
@@ -566,6 +629,7 @@ export function initSite(): () => void {
           lenis?.scrollTo(st.end + 2, { immediate: true, force: true });
           lenis?.start();
         } else if (locked) {
+          hold(anchor);
           lenis?.stop();
         }
       };
@@ -612,11 +676,22 @@ export function initSite(): () => void {
       const reclaim = () => {
         if (locked || settling()) return;
         locked = true;
+        hold(window.scrollY);
         lenis?.stop();
         if (phase === "done" && !busy) retreat();
       };
 
-      const canAct = () => !busy && performance.now() > cooldown;
+      /* The overture holds the screen with the hero already mounted and
+         already locked underneath it, so every gesture aimed at the intro -
+         and an intro that runs this long collects a few - was landing on
+         the hero's state machine instead. Scroll twice while the bulb is
+         still swinging and the sequence had spent both its phases behind
+         the curtain: the definition wrote itself onto a photo nobody could
+         see, and what the overture handed back was a hero that had already
+         happened. Nothing may be spent until the screen is actually ours. */
+      const overtureOwns = () =>
+        document.documentElement.classList.contains("is-overture");
+      const canAct = () => !overtureOwns() && !busy && performance.now() > cooldown;
       const intent = (dir: 1 | -1) => {
         if (!canAct()) return;
         if (dir > 0) advance(); else retreat();
@@ -633,20 +708,42 @@ export function initSite(): () => void {
       const returning = (up: boolean) =>
         !locked && !settling() && up && phase === "done" && window.scrollY <= st.end;
 
+      /* A wheel notch, in pixels, whatever the browser chose to measure it
+         in. deltaY is only pixels when deltaMode is 0, and nothing
+         guarantees that: Firefox reports a mouse wheel in *lines*
+         (deltaMode 1, deltaY of 3 per notch) and keeps pixels for the
+         trackpad, and deltaMode 2 is whole pages. Read raw, the deadzones
+         below - 4px to act, 8px to come back up - threw every line-mode
+         notch away, so on Firefox with a mouse the hero could not be
+         advanced at all: the scroll was eaten by the lock and the sequence
+         never moved. Same multipliers Lenis normalises with, so the two
+         agree about how big a gesture is. */
+      const LINE_PX = 100 / 6;
+      const wheelPx = (e: WheelEvent) =>
+        e.deltaY * (e.deltaMode === 1 ? LINE_PX : e.deltaMode === 2 ? window.innerHeight : 1);
+
       const onWheel = (e: WheelEvent) => {
+        const dy = wheelPx(e);
         if (!locked) {
           // a real gesture, not the tail of the one that finished the
           // crumble: coming back up costs the same deadzone as everything
           // else, or momentum wobble reverses the hero on its own
-          if (Math.abs(e.deltaY) < 8) return;
-          if (!returning(e.deltaY < 0)) return;
-          e.preventDefault();
+          if (Math.abs(dy) < 8) return;
+          if (!returning(dy < 0)) return;
+          if (e.cancelable) e.preventDefault();
           reclaim();                     // starts the reverse itself
           return;
         }
-        e.preventDefault();
-        if (Math.abs(e.deltaY) < 4) return;
-        intent(e.deltaY > 0 ? 1 : -1);
+        // cancelable is not a given. Chrome stops making wheel events
+        // cancelable once it has decided the main thread is too busy to be
+        // asked (the "input event was delayed" intervention) and scrolls on
+        // the compositor instead, which is why the lock leaked on slower
+        // machines and held on fast ones. preventDefault is still the first
+        // line of defence; the scroll clamp below is what makes it not
+        // matter when the browser declines.
+        if (e.cancelable) e.preventDefault();
+        if (Math.abs(dy) < 4) return;
+        intent(dy > 0 ? 1 : -1);
       };
       let touchY = 0;
       const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0]?.clientY ?? 0; };
@@ -660,14 +757,133 @@ export function initSite(): () => void {
           reclaim();
           return;
         }
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         if (Math.abs(dy) < 6) return;
         touchY = y;
         intent(dy > 0 ? 1 : -1);
       };
+
+      /* The rest of the ways a page moves.
+
+         Wheel and touch were the whole input layer, and they are only two
+         of them: space, page up/down, the arrows, home/end, dragging the
+         scrollbar, middle-click autoscroll and find-in-page all move the
+         document without ever producing a wheel event. On a trackpad you
+         never notice; on a laptop where the reader reaches for the space
+         bar or the scrollbar - which is most of them - the gesture went
+         straight past the hero with the sequence unplayed and left the
+         engine holding a lock on a page that had already moved. The keys
+         are given the same meaning a notch of wheel has; everything else
+         is caught by the clamp below. */
+      const KEYS_FWD = new Set([" ", "Spacebar", "PageDown", "ArrowDown", "End"]);
+      const KEYS_BACK = new Set(["PageUp", "ArrowUp", "Home"]);
+      const onKey = (e: KeyboardEvent) => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        /* Never a key that already means something where it landed: typed
+           into a field, or space on a focused control - the skip button
+           and the entry's speaker are both reachable that way, and taking
+           the space bar off them would be trading one broken thing for
+           another. */
+        const t = e.target as HTMLElement | null;
+        if (t && (t.isContentEditable
+          || /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName)
+          || t.getAttribute("role") === "button")) return;
+        const fwd = KEYS_FWD.has(e.key);
+        if (!fwd && !KEYS_BACK.has(e.key)) return;
+        if (!locked) {
+          if (!returning(!fwd)) return;
+          e.preventDefault();
+          reclaim();
+          return;
+        }
+        e.preventDefault();
+        intent(fwd ? 1 : -1);
+      };
+
+      /* The lock itself, rather than the promise of one.
+
+         Everything above asks the browser not to scroll. This checks
+         whether it listened. While the sequence owns the screen the
+         document belongs on its anchor, so any scroll that lands somewhere
+         else - an uncancelable wheel event, a scrollbar drag, a key we do
+         not know about, a browser that scrolled first and told us after -
+         is put straight back. This is the piece that was missing: the whole
+         hold rested on preventDefault, and a scroll the browser would not
+         let us cancel walked right through it - which is exactly the "it
+         plays for us and not for them" split, since whether the browser
+         cancels depends on the machine rather than on the page.
+
+         With one deliberate way out. If the reader has somehow ended up
+         more than a screen and a half from the pin, something has gone
+         wrong that clamping cannot fix, and trapping them against the top
+         of a page they are trying to leave is worse than an unplayed
+         sequence: give the scroll back instead. */
+      const onScroll = () => {
+        if (!locked || refreshing()) return;
+        const at = anchor;
+        const off = window.scrollY - at;
+        if (Math.abs(off) < 2) return;
+        if (off > window.innerHeight * 1.5) {
+          console.warn("[socheers] hero lock overrun - releasing");
+          gsap.killTweensOf(tl);
+          tl.time(DONE);
+          phase = "done";
+          busy = false;
+          release();
+          return;
+        }
+        if (lenis) lenis.scrollTo(at, { immediate: true, force: true });
+        else window.scrollTo(0, at);
+      };
+
+      // every callback the trigger can reach now exists - see `wired` above
+      wired = true;
+
+      /* -------------------------------------------------- the read-out
+         Add ?motion-debug to the URL and the hero's whole state machine is
+         printed over the top of it, live. This exists because the only
+         machines the sequence has ever misbehaved on are machines we do
+         not have: the report is "it does not play", and everything that
+         could cause that - a pin with no spacer, a wheel measured in lines,
+         a lock the browser walked through, a phase stuck busy - looks
+         identical from the outside. One screenshot from the far end says
+         which. Off unless asked for, and nothing above knows it exists. */
+      if (/[?&]motion-debug/.test(location.search)) {
+        const panel = document.createElement("pre");
+        panel.style.cssText =
+          "position:fixed;left:8px;bottom:8px;z-index:99999;margin:0;padding:8px 10px;" +
+          "font:11px/1.5 ui-monospace,Menlo,Consolas,monospace;white-space:pre;" +
+          "background:rgba(0,0,0,.82);color:#7CFFB2;border:1px solid #7CFFB2;" +
+          "border-radius:4px;pointer-events:none;max-width:46ch;";
+        document.body.appendChild(panel);
+        cleanups.push(() => panel.remove());
+
+        let wheelSeen = "none";
+        window.addEventListener("wheel", (e) => {
+          wheelSeen = `mode ${e.deltaMode} raw ${e.deltaY.toFixed(1)} -> ${wheelPx(e).toFixed(0)}px` +
+            `${e.cancelable ? "" : " UNCANCELABLE"}`;
+        }, { signal: ac.signal, passive: true });
+
+        const paintPanel = () => {
+          panel.textContent = [
+            `phase    ${phase}${busy ? " (busy)" : ""}  t=${tl.time().toFixed(2)}`,
+            `locked   ${locked}${settling() ? " (settling)" : ""}`,
+            `scroll   ${Math.round(window.scrollY)}  anchor ${Math.round(anchor)}`,
+            `pin      ${Math.round(st.start)}..${Math.round(st.end)}  spacer ${spaced()}`,
+            `is-pinned ${document.documentElement.classList.contains("is-pinned")}`,
+            `lenis    ${lenis ? (lenis.isStopped ? "stopped" : "running") : "none"}`,
+            `reduced  ${prefersReduced}   overture ${overture}`,
+            `wheel    ${wheelSeen}`,
+          ].join("\n");
+        };
+        addTicker(paintPanel);
+      }
+
       window.addEventListener("wheel", onWheel, { signal: ac.signal, passive: false });
       window.addEventListener("touchstart", onTouchStart, { signal: ac.signal, passive: true });
       window.addEventListener("touchmove", onTouchMove, { signal: ac.signal, passive: false });
+      window.addEventListener("keydown", onKey, { signal: ac.signal, passive: false });
+      window.addEventListener("scroll", onScroll, { signal: ac.signal, passive: true });
     }
 
     /* -------------------------------------------------- the hero crumbling
@@ -1648,6 +1864,21 @@ export function initSite(): () => void {
           hang();
         },
       });
+
+      /* And the case that gate cannot see: a page that is *already* past
+         it when it is built. Reload with the scroll restored to the
+         bottom of the page - which is exactly where anyone looking at the
+         footer is - and there is no crossing for onEnter to fire on, so
+         hang() had hidden every part of the room and nothing was ever
+         going to bring them back. The room came up empty, and it came up
+         empty only on a reload, which is what made it look random.
+
+         Idempotent: on a normal load from the top the test is false, and
+         the gate above does the work. */
+      if (run.getBoundingClientRect().top <= window.innerHeight * 0.75) {
+        html.classList.add("is-foot");
+        tl.play();
+      }
     }
 
     /* -------------------------------------------------- boot */

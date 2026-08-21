@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { OVERTURE_REPLAY, shouldRunOverture } from "@/lib/overture";
+import { OVERTURE_DONE, OVERTURE_REPLAY, shouldRunOverture } from "@/lib/overture";
 import { initOverture } from "@/lib/overture-motion";
 import { OVERTURE_FINAL, OVERTURE_WALLS } from "@/lib/content";
 import {
@@ -354,8 +354,25 @@ export default function Overture() {
        to jump straight to the end state with nothing animated. */
     const instant = run === 0 && !shouldRunOverture();
 
-    root.removeAttribute("data-idle");
-    const teardown = initOverture(root, { instant });
+    /* If the opening sequence cannot be built, the page must not be left
+       standing behind it. It takes the screen by dispatching its own start
+       event, and lib/motion.ts answers that by stopping the scroll and
+       parking the page at the top - so a throw anywhere after that point
+       and before the hand-off leaves a reader looking at a dark room they
+       cannot leave, on a site that is otherwise fine. Put the curtain back
+       up and say the sequence is over: the hero underneath is a complete
+       page on its own, and losing the intro is not the same as losing the
+       site. */
+    let teardown: () => void;
+    try {
+      root.removeAttribute("data-idle");
+      teardown = initOverture(root, { instant });
+    } catch (err) {
+      console.error("[socheers] overture failed to build", err);
+      root.setAttribute("data-idle", "");
+      document.dispatchEvent(new CustomEvent(OVERTURE_DONE));
+      teardown = () => {};
+    }
 
     return () => {
       document.removeEventListener(OVERTURE_REPLAY, replay);

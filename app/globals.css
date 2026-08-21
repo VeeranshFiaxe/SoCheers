@@ -1586,32 +1586,23 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   /* how far off the mark the addresses stand */
   --reach:clamp(178px, 20vw, 290px);
 
-  /* The ask, under the bulb. Purely a clearance now: with the mark at the
-     middle of the room there is no slack left to distribute, so this sits
-     directly under whatever the mark's own height works out to rather
-     than claiming a share of the height for itself. */
-  --ask-y:calc(var(--mark-y) + var(--mark-h) / 2 + var(--mark-word) + clamp(20px, 3.4vh, 40px));
-  /* A reservation, and deliberately bigger than the block: the real
-     height is a headline plus a button and is only knowable at layout
-     time, so this is that plus the gap that should follow it. Carrying
-     the trailing gap in here is what lets the floor below be a single
-     max() and still land evenly at both ends of the height range. */
-  --ask-h:clamp(120px, 20.4dvh, 210px);
-  /* Where the floor of the room starts - everything below the social ring
-     (the globe, the sign-off, the back-to-top column) is measured down
-     from here rather than up from the viewport's own bottom edge. Two
-     numbers used to own this independently (--mark-y from the top,
-     the old row's own `bottom:clamp(...)` from the bottom) and nothing
-     tied them together, so a short window let the ring and the floor
-     collide and a tall one left a dead gap neither side knew was there.
+  /* Where the room stops being positioned and starts being a column.
 
-     A share of the room's height, floored by the clearance the ask above
-     actually needs - the same shape --ask-y used to have. A fixed step up
-     from the bottom was the obvious alternative and it is wrong here:
-     with the mark now at the middle of the room, that pinned the floor
-     while the ask stayed put, and every extra pixel of window height went
-     into the one gap between them. */
-  --floor-y:max(76dvh, calc(var(--ask-y) + var(--ask-h)));
+     This is the one number the stack below still needs: the foot of the
+     lockup, plus a breath. Everything under it - the ask, the floor row,
+     the legal line, and on a phone the two addresses as well - is laid
+     out in flow from here down, so none of it needs a stop of its own and
+     none of it can land on top of anything else.
+
+     Two variables used to live here beside it: --ask-h, a *reservation*
+     for the ask block ("a headline plus a button, only knowable at layout
+     time" - which is exactly why guessing at it was the bug), and
+     --floor-y, the floor's own stop, derived from that guess. Guess low -
+     or let the webfont land and rewrap the headline onto a second line,
+     or open the page on a short window - and the ask was drawn straight
+     through the globe row. Both are gone: the column knows the real
+     heights because it is made of them. */
+  --ask-y:calc(var(--mark-y) + var(--mark-h) / 2 + var(--mark-word) + clamp(20px, 3.4vh, 40px));
   /* what the one-line floor row stands at - the globe is the tallest
      thing in it, so this is the globe */
   --floor-h:clamp(64px, min(8.5vw, 11vh), 116px);
@@ -1707,13 +1698,41 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 .foot__lit{ opacity:var(--lit); }
 .foot__cold{ opacity:calc(1 - var(--lit)); }
 
+/* ---- everything under the ceiling, in one column ----
+   From the foot of the lockup to the bottom edge of the room. The ask,
+   the floor row and the legal line are ordinary flow items in here, in
+   the order they are written, which is the whole guarantee: a column
+   cannot overlap itself. Whatever the display headline does at this
+   width, in this font, at this window height, the globe row is under it
+   and the legal line is under that.
+
+   The slack in a tall window all goes to one place - `margin-top:auto`
+   on the floor row - so the ask stays sitting under the mark and the
+   floor stays sitting on the bottom edge, which is where the old
+   hand-picked stops were putting them anyway. In a short window that
+   auto margin is simply zero and the column closes up, instead of two
+   fixed stops crossing over each other.
+
+   The addresses are the one thing still positioned in here, and only on
+   desktop: they belong out on the mark's shoulders, which is a point on
+   the ring rather than a step in a column. They are measured off the same
+   --mark-y the mark itself is, so they cannot drift from it. */
+.foot__stack{
+  position:absolute; left:0; right:0; top:var(--ask-y); bottom:0; z-index:4;
+  display:flex; flex-direction:column; align-items:stretch;
+  min-height:0;
+}
+
 /* ---- the copy, on a ring round the mark ----
    The addresses on its shoulders, tipped a few degrees so they sit on
    the circle rather than beside it. The tilt lives on this element and
    the reveal only ever touches opacity, which leaves the transform of
-   the <a> inside free for the magnetic pull. */
+   the <a> inside free for the magnetic pull.
+
+   The top is negative: the stack's own origin is the foot of the lockup,
+   and the shoulders are back up at the middle of the mark. */
 .foot__mail{
-  position:absolute; top:var(--mark-y); z-index:4;
+  position:absolute; top:calc(var(--mark-y) - var(--ask-y)); z-index:1;
   width:min(290px, 24vw); margin-top:-2.6em;
 }
 .foot__mail--l{ right:calc(50% + var(--reach)); text-align:right; transform:rotate(-4.5deg); }
@@ -1736,7 +1755,17 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
    the one thing the room is actually asking, so it gets the space
    directly below the mark rather than sharing it with five icons. */
 .foot__ask{
-  position:absolute; left:0; right:0; top:var(--ask-y); z-index:4;
+  /* First item in the column, so it is under the mark by construction
+     rather than by a stop that has to be kept in step with one.
+
+     It is not allowed to shrink. A flex item squeezed below the height of
+     its own content does not reflow, it spills - which would be the
+     overlap coming straight back in through the one property that was
+     meant to prevent it. If a window is genuinely too short for the room,
+     the column runs past the bottom edge and the room clips it, which is
+     a footer with its last line cut off rather than a headline typed
+     through a globe. */
+  position:relative; flex:0 0 auto;
   display:flex; flex-direction:column; align-items:center;
   gap:clamp(18px, 2.6vh, 34px);
   padding:0 var(--pad); text-align:center;
@@ -1773,7 +1802,12 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
    for them to hang from, so the globe and the accounts read as sitting on
    the same line, which is what they are. */
 .foot__base{
-  position:absolute; left:0; right:0; top:var(--floor-y); z-index:4;
+  /* margin-top:auto is the whole of the old --floor-y: every spare pixel
+     of window height collects here, between the ask and the floor, and
+     the row settles onto the bottom of the room. When there is no spare
+     height the margin is zero and the row simply follows the ask. */
+  position:relative; flex:0 0 auto;
+  margin-top:auto; margin-bottom:min(3.6vh, 48px);
   min-height:var(--floor-h);
   display:flex; align-items:center; justify-content:space-between; gap:24px;
   padding:0 var(--pad);
@@ -1838,7 +1872,10 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 .foot__top:hover{ color:var(--accent); }
 
 .foot__legal{
-  position:absolute; left:0; right:0; bottom:0; z-index:4;
+  /* Last item in the column, so it is the bottom edge of the room -
+     which is what `bottom:0` used to be asserting independently of
+     everything above it. */
+  position:relative; flex:0 0 auto;
   display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap;
   padding:15px var(--pad); border-top:1px solid var(--line);
   font-family:var(--f-mono); font-weight:500; font-size:10.5px; letter-spacing:.16em;
@@ -1860,54 +1897,81 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 
 /* ---- narrow ----
    Below this the ring cannot hold: the addresses at ±--reach would be over
-   the mark. Everything comes off the circle and stacks down the middle
-   instead, which is the only honest layout at this width - the pendant,
-   the drop and the flicker are untouched.
+   the mark. Everything comes off the circle and joins the column instead,
+   which is the only honest layout at this width - the pendant, the drop
+   and the flicker are untouched.
 
-   The stack is authored as explicit dvh stops rather than derived from
-   --ask-y/--floor-y the way the wide layout is: with everything in one
-   column there is no "beside" left for the solver to protect, and one
-   readable ladder of positions beats four interlocking calcs. */
+   This used to be a ladder of hand-picked dvh stops - the addresses at 36
+   and 42, the ask at 50, the accounts at 68, the globe at 76 - and it had
+   the same fault the desktop layout had, only worse, because there are
+   five things stacked here instead of three. On a short phone the two
+   addresses are about forty-six pixels tall and six dvh apart, so they
+   were already sitting on each other before anything else went wrong.
+
+   Now they are simply the first two items of the same column the desktop
+   uses. The markup order is already the reading order - address, address,
+   ask, floor, legal - so the phone layout is what the column does with no
+   positions at all. */
 @media (max-width:820px){
   .foot{
     --mark-w:clamp(74px, 19vw, 102px);
-    /* Higher than the desktop 43dvh, and not a contradiction of it: with
+    /* Higher than the desktop 41dvh, and not a contradiction of it: with
        the two addresses stacked underneath rather than out on the mark's
        shoulders, the column below it is four items long instead of two,
        and the mark has to make room for them. */
-    --mark-y:24dvh;
+    --mark-y:23dvh;
   }
+  .foot__stack{ gap:clamp(12px, 2.2vh, 26px); }
   .foot__mail{
-    left:0; right:0; width:auto; margin-top:0;
+    position:relative; flex:0 0 auto; top:auto; left:0; right:0;
+    width:auto; margin-top:0;
     text-align:center; transform:none;
   }
   .foot__mail a{ align-items:center; }
-  .foot__mail--l{ top:36dvh; }
-  .foot__mail--r{ top:42dvh; }
 
-  .foot__ask{ top:50dvh; gap:16px; }
+  .foot__ask{ gap:16px; }
   .foot__ask-title{ font-size:clamp(24px, 6.6vw, 34px); }
   .foot__ask .contact__cta{ font-size:15px; padding:13px 26px; }
 
   /* The floor is one line at desktop; here there is no room for a line
-     that long, so the row goes back to being the plain wrapper it was
-     (display:contents) and its two halves stack down the middle with
-     their own positions. */
-  .foot__base{ display:contents; }
+     that long, so its two halves stack down the middle - reversed,
+     because the accounts sit above the address on a phone. */
+  .foot__base{
+    flex-direction:column-reverse; align-items:center;
+    gap:clamp(12px, 2.2vh, 22px);
+    margin-bottom:min(2.4vh, 22px);
+    min-height:0;
+  }
 
   /* .foot__ends survives as the accounts and nothing else: "back to top"
      is a scroll away on a phone and "est. 2013" is small print the legal
      line already carries - so it drops its second half rather than the
      whole block, since hiding .foot__ends would take the accounts too. */
-  .foot__ends{
-    position:absolute; left:0; right:0; top:68dvh; z-index:4;
-    justify-content:center;
-  }
+  .foot__ends{ justify-content:center; }
   .foot__ends-meta{ display:none; }
 
-  .foot__where{
-    position:absolute; left:0; right:0; bottom:auto; top:76dvh;
-    justify-content:center;
-  }
+  .foot__where{ justify-content:center; }
   .foot__legal{ justify-content:center; text-align:center; font-size:9.5px; }
+}
+
+/* ---- short ----
+   A column cannot overlap, but it can still run out of room, and the one
+   thing in this room that does not scale with the window is the fixture:
+   --mark-w is read off the *width*, so a short wide window hands the
+   column a full-size pendant and half the height to put it under. These
+   two blocks take the ceiling and the display line down with the height,
+   which is the difference between a room that closes up neatly and one
+   whose legal line is off the bottom of the screen.
+
+   Height-only queries, so nothing here fires on a normal window. */
+@media (min-width:821px) and (max-height:760px){
+  .foot{ --mark-w:clamp(76px, 6.6vw, 104px); --mark-y:37dvh; }
+  .foot__ask-title{ font-size:clamp(24px, 3.2vw, 40px); }
+  .foot__ask{ gap:clamp(12px, 2vh, 20px); }
+}
+@media (max-width:820px) and (max-height:720px){
+  .foot{ --mark-w:clamp(62px, 15vw, 84px); --mark-y:19dvh; }
+  .foot__ask-title{ font-size:clamp(21px, 5.6vw, 28px); }
+  .foot__ask{ gap:12px; }
+  .foot__ask .contact__cta{ font-size:14px; padding:11px 22px; }
 }

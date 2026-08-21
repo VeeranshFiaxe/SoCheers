@@ -290,6 +290,15 @@ function Globe() {
             fill="var(--bg)"
             strokeWidth="4"
           />
+          {/* textLength, and it is not a nicety. The plank is a fixed 120
+              units wide and this label is set in the site's webfont - so
+              between first paint and the font landing the word is typed
+              in whatever the fallback is, at whatever width that face
+              happens to be, and on the wide fallbacks it runs off both
+              ends of the plank. Pinning the run to 96 units makes the
+              word the same size in the fallback as in the real face, so
+              the sign reads identically from the first frame and nothing
+              moves when the font arrives. */}
           <text
             className="foot__sign-text"
             x={GLOBE_PIN.x}
@@ -300,6 +309,8 @@ function Globe() {
             dominantBaseline="central"
             fontSize="19"
             letterSpacing="2"
+            textLength="96"
+            lengthAdjust="spacingAndGlyphs"
           >
             MUMBAI
           </text>
@@ -399,87 +410,116 @@ export default function Footer() {
         </span>
       </div>
 
-      {/* --- what arrives around it -------------------------------------
-          The two addresses sit on the mark's shoulders, tipped a few
-          degrees so they read as curved around it rather than parked
-          beside it.
+      {/* --- everything under the ceiling -------------------------------
+          One column, and that is the whole point of it.
 
-          "fade" rather than the default rise: that tilt is a CSS
-          transform, and a rise would be a second author for the same
-          property. */}
-      <div className="foot__mail foot__mail--l" data-foot-part="fade">
-        <a href="mailto:hello@socheers.net" data-magnetic data-cursor="Email">
-          <span className="foot__mail-label">Bring us a brief</span>
-          <span className="foot__mail-addr">hello@socheers.net</span>
-        </a>
-      </div>
-      <div className="foot__mail foot__mail--r" data-foot-part="fade">
-        <a href="mailto:careers@socheers.net" data-magnetic data-cursor="Email">
-          <span className="foot__mail-label">Bring us your best work</span>
-          <span className="foot__mail-addr">careers@socheers.net</span>
-        </a>
-      </div>
+          Every piece of this used to be its own absolutely positioned
+          block at its own hand-picked fraction of the viewport - the
+          addresses at 36 and 42dvh, the ask at a third stop, the floor
+          row at a fourth - with a guessed reservation (--ask-h) standing
+          in for the one height nobody can know at author time: a display
+          headline plus a button, at whatever width and whatever font the
+          browser has actually got. Guess low, or let the webfont land and
+          rewrap the headline onto a second line, or open the page on a
+          short window, and two of those blocks are in the same place. It
+          is not random - it is four independent guesses that only happen
+          to agree at the sizes it was checked at.
 
-      {/* --- the ask -----------------------------------------------------
-          What used to be the page's closing section, now the first thing
-          under the bulb: the room is uncovered, the light dies, the mark
-          turns over, and the question is already waiting there. */}
-      <div className="foot__ask" data-foot-part>
-        <h2 className="foot__ask-title">Let&rsquo;s make more&nbsp;happen.</h2>
-        <ContactModal />
-      </div>
+          So the stack is flow layout now. The room's ceiling (the pendant
+          and the light) is still positioned, because it is the thing that
+          gets animated; everything below it is a flex column running from
+          the foot of the lockup to the bottom edge of the room, and two
+          items in a column cannot occupy the same pixels no matter what
+          the fonts do, how the headline wraps, or how short the window
+          is. See .foot__stack in globals.css - the desktop ring (the two
+          addresses out on the mark's shoulders) is the one thing still
+          positioned inside it, off the same --mark-y the mark itself
+          uses, so it cannot drift from it either. */}
+      <div className="foot__stack">
 
-      {/* --- the floor of the room --------------------------------------
-          One line, end to end: where we are at one end, how to reach us
-          at the other, and nothing stacked above or below either of them.
-          The big "SoCheers / Making more happen" sign-off that used to
-          sit in the middle of this row is gone - the ask above already
-          says it, and the wordmark is in the legal line below. */}
-      <div className="foot__base">
-        <div className="foot__where" data-foot-part>
-          <span className="foot__globe">
-            <Globe />
-          </span>
-          <span className="foot__place">
-            <b>Mumbai, India</b>
-            <i>19.0760° N · 72.8777° E</i>
-          </span>
+        {/* --- what arrives around it -------------------------------------
+            The two addresses sit on the mark's shoulders, tipped a few
+            degrees so they read as curved around it rather than parked
+            beside it.
+
+            "fade" rather than the default rise: that tilt is a CSS
+            transform, and a rise would be a second author for the same
+            property. */}
+        <div className="foot__mail foot__mail--l" data-foot-part="fade">
+          <a href="mailto:hello@socheers.net" data-magnetic data-cursor="Email">
+            <span className="foot__mail-label">Bring us a brief</span>
+            <span className="foot__mail-addr">hello@socheers.net</span>
+          </a>
+        </div>
+        <div className="foot__mail foot__mail--r" data-foot-part="fade">
+          <a href="mailto:careers@socheers.net" data-magnetic data-cursor="Email">
+            <span className="foot__mail-label">Bring us your best work</span>
+            <span className="foot__mail-addr">careers@socheers.net</span>
+          </a>
         </div>
 
-        {/* The accounts came off the ring when the ask took the space
-            under the mark - they close the floor row instead, which is
-            where a footer's social row usually is anyway. */}
-        <div className="foot__ends" data-foot-part>
-          <nav className="foot__social" aria-label="SoCheers on social media">
-            {SOCIAL.map((s) => (
-              <a
-                key={s.href}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={s.label}
-                data-cursor="Follow"
-              >
-                <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  {s.path}
-                </svg>
-              </a>
-            ))}
-          </nav>
-          <span className="foot__ends-meta">
-            {/* A control, not a destination: it moves the page, it does not
-                name a place, so it is a button and leaves the address bar
-                alone. Handled by initTopLinks() in lib/motion.ts. */}
-            <button type="button" className="foot__top" data-top data-cursor="Top">
-              Back to top
-            </button>
-            <i>Est. 2013</i>
-          </span>
+        {/* --- the ask -----------------------------------------------------
+            What used to be the page's closing section, now the first thing
+            under the bulb: the room is uncovered, the light dies, the mark
+            turns over, and the question is already waiting there. */}
+        <div className="foot__ask" data-foot-part>
+          <h2 className="foot__ask-title">Let&rsquo;s make more&nbsp;happen.</h2>
+          <ContactModal />
         </div>
-      </div>
 
-      <div className="foot__legal" data-foot-part>
-        <span>© {new Date().getFullYear()} SoCheers</span>
+        {/* --- the floor of the room --------------------------------------
+            One line, end to end: where we are at one end, how to reach us
+            at the other, and nothing stacked above or below either of them.
+            The big "SoCheers / Making more happen" sign-off that used to
+            sit in the middle of this row is gone - the ask above already
+            says it, and the wordmark is in the legal line below. */}
+        <div className="foot__base">
+          <div className="foot__where" data-foot-part>
+            <span className="foot__globe">
+              <Globe />
+            </span>
+            <span className="foot__place">
+              <b>Mumbai, India</b>
+              <i>19.0760° N · 72.8777° E</i>
+            </span>
+          </div>
+
+          {/* The accounts came off the ring when the ask took the space
+              under the mark - they close the floor row instead, which is
+              where a footer's social row usually is anyway. */}
+          <div className="foot__ends" data-foot-part>
+            <nav className="foot__social" aria-label="SoCheers on social media">
+              {SOCIAL.map((s) => (
+                <a
+                  key={s.href}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  data-cursor="Follow"
+                >
+                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    {s.path}
+                  </svg>
+                </a>
+              ))}
+            </nav>
+            <span className="foot__ends-meta">
+              {/* A control, not a destination: it moves the page, it does not
+                  name a place, so it is a button and leaves the address bar
+                  alone. Handled by initTopLinks() in lib/motion.ts. */}
+              <button type="button" className="foot__top" data-top data-cursor="Top">
+                Back to top
+              </button>
+              <i>Est. 2013</i>
+            </span>
+          </div>
+        </div>
+
+        <div className="foot__legal" data-foot-part>
+          <span>© {new Date().getFullYear()} SoCheers</span>
+        </div>
+
       </div>
     </footer>
   );
