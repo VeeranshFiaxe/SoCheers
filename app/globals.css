@@ -56,6 +56,24 @@
 html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; overflow-x:hidden; }
 .lenis.lenis-smooth{ scroll-behavior:auto !important; }
 
+/* ---- no native scrollbar ----
+   The page already tells the reader where they are twice over - the
+   accent line across the top (.progress) and the site's own cursor - and
+   the OS gutter agrees with neither. Hidden, not disabled: the document
+   still scrolls by every means it did before (wheel, trackpad, touch,
+   space/PageDown/arrows/Home/End - all of which the hero's own input
+   layer already answers - and find-in-page), it just is not drawn.
+
+   Both spellings, because they cover different engines: `scrollbar-width`
+   is the standard one (Firefox, and Chromium from 121), the ::-webkit-
+   pseudo-element is what older WebKit and Chromium read. On macOS and
+   touch the bar was already an overlay that fades out, so this only
+   really changes the picture on Windows and Linux - which is also where
+   it was taking a slice of the viewport's width, so the layout gets
+   those pixels back. */
+html{ scrollbar-width:none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar{ width:0; height:0; display:none; }
+
 body{
   background:var(--bg); color:var(--cream);
   font-family:var(--f-body); font-weight:400;
@@ -221,7 +239,16 @@ em{ font-style:italic; }
 @media (hover:none){ .cursor,.cursor-ring{ display:none; } }
 
 .progress{ position:fixed; top:0; left:0; width:100%; height:2px; z-index:9997; }
-.progress__bar{ display:block; height:100%; width:0%; background:var(--accent); box-shadow:0 0 12px var(--accent); }
+/* Scaled, not widthed. The bar is driven every frame while the hero's
+   sequence plays itself out (initNav, lib/motion.ts), and animating
+   `width` re-lays-out and repaints a full-width element on each of those
+   frames. transform is composited, so the bar costs nothing to move. */
+.progress__bar{
+  display:block; height:100%; width:100%;
+  transform:scaleX(0); transform-origin:0 50%;
+  background:var(--accent); box-shadow:0 0 12px var(--accent);
+  will-change:transform;
+}
 
 .loader{ position:fixed; inset:0; z-index:9990; background:var(--bg); display:grid; place-items:center; }
 .loader__inner{ text-align:center; position:relative; z-index:2; }
@@ -1090,8 +1117,13 @@ html.is-pinned .who{ margin-top:-100vh; }
 .cmodal__form{
   display:flex; flex-direction:column; gap:14px;
   padding:clamp(28px,4vw,42px);
-  overflow-y:auto;
+  /* the one panel on the site with its own scroll - kept silent for the
+     same reason the document's is (see the top of this file), since a
+     native gutter down the inside of the modal is the one place the OS
+     bar would still show up */
+  overflow-y:auto; scrollbar-width:none;
 }
+.cmodal__form::-webkit-scrollbar{ width:0; height:0; display:none; }
 .cmodal__form .tag{ color:var(--accent); }
 .cmodal__title{
   font-family:var(--f-display); font-weight:700;

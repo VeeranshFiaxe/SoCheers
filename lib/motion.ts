@@ -71,6 +71,31 @@ export function initSite(): () => void {
   let lenis: Lenis | null = null;
 
   const ctx = gsap.context(() => {
+    /* Who gets to say how far through the page the reader is.
+
+       The scroll bar at the top is normally just document scroll over
+       document height, which is true of every page here except the one
+       that matters: on the home page the hero takes the scroll away and
+       plays its sequence on its own clock (see initHero). For as long as
+       that lasts the document does not move at all - it is clamped to the
+       pin's anchor - so the bar sat frozen through the whole opening and
+       then jumped a screen's worth in one frame when the scroll was handed
+       back. Which is the report: it does not account for the part that
+       animates itself.
+
+       So whoever currently owns the reader's progress can say so here.
+       Returning null means "not me, use the scroll" - and every page that
+       is not the home page never sets this at all. */
+    let barSource: (() => number | null) | null = null;
+
+    /* How much document there is to get through, remembered rather than
+       asked for. The bar is repainted on a ticker now (initNav), and
+       ScrollTrigger.maxScroll reads scrollHeight - a layout read, every
+       frame, forever, for a number that only changes when the page is
+       remeasured. So it is read when the page *is* remeasured instead. */
+    let barMax = 0;
+    const readBarMax = () => { barMax = ScrollTrigger.maxScroll(window); };
+
     /* -------------------------------------------------- Lenis */
     function initLenis() {
       if (prefersReduced) return;
@@ -595,6 +620,29 @@ export function initSite(): () => void {
         anchor = Math.min(Math.max(y ?? lo, lo), hi);
       };
       hold();
+
+      /* -------------------------------------------------- the scroll bar
+         What the bar should read while the hero owns the scroll. The pin
+         is a real screen of document - the reader will be put on the far
+         side of it the moment the sequence finishes - so the sequence's
+         own clock is mapped straight onto that range: REST is the top of
+         the pin, DONE is its end, and everything the timeline does in
+         between moves the bar exactly as far as scrolling through the pin
+         would have. The handover then costs nothing visually, because the
+         bar is already sitting on the number the released scroll lands on.
+
+         Read live rather than pushed, so a resize (which moves both the
+         pin's range and the document height under it) is answered by the
+         next frame rather than by a stale value. */
+      const heroProgress = () => {
+        if (barMax <= 0) readBarMax();
+        if (barMax <= 0) return 0;
+        const span = Math.max(st.end - st.start, 1);
+        const t = Math.min(Math.max(tl.time() / DONE, 0), 1);
+        return Math.min((st.start + span * t) / barMax, 1);
+      };
+      barSource = () => (locked ? heroProgress() : null);
+      cleanups.push(() => { barSource = null; });
 
       // the hero is on screen at rest as soon as it mounts - lock the page
       // right away rather than waiting for a scroll event to discover it
@@ -1634,6 +1682,42 @@ export function initSite(): () => void {
       const nav = document.getElementById("nav");
       const bar = document.querySelector<HTMLElement>(".progress__bar");
 
+      /* ---- the scroll bar ----
+         One place the bar is ever written, and one number it is ever
+         written from: whoever owns the reader's progress (barSource, top
+         of this context) if anyone does, and plain document scroll if not.
+         Painted through a transform (see .progress__bar in globals.css)
+         and only when the value has actually changed, since the ticker
+         below asks on every frame. */
+      let painted = -1;
+      const paintBar = (p: number) => {
+        if (!bar) return;
+        const v = Math.min(Math.max(p, 0), 1);
+        if (Math.abs(v - painted) < 0.0005) return;
+        painted = v;
+        bar.style.transform = `scaleX(${v.toFixed(4)})`;
+      };
+      const docProgress = () => (barMax > 0 ? window.scrollY / barMax : 0);
+      const readBar = () => paintBar(barSource?.() ?? docProgress());
+
+      /* Every frame, not every scroll event. The hero's sequence plays on
+         its own clock with the document held still, so there are no scroll
+         events at all for most of the opening - the one stretch of the page
+         the bar was getting wrong. Off the home page barSource is null and
+         a frame costs one scrollY read against a remembered height, with
+         the write skipped unless the number actually moved. */
+      addTicker(readBar);
+      /* Anything that changes how long the page is - fonts landing, the
+         hero's pin spacer appearing, a resize, a section opening - ends in
+         a ScrollTrigger refresh, so that is where the height is re-read.
+         Without this the bar kept reporting against the height the page
+         had on the frame it booted. */
+      readBarMax();
+      const remeasure = () => { readBarMax(); readBar(); };
+      ScrollTrigger.addEventListener("refresh", remeasure);
+      cleanups.push(() => ScrollTrigger.removeEventListener("refresh", remeasure));
+      readBar();                                  // right on the first frame
+
       /* ---- which way round the nav is drawn ----
          The header is fixed and the site is not one colour: the home page
          runs black, the About page's panels come up cream under it, and
@@ -1675,14 +1759,14 @@ export function initSite(): () => void {
       ScrollTrigger.create({
         start: 0, end: "max",
         onUpdate: (self) => {
-          if (bar) bar.style.width = (self.progress * 100).toFixed(2) + "%";
+          readBar();
           const y = self.scroll();
           if (nav) nav.classList.toggle("is-hidden", y > lastY && y > 500);
           lastY = y;
           readGround();
         },
       });
-      on(window, "resize", readGround);
+      on(window, "resize", () => { readGround(); remeasure(); });
     }
 
     /* -------------------------------------------------- the meaning entry
