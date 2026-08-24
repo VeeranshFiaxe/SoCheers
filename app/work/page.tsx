@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./work.css";
-import { Nav, Overlays } from "@/components/Chrome";
 import Footer from "@/components/Footer";
 import WorkMotion from "@/components/WorkMotion";
 import WorkPinned from "@/components/WorkPinned";
@@ -41,9 +40,6 @@ export default async function Work() {
 
   return (
     <>
-      <Overlays />
-      <Nav variant="sub" active="/work" />
-
       {/* The room under the page. Same three parts the home page needs and
           in the same upside-down order - the footer has to come first so
           it is underneath, and .foot-run is one screen of nothing for the

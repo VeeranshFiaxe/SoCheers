@@ -11,7 +11,10 @@ export default function Hero() {
       <div className="hero__pin" data-hero-pin>
         {/* the SOC▢HEERS artwork, full bleed */}
         <div className="hero__frame" data-frame>
-          <img src={IMG.frame} alt="SoCheers" data-frame-img />
+          {/* the first thing on the page and the last thing the overture walks
+              into, so it is worth saying so out loud rather than letting it
+              queue behind the stage photo underneath it */}
+          <img src={IMG.frame} alt="SoCheers" fetchPriority="high" decoding="async" data-frame-img />
           <span className="hero__greet">Hi! We Are</span>
         </div>
 

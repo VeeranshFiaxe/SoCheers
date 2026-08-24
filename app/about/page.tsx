@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import "./about.css";
-import { Nav, Overlays } from "@/components/Chrome";
 import AboutMotion from "@/components/AboutMotion";
 import AboutHero from "@/components/AboutHero";
 import {
-  AboutDrives, AboutEnd, AboutFounders, AboutIntro,
-  AboutPeople, AboutSpace,
+  AboutCrowd, AboutDrives, AboutEnd, AboutFounders,
+  AboutIntro, AboutPeople, AboutSpace,
 } from "@/components/AboutSections";
 
 export const metadata: Metadata = {
@@ -19,9 +18,6 @@ export const metadata: Metadata = {
 export default function About() {
   return (
     <>
-      <Overlays />
-      <Nav variant="sub" active="/about" />
-
       <main id="top">
         <AboutHero />
 
@@ -35,6 +31,7 @@ export default function About() {
           <AboutPeople />
           <AboutDrives />
           <AboutSpace />
+          <AboutCrowd />
           <AboutEnd />
         </div>
       </main>

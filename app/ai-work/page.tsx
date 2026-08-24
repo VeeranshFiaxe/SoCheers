@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./ai.css";
-import { Nav, Overlays } from "@/components/Chrome";
 import AiMotion from "@/components/AiMotion";
 import AiGate from "@/components/AiGate";
 import AiThoughts from "@/components/AiThoughts";
@@ -31,9 +30,6 @@ export const metadata: Metadata = {
 export default function AiWork() {
   return (
     <>
-      <Overlays />
-      <Nav variant="sub" active="/ai-work" />
-
       <main id="top" className="ai-page">
         <section className="ai-hero">
           <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>

@@ -84,39 +84,19 @@ export function What() {
   );
 }
 
-export function Clients() {
-  return (
-    <section className="sec clients" data-section data-sec="3">
-      <div className="wrap">
-        <span className="tag" data-reveal>WHO DO WE DO IT WITH</span>
-        <h2 className="sec__title" data-split>Brands you like consuming the most.</h2>
-      </div>
-      <div className="clients__rows">
-        {CLIENT_ROWS.map((row, r) => (
-          <div className="cmarquee" key={r} aria-hidden="true">
-            {/* the track is duplicated so the loop can wrap on half its width */}
-            <div className="cmarquee__track" data-marquee={row.dir}>
-              {[0, 1].map((copy) =>
-                row.names.map((n, i) => (
-                  <Fragment key={`${copy}-${i}`}>
-                    <span>{n}</span>
-                    <span className="s">✦</span>
-                  </Fragment>
-                )),
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
+/* ------------------------------------------------------------------
+   The design book's six solids (SoCheers Colors.jpg, and the tokens at the
+   top of globals.css), in the order they are printed there. Two rows on
+   this page are coloured out of it, and they use it differently.
 
-/* The design book's six solids (SoCheers Colors.jpg, and the tokens at the
-   top of globals.css), in the order they are printed there. There are six
-   awards, so the row runs the whole palette once per pass and each show
-   keeps its own colour on every repeat of the ticker. */
-const SWIPES = [
+   The awards ticker runs it straight: there are six shows, so one pass of
+   the row is one pass of the palette and every show keeps its own colour
+   on every repeat.
+
+   The client wall cannot do that. It is thirty-odd names across three
+   rows, so walking the palette in order would print a six-name rainbow
+   twice per row and read as a pattern rather than as thirty brands. */
+const SOLIDS = [
   "var(--leaf)",
   "var(--sky)",
   "var(--tangerine)",
@@ -124,6 +104,135 @@ const SWIPES = [
   "var(--purple)",
   "var(--pink)",
 ];
+
+/* Which solid a brand hovers into.
+
+   Scattered, but not random: this is server-rendered and then hydrated,
+   and Math.random() would deal one hand on the server and a different one
+   in the browser. So the colour is a function of the name itself - which
+   also means the same brand gets the same ink wherever it appears, and
+   that matters here because Schweppes and ITC are each on two of the
+   three rows. A name that changed colour between rows would read as two
+   different clients.
+
+   djb2, xor variant, sign stripped. Any cheap avalanche would do; the
+   only requirement is that names sitting next to each other in the source
+   list do not land on numbers sitting next to each other. */
+function hash(name: string): number {
+  let h = 5381;
+  for (let i = 0; i < name.length; i += 1) h = ((h * 33) ^ name.charCodeAt(i)) >>> 0;
+  return h;
+}
+
+/* One row's worth of draws, with the two collisions a hash cannot see
+   fixed up afterwards.
+
+   Six of anything over ten or twelve names means repeats are certain, and
+   fine. What is not fine is two of them touching - that reads as a
+   mistake rather than as a palette - so a name that draws its neighbour's
+   number is nudged one along. The same is done across the seam: the track
+   is printed twice so the loop can wrap on half its width (see Clients
+   below), which puts the last name of a pass hard against the first name
+   of the next one.
+
+   `salt` is what lets one row be dealt twice without the second deal
+   being a copy of the first. Colour and tilt are drawn independently, so
+   the yellow names are not also the ones leaning the same way. */
+function scatter(names: string[], count: number, salt: string): number[] {
+  const picked: number[] = [];
+  names.forEach((n, i) => {
+    let k = hash(n + salt) % count;
+    if (i > 0 && k === picked[i - 1]) k = (k + 1) % count;
+    picked.push(k);
+  });
+
+  const last = picked.length - 1;
+  if (last > 0 && picked[last] === picked[0]) {
+    picked[last] = (picked[last] + 1) % count;
+    /* and do not re-create the collision the loop just spent its time
+       avoiding on the way past */
+    if (picked[last] === picked[last - 1]) {
+      picked[last] = (picked[last] + 1) % count;
+    }
+  }
+  return picked;
+}
+
+/* How far a name leans when you point at it, and which way.
+
+   It used to be one value for the whole wall - every name kicked two
+   degrees anticlockwise - which made the row feel like one object
+   responding rather than thirty separate names. Both directions now, and
+   three amounts each.
+
+   The ceiling is deliberately low. These are set in bold display type at
+   up to 31px and they are the client list: a name has to stay a name
+   while it is moving, so nothing here goes past two and a half degrees.
+   The scale carries most of the pop; the angle is what stops it reading
+   as a stamp.
+
+   Paired with a scale rather than left alone, and the pairing is not an
+   accident: the two hardest leans are the smallest lifts. A name that
+   both jumps and turns the furthest is the one that stops being readable,
+   so the further it turns the less it grows. */
+const TILTS = [
+  { deg: "-2.4deg", pop: 1.11 },
+  { deg: "-1.5deg", pop: 1.14 },
+  { deg: "-0.8deg", pop: 1.16 },
+  { deg: "0.8deg",  pop: 1.16 },
+  { deg: "1.5deg",  pop: 1.14 },
+  { deg: "2.4deg",  pop: 1.11 },
+];
+
+export function Clients() {
+  /* The wall is grey type until you point at it, and then the one name
+     under the cursor takes a colour - its own, off the design book's
+     solids, the same six the awards row further down is struck through
+     with. Nothing is coloured at rest, on purpose: thirty brands in six
+     colours all at once is a logo sheet, and the point of this row is
+     that it reads as a list of names you already recognise. */
+  return (
+    <section className="sec clients" data-section data-sec="3">
+      <div className="wrap">
+        <span className="tag" data-reveal>WHO DO WE DO IT WITH</span>
+        <h2 className="sec__title" data-split>Brands you like consuming the most.</h2>
+      </div>
+      <div className="clients__rows">
+        {CLIENT_ROWS.map((row, r) => {
+          const ink = scatter(row.names, SOLIDS.length, "");
+          const lean = scatter(row.names, TILTS.length, "·tilt");
+          return (
+            <div className="cmarquee" key={r} aria-hidden="true">
+              {/* the track is duplicated so the loop can wrap on half its width */}
+              <div className="cmarquee__track" data-marquee={row.dir}>
+                {[0, 1].map((copy) =>
+                  row.names.map((n, i) => (
+                    <Fragment key={`${copy}-${i}`}>
+                      {/* All three are only ever read by the hover rule
+                          below, so this costs three custom properties and
+                          no paint at all until the cursor is on the name */}
+                      <span
+                        style={{
+                          "--brand": SOLIDS[ink[i]],
+                          "--tilt": TILTS[lean[i]].deg,
+                          "--pop": TILTS[lean[i]].pop,
+                        } as CSSProperties}
+                      >
+                        {n}
+                      </span>
+                      <span className="s">✦</span>
+                    </Fragment>
+                  )),
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 
 export function Awards() {
   /* One row, going past. This spent a while as a catalogue - an index on
@@ -170,7 +279,7 @@ export function Awards() {
                 <Fragment key={`${copy}-${i}`}>
                   <span
                     className="amarquee__show"
-                    style={{ "--swipe": SWIPES[i % SWIPES.length] } as CSSProperties}
+                    style={{ "--swipe": SOLIDS[i % SOLIDS.length] } as CSSProperties}
                   >
                     <b>{a.name}</b>
                   </span>
@@ -179,7 +288,7 @@ export function Awards() {
                       on the one behind it */}
                   <span
                     className="amarquee__dot"
-                    style={{ "--swipe": SWIPES[(i + 1) % SWIPES.length] } as CSSProperties}
+                    style={{ "--swipe": SOLIDS[(i + 1) % SOLIDS.length] } as CSSProperties}
                   />
                 </Fragment>
               )),

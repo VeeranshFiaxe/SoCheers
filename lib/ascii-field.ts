@@ -313,7 +313,34 @@ export function createAsciiField(
   function textRects(el: HTMLElement): DOMRect[] {
     const out: DOMRect[] = [];
     try {
-      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      /* Type that is not on the screen does not get to clear the grid.
+
+         The split heading carries a .sr-only copy of its own text - the
+         readable string, kept for the screen reader, because what is left
+         for the eye is a stack of aria-hidden line wrappers. Visually it
+         is nothing: a 1px box, clipped to inset(50%).
+
+         A Range does not care. .sr-only is also white-space:nowrap, so the
+         text run inside that 1px box lays out at its natural width and
+         overflows it, and getClientRects hands back the run's own
+         geometry - it reports the ink, and clip-path is a paint-time
+         operation that never touches it. On "The space." that is a 313px
+         box starting at the exact centre of the column and running right,
+         which is why the clearing was hard against the T on the left and
+         had most of a heading's width of empty paper after the full stop
+         on the right. The heading was centred the whole time; the hole cut
+         for it was not, because it was being cut for two strings, one of
+         them invisible.
+
+         Rejecting the subtree rather than filtering the rects afterwards:
+         by the time it is a DOMRect there is nothing left on it that says
+         where it came from. */
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+        acceptNode: (t) =>
+          t.parentElement?.closest(".sr-only")
+            ? NodeFilter.FILTER_REJECT
+            : NodeFilter.FILTER_ACCEPT,
+      });
       const range = document.createRange();
       let node = walker.nextNode();
       while (node) {

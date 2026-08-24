@@ -2,6 +2,7 @@ import AboutBulbs from "./AboutBulbs";
 import AboutMan from "./AboutMan";
 import AboutSplash from "./AboutSplash";
 import AboutStage from "./AboutStage";
+import Link from "next/link";
 import {
   ABOUT_IMG, ABOUT_INTRO, BELIEF, DRIVERS,
   FOUNDERS, SPACE_COPY, SPACE_SHOTS, WHY_WE_EXIST,
@@ -327,7 +328,26 @@ export function AboutPeople() {
 /* 5 · nothing special happens at this join. Every section past the opener
    carries the same off-white (see .ab-panel in about.css) and scrolls into
    the next one plainly - the old pixel veil was solving a hard
-   black-to-white cut that no longer happens here. */
+   black-to-white cut that no longer happens here.
+
+   The card is the site's own card - hairline border, rounded corner,
+   faint panel wash, an index in mono above the name, the same parts in
+   the same order as the featured-work tiles on the home page (.tile in
+   globals.css). What is particular to this section is the name: written
+   in the script, and each one in a brand colour of its own.
+
+   That is not a new idea on this site either - the client marquee on the
+   home page deals the design book's solids out one name at a time (see
+   --brand in components/Sections.tsx). The colour lives in the type here
+   and nowhere else on the card: no tinted washes, no coloured shadows.
+   An earlier pass put all of that in at once, with confetti over the
+   section, and it read as a different website. */
+
+/* one brand solid per card, in the order the drivers are written. Three
+   that hold their own against cream at the weight the script sets at -
+   sky is the one that does not, so it stays out. */
+const DRIVER_COLORS = ["--tangerine", "--purple", "--pink"] as const;
+
 export function AboutDrives() {
   return (
     <section className="ab-panel ab-drives is-light" data-sec="4">
@@ -339,23 +359,34 @@ export function AboutDrives() {
         <h2 className="ab-drives__title" data-split>What drives us?</h2>
 
         <div className="drivers">
-          {DRIVERS.map((d) => (
-            <article className="driver" key={d.idx} data-reveal>
-              <span className="driver__head">
-                <i>{d.idx}.</i> {d.name}
+          {DRIVERS.map((d, i) => (
+            <article
+              className="driver"
+              key={d.idx}
+              data-reveal
+              style={{ "--c": `var(${DRIVER_COLORS[i % DRIVER_COLORS.length]})` } as React.CSSProperties}
+            >
+              {/* Numeral and name on one line, the numeral first - the
+                  same arrangement the featured-work tiles use on the home
+                  page (.tile__meta in globals.css), where a mono index and
+                  a display name share a baseline. It read as an index
+                  floating above a heading when the two were stacked. */}
+              <span className="driver__top">
+                <span className="driver__idx">{d.idx}</span>
+                <span className="driver__head">{d.name}</span>
               </span>
               <p>{d.copy}</p>
             </article>
           ))}
         </div>
       </div>
-
-      <div className="ab-drives__art" data-ab-crowd aria-hidden="true">
-        <img src={ABOUT_IMG.crowd} alt="" />
-      </div>
     </section>
   );
 }
+
+/* the crowd, which used to hang off the foot of the drivers section and
+   is the last picture on the page now - see AboutCrowd below, rendered
+   under the office stage in app/about/page.tsx */
 
 /* 6 · the office - ten frames, shown one at a time.
 
@@ -383,24 +414,43 @@ export function AboutSpace() {
   );
 }
 
+/* 7 · the crowd, on its own.
+
+   Same image, same scroll-driven drift (lib/about-motion.ts still finds
+   it on [data-ab-crowd]) - it has just moved down the page. Under the
+   drivers it was competing with the three cards for the end of that
+   section; here it is the picture the page finishes on, with only the
+   way onward under it. Not an .ab-panel: it carries no copy and takes no
+   part in the card stack, it is one masked photograph on the same cream
+   the panels above it end on. */
+export function AboutCrowd() {
+  return (
+    <div className="ab-crowd" aria-hidden="true">
+      <div className="ab-crowd__art" data-ab-crowd>
+        <img src={ABOUT_IMG.crowd} alt="" />
+      </div>
+    </div>
+  );
+}
+
 /* a way onward, so the page does not dead-end on the grid. Stays on the
    white the office grid finished on - the stack has arrived, and dropping
    back to black for one footer strip would undo the whole walk. */
 export function AboutEnd() {
   return (
     <div className="ab-end is-light">
-      <a href="/" className="ab-end__back" data-cursor="Home">
+      <Link href="/" prefetch className="ab-end__back" data-cursor="Home">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M19 12H5M11 18l-6-6 6-6" />
         </svg>
         <span>Back to home</span>
-      </a>
-      <a href="/#contact" className="nav__cta" data-magnetic data-cursor="Say hi">
+      </Link>
+      <Link href="/#contact" prefetch className="nav__cta" data-magnetic data-cursor="Say hi">
         <span>Start a project</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M5 12h14M13 6l6 6-6 6" />
         </svg>
-      </a>
+      </Link>
     </div>
   );
 }

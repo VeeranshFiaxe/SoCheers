@@ -7,34 +7,28 @@
 
 export const BLOG_HERO = {
   eyebrow: "Insights & resources",
-  lines: ["Ideas, ", "decoded."],
+  lines: ["Things worth ", "reading."],
   lede:
-    "Notes from the team on culture, platforms and the campaigns that move both - starting with the research we've already put our name on.",
+    "White papers, reports, and the occasional rant from people who actually do this for a living.",
 } as const;
 
 /* Three segments under one roof. Only "whitepapers" has anything live right
-   now - "blogs" and "reports" stay in the UI as empty tabs with a
-   placeholder rather than disappearing, so the section reads as the full
-   resource hub it's meant to become as soon as there's more than one live
-   piece. */
+   now - "blogs" and "reports" stay in the bar as dead tabs rather than
+   disappearing, so the section already reads as the full resource hub it's
+   meant to become. `live:false` is what dims them and turns the click off
+   (see components/BlogTabs.tsx); flipping one to true is all it takes to
+   open that tab once there's something in it. */
 export const TABS = [
-  { id: "blogs", label: "Blogs" },
-  { id: "whitepapers", label: "White Papers" },
-  { id: "reports", label: "Reports" },
+  { id: "blogs", label: "Blogs", live: false },
+  { id: "whitepapers", label: "White Papers", live: true },
+  { id: "reports", label: "Reports", live: false },
 ] as const;
 
 export type TabId = (typeof TABS)[number]["id"];
 
-export const EMPTY_TABS: Record<Exclude<TabId, "whitepapers">, { title: string; copy: string }> = {
-  blogs: {
-    title: "First post is in the works",
-    copy: "Nothing published here yet - the team's writing is starting with the whitepaper below. Blog posts will land in this tab as soon as they're ready.",
-  },
-  reports: {
-    title: "Reports are coming",
-    copy: "Longer-form research and campaign reports will live here once the first one's ready to share.",
-  },
-};
+/* What the dead tabs say on hover - one line, because it's a tooltip and
+   not a panel. */
+export const SOON_LABEL = "Coming soon";
 
 /* An array, not a single object, on purpose - the White Papers tab lists
    whatever's live in here. Right now that's one piece; adding the next one
@@ -42,10 +36,10 @@ export const EMPTY_TABS: Record<Exclude<TabId, "whitepapers">, { title: string; 
 
    `pdf` is the whole point of the entry now. The paper used to sit behind
    an email field; the client's call is that it's open to everyone, so the
-   card in the tab is simply a link to the file - no gate, no capture,
-   nothing to submit, and clicking a paper opens the paper. The path is a
-   plain public asset: drop the file at `public/assets/whitepapers/` under
-   the same name and the tab is live. */
+   paper is embedded straight into the tab - no gate, no capture, nothing
+   to submit, and the visitor reads it without leaving the page. The file
+   is the one the old site served at socheers.net/parasocial-marketing-
+   whitepaper/, carried over as a plain public asset. */
 export const WHITEPAPERS = [
   {
     id: "parasocial-marketing",
@@ -60,6 +54,9 @@ export const WHITEPAPERS = [
     ],
     pdf: "/assets/whitepapers/parasocial-marketing.pdf",
     cta: "Open the paper",
+    /* Shown under the embedded reader, so a visitor who wants the file
+       itself doesn't have to hunt through the viewer's own chrome. */
+    file: "The-Friendship-Illusion-Whitepaper.pdf",
   },
 ] as const;
 

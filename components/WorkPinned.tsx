@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PINNED, PINNED_DWELL } from "@/lib/work-content";
+import Link from "next/link";
 
 /* ============================================================
    SECTION A - the pinned stage, and it is the whole opening screen.
@@ -39,10 +40,17 @@ import { PINNED, PINNED_DWELL } from "@/lib/work-content";
    The stage advances itself on PINNED_DWELL and shows how long is left
    on the selected poster, because a rail that moves on its own with no
    warning reads as a page glitching rather than as a reel playing. The
-   clock stops the moment the reader is involved - pointer over the
-   stage, focus inside it, tab in the background - and any manual pick
-   restarts it from zero rather than dropping the reader into the tail
-   end of the previous frame's turn.
+   clock stops when the reader is involved - pointer over the poster
+   wall, focus inside the stage, tab in the background - and any manual
+   pick restarts it from zero rather than dropping the reader into the
+   tail end of the previous frame's turn.
+
+   The pointer hold is on the wall and not on the stage, which is the
+   whole opening screen: a section-wide hover meant the reel was paused
+   for anyone whose cursor was anywhere on the page, which on a desktop
+   is everyone, all the time. It never advanced. Hovering the wall is a
+   reader about to pick a frame; a cursor resting over the picture is
+   just a cursor.
 
    ---- why every frame is mounted ----
 
@@ -117,8 +125,6 @@ export default function WorkPinned() {
     <section
       className="wk-stage"
       aria-label="Featured work"
-      onPointerEnter={() => setHeld((h) => ({ ...h, hover: true }))}
-      onPointerLeave={() => setHeld((h) => ({ ...h, hover: false }))}
       onFocusCapture={() => setHeld((h) => ({ ...h, focus: true }))}
       onBlurCapture={() => setHeld((h) => ({ ...h, focus: false }))}
     >
@@ -160,16 +166,20 @@ export default function WorkPinned() {
 
           <p className="wk-lede__line">{active.line}</p>
 
-          <a className="wk-lede__go" href={`/work/${active.slug}`} data-magnetic data-cursor="Open">
+          <Link className="wk-lede__go" href={`/work/${active.slug}`} prefetch data-magnetic data-cursor="Open">
             <span className="wk-lede__play" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
             </span>
             View case
-          </a>
+          </Link>
         </div>
 
         {/* ---- right: the poster wall ---- */}
-        <div className="wk-also">
+        <div
+          className="wk-also"
+          onPointerEnter={() => setHeld((h) => ({ ...h, hover: true }))}
+          onPointerLeave={() => setHeld((h) => ({ ...h, hover: false }))}
+        >
           <div className="wk-also__head">
             <span className="wk-also__label">More pinned work</span>
             <div className="wk-also__nav">

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./blog.css";
-import { Nav, Overlays } from "@/components/Chrome";
 import BlogMotion from "@/components/BlogMotion";
 import BlogTabs from "@/components/BlogTabs";
 import { BLOG_HERO, TOPICS } from "@/lib/blog-content";
@@ -14,9 +13,6 @@ export const metadata: Metadata = {
 export default function Blog() {
   return (
     <>
-      <Overlays />
-      <Nav variant="sub" active="/blogs" />
-
       {/* data-nav-light: cream ground from the first frame, so the fixed
           header has to draw itself in black ink over it - see readGround()
           in lib/motion.ts. */}

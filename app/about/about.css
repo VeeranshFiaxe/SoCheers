@@ -194,7 +194,14 @@
    in lib/about-motion.ts) - but that pin keeps its spacing, so it is a
    pause in the scroll rather than a slide change.
    ============================================================ */
-.ab-stack{ position:relative; z-index:1; }
+/* The cream is painted here, on the stack, and not only on each panel.
+   The symbol field in the space section is allowed to run past that
+   section's foot and on down behind the crowd (see .stage__ascii below),
+   and the only way anything can show *through* the crowd block is if the
+   crowd block has no background of its own - so the colour it used to
+   paint has moved up one level to the stack, where it sits under every
+   panel and under the bleed as well. */
+.ab-stack{ position:relative; z-index:1; background:#f4f2ec; }
 .ab-panel{ position:relative; overflow:hidden; }
 
 /* Black opener, then straight to one consistent off-white for every panel
@@ -205,6 +212,56 @@
 .ab-people  { background:#f4f2ec; z-index:3; }
 .ab-drives  { background:#f4f2ec; z-index:4; }
 .ab-space   { background:#f4f2ec; z-index:5; }
+
+/* No seam at any of those joins.
+
+   Two panels of the identical cream, stacked flush, still drew a hairline
+   between them on a display that is not at 1:1 - Windows at 125%, a
+   fractional device pixel ratio, a browser at 110% zoom. Each section's
+   height lands on a fraction of a device pixel, the next one starts on
+   the far side of that fraction, and the sliver in between belongs to
+   neither: what shows through it is the body, which is near-black. One
+   dark line across the page at the exact point the design is trying to
+   say nothing is happening.
+
+   So every panel paints one pixel of its own colour above its own top
+   edge. Each is a higher z-index than the one before it (the stack is
+   ordered above), so a panel's shadow always lands over its predecessor
+   and fills that sliver with the colour the join is meant to be. It is a
+   shadow, so it takes up no space and moves nothing.
+
+   The opener paints black for the same reason, against the hero above
+   it - invisible where the two already agree, and there if the same
+   rounding ever bites at that join. */
+/* And the reserved band under the founders hold, which is the same
+   problem one size up.
+
+   That section pins for a screen's worth of scroll (pin: true in
+   lib/about-motion.ts), and a pin moves the element into a generated
+   .pin-spacer whose job is to hold the space the pinned panel is not
+   occupying. The spacer is GSAP's own element: it has no background, so
+   for the whole of the hold there is a screen-tall band of nothing
+   between two cream panels, and what shows through it is the near-black
+   body. The panel covers it while it is fixed and stops covering it the
+   moment the pin releases, which is exactly when the join is handing
+   over to the section below - so the hand-off happened across a dark
+   edge that nothing in the design puts there.
+
+   The spacer takes the panel's own cream. Scoped to this stack so no
+   other pin on the site inherits a background it did not ask for. */
+.ab-stack > .pin-spacer{ background:#f4f2ec; }
+
+.ab-intro{ box-shadow:0 -1px 0 #0b0b0c; }
+.ab-founders,
+.ab-people,
+.ab-drives,
+.ab-space{ box-shadow:0 -1px 0 #f4f2ec; }
+/* the crowd is not in that list any more. It has no background of its own
+   now, and a cream hairline above its top edge would be drawn straight
+   across the symbol field running down behind it - painting the one seam
+   this trick exists to hide. It cannot have a seam to hide either: the
+   colour on both sides of that join is the stack's, one box, so there is
+   no join for a sub-pixel to fall into. */
 
 
 /* ---------- 2 · the intro line + the team artwork ---------- */
@@ -750,6 +807,13 @@
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(17px, 1.65vw, 28px); line-height:1.25;
   letter-spacing:-.01em;
+  /* One line, always. The sentence is the panel's payoff and it is
+     sized off the viewport, so it has the room - but left to wrap it
+     dropped its last word onto a second line of its own, which reads as
+     a line break somebody wrote rather than as a wrap. It goes back to
+     wrapping on the phone, where it genuinely cannot fit (see the 860px
+     block near the foot of this file). */
+  white-space:nowrap;
 }
 .ab-intro__payoff::before{
   content:""; position:absolute; z-index:-1;
@@ -766,7 +830,9 @@
 }
 .ab-intro__payoff em{
   color:var(--accent);
-  font-weight:400; font-style:italic; text-wrap:balance;
+  /* no text-wrap:balance here - it sets text-wrap-mode:wrap, which would
+     override the nowrap above on this span and re-break the sentence */
+  font-weight:400; font-style:italic;
   /* the accent is a light green on near-black, so its shadow is the
      panel colour rather than a darker green - a tinted shadow under a
      saturated colour reads as a printing misregistration */
@@ -1171,7 +1237,10 @@
    statements - and each band was a different width from the one above it,
    so nothing on the page shared an edge with anything else. No one-screen
    lock; the section takes the height it needs. */
-.ab-people{ padding:clamp(90px,13vh,150px) 0 clamp(80px,12vh,140px); }
+/* Tighter at both ends than it was (13vh / 12vh): the photograph inside
+   is bigger now and the room the section needs comes from the picture,
+   not from paper around it. */
+.ab-people{ padding:clamp(72px,9.5vh,120px) 0 clamp(64px,8.5vh,110px); }
 
 /* ---- the frame ----
    The claim across the top, and under it one row: statement, photograph,
@@ -1238,9 +1307,9 @@
    tall - which is also what lets the two statements either side of it
    have a column worth reading in.
 
-   Height first, width from the ratio. It is the height that decides
-   whether the section fits a screen, so that is what is capped against
-   the viewport; the width cap is only there to keep the frame clear of
+   Height first, width from the ratio. It is the height that decides how
+   much of the screen the section fills, so that is what is measured
+   against the viewport; the width cap is only there to keep the frame clear of
    the two columns beside it, and neither ever asks the browser to upscale
    the 1080px source (public/assets/about/people.jpg).
 
@@ -1256,9 +1325,15 @@
 }
 .ab-people__shot img{
   display:block;
-  height:clamp(280px, 42svh, 520px);
+  /* 42svh left the row shorter than the space around it - the section
+     finished on a picture with a screen's worth of paper under it and
+     air above the claim. The frame takes that back: at 54svh the row is
+     tall enough that the section reads as filled rather than as
+     something floating in the middle of the page. Still capped at the
+     source's own width, so it is never upscaled. */
+  height:clamp(300px, 54svh, 620px);
   width:auto; aspect-ratio:5/4;
-  max-width:min(46vw, 1080px);
+  max-width:min(52vw, 1080px);
   /* cover, so the window is filled and the crop is aimed rather than the
      picture being squeezed into a shape it is not */
   object-fit:cover; object-position:center 92%;
@@ -1340,7 +1415,20 @@
    The panel's own top edge is the whole transition now, so this section
    needs no veil and no bleed of its own - just the room to breathe under
    the rounded corner it arrives on. */
-.ab-drives{ padding:clamp(120px,18vh,200px) 0 0; }
+/* Sat off-centre between its neighbours: the top was 18vh and the
+   bottom 13vh, and on top of that the people section above finishes on
+   ~8.5vh of its own padding while the space section below opens on only
+   ~4.5vh of its. Two paddings stack at each seam, so what the eye
+   actually measures is people-bottom + drives-top above the question,
+   and drives-bottom + space-top under the cards - which came out about a
+   hundred pixels heavier at the top.
+
+   So the section's own top padding comes down to roughly its bottom
+   padding less the difference between the two neighbours, and the two
+   gaps land within a few pixels of each other at any viewport height.
+   The crowd used to close this section out, which is why the foot of it
+   had no padding at all until recently. */
+.ab-drives{ padding:clamp(70px,8.5vh,104px) 0 clamp(88px,13vh,150px); }
 .ab-drives__inner{ position:relative; z-index:2; }
 
 /* .is-light - the light-panel token remap - used to be declared here and
@@ -1348,45 +1436,32 @@
    is used by three routes, and a rule in a route stylesheet only exists
    on the route that imports it: on /series and /ai-work the class matched
    nothing and cream type landed on a cream ground. */
-/* The one heading on this page that is written rather than set.
+/* Back on Satoshi, at the page's own heading size.
 
-   It was moved onto the display face at one point on the argument that a
-   single section in a different family reads as a different page. That is
-   true of a heading doing the same job as the others - and this one is
-   not: it asks the reader a question in the second person and answers it
-   with curiosity, transparency and collaboration, over three cards whose
-   names are written in this same script. The handwriting is the section,
-   and taking it off left the cards looking like a flourish applied to a
-   corporate heading.
+   It spent a while in the script face on the argument that the section
+   addresses the reader directly and the three cards under it are written
+   in the same hand. The heading is doing the same job every other h2 on
+   the page does, though, and setting one of them in a different family
+   reads as a different page - so the handwriting stays where it belongs,
+   on the driver names, and the question is set like the rest.
 
-   Centred, too, and for the same reason: this is the one section on the
-   page that addresses the reader directly, and it is built symmetrically
-   around the question, with the three cards ranged under it on the same
-   axis. Every other head on the page stays ranged left.
-
-   The leading and the extra room around it are not spacing, they are the
-   fix for a clipped glyph. Every line of a [data-split] heading is
-   wrapped in its own overflow:hidden mask so it can rise into frame, and
-   that mask is exactly the line box - which this script does not fit
-   inside. Caveat throws its question mark and its ascenders well above
-   the cap height and its descenders well below the baseline, so at the
-   display face's leading of 1.05 the top of the "?" was being sliced off.
-
-   Two things together, because one was not enough: the leading is opened
-   up so the line box itself contains the glyph, and the mask is then
-   padded on all four sides with the same amount taken back out as
-   negative margin. All four, not just the vertical - overflow:hidden
-   clips sideways as well, and a script face's strokes overhang their own
-   advance widths at the ends of a line. Nothing moves; the clip box just
-   stops cutting into the ink. */
+   Centred is a separate decision and it stands: this is the one section
+   built symmetrically, with the three cards ranged under the question on
+   the same axis. Every other head on the page stays ranged left. */
 .ab-drives__title{
-  font-family:var(--f-playful); font-weight:700;
-  font-size:clamp(38px,6vw,88px); line-height:1.24; letter-spacing:0;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(32px,5.2vw,76px); line-height:1.02; letter-spacing:-.03em;
   text-align:center; text-transform:none;
 }
+/* The mask is still padded, just by less than the script needed: every
+   line of a [data-split] heading is wrapped in its own overflow:hidden
+   box that is exactly the line box, and at a leading of 1.02 the sans
+   overshoots it slightly at the ascenders. Padded on all four sides and
+   taken straight back out as negative margin, so nothing moves - the
+   clip box just stops cutting into the ink. */
 .ab-drives__title .line-mask{
-  padding:.3em .14em;
-  margin:-.3em -.14em;
+  padding:.12em .06em;
+  margin:-.12em -.06em;
 }
 /* the heading is centred, the cards keep the full column */
 .ab-drives__inner{ display:flex; flex-direction:column; align-items:center; }
@@ -1394,45 +1469,82 @@
 
 /* The page's heading scale, in one place. Every h2 on this page carrying
    the display face is the same size, so a reader moving down it never has
-   to work out whether a change of type means a change of subject. (What
-   drives us is the deliberate exception above - see the note there.) */
+   to work out whether a change of type means a change of subject. What
+   drives us is set to match; it just keeps its own centred alignment. */
 .ab-people__title,
 .ab-space__title{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(32px,5.2vw,76px); line-height:1.02; letter-spacing:-.03em;
   text-transform:none;
 }
-/* Three of them, side by side, and deliberately plain.
+/* ---- the cards ----
+   Three of them, built out of the site's own card, with one line of
+   colour each.
 
-   They spent a while as a pinboard: hand-drawn radii, a hard offset
-   shadow in a different brand colour each, every card pinned at its own
-   angle and straightening up on hover. It was a lot of treatment for
-   three short definitions, and it put three loud rectangles directly
-   under a heading that is already the one piece of handwriting on the
-   page. The tone lives in the type here - the question above, the script
-   on each name - and the card is just the box it is written in: a dashed
-   accent hairline that firms up when you point at it.
+   The box is the home page's featured-work tile in light: a hairline
+   border on a rounded corner, a faint panel wash, an index in mono, body
+   copy in the muted grey (.tile in globals.css). The name is the part
+   that is this section's own - written in the script, and set in a brand
+   solid handed to the card inline on --c (see DRIVER_COLORS in
+   components/AboutSections.tsx).
 
-   The stroke that used to be ruled under the question went with them,
-   for the same reason. */
+   The colour stays in the type. It washed the whole card for a version -
+   tinted background, coloured border, a hard shadow in the same solid,
+   confetti over the section - and three saturated blocks in the middle
+   of a page that otherwise runs on cream, near-black and one green read
+   as a different site. One written word per card is the whole of it, and
+   the card only picks the colour up anywhere else on hover, where it
+   takes the border for as long as you are pointing at it.
+
+   The index is the page's own device: .ab-people__idx sets the two
+   statements further up in exactly this way, which is what makes the
+   drivers read as the continuation of that argument. It stays on the
+   accent rather than joining in - it is the same mark in all three
+   cards, so it is the thing holding them together while the names are
+   each doing their own thing. */
 .drivers{
   margin-top:clamp(38px,6vh,66px);
   display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2vw,28px);
 }
 .driver{
-  border:1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
-  padding:clamp(18px,1.9vw,26px);
-  transition:border-color .5s var(--ease), transform .5s var(--ease);
+  position:relative;
+  border:1px solid var(--line); border-radius:16px;
+  background:var(--panel);
+  padding:clamp(20px,2.1vw,30px);
+  transition:border-color .45s var(--ease), background-color .45s var(--ease), transform .5s var(--ease);
 }
-.driver:hover{ border-color:var(--accent); transform:translateY(-4px); }
-/* the name is written, not set - same script as the question above it,
-   which is what ties the cards to their own heading */
+.driver:hover{
+  border-color:color-mix(in srgb, var(--c) 60%, transparent);
+  background:color-mix(in srgb, var(--c) 5%, var(--panel));
+  transform:translateY(-4px);
+}
+/* Numeral and name on one line, sharing a baseline - the arrangement
+   .tile__meta uses on the home page. Baseline, not centre: the two are
+   set in different families at very different sizes, and centring them
+   would hang the small one in the middle of the big one's x-height. */
+.driver__top{
+  display:flex; align-items:baseline; gap:.7em;
+  margin-bottom:12px;
+}
+/* The index, set as .ab-people__idx sets it, in the page's own ink
+   rather than the accent: beside a name that is already carrying the
+   card's colour, a green numeral made two coloured things on one line
+   and neither of them led. */
+.driver__idx{
+  font-family:var(--f-mono); font-weight:500; font-style:normal;
+  font-size:11px; letter-spacing:.24em; color:var(--cream);
+}
+/* The one written word on the card, and the only colour on it.
+
+   Bigger than the sans would be set at the same rank: Caveat's lowercase
+   runs small, so matching a 23px display name optically takes about a
+   third more - the same correction .tag-script makes in globals.css. */
 .driver__head{
-  display:block; font-family:var(--f-playful); font-weight:700;
-  font-size:clamp(19px,1.7vw,26px);
-  color:var(--accent); margin-bottom:12px;
+  display:block;
+  font-family:var(--f-playful); font-weight:700;
+  font-size:clamp(24px,2.2vw,34px); line-height:1.05; letter-spacing:0;
+  color:var(--c);
 }
-.driver__head i{ font-style:normal; }
 /* the same body size as .ab-space__copy and the founders' bios - one
    reading size for the whole page */
 .driver p{ font-size:clamp(13px,1vw,15.5px); line-height:1.6; color:var(--muted); }
@@ -1442,19 +1554,66 @@
   .driver:hover{ transform:none; }
 }
 
-/* The crowd is masked at both ends so it melts into the cream it sits on
-   rather than ending on a cut edge - top and bottom both, since the panel
-   below now arrives over it on its own rounded edge. */
-.ab-drives__art{
-  position:relative; z-index:1; margin-top:clamp(44px,7vh,86px);
+/* ---------- the crowd ----------
+   It used to hang off the foot of the drivers section. It is the page's
+   last picture now and sits under the office stage instead, between it
+   and the way onward - so the drivers finish on the three cards and the
+   photograph is the thing the page ends on.
+
+   Masked at both ends so it melts into the cream it sits on rather than
+   ending on a cut edge, top and bottom both: there is a section above it
+   and the footer strip below, and neither seam should be visible. */
+/* Two elements, because the mask cannot be on the thing that paints the
+   cream: a mask eats the element's own background along with its
+   content, and outside the drivers panel there is no longer a cream
+   ancestor behind it to show through the fade. So the outer block owns
+   the colour and the clip, and the mask sits on the inner one. */
+/* No background. The symbol field from the section above runs on down
+   through this block (see .stage__ascii), and the crowd is meant to be
+   standing *on* that field rather than on a cream plate laid over it -
+   which is also why the image itself is a cut-out PNG now. The cream
+   behind both comes from .ab-stack.
+
+   z-index:6 keeps the figures above the field: the field belongs to
+   .ab-space at z-index:5, so everything in here paints after it. */
+.ab-crowd{
+  position:relative; z-index:6; overflow:hidden;
+  background:transparent; padding-top:clamp(44px,7vh,86px);
+}
+.ab-crowd__art{
+  position:relative;
   /* the crowd's heads sit almost flush with the top edge of the source
      image, so the fade-in has to resolve to fully opaque fast - the old
      13% span was still fading when it reached them and read as heads
-     getting cut off rather than the image melting into the white above it */
-  -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,0) 0%, #000 4%, #000 66%, rgba(0,0,0,0) 100%);
-  mask-image:linear-gradient(to bottom, rgba(0,0,0,0) 0%, #000 4%, #000 66%, rgba(0,0,0,0) 100%);
+     getting cut off rather than the image melting into the white above it
+
+     The dissolve at the foot now runs over more than half the picture,
+     starting at 42% rather than 66%. Over a third of the height it read
+     as a fade applied to a photograph - you could see where the effect
+     began, so the crowd was a rectangle with a soft edge sitting on the
+     page. Given half the frame to work in it stops being an edge and
+     becomes the way the picture is made: the figures thin out row by row
+     into the cream the page ends on, and the image belongs to the space
+     under it instead of being dropped into it.
+
+     The middle stops are not decoration. A straight two-stop ramp over
+     this distance puts its half-way point in the middle of the densest
+     part of the crowd and reads as a grey wash lying across the faces;
+     easing it - slow to start, quicker through the last third - keeps
+     the upper half of the dissolve almost clear and spends the alpha
+     where the figures are already sparse. */
+  --crowd-fade:linear-gradient(to bottom,
+    rgba(0,0,0,0) 0%, #000 4%,
+    #000 42%,
+    rgba(0,0,0,.92) 56%,
+    rgba(0,0,0,.72) 68%,
+    rgba(0,0,0,.42) 80%,
+    rgba(0,0,0,.16) 90%,
+    rgba(0,0,0,0) 100%);
+  -webkit-mask-image:var(--crowd-fade);
+  mask-image:var(--crowd-fade);
 }
-.ab-drives__art img{ height:auto; will-change:transform; }
+.ab-crowd__art img{ height:auto; will-change:transform; }
 
 /* ---------- 6 · the space ---------- */
 /* The last and lightest card in the stack: plain white, so the office
@@ -1474,6 +1633,26 @@
      the section's own padding goes straight into --stage-h below, and the
      photograph is the thing worth the room here */
   padding:clamp(32px,4.5vh,64px) 0;
+
+  /* The one panel that does not clip. .ab-panel does, and for every other
+     card that is right - the section's own edge is where its effects end.
+     Here the symbol field is deliberately longer than the section: it
+     carries on past the foot and down behind the crowd, so the two read
+     as one surface rather than as an effect followed by a picture.
+     Nothing else in this section overflows, and the field cannot escape
+     upwards because it is anchored to the section's top edge. */
+  overflow:visible;
+
+  /* How far past the foot the field has to reach: the whole of the crowd
+     block. Computed rather than guessed, because a canvas has to be given
+     a height in CSS before it has a grid at all.
+
+     The crowd image is full-bleed and 1920x730, so it sets at 730/1920 of
+     the viewport width - 38.03vw - and the block adds its own top padding
+     above that. The scrollbar's share of vw makes this a few pixels long;
+     harmless, because the mask is already at zero by the time it gets
+     there. */
+  --crowd-h:calc(38.03vw + clamp(44px,7vh,86px));
 }
 /* The field does not run under either of these. Both boxes are measured at
    runtime and the grid is cleared behind them - permanently, not dimmed:
@@ -1540,7 +1719,14 @@
    the frame plus the rail plus the caption line plus the title block plus
    the padding above, which is why that padding came down with it. */
 .stage{
-  position:relative;
+  /* static, not relative - and that is load-bearing. The symbol field is
+     absolutely positioned, and with .stage as its containing block it
+     could only ever be as tall as the frame's own box allowed. Measured
+     against the section instead, it can be given the section's height
+     plus the crowd's, which is what lets it run on past the foot. Nothing
+     else in here is absolutely positioned: .stage__prog and the frame's
+     ::after both hang off .stage__frame, which has its own position. */
+  position:static;
   /* 50svh, down from 54: the section's title is set at the page's shared
      heading scale now rather than at its own smaller size, and that extra
      line height has to come out of the frame's budget or the rail drops
@@ -1586,16 +1772,66 @@
    density around the frame and give most of the distance to the falloff -
    the field should be unmistakable behind the picture and almost gone by
    the time it reaches the copy. */
+/* ---- and it does not stop at the section ----
+
+   The field used to be a box centred on the frame and clipped to the
+   space section, which ended it on the section's foot - and the crowd,
+   the last picture on the page, then sat underneath it on a plate of flat
+   cream. Two treatments, one under the other, with a line between them:
+   the field read as an effect that had been applied to one section and
+   the crowd read as an image that had been dropped in after it.
+
+   So the layer is measured against the section now, from its top edge
+   down, and it is given the section's height plus the whole of the crowd
+   block (--crowd-h above). The characters carry on behind the figures,
+   and because the crowd is a cut-out PNG with no paper behind it, what
+   fills the gaps between the heads is grid rather than cream. It is one
+   surface from the photograph down to the foot of the page.
+
+   Anchored at top:0 rather than centred, which is what keeps this safe:
+   the section no longer clips (see .ab-space), so a centred box would
+   bleed upward over the drivers card as well. From the top edge it can
+   only ever grow downward, into the block it is meant to reach. */
 .stage__ascii{
   position:absolute; z-index:0; pointer-events:none; display:block;
-  left:50%; top:50%;
-  width:100vw; height:132svh;
-  transform:translate(-50%,-50%);
+  left:0; top:0;
+  width:100%; height:calc(100% + var(--crowd-h));
   opacity:.92;
-  -webkit-mask-image:radial-gradient(ellipse 78% 92% at 50% 46%,
-    #000 0%, rgba(0,0,0,.9) 38%, rgba(0,0,0,.42) 70%, transparent 100%);
-  mask-image:radial-gradient(ellipse 78% 92% at 50% 46%,
-    #000 0%, rgba(0,0,0,.9) 38%, rgba(0,0,0,.42) 70%, transparent 100%);
+
+  /* Where the ellipse sits: half the section's own height from the top,
+     which is the frame, and not the middle of the canvas - the canvas has
+     the crowd's height hanging off the bottom of it now, and centring on
+     that would drag the densest part of the field down out of the
+     photograph it belongs to. */
+  --ascii-focus:calc((100% - var(--crowd-h)) / 2);
+
+  /* Two layers, unioned (mask-composite defaults to add).
+
+     The first is the vignette that was always here, with its radii
+     restated as lengths - 78vw by 120svh, which is what 78% by 92% of the
+     old box came out as. Written as percentages they would now be read
+     against a box that is half as tall again, and the field would go flat
+     and even across the whole thing.
+
+     The second is what carries the grid through the crowd. The ellipse
+     alone is down to a fifth of its density by the time it reaches the
+     figures - enough to see, not enough to stand on - so this props the
+     lower run back up to a steady, quiet level and then takes it out over
+     the last third of the picture. The page still finishes on plain
+     cream; it simply arrives there through the crowd instead of at a
+     hard edge above it. */
+  --ascii-mask:
+    radial-gradient(ellipse 78vw 120svh at 50% var(--ascii-focus),
+      #000 0%, rgba(0,0,0,.9) 38%, rgba(0,0,0,.42) 70%, transparent 100%),
+    linear-gradient(to bottom,
+      transparent calc(var(--ascii-focus) + 16svh),
+      rgba(0,0,0,.30) calc(100% - var(--crowd-h)),
+      rgba(0,0,0,.30) calc(100% - var(--crowd-h) * .42),
+      transparent 100%);
+  -webkit-mask-image:var(--ascii-mask);
+  mask-image:var(--ascii-mask);
+  -webkit-mask-composite:source-over;
+  mask-composite:add;
   /* it types itself in rather than appearing already there, which is what
      keeps it part of the section arriving instead of a thing that
      switched on */
@@ -1814,6 +2050,8 @@
      halves of the list are stacked under him instead */
   .ab-intro__payoff{
     order:3; position:static; margin-top:clamp(14px, 2.4svh, 30px);
+    /* the sentence is wider than a phone at any readable size */
+    white-space:normal;
   }
   /* the field of words thins out: at this size the rows are only three
      or four tokens wide and start reading as words rather than as tone */

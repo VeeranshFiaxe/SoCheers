@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./series.css";
-import { Nav, Overlays } from "@/components/Chrome";
 import SeriesMotion from "@/components/SeriesMotion";
 import SeriesStory from "@/components/SeriesStory";
 import { SeriesClose, SeriesFeed } from "@/components/SeriesFeed";
@@ -50,9 +49,6 @@ export const metadata: Metadata = {
 export default function Series() {
   return (
     <>
-      <Overlays />
-      <Nav variant="sub" active="/series" />
-
       <main id="top" className="s-page">
         {/* The episode rail. Fixed, hairline, and only alive while the
             story is - see episodeRail() in lib/series-motion.ts. */}

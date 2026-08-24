@@ -1,22 +1,11 @@
-import { Loader, Nav, Overlays } from "@/components/Chrome";
 import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
-import Overture from "@/components/Overture";
 import { Awards, Clients, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
 
 export default function Home() {
   return (
     <>
-      <Overlays />
-      <Loader />
-      {/* The opening sequence, over the top of all of it. Once per tab and
-          never with reduced motion - it decides that itself, and lib/motion.ts
-          asks the same question so the two never disagree about who owns the
-          screen. */}
-      <Overture />
-      <Nav />
-
       {/* The footer is behind the page, not below it: it is a fixed room
           the height of the viewport that <main> is sitting on top of, and
           the last screen of scroll lifts the page off it. Which means the

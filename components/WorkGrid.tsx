@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import {
   WORK_BROWSE, WORK_CATEGORIES, catLabel, type CategoryId, type WorkAsset,
 } from "@/lib/work-content";
@@ -131,17 +132,18 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
                clickable and four of them are is worse than a wall where
                the four announce themselves. */
             return a.slug ? (
-              <a
+              <Link
                 className={a.pending ? "wk-tile is-pending" : "wk-tile"}
                 key={a.publicId}
                 href={`/work/${a.slug}`}
+                prefetch
                 data-cursor="Open"
               >
                 {inner}
                 <span className="wk-tile__go" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 18L18 6M9 6h9v9" /></svg>
                 </span>
-              </a>
+              </Link>
             ) : (
               <figure
                 className={a.pending ? "wk-tile is-pending" : "wk-tile"}

@@ -694,7 +694,7 @@ export function initOverture(
          still the switch: clicking it runs the whole thing again. */
       lamp.tabIndex = 0;
       lamp.setAttribute("aria-label", "Play the opening sequence again");
-      lamp.setAttribute("data-cursor", "Again?");
+      lamp.setAttribute("data-cursor", "Light it");
       on(lamp, "click", () => {
         document.dispatchEvent(new CustomEvent(OVERTURE_REPLAY));
       });

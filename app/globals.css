@@ -250,7 +250,13 @@ em{ font-style:italic; }
   will-change:transform;
 }
 
-.loader{ position:fixed; inset:0; z-index:9990; background:var(--bg); display:grid; place-items:center; }
+/* A tab that has already seen the opening does not get the door - and it
+   has to not get it before the first paint, not after hydration, or the
+   answer arrives a full screen of black too late. The class is set by an
+   inline script in the document head (app/layout.tsx) off the same
+   sessionStorage key lib/overture.ts owns. */
+html.sc-seen .loader{ display:none; }
+.loader{ position:fixed; inset:0; z-index:9992; background:var(--bg); display:grid; place-items:center; }
 .loader__inner{ text-align:center; position:relative; z-index:2; }
 /* The mark itself rather than the name set in a typeface: this is the same
    logo (components/SoCheersLockup.tsx, geometry in lib/logo-paths.ts) that
@@ -357,7 +363,21 @@ em{ font-style:italic; }
    black and the black-line version over cream - which is exactly the two
    ways the design book prints it. */
 .nav__logo-mark{ height:46px; width:auto; color:var(--nav-ink); transition:color .35s var(--ease); }
-a.nav__logo{ display:inline-flex; align-items:center; }
+/* A button, not a link. The mark is the switch - it plays the opening
+   sequence, on every page - and the way home is the Home tab in the row
+   beside it (components/Nav.tsx).
+
+   Every one of these declarations is undoing something the browser draws
+   on a <button> and nothing else: the grey face, the bevel, the padding
+   it reserves for a label. The header has a logo in it, not a control. */
+.nav__logo{
+  display:inline-flex; align-items:center;
+  appearance:none; -webkit-appearance:none;
+  background:none; border:0; padding:0; margin:0;
+  color:inherit; font:inherit; line-height:0; cursor:none;
+}
+@media (hover:none){ .nav__logo{ cursor:pointer; } }
+.nav__logo:focus-visible{ outline:2px solid var(--accent); outline-offset:6px; border-radius:8px; }
 /* The hand-off, from both ends.
 
    While the overture is actually playing, the nav's mark is held at zero:
@@ -410,9 +430,35 @@ a.nav__logo{ display:inline-flex; align-items:center; }
    see the note in components/Chrome.tsx */
 .nav__links a:hover{ background:var(--nav-island-hover); }
 .nav__links a:hover .roll__in{ transform:translateY(-100%); }
-/* the page you are on, filled in - the switcher's own active state */
-.nav__links a[aria-current="page"]{ background:var(--accent); color:#04140b; }
+/* ---- the indicator ----
+   The page you are on is filled in green, and it is one object doing it
+   rather than a background switching from one link to another: the header
+   is rendered once outside the route (app/layout.tsx), so this element
+   survives the navigation and can travel from the tab you left to the tab
+   you arrived at instead of repainting in place.
+
+   Its box is written in JS - components/Nav.tsx measures the current tab
+   and writes width, height and a translate - because the width it has to
+   take is the width of a word, and there is no CSS that knows that. It
+   sits behind the labels, which is the only reason the links in here need
+   a stacking order at all. */
+.nav__pill{
+  position:absolute; left:0; top:0; z-index:0;
+  border-radius:999px; background:var(--accent);
+  opacity:0; pointer-events:none;
+  will-change:transform, width;
+  transition:transform .5s var(--ease), width .5s var(--ease),
+             height .5s var(--ease), opacity .3s var(--ease);
+}
+.nav__links a,
+.nav__links .nav__soon{ position:relative; z-index:1; }
+/* The ink flips on the same beat the green arrives under it. Slower and
+   the tab you left reads as dark text on nothing for a moment; faster and
+   the one you are going to goes dark before anything is behind it. */
+.nav__links a[aria-current="page"]{ color:#04140b; }
 .nav__links a[aria-current="page"] .roll__in > span:last-child{ color:#04140b; }
+/* nothing to hover onto - the tab is already filled */
+.nav__links a[aria-current="page"]:hover{ background:transparent; }
 /* A tab with nowhere to go yet (AI Work). It reads as one of the row, one
    step back: the page behind it does not exist, so it should not look like
    something you failed to click. */
@@ -916,7 +962,15 @@ html.is-pinned .who{ margin-top:-100vh; }
   letter-spacing:-.01em; color:var(--muted);
   transition:color .35s, transform .45s var(--ease);
 }
-.cmarquee__track span:hover{ color:var(--accent); transform:scale(1.14) rotate(-2deg); }
+/* The name under the cursor takes its own colour out of the design
+   book's solids - components/Sections.tsx deals them out and writes
+   --brand onto each span. The fallback is the accent, which is what this
+   row did for every name before: a span that somehow arrives without a
+   brand still lights up rather than staying grey. */
+.cmarquee__track span:hover{
+  color:var(--brand, var(--accent));
+  transform:scale(var(--pop, 1.14)) rotate(var(--tilt, -2deg));
+}
 .cmarquee__track .s{ color:var(--accent); font-size:.5em; }
 .cmarquee__track .s:hover{ transform:none; }
 
@@ -2006,4 +2060,10 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   .foot__ask-title{ font-size:clamp(21px, 5.6vw, 28px); }
   .foot__ask{ gap:12px; }
   .foot__ask .contact__cta{ font-size:14px; padding:11px 22px; }
+}
+
+/* The indicator is a position, not a journey, for anyone who asked for
+   less movement - see .nav__pill above. */
+@media (prefers-reduced-motion: reduce){
+  .nav__pill{ transition:opacity .3s linear; }
 }

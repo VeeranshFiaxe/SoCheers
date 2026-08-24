@@ -6,8 +6,11 @@
    something readable in under a minute, and a page that keeps
    introducing new treatments is a page that keeps asking to be studied.
 
-   Site palette throughout: black ground, cream type, the green accent,
-   and the off-white the About page's panels use for the light half.
+   Site palette throughout, and one ground the whole way down: the dark
+   base, cream type, the green accent. The story and the wall used to be
+   .is-light panels on the About page's off-white, which turned the
+   bottom two thirds of an AI page into a sheet of paper - the films and
+   the stills are the only light on this page now.
    ============================================================ */
 
 .ai-page{ position:relative; background:var(--bg); }
@@ -37,29 +40,53 @@
 }
 .ai-hero__in{ position:relative; z-index:2; width:100%; }
 .ai-hero__copy{
-  position:relative; z-index:2; max-width:min(46ch, 52%);
-  /* The copy sits in front of a figure and eighteen bubbles, and on the
-     odd narrow viewport one of them will pass behind a line of it. The
-     type carries its own shadow (below) rather than the column carrying
-     a scrim: a panel behind the headline would put a hard rectangle in
-     the middle of the composition to solve a problem that only happens
-     at a few widths. */
+  position:relative; z-index:2;
+  /* No measure on the column itself - the two things in it want
+     different widths and the narrower of them was deciding for both. The
+     headline is one line per sentence and needs the room to be; the lede
+     is running copy and keeps its own measure below.
+
+     The copy sits in front of a figure and eighteen bubbles, and now that
+     the headline is wider it will cross the figure at most widths rather
+     than at a few. The type carries its own shadow (below) rather than
+     the column carrying a scrim: a panel behind the headline would put a
+     hard rectangle in the middle of the composition. */
   padding:0 clamp(14px,2vw,26px) clamp(10px,1.6vw,22px) 0;
 }
-@media (max-width:1100px){ .ai-hero__copy{ max-width:none; } }
 
-/* The break between the two sentences is a <br> in the markup, so the box
-   only has to be wide enough for the longer of them (24ch) - and balancing
-   is off, since balance would pull "make it" down onto the accent line. */
+/* Two lines, one sentence each, and it is held to that rather than left
+   to the wrap to decide: the break between them is the <br> in the
+   markup and nothing else is allowed to break.
+
+   Which is what makes the size a ratio rather than a taste. The longer
+   sentence sets about 11.3em wide in Satoshi Bold at this tracking, so
+   at 5.4vw it asks for roughly 61% of the viewport - comfortably inside
+   the wrap's measure at every width down to the breakpoint below, with
+   enough headroom that a font swap or a fallback face cannot push it
+   into an overflow. The cap is where the ratio stops and the type simply
+   stops growing.
+
+   Below 700px there is no width for a ratio to work in, so the nowrap
+   comes off and the headline is allowed to set as four lines, larger,
+   the way a phone wants it. */
 .ai-hero__title{
-  margin-top:26px; max-width:25ch;
+  margin-top:26px;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px,4.6vw,76px); line-height:1.04; letter-spacing:-.035em;
-  text-shadow:0 2px 30px rgba(11,11,12,.75);
+  font-size:min(5.2vw, 84px); line-height:1.04; letter-spacing:-.035em;
+  white-space:nowrap;
+  text-shadow:0 2px 30px rgba(11,11,12,.75), 0 1px 8px rgba(11,11,12,.55);
+}
+@media (max-width:700px){
+  .ai-hero__title{ white-space:normal; font-size:clamp(32px,8.4vw,46px); }
 }
 .ai-hero__title em{ color:var(--accent); }
+
+/* Two lines as well, and balanced so they are two even ones rather than
+   a long line and a remainder. The measure is what decides the count:
+   the sentence runs about 128 characters, so a 64ch column is two of
+   them. */
 .ai-hero__lede{
-  margin-top:clamp(20px,3vh,32px); max-width:46ch;
+  margin-top:clamp(20px,3vh,32px); max-width:64ch; text-wrap:balance;
   font-size:clamp(15px,1.2vw,19px); line-height:1.6; color:var(--muted);
   text-shadow:0 2px 24px rgba(11,11,12,.8);
 }
@@ -72,9 +99,31 @@
    for that (see components/AiFigure.tsx), so the crop is framing rather
    than damage. Centred a little right of middle: dead centre would put
    his head directly over the end of the headline. */
+/* Centred on 80% rather than 58%, and a little shorter with it.
+
+   He moved because the headline grew: it is one line per sentence now
+   and the longer of the two runs to about 64% of the viewport, which is
+   straight through where he used to stand. The copy is the thing that
+   cannot move - it is set into the bottom-left corner and the whole
+   bubble fan is written around leaving that corner clear - so the figure
+   goes right instead, until his left edge clears the end of the longest
+   line with air to spare.
+
+   The height is what sizes him, not the width: the drawing is taller
+   than its box is wide, so it is fitted by height and the width only has
+   to be big enough not to bind. Which is also why coming down from 72%
+   to 66% is what buys the room - it narrows the drawing by the same
+   proportion, and 80% of the viewport is as far right as he can go
+   before his own right edge starts leaving the frame.
+
+   The 42vw in that same min() is the tall-and-narrow case, and it is the
+   only reason the height knows anything about the width: a 1150 by 950
+   window sizes him off 950 and stands him in a frame 1150 wide, which is
+   where he grows back into the headline and off the right edge at the
+   same time. It binds nowhere else. */
 .ai-stage__man{
-  position:absolute; left:58%; bottom:0;
-  width:min(46vw,620px); height:min(72%,660px);
+  position:absolute; left:80%; bottom:0;
+  width:min(46vw,620px); height:min(66%,600px,42vw);
   transform:translateX(-50%);
 }
 .ai-figure{
@@ -218,10 +267,20 @@
    The min-height on the child is still required - it stops the item
    itself refusing to shrink inside the track - but on its own it was
    never enough. */
+/* The height is not animated, and that is deliberate - see choose() in
+   components/AiGate.tsx. A panel that takes three quarters of a second to
+   grow is a document that is too short to scroll into for three quarters
+   of a second, and the growth itself happens below the fold with a scroll
+   travelling over it: nobody has ever seen it. So the row opens at once
+   and the panel fades up, and the arrival is carried by the story's own
+   type coming in as the reader lands on it.
+
+   The 0fr row is still what does the collapsing, because it is also what
+   makes the page end at the gate before a door is picked. */
 .ai-hold{
   overflow:hidden;
   display:grid; grid-template-rows:minmax(0,1fr);
-  transition:grid-template-rows .75s var(--ease), opacity .5s var(--ease);
+  transition:opacity .5s var(--ease);
 }
 .ai-hold > *{ min-height:0; }
 .ai-hold[data-collapsed]{ grid-template-rows:minmax(0,0fr); opacity:0; }
@@ -230,24 +289,72 @@
 /* ============================================================
    THE STORY
    ============================================================ */
-.ai-story{ background:#f4f2ec; padding:clamp(80px,13vh,150px) 0; }
+.ai-story{ background:var(--bg); padding:clamp(80px,13vh,150px) 0; }
+/* One column, always - the heading, then the portrait centred in the
+   measure, then the beats running above and below it. */
 .ai-story__in{ max-width:760px; }
+
+.ai-story__head{ text-align:center; }
 .ai-story__title{
-  margin-top:24px;
+  max-width:680px;
+  margin:24px auto 0;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px,4.6vw,62px); line-height:1.02; letter-spacing:-.03em;
-  text-wrap:balance;
+  font-size:clamp(26px,4vw,44px); line-height:1.1; letter-spacing:-.03em;
+  text-align:center; text-wrap:balance;
 }
-.ai-story__beats{ margin-top:clamp(34px,5vh,56px); display:flex; flex-direction:column; gap:clamp(20px,3vh,32px); }
-/* No index down the left. Numbering six paragraphs turns a story into a
+
+/* ---------- the portrait ----------
+   Composited into the page rather than placed on it. The delivered PNG is
+   a figure on near-black with a warm/green glow behind him and the page's
+   own ground is #0b0b0c, so `screen` puts his black into the page's black
+   and there is nothing left to draw an edge with. The mask then takes the
+   remaining glow out at the bottom and the two sides, which is what stops
+   the last visible thing being a rectangle.
+
+   No border, no radius, no shadow, no caption: the only other framed
+   objects on this page are the tiles in the wall of work, and this is
+   deliberately not one of those.
+
+   ---- centred ----
+   A plain centred block, not a float: a browser lays out a line of text
+   as one contiguous run, so it can only wrap around the open side of a
+   single float - there is no "flow into both remaining gutters" mode to
+   reach for here, which is what made the earlier split-image attempt at
+   this fall apart. Centred and full-stopped is the honest version: the
+   beats run above it and below it instead of beside it. */
+.ai-story__figure{
+  position:relative;
+  width:clamp(220px,28vw,320px);
+  margin:clamp(24px,4vh,44px) auto;
+  pointer-events:none;
+}
+.ai-story__figure img{
+  display:block; width:100%; height:auto;
+  mix-blend-mode:screen;
+  -webkit-mask-image:
+    linear-gradient(to bottom, #000 58%, rgba(0,0,0,.45) 82%, transparent 99%),
+    linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+  mask-image:
+    linear-gradient(to bottom, #000 58%, rgba(0,0,0,.45) 82%, transparent 99%),
+    linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
+  -webkit-mask-composite:source-in;
+  mask-composite:intersect;
+}
+
+.ai-story__beats{ margin-top:clamp(28px,4vh,44px); }
+/* No index down the left. Numbering nine paragraphs turns a story into a
    list of points, and the whole reason this is a story is that a list of
    points was the wrong way to make the argument. */
 .ai-beat{
   font-size:clamp(16px,1.3vw,19px); line-height:1.66; color:var(--muted);
+  text-align:center;
 }
-/* The last beat is the turn, and it is set as the page's own voice rather
-   than as more narration. */
-.ai-beat:last-child{ color:var(--cream); font-size:clamp(18px,1.6vw,23px); line-height:1.5; }
+.ai-beat + .ai-beat{ margin-top:clamp(20px,3vh,32px); }
+/* The two beats that stop narrating and start arguing - the one that says
+   what AI is without taste, and the one that says what it is with the
+   right hands. They are set as the page's own voice rather than as more
+   narration. Marked in lib/ai-content.ts, not guessed at from position. */
+.ai-beat[data-lift]{ color:var(--cream); font-size:clamp(18px,1.6vw,23px); line-height:1.5; }
 
 .ai-story__out{
   margin-top:clamp(38px,6vh,64px); padding-top:26px; border-top:1px solid var(--line);
@@ -256,14 +363,18 @@
 .ai-story__outline{ font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
 .ai-story__go{
   display:inline-flex; align-items:center; gap:9px; padding:13px 24px;
-  border-radius:999px; background:var(--cream); color:#f4f2ec;
+  border-radius:999px; background:var(--cream); color:var(--bg);
   font-size:14px; font-weight:500;
+}
+
+@media (max-width:420px){
+  .ai-story__figure{ width:min(230px,72%); }
 }
 
 /* ============================================================
    THE WALL
    ============================================================ */
-.ai-work{ background:#f4f2ec; padding:clamp(70px,11vh,130px) 0 clamp(90px,15vh,170px); }
+.ai-work{ background:var(--bg); padding:clamp(70px,11vh,130px) 0 clamp(90px,15vh,170px); }
 
 .ai-tabs{
   margin-top:26px; display:flex; gap:8px; flex-wrap:wrap;
@@ -276,9 +387,8 @@
   display:inline-flex; align-items:baseline; gap:6px;
   transition:border-color .35s var(--ease), color .35s var(--ease), background .35s var(--ease);
 }
-.ai-tab sup{ font-family:var(--f-mono); font-weight:500; font-size:9px; letter-spacing:.1em; opacity:.7; }
 .ai-tab:hover{ border-color:var(--cream); color:var(--cream); }
-.ai-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:#f4f2ec; }
+.ai-tab[aria-selected="true"]{ background:var(--cream); border-color:var(--cream); color:var(--bg); }
 @media (hover:none){ .ai-tab{ cursor:pointer; } }
 
 /* Columns, not grid - see the note at the top of components/AiGrid.tsx
@@ -306,11 +416,12 @@
 .ai-tile:hover img{ transform:scale(1.04); }
 
 /* ---------- films ---------- */
-/* Nothing is fetched for a film until it is asked for, so what sits in
-   the tile until then is the title, set as a card. It is treated as a
-   piece of type rather than as a placeholder for a missing image: a wall
-   of dark cards among the stills reads as an index of the films, which
-   is what it is. */
+/* A film tile shows a frame of the film and plays it on hover. The frame
+   is seeked out of the file itself rather than encoded as a poster - see
+   the note at the top of components/AiGrid.tsx - which means there is a
+   moment between the tile arriving and the frame existing. The card
+   below covers both states: opaque until the frame is decoded, a scrim
+   over the picture afterwards. */
 .ai-tile__film{
   position:absolute; inset:0; z-index:1;
   width:100%; height:100%; object-fit:cover; display:block;
@@ -332,6 +443,28 @@
    the thing it had just started. */
 .ai-tile[data-playing] .ai-tile__card{ opacity:0; }
 .ai-tile__card:hover{ background:linear-gradient(165deg, #1c1c21, #0d0d0f 72%); }
+
+/* Once the frame is there, the card stops being the tile and becomes a
+   scrim on it: dark enough at the top and bottom to keep the label and
+   the title legible over whatever the frame happens to be, and out of
+   the way through the middle. */
+.ai-tile[data-thumb] .ai-tile__card{
+  background:linear-gradient(
+    180deg,
+    rgba(6,6,7,.62) 0%,
+    rgba(6,6,7,.14) 38%,
+    rgba(6,6,7,.20) 60%,
+    rgba(6,6,7,.80) 100%
+  );
+}
+.ai-tile[data-thumb] .ai-tile__card:hover{
+  background:linear-gradient(180deg, rgba(6,6,7,.34) 0%, rgba(6,6,7,.06) 45%, rgba(6,6,7,.55) 100%);
+}
+/* The stills lean in on hover; the films should do the same rather than
+   sitting flat next to them. The frame moves, not the type. */
+.ai-tile__film{ transition:transform .8s var(--ease); }
+.ai-tile[data-thumb]:hover .ai-tile__film{ transform:scale(1.04); }
+.ai-tile[data-playing] .ai-tile__film{ transform:none; }
 @media (hover:none){ .ai-tile__card{ cursor:pointer; } }
 
 .ai-tile__kind{
@@ -368,6 +501,6 @@
 @media (hover:none){ .ai-tile__cap{ opacity:1; transform:none; } }
 
 @media (prefers-reduced-motion:reduce){
-  .ai-tile img{ transition:none; }
-  .ai-tile:hover img{ transform:none; }
+  .ai-tile img, .ai-tile__film{ transition:none; }
+  .ai-tile:hover img, .ai-tile[data-thumb]:hover .ai-tile__film{ transform:none; }
 }

@@ -55,7 +55,7 @@ const CAT_LABEL = new Map<string, string>(
 export const catLabel = (tag: string) => CAT_LABEL.get(tag) ?? tag;
 
 /* How long each pinned frame holds before the stage moves itself on.
-   Six seconds: long enough to read the brand, the credits row and the
+   Five seconds: long enough to read the brand, the credits row and the
    line under them at a glance, which is the most this composition asks
    anyone to do, and short enough that all five have had their turn
    before a reader who is going to scroll has scrolled.
@@ -63,7 +63,7 @@ export const catLabel = (tag: string) => CAT_LABEL.get(tag) ?? tag;
    It lives here rather than in the component because it is a pacing
    decision the client will have an opinion about, and this file is
    where every other such decision on the Work tab already is. */
-export const PINNED_DWELL = 6000;
+export const PINNED_DWELL = 5000;
 
 /* ------------------------------------------------------------------
    SECTION A - the pinned stage.

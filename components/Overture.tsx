@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { OVERTURE_DONE, OVERTURE_REPLAY, shouldRunOverture } from "@/lib/overture";
+import {
+  OVERTURE_CUE,
+  OVERTURE_DONE,
+  OVERTURE_REPLAY,
+  overtureCued,
+  shouldRunOverture,
+} from "@/lib/overture";
 import { initOverture } from "@/lib/overture-motion";
 import { OVERTURE_FINAL, OVERTURE_WALLS } from "@/lib/content";
 import {
@@ -341,7 +347,7 @@ export default function Overture() {
   const [run, setRun] = useState(0);
 
   useEffect(() => {
-    const root = document.querySelector<HTMLElement>("[data-overture]");
+    const root = document.querySelector<HTMLElement>('[data-overture]');
     if (!root) return;
 
     const replay = () => setRun((n) => n + 1);
@@ -363,19 +369,33 @@ export default function Overture() {
        up and say the sequence is over: the hero underneath is a complete
        page on its own, and losing the intro is not the same as losing the
        site. */
-    let teardown: () => void;
-    try {
-      root.removeAttribute("data-idle");
-      teardown = initOverture(root, { instant });
-    } catch (err) {
-      console.error("[socheers] overture failed to build", err);
-      root.setAttribute("data-idle", "");
-      document.dispatchEvent(new CustomEvent(OVERTURE_DONE));
-      teardown = () => {};
+    let teardown = () => {};
+    const build = () => {
+      try {
+        root.removeAttribute('data-idle');
+        teardown = initOverture(root, { instant });
+      } catch (err) {
+        console.error('[socheers] overture failed to build', err);
+        root.setAttribute('data-idle', '');
+        document.dispatchEvent(new CustomEvent(OVERTURE_DONE));
+        teardown = () => {};
+      }
+    };
+
+    /* The first run does not start here, it starts when the loader says so
+       (components/Loader.tsx): the count is the wall images being fetched,
+       and building the room before they land is what used to make the
+       first fall stutter. A replay has no such wait - the assets are in
+       cache by definition, and the cue has long since fired. */
+    if (run > 0 || overtureCued()) {
+      build();
+    } else {
+      document.addEventListener(OVERTURE_CUE, build, { once: true });
     }
 
     return () => {
       document.removeEventListener(OVERTURE_REPLAY, replay);
+      document.removeEventListener(OVERTURE_CUE, build);
       teardown();
     };
   }, [run]);

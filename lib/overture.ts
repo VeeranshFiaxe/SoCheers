@@ -49,3 +49,33 @@ export function markOvertureSeen() {
     /* nothing to do - the sequence simply plays again next time */
   }
 }
+
+/* ------------------------------------------------------------------
+   The cue.
+
+   The percentage loader and the overture are one opening, not two: the
+   loader is what the first visit looks like *while the room is being
+   built* - the wall images fetched and decoded behind the black, so the
+   sequence does not stutter on the first fall and the hero underneath is
+   already in cache by the time the camera arrives.
+
+   So the overture no longer builds itself on mount. It waits here, and
+   components/Loader.tsx fires this when the count has landed and its
+   sheet is over the screen. The flag matters as much as the event: the
+   two mount in the same commit and the loader can be finished (the
+   already-seen path bails synchronously) before the overture has
+   subscribed, and a cue nobody heard would leave the room dark forever. */
+export const OVERTURE_CUE = "socheers:overture-cue";
+
+let cued = false;
+
+export function cueOverture() {
+  if (cued) return;
+  cued = true;
+  document.dispatchEvent(new CustomEvent(OVERTURE_CUE));
+}
+
+/* already fired - build now rather than wait for a second one */
+export function overtureCued(): boolean {
+  return cued;
+}

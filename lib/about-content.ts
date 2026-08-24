@@ -16,8 +16,14 @@ export const ABOUT_IMG = {
      as the two frames come together (see .founders__duo in about.css). */
   foundersDuo: "/assets/about/founders-duo.webp",
   people: "/assets/about/people.jpg",
-  /* the pop-art crowd, cropped out of the client's own reference slide */
-  crowd: "/assets/about/crowd.jpg",
+  /* the pop-art crowd, cropped out of the client's own reference slide -
+     the cut-out version, with the white paper behind the figures knocked
+     out to transparency. It is the last picture on the page and it sits
+     on the panel's own cream, so a rectangle of near-white was always a
+     faintly visible plate under it; with the background gone the crowd
+     stands directly on the page and the long dissolve in .ab-crowd__art
+     has silhouettes to work on rather than a block. */
+  crowd: "/assets/about/crowd.png",
 } as const;
 
 /* The hero copy. The client's own line is back over the film - it was
@@ -162,9 +168,13 @@ export const SPACE_COPY =
    is instead of hedging. That is the whole point of the copy above it;
    naming them is what makes the joke land.
 
-   Rooms and people alternate down the list and no room sits next to
-   itself, because the rail shows every thumbnail at once and a run of
-   near-identical doorways in it reads as a mistake.
+   The people come first and the rooms follow. The section is about the
+   place, but a rail that opens on four empty doorways is a property
+   listing - so the offsite, the run, the birthday and Khaugalli day lead
+   it, and the rooms are what you find further along once the frame has
+   already shown you who is in them. No room sits next to itself: the
+   rail shows every thumbnail at once, and a run of near-identical doors
+   in it reads as a mistake.
 
    PLACEHOLDERS. Every one of these is a portrait phone shot standing in
    until the real horizontal photography arrives - which is what `pos` is
@@ -182,14 +192,14 @@ export type SpaceShot = {
 };
 
 export const SPACE_SHOTS: SpaceShot[] = [
-  { src: "/assets/about/space-02.jpg", alt: "The Jidhar meeting room at SoCheers, seen through its glass front", cap: "Jidhar", pos: "center 36%" },
   { src: "/assets/about/people-offsite.webp", alt: "The whole of SoCheers on its twelfth-birthday offsite", cap: "The offsite, all of us" },
-  { src: "/assets/about/space-05.jpg", alt: "The Kidhar meeting room at SoCheers, behind fluted glass", cap: "Kidhar", pos: "center 34%" },
   { src: "/assets/about/people-run.webp", alt: "The SoCheers team after a morning run, medals up", cap: "The morning run" },
-  { src: "/assets/about/space-07.jpg", alt: "The Idhar meeting room at SoCheers, hexagon tile beside the door", cap: "Idhar", pos: "center 32%" },
   { src: "/assets/about/people-cake.webp", alt: "A birthday in the SoCheers kitchen", cap: "A birthday, in the kitchen" },
-  { src: "/assets/about/space-09.jpg", alt: "The Udhar meeting room at SoCheers, teal hexagons through the door", cap: "Udhar", pos: "center 30%" },
   { src: "/assets/about/people-khaugalli.webp", alt: "Khaugalli day at the SoCheers office", cap: "Khaugalli day", pos: "center 42%" },
-  { src: "/assets/about/space-01.jpg", alt: "The floor outside Jidhar, desks either side", cap: "Jidhar, from the floor", pos: "center 38%" },
-  { src: "/assets/about/space-08.jpg", alt: "The doorway into Udhar at SoCheers", cap: "Udhar, the way in", pos: "center 30%" },
+  { src: "/assets/about/space-christmas.jpg", alt: "Cutting a snowman-and-Santa cake at the SoCheers Christmas party", cap: "The Christmas cake" },
+  { src: "/assets/about/space-traditions.jpg", alt: "The whole SoCheers office dressed up for Diwali, under the fairy lights", cap: "Diwali, together" },
+  { src: "/assets/about/space-02.jpg", alt: "The Jidhar meeting room at SoCheers, seen through its glass front", cap: "Jidhar", pos: "center 36%" },
+  { src: "/assets/about/space-05.jpg", alt: "The Kidhar meeting room at SoCheers, behind fluted glass", cap: "Kidhar", pos: "center 34%" },
+  { src: "/assets/about/space-07.jpg", alt: "The Idhar meeting room at SoCheers, hexagon tile beside the door", cap: "Idhar", pos: "center 32%" },
+  { src: "/assets/about/space-09.jpg", alt: "The Udhar meeting room at SoCheers, teal hexagons through the door", cap: "Udhar", pos: "center 30%" },
 ];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AI_SEGMENTS, AI_WORK, type AiAsset, type SegmentId } from "@/lib/ai-content";
 
 /* ============================================================
@@ -27,24 +27,37 @@ import { AI_SEGMENTS, AI_WORK, type AiAsset, type SegmentId } from "@/lib/ai-con
    rather than across - which for an unordered wall of work is not a
    meaning anyone is relying on.
 
-   ---- the films ----
+   ---- the films, and where their thumbnails come from ----
 
    Thirty-odd of the eighty-nine assets are video, they average 30MB
-   apiece, and there is no encoder in this repo to cut posters with. So
-   nothing about a film is fetched until somebody asks for it: the tile
-   is a typographic card carrying the title, `preload="none"`, and the
-   src is not attached to the element until the first hover or tap. A
-   wall that quietly pulled a gigabyte of MP4 on scroll would be a page
-   about AI that cannot be loaded on a train.
+   apiece, and there is no encoder in this repo - no ffmpeg on the
+   machine that builds this - to cut poster frames with. The tiles still
+   have to show the film rather than a card with its name on it, so the
+   frame is taken from the file itself: the src carries a media fragment
+   (`#t=0.1`), which is an instruction to the browser to seek there and
+   paint that frame, and `preload="metadata"` is what lets it do that
+   without pulling the whole thing. A tenth of a second in rather than
+   zero because the first frame of a rendered film is quite often black.
+
+   The cost of that is one range request per film, so it is not paid on
+   load either: the element is not put in the tree until the tile is
+   within a screen of the viewport (see `near` below). A wall that
+   quietly pulled a gigabyte of MP4 on scroll would be a page about AI
+   that cannot be loaded on a train.
+
+   Hover then plays the film in place, and leaving stops it and returns
+   it to its frame. Until the frame is actually decoded the tile keeps
+   the old typographic card at full strength; once it is, the card drops
+   back to a scrim over the picture (`data-thumb` in ai.css). Nothing is
+   ever blank.
 
    That is also why the card is a real <button>: playing a film is an
    action, and hover is not available to everybody. Tap plays on touch,
    Enter plays from the keyboard, and the same press stops it again.
 
    When the films move to Cloudinary (see lib/ai-content.ts) they arrive
-   with derived posters and this can become a still that starts playing
-   in place - the markup is already shaped for it, and `poster` on the
-   asset is the only thing that has to start being set.
+   with derived posters, and `poster` on the asset - already honoured
+   below - becomes the cheaper way to get the same picture.
 
    ---- the filter ----
 
@@ -60,14 +73,14 @@ import { AI_SEGMENTS, AI_WORK, type AiAsset, type SegmentId } from "@/lib/ai-con
 export default function AiGrid() {
   const [seg, setSeg] = useState<SegmentId>("all");
 
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { all: AI_WORK.length };
-    for (const a of AI_WORK) for (const t of a.tags) c[t] = (c[t] ?? 0) + 1;
-    return c;
-  }, []);
-
+  /* The tabs used to carry a count each. They do not any more, and that
+     is a content decision rather than a layout one: the wall is meant to
+     read as a body of work, and a number beside the label turns it into
+     an inventory - it invites the reader to weigh the segments against
+     each other, and it dates the page every time a film is added or
+     taken out. Nothing on this page states a quantity now. */
   return (
-    <section className="ai-work is-light" id="ai-grid">
+    <section className="ai-work" id="ai-grid">
       <div className="wrap">
         <span className="tag" data-reveal>The work</span>
 
@@ -83,7 +96,6 @@ export default function AiGrid() {
               data-cursor={s.label}
             >
               {s.label}
-              <sup>{counts[s.id] ?? 0}</sup>
             </button>
           ))}
         </div>
@@ -102,28 +114,61 @@ const KIND_LABEL: Record<string, string> = { video: "Film", cgi: "CGI", static: 
 
 function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
   const isFilm = a.kind !== "static";
+  const box = useRef<HTMLElement>(null);
   const vid = useRef<HTMLVideoElement>(null);
-  /* `live` is the src being attached at all - once a film has been asked
-     for once it stays attached, so a second hover is instant rather than
-     a second download. `playing` is only what the card is doing. */
-  const [live, setLive] = useState(false);
+  /* `near` is the src being attached at all - it goes true a screen
+     before the tile arrives and never goes back, so a film that has been
+     scrolled past once is already sitting on its own frame when the
+     reader comes back to it. `ready` is that frame having been decoded.
+     `playing` is only what the card is doing. */
+  const [near, setNear] = useState(false);
+  const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
 
+  /* Deliberately not IntersectionObserver on a hidden tile: a filtered-out
+     tile is display:none, so it never intersects and never fetches, and
+     it starts observing for real the moment its segment is picked. */
+  useEffect(() => {
+    if (!isFilm || near || !shown) return;
+    const el = box.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      setNear(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "100% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [isFilm, near, shown]);
+
   const play = () => {
-    setLive(true);
+    setNear(true);
     setPlaying(true);
   };
   const stop = () => {
-    vid.current?.pause();
+    const v = vid.current;
     setPlaying(false);
+    if (!v) return;
+    v.pause();
+    /* back to the frame the tile is meant to be showing, rather than
+       leaving it parked on whatever it happened to be on */
+    try { v.currentTime = 0.1; } catch { /* not seekable yet */ }
   };
 
   useEffect(() => {
     if (!playing) return;
-    /* the element only exists once `live` has put it in the tree, so the
+    /* the element only exists once `near` has put it in the tree, so the
        play() call waits for the render that did */
     vid.current?.play().catch(() => setPlaying(false));
-  }, [playing, live]);
+  }, [playing, near]);
 
   /* A film left running inside a segment that has just been filtered
      out is audio-free, invisible and still decoding frames. */
@@ -134,9 +179,11 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
 
   return (
     <figure
+      ref={box}
       className="ai-tile"
       data-kind={a.kind}
       data-playing={playing ? "" : undefined}
+      data-thumb={ready ? "" : undefined}
       hidden={!shown}
       /* the asset's own ratio, so nothing is cropped and the column
          packer knows the real height before anything loads */
@@ -144,16 +191,20 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
     >
       {isFilm ? (
         <>
-          {live && (
+          {near && (
             <video
               ref={vid}
               className="ai-tile__film"
-              src={a.src}
+              /* the fragment is the thumbnail - see the note at the top.
+                 Dropped once the asset carries a real poster, since then
+                 the browser has a picture without seeking for one. */
+              src={a.poster ? a.src : `${a.src}#t=0.1`}
               poster={a.poster}
               muted
               loop
               playsInline
-              preload="none"
+              preload="metadata"
+              onLoadedData={() => setReady(true)}
               onPause={() => setPlaying(false)}
             />
           )}

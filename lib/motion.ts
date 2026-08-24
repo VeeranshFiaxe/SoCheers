@@ -37,8 +37,32 @@ type Grid = { tiles: HTMLElement[]; cols: number; rows: number };
    to the native scroll rather than needing to know. */
 let active: Lenis | null = null;
 
-export function smoothTo(target: HTMLElement, duration = 1.2): void {
-  if (active) active.scrollTo(target, { duration });
+/* `force`, always. Lenis refuses a scrollTo while it is stopped, and this
+   site stops it in five places (the overture, the home hero's pin). All
+   of them are on other pages, which is exactly why this is easy to get
+   wrong later: a caller here is asking for a scroll it has already
+   decided on, and "the home page happened to have the wheel locked" is
+   not a reason to silently do nothing. */
+export function smoothTo(target: HTMLElement | number, duration = 1.2): void {
+  if (active) {
+    /* Remeasured first, and this is the whole reason the gate's scroll
+       used to go nowhere. Lenis does not read the document height when it
+       is asked to scroll - it keeps its own `limit` and clamps every
+       target to it, and that number is refreshed by a ResizeObserver,
+       which does not fire until after the frame the DOM changed in. So a
+       caller that has just made the page taller and wants to go to the
+       new part of it is asking a scroller that still believes the old,
+       shorter page: the target is clamped to the old bottom and the
+       reader lands short of it, or does not move at all.
+
+       AiGate is exactly that caller. resize() is synchronous, so by the
+       time scrollTo runs the limit is the one the reader can actually
+       see. */
+    active.resize();
+    active.scrollTo(target, { duration, force: true });
+    return;
+  }
+  if (typeof target === "number") window.scrollTo({ top: target, behavior: "smooth" });
   else target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -208,33 +232,23 @@ export function initSite(): () => void {
       if (overture) lock();
     }
 
-    /* -------------------------------------------------- preloader */
+    /* -------------------------------------------------- the door
+       The count is not here any more. It is components/Loader.tsx, where
+       it can be a real number: the overture's wall images and the hero
+       artwork are fetched behind that black and the percentage is how far
+       through them the browser actually is - which is also the only honest
+       reason to hold the screen at all. It runs once per tab, in front of
+       the sequence it is loading for, and a second visit to the home page
+       gets no door at all.
+
+       What is left here is the other half of the same decision. A visit
+       that does not get the overture does not get a camera move arriving
+       on the hero either, so the hero has to introduce itself; a visit
+       that does gets nothing from this file, because the push-in at the
+       end of the sequence *is* the intro and a second one would fight it. */
     function runLoader() {
-      const loader = document.getElementById("loader");
-      const countEl = document.getElementById("loaderCount");
-      if (!loader) return;
-      if (prefersReduced) { loader.style.display = "none"; return; }
-      // The overture runs its own count, over its own black, and the hero
-      // arrives already pushed in at the end of its camera move - so both
-      // this and heroIntro() would be a second, contradictory opening.
-      if (overture) { loader.style.display = "none"; return; }
-
-      let done = false;
-      const finish = () => {
-        if (done) return; done = true;
-        loader.style.display = "none";
-        heroIntro();
-      };
-      const safety = setTimeout(finish, 4200);
-
-      const state = { v: 0 };
-      const tl = gsap.timeline({ onComplete: () => { clearTimeout(safety); finish(); } });
-      tl.to(state, {
-        v: 100, duration: 1.5, ease: "power2.inOut",
-        onUpdate: () => { if (countEl) countEl.textContent = String(Math.round(state.v)); },
-      });
-      tl.to(".loader__sheet", { scaleY: 1, duration: 0.55, ease: "power4.in", transformOrigin: "bottom" }, "+=0.05");
-      tl.to(".loader__inner", { autoAlpha: 0, duration: 0.3 }, "<0.05");
+      if (prefersReduced || overture) return;
+      heroIntro();
     }
 
     /* -------------------------------------------------- hero intro */
@@ -1260,6 +1274,62 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- word-by-word highlight
+       The Ashok story's beats (components/AiStory.tsx, [data-highlight]):
+       every word starts dim and brightens to full opacity as the reader
+       scrolls, in reading order - left to right, then down to the next
+       line, straight through all nine paragraphs on one scrub tied to the
+       whole block's height. Opacity only, never colour: a beat and a
+       "lift" beat are already two different colours in ai.css, and this
+       has no opinion about that - it just moves how much of whichever
+       colour is showing.
+
+       One SplitText per paragraph (line detection needs each paragraph's
+       own box) but their words are pooled into a single array and given
+       one shared scrollTrigger, so the cascade reads as one continuous
+       sweep through the block rather than nine separate ones restarting
+       at each paragraph's own trigger point. */
+    function initWordHighlight() {
+      document.querySelectorAll<HTMLElement>("[data-highlight]").forEach((host) => {
+        const paras = Array.from(host.querySelectorAll<HTMLElement>(":scope > p"));
+        if (!paras.length) return;
+
+        const build = () => {
+          if (ac.signal.aborted) return;
+          if (prefersReduced) return; // leave the paragraphs at their plain, fully-lit CSS colour
+
+          const words: Element[] = [];
+          paras.forEach((p) => {
+            const split = new SplitText(p, { type: "lines,words", linesClass: "hl-line", wordsClass: "hl-word" });
+            splits.push(split);
+            words.push(...split.words);
+          });
+          if (!words.length) return;
+
+          // duration is deliberately much longer than the stagger interval
+          // between words, so each word's own fade is still running when the
+          // next one starts - overlapping ramps read as one continuous wave
+          // brightening through the line rather than a row of words
+          // blinking on individually. scrub:1 lags a little behind the raw
+          // scroll delta for the same reason: it smooths out mouse-wheel /
+          // trackpad jitter instead of snapping the wave to every tick.
+          // start/end is stretched to most of the block's own height (rather
+          // than a fixed viewport band) so the wave has real scroll distance
+          // to cover - the previous "top 80% / bottom 50%" window let the
+          // whole cascade finish in well under one screen of scrolling,
+          // which is what read as rushed no matter how the per-word easing
+          // was tuned.
+          gsap.set(words, { opacity: 0.4 });
+          gsap.to(words, {
+            opacity: 1, ease: "sine.inOut", duration: 1.6, stagger: 0.55,
+            scrollTrigger: { trigger: host, start: "top 90%", end: "bottom 15%", scrub: 1.2 },
+          });
+        };
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(build, build);
+        else build();
+      });
+    }
+
     /* -------------------------------------------------- work tiles pixel reveal */
     function initTiles() {
       document.querySelectorAll<HTMLElement>("[data-tile]").forEach((tile) => {
@@ -1856,49 +1926,68 @@ export function initSite(): () => void {
          only thing that happens is the page sliding off it. */
       if (prefersReduced) return;
 
-      /* --- the pre-state --- */
+      /* --- the pre-state ---
+         The bulb is already there.
+
+         It used to be parked a screen above the ceiling with no cord, and
+         the sequence began by lowering it in - which meant the room was
+         uncovered onto an empty ceiling and the fixture arrived afterwards,
+         from nowhere, as a thing that happened *at* you. It hangs now, from
+         the first pixel of the room you can see: lit, on a full cord, upside
+         down the way a pendant bulb is, waiting. Nothing about the opening
+         is animated any more. The only thing left to play is the ending. */
+      const REST = 1.7;                 // degrees either side of plumb
       const hang = () => {
         gsap.set(foot, { "--lit": 1 });
-        gsap.set(pivot, { rotation: 0 });
+        gsap.set(pivot, { rotation: -REST });
+        gsap.set(cord, { scaleY: 1 });
+        gsap.set(mark, { y: 0, rotation: 180 });
         gsap.set(rises, { autoAlpha: 0, y: 28 });
         gsap.set(fades, { autoAlpha: 0 });
       };
       hang();
 
+      /* --- and it dangles the whole time ---
+         A slow, shallow drift about the ceiling rose - a couple of degrees,
+         four seconds a pass - so the fixture is alive while you scroll
+         toward it rather than nailed to the ceiling. This is not part of the
+         sequence and it is not on the scrub: it is the room's idle, running
+         for as long as the room is uncovered at all, and the sequence's
+         first move is to still it. */
+      const idle = gsap.to(pivot, {
+        rotation: REST,
+        duration: 4,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+        paused: true,
+      });
+      cleanups.push(() => idle.kill());
+
       const tl = gsap.timeline({ paused: true });
 
-      /* The whole thing runs in about three seconds now. It used to take
-         nearly seven, which is a long time to hold someone at the bottom
-         of a page watching a light they have already understood - so
-         every beat below is shorter and they overlap harder. The shapes
-         are unchanged; only the clock is. */
+      /* This is the ending and only the ending, about two seconds of it.
 
-      /* 1 · lowered in, already alight. The cord is scaled rather than
-            sized: it is a 2px line, so scaleY and a growing height are
-            the same picture, and one of them costs a layout per frame. */
-      tl.fromTo(mark,
-        { y: () => -(cord.offsetHeight + mark.offsetHeight + 60), rotation: 180 },
-        { y: 0, duration: 0.62, ease: "power2.out" }, 0);
-      tl.fromTo(cord, { scaleY: 0 }, { scaleY: 1, duration: 0.62, ease: "power2.out" }, 0);
+         The arrival used to live in here too - the bulb lowered in on a
+         growing cord, then four damped throws as the cord went taut - and
+         all of that is gone, because the bulb is already hanging by the
+         time anything below can fire (see hang() above). What is left is
+         the light going out, the cord letting go, and the room filling in.
 
-      /* 2 · and then it dangles. A damped swing about the ceiling rose,
-            written out rather than looped: the first throw is the cord
-            going taut and is much bigger than the rest, which is the
-            part a uniform oscillation always gets wrong. Four throws
-            rather than six - past the fourth the movement is smaller than
-            the line is thick, so they were costing a second to show
-            nothing. */
-      const swing: [number, number][] = [[6.2, 0.3], [-3.6, 0.34], [1.8, 0.3], [0, 0.28]];
-      swing.forEach(([r, d], i) => {
-        tl.to(pivot, { rotation: r, duration: d, ease: i === 0 ? "sine.out" : "sine.inOut" }, i === 0 ? 0.58 : ">");
-      });
+         1 · the drift stills. Whatever angle the idle happens to have the
+             fixture at when the gate fires, it comes back to plumb - and it
+             is a tween to a number rather than a resume of anything, so it
+             does not matter where in its four seconds the idle was. */
+      tl.to(pivot, { rotation: 0, duration: 0.5, ease: "sine.inOut" }, 0);
 
-      /* 3 · it goes. Hard sets, not tweens, for the same reason the
+      /* 2 · it goes. Hard sets, not tweens, for the same reason the
             overture's ignition is hard sets: a filament is conducting or
             it is not, and easing between the two is what makes flicker
             look drawn. The room is the same number, so the white goes
             with it - the strobe is the whole screen, not the bulb. */
-      const OUT = 1.5;
+      /* Hard on the heels of the settle rather than a second and a half
+         later: there is no arrival to wait out any more. */
+      const OUT = 0.42;
       const strike = (v: number, t: number) => tl.set(foot, { "--lit": v }, OUT + t);
       strike(0.4, 0);
       strike(1, 0.04);
@@ -1910,7 +1999,7 @@ export function initSite(): () => void {
       strike(0.18, 0.44);
       tl.to(foot, { "--lit": 0, duration: 0.22, ease: "power2.in" }, OUT + 0.46);
 
-      /* 4 · in the dark, the cord lets go. It retracts to the ceiling it
+      /* 3 · in the dark, the cord lets go. It retracts to the ceiling it
             came from, the mark drops the inch it was being held up by,
             and on the way back it turns over - so the thing that was a
             bulb hanging upside down finishes as the logo, the right way
@@ -1920,49 +2009,78 @@ export function initSite(): () => void {
       tl.to(mark, { y: 26, duration: 0.2, ease: "power2.in" }, CUT);
       tl.to(mark, { y: 0, rotation: 0, duration: 0.72, ease: "power3.inOut" }, CUT + 0.18);
 
-      /* 5 · and the room fills in around it, overlapping the turn rather
+      /* 4 · and the room fills in around it, overlapping the turn rather
             than waiting for it to finish */
       tl.to(rises, { autoAlpha: 1, y: 0, duration: 0.45, ease: "power2.out", stagger: 0.06 }, CUT + 0.5);
       tl.to(fades, { autoAlpha: 1, duration: 0.5, ease: "power2.out", stagger: 0.08 }, CUT + 0.6);
 
-      /* The gate. Not "when the footer is in view" - it is always in
-         view, it is fixed - but when enough of it has been uncovered
-         that the room is worth looking at.
+      /* Three gates, because three different things are being asked here,
+         and they used to be one.
 
-         Fires early, at a quarter uncovered rather than well past half:
-         the drop and the first swings then happen *while* the page is
-         still being scrolled off, so the bulb is already hanging there by
-         the time the room is actually being looked at, instead of the
-         reader arriving at an empty ceiling and waiting for it.
-
-         Scrolling back up puts it back to hanging, so it plays again on
-         the way down rather than handing you a dark room and nothing to
-         watch. */
+         a · the chrome. A cream nav over a white room reads as a bug and
+             the progress bar has nothing left to report, so both step off
+             as soon as the room starts showing. This one has to work in
+             both directions on every pass - scrolling back up must give
+             the header back - which is exactly why it cannot go on sharing
+             a trigger with the sequence below. */
       ScrollTrigger.create({
         trigger: run,
         start: "top 75%",
-        onEnter: () => { html.classList.add("is-foot"); tl.play(); },
-        onLeaveBack: () => {
-          html.classList.remove("is-foot");
-          tl.pause(0).invalidate();
-          hang();
-        },
+        onEnter: () => html.classList.add("is-foot"),
+        onLeaveBack: () => html.classList.remove("is-foot"),
       });
 
-      /* And the case that gate cannot see: a page that is *already* past
-         it when it is built. Reload with the scroll restored to the
+      /* b · the idle. Runs for as long as there is any room to see it in,
+             which is from the moment the page's bottom edge lifts. */
+      ScrollTrigger.create({
+        trigger: run,
+        start: "top bottom",
+        onEnter: () => idle.play(),
+        onLeaveBack: () => idle.pause(),
+      });
+
+      /* c · the sequence, and it waits.
+
+             It used to fire at a quarter uncovered and then play out behind
+             the page that was still covering it - so the light went out,
+             the cord let go and the copy came up while there was nothing
+             but a strip of room to watch it in, and by the time you had
+             actually arrived it was over. The whole ending happened
+             off-stage.
+
+             So it holds until the page above is off the screen: run's own
+             top at the top of the viewport is <main> fully scrolled past
+             and the room completely uncovered. 4% rather than a flat "top
+             top" only because that is the last pixel of the document, and
+             a gate on the exact end of the scroll is one you can stop a
+             wheel-notch short of and never open.
+
+             And it plays once. Not once per visit to the bottom - once.
+             Scrolling back up and coming down again used to reset the room
+             to a hanging bulb and no copy, which meant the footer's text
+             was there or not there depending on how many times you had
+             passed it. The ending is a thing that has happened. */
+      ScrollTrigger.create({
+        trigger: run,
+        start: "top 4%",
+        once: true,
+        onEnter: () => { idle.pause(); tl.play(); },
+      });
+
+      /* And the case those gates cannot see: a page that is *already* past
+         them when it is built. Reload with the scroll restored to the
          bottom of the page - which is exactly where anyone looking at the
          footer is - and there is no crossing for onEnter to fire on, so
          hang() had hidden every part of the room and nothing was ever
          going to bring them back. The room came up empty, and it came up
          empty only on a reload, which is what made it look random.
 
-         Idempotent: on a normal load from the top the test is false, and
-         the gate above does the work. */
-      if (run.getBoundingClientRect().top <= window.innerHeight * 0.75) {
-        html.classList.add("is-foot");
-        tl.play();
-      }
+         Idempotent: on a normal load from the top every test is false and
+         the gates above do the work. */
+      const at = run.getBoundingClientRect().top;
+      if (at <= window.innerHeight * 0.75) html.classList.add("is-foot");
+      if (at <= window.innerHeight * 0.04) tl.play();
+      else if (at <= window.innerHeight) idle.play();
     }
 
     /* -------------------------------------------------- boot */
@@ -1995,6 +2113,7 @@ export function initSite(): () => void {
     step("initMeaning", initMeaning);
     step("initSplits", initSplits);
     step("initReveals", initReveals);
+    step("initWordHighlight", initWordHighlight);
     step("initTiles", initTiles);
     step("initWCardCycle", initWCardCycle);
     step("initCounters", initCounters);
@@ -2046,6 +2165,12 @@ export function initSite(): () => void {
     active = null;
     ScrollTrigger.getAll().forEach((st) => st.kill());
     ctx.revert();
+    /* The header is outside the route now (app/layout.tsx), so it is not
+       rebuilt between pages - which means anything this page wrote onto
+       :root and never took off would follow the reader to the next one.
+       This one shifts the link capsule sideways to sit over the home
+       hero's window; off the home page there is no window to sit over. */
+    document.documentElement.style.removeProperty("--hero-cx");
     document.documentElement.classList.remove("is-foot");
     document.documentElement.classList.remove("is-pinned");
     document.documentElement.classList.add("no-js");

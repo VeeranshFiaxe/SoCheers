@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CASE_NAV } from "@/lib/work-content";
+import Link from "next/link";
 
 /* ============================================================
    THE RAIL BESIDE A CASE.
@@ -64,10 +65,10 @@ export default function CaseNav({ items }: { items: CaseNavItem[] }) {
   return (
     <aside className="cs-rail" aria-label="Case navigation">
       <div className="cs-rail__in">
-        <a className="cs-back" href="/work" data-cursor="Back">
+        <Link className="cs-back" href="/work" prefetch data-cursor="Back">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 6l-6 6 6 6" /></svg>
           {CASE_NAV.back}
-        </a>
+        </Link>
 
         {/* A case with one heading does not need a contents list, and a
             list of one is furniture. Below two it simply is not there -
@@ -92,9 +93,9 @@ export default function CaseNav({ items }: { items: CaseNavItem[] }) {
           </nav>
         )}
 
-        <a className="cs-rail__cta" href="/contact" data-magnetic data-cursor="Say hi">
+        <Link className="cs-rail__cta" href="/contact" prefetch data-magnetic data-cursor="Say hi">
           {CASE_NAV.cta}
-        </a>
+        </Link>
       </div>
     </aside>
   );

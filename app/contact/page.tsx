@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./contact.css";
-import { Nav, Overlays } from "@/components/Chrome";
 import ContactMotion from "@/components/ContactMotion";
 import ContactForm from "@/components/ContactForm";
 /* CONTACT_LINKS is no longer read here - the careers link went with the
@@ -23,9 +22,6 @@ export const metadata: Metadata = {
 export default function Contact() {
   return (
     <>
-      <Overlays />
-      <Nav variant="sub" active="/contact" />
-
       {/* Light throughout, the same way /blogs is - see .ct-page in
           contact.css. This page used to be the site's dark theme with a
           dark form panel on it, which made it the one page you arrived at

@@ -103,40 +103,73 @@ export const AI_GATE = {
 /* ------------------------------------------------------------------
    The Ashok story.
 
-   Six beats, told in the second person about someone else - short enough
-   that the reader never has to decide whether to keep going. PENDING:
-   final copy from the client's team, who are rewriting their own intro
-   line. The beat count and the length per beat are the spec; the
-   sentences are a stand-in.
+   ---- this is the client's own copy, and it is final ----
+
+   Delivered as one block of prose. The only thing done to it here is
+   punctuation: every em dash in the original has been replaced with the
+   mark the sentence was already using anyway (a colon where the clause
+   explains, commas where it interrupts), because the em dash reads as a
+   machine's favourite piece of punctuation and this is a page arguing
+   the opposite. No word has been changed, added or dropped.
+
+   The opening sentence is set as the heading rather than as the first
+   paragraph - it is the hook, it is one line long, and the display face
+   is what it was written for. It is not repeated in the body.
+
+   The breaks are the paragraph breaks of the original. `lift` marks the
+   two lines that stop narrating and start arguing; the styling for it is
+   in app/ai-work/ai.css.
    ------------------------------------------------------------------ */
 export const ASHOK = {
-  title: "Ashok didn't need an agency.",
+  title: "Ashok didn't sleep the night ChatGPT Go dropped.",
+  /* The portrait. It is not an illustration sitting beside the story, it
+     is the man the story is about, set into the column and faded out at
+     the edges so the page keeps reading as one thing - see the note in
+     components/AiStory.tsx. */
+  figure: {
+    src: "/assets/SC%20Website%20Revamp/05.%20AI%20work/Ashok.png",
+    alt: "Ashok, in a suit and sunglasses, phone in hand, surrounded by floating dashboards, charts and sticky notes.",
+  },
   beats: [
     {
       copy:
-        "Ashok runs marketing for a mid-sized brand you have definitely bought something from. In the winter of the year the tools got good, he sat in a demo and watched thirty seconds of finished film come out of a text box.",
+        "By Monday, he'd put his agency on PIP. “AI's here. Why are we paying them ₹6 lakhs a month when my team with Go can get it done on their own?”",
     },
     {
       copy:
-        "He was not being reckless. He did the arithmetic that anyone in his chair would do: a retainer against a subscription, six weeks against an afternoon. The numbers were not close.",
+        "Fast-forward 60 days. The internal team proudly delivers a ‘content calendar’: twelve posts, one strategy deck, and a three-page Google Doc of ‘AI-generated campaign ideas.’ The CFO is thrilled. “Look at this cost-saving.”",
     },
     {
       copy:
-        "So he thanked his agency, kept two people who were good with prompts, and started producing in-house. The first week was genuinely exhilarating. They shipped more in five days than the last quarter.",
+        "Until the strategy lead walks in with a new ‘urgent’ brief: a high-gloss ₹10 lakh shoot needed in ten days to save the next launch.",
     },
     {
       copy:
-        "Around day thirty, a competitor posted a film. Same light. Same drone push over the same coastline. Same voice reading a slightly different sentence. Ashok had not seen their work before it went up, and he could not have told you which of the two was his.",
+        "Ashok stares at the plan in silence. The captions sound like a first-year intern wrote them. The mood boards are Pinterest rejects. That competitor that used to lag behind? Already eating into Gozo's market share.",
+    },
+    {
+      lift: true,
+      copy:
+        "Here's the thing about AI nobody says out loud: yes, it's cheap. Yes, it's fast. But cheap and fast without taste, insight, and strategy is just noise. That's where we come in.",
     },
     {
       copy:
-        "The tools had not failed him. They had done exactly what he asked, and so had everyone else's. What was missing was never the making. It was the part before it - the argument about what this brand is for, and why it should sound like nobody else.",
+        "We've used these same tools, but with sharper strategy, better taste, and faster workflows, to create CGI, videos, and campaigns that look like Paris studios but move at Indian startup speed.",
     },
     {
       copy:
-        "He came back. Not for the cameras, and not for the software licence. For the room where somebody says: everyone can make this now, so we are not going to.",
+        "Havmor scaled campaigns 3x faster, at a fraction of the cost. Belgian got visuals that outperformed paid spends without a single physical shoot. Lindor turned around ideas in a week that usually take months.",
     },
-  ],
+    {
+      copy:
+        "Ashok's team? Still stuck asking the AI for ‘quirky caption ideas.’ Gozo? Still losing share. And Ashok? Quietly posting: looking for agencies. Yet again.",
+    },
+    {
+      lift: true,
+      copy:
+        "Because by now we all know, and so does Ashok, that AI is not a replacement. But with the right hands, it's a multiplier.",
+    },
+  ] as readonly { copy: string; lift?: boolean }[],
   /* After the story the reader is put back into the work rather than left
      at the bottom of a parable - the brief calls this out specifically. */
   out: {

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { flushSync } from "react-dom";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import { AI_GATE } from "@/lib/ai-content";
 import { smoothTo } from "@/lib/motion";
@@ -72,14 +73,11 @@ import { smoothTo } from "@/lib/motion";
    moved will never fire, and the type inside is held at autoAlpha 0
    until it does. An empty page under a button that said "yes".
 
-   So the triggers are re-measured once the row has finished growing,
-   and the scroll to the target waits for the same moment - an anchor
-   would have left for the target's old position on the click that
-   started the expansion. transitionend rather than a timer, because the
-   timer and the CSS duration are two numbers that have to agree
-   forever; the timer is only the fallback for the case where the
-   transition never runs at all (reduced motion turns it off, and
-   transitionend does not fire for a transition that did not happen).
+   So the triggers are re-measured on the way through the door, and the
+   whole sequence - open, commit, re-measure, go - is one synchronous
+   run inside the click. See choose() for why it is not deferred any
+   more, which is the same reason the panel no longer animates its
+   height.
    ============================================================ */
 type Door = "story" | "work";
 
@@ -95,31 +93,54 @@ export default function AiGate({ story, work }: { story: ReactNode; work: ReactN
   const storyShut = mounted && open !== "story";
   const workShut = mounted && open === null;
 
-  const settle = useCallback((panel: HTMLElement | null, target: HTMLElement | null) => {
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      panel?.removeEventListener("transitionend", onEnd);
-      ScrollTrigger.refresh();
-      if (target) smoothTo(target);
-    };
-    const onEnd = (e: TransitionEvent) => {
-      if (e.target === panel && e.propertyName === "grid-template-rows") finish();
-    };
-    panel?.addEventListener("transitionend", onEnd);
-    window.setTimeout(finish, 900);
-  }, []);
+  /* ---- opening a door, and going through it ----
 
+     Three things have to happen in one order and they are all done here,
+     synchronously, on the click:
+
+       1. the panel is opened,
+       2. the DOM is committed so the document is its full height,
+       3. the triggers are re-measured and the page is sent to the panel.
+
+     Step 2 is what flushSync is for, and it is not decoration. React
+     batches a setState and commits it after the handler returns, so
+     anything measuring or scrolling in the same tick is looking at the
+     page as it was before the door opened - and a scroll to a target
+     below the current document height is clamped to the bottom of the
+     short page, which lands the reader somewhere above the story with
+     no indication that anything was aimed at.
+
+     This used to be deferred instead: a rAF, then a transitionend on the
+     panel's height animation, then the scroll, with a timer behind it in
+     case the transition never ran. Three separate things, every one of
+     them able to not happen - and in a backgrounded tab, or any tab the
+     browser has throttled, none of them do: rAF does not fire, the
+     transition does not advance, and the click silently opened a panel
+     and went nowhere.
+
+     Which is also why the height no longer animates (ai.css): a panel
+     that takes three quarters of a second to reach its full height is a
+     document that is too short to scroll into for three quarters of a
+     second, and every workaround for that was a workaround for an
+     animation nobody can see - it is happening below the fold, behind a
+     scroll that is travelling over it. The panel now opens at once and
+     fades up, and the arrival is carried by the story's own type coming
+     in as the reader lands on it. */
   const choose = (door: Door) => {
     if (open) return;
-    setOpen(door);
-    /* one frame, so the row has been told to grow before we start
-       listening for it to stop */
-    requestAnimationFrame(() => {
-      const panel = door === "story" ? storyHold.current : workHold.current;
-      settle(panel, panel);
-    });
+    flushSync(() => setOpen(door));
+
+    const panel = door === "story" ? storyHold.current : workHold.current;
+    if (!panel) return;
+
+    /* Every [data-reveal] in the panel was measured while the panel was
+       collapsed to nothing, so their triggers are all recorded at one
+       point just under the gate. Left alone, the type inside would be
+       held at autoAlpha 0 by a trigger whose start is now above the
+       reader and will never come round again: an empty page under a
+       button that said yes. */
+    ScrollTrigger.refresh();
+    smoothTo(panel);
   };
 
   return (
