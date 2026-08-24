@@ -36,15 +36,27 @@ export const metadata: Metadata = {
       components; the how-it-gets-made belongs in a deck or on /contact,
       and the seasons *are* the feed.
 
-   ---- what is not real yet ----
+   4. THE STAT. A beat carrying a figure the client had never sent, and
+      it did not even render as a placeholder: it rendered as the word
+      NaN. See the note where figures() used to be in lib/series-motion
+      .ts for how a bare JSX data attribute got it there.
 
-   The stat and the eight Instagram links are marked PENDING in
-   lib/series-content.ts and are visibly marked in the UI too. The
-   imagery is lifted from the client's own deck and is placeholder for
-   the same reason - it is their reference, not their licence. Series
-   footage does not exist in this repo at all: every beat can carry an
-   mp4, three currently do, and the note over FILM in the content file
-   says what to drop in when the cuts land.
+   5. THE OPENING FILM. The first thing on this page was an mp4 pulled
+      off socheers.net at runtime - the live site's own *home page*
+      banner, standing in for series footage that does not exist. It was
+      unrelated to a word of the argument under it.
+
+   ---- what is not real yet, and how it is handled ----
+
+   Nothing on this page says "PENDING" or "PLACEHOLDER" out loud any
+   more. The eight feed tiles have no post URLs yet, so they are simply
+   not links and the line promising that they open Instagram does not
+   render until one of them is. What is still standing in is recorded in
+   the comments in lib/series-content.ts, which is where a note about
+   unfinished work belongs - not on a page a client is going to open.
+
+   The imagery is lifted from the client's own deck and is placeholder
+   for a different reason: it is their reference, not their licence.
    ============================================================ */
 export default function Series() {
   return (

@@ -132,12 +132,34 @@
    cropped, with a ceiling in vh so a tall window doesn't hand the whole
    screen to the embed. */
 .bl-paper__doc{ display:flex; flex-direction:column; align-items:flex-start; gap:14px; }
+.bl-paper__frameWrap{ position:relative; width:100%; }
 .bl-paper__frame{
   display:block; width:100%;
   aspect-ratio:1 / 1.294; max-height:78vh;
   border:1px solid var(--line); border-radius:14px;
   background:color-mix(in srgb, var(--cream) 6%, #fff);
 }
+/* full screen: the wrapper itself goes fullscreen, so the frame just
+   needs to fill it - the aspect-ratio/max-height caps that keep the
+   embed sane in-page would otherwise letterbox it. */
+.bl-paper__frameWrap:fullscreen{ background:#000; display:flex; }
+.bl-paper__frameWrap:fullscreen .bl-paper__frame{
+  aspect-ratio:auto; max-height:none; width:100%; height:100%;
+  border:none; border-radius:0;
+}
+.bl-paper__expand{
+  position:absolute; top:12px; right:12px; z-index:1;
+  display:flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:9px;
+  background:color-mix(in srgb, var(--bg) 78%, transparent);
+  color:#fff; backdrop-filter:blur(4px);
+  opacity:0; transform:translateY(-4px);
+  transition:opacity .3s var(--ease), transform .3s var(--ease), background .3s var(--ease);
+}
+.bl-paper__frameWrap:hover .bl-paper__expand,
+.bl-paper__expand:focus-visible{ opacity:1; transform:translateY(0); }
+.bl-paper__expand:hover{ background:var(--bg); }
+.bl-paper__frameWrap:fullscreen .bl-paper__expand{ opacity:1; transform:none; }
 .bl-paper__fallback{
   height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
   padding:32px; text-align:center;

@@ -12,6 +12,33 @@ import { SOON_LABEL, TABS, WHITEPAPERS, type TabId } from "@/lib/blog-content";
 export default function BlogTabs() {
   const [active, setActive] = useState<TabId>("whitepapers");
 
+  /* Fullscreen toggle for the embedded PDF - one native Fullscreen API
+     call on the frame's own wrapper, not the whole page, so the reader
+     expands without taking the tab bar and copy with it. Tracked per
+     wrapper element since more than one paper can be on the page. */
+  const [fullscreenId, setFullscreenId] = useState<string | null>(null);
+  const docRefs = useRef(new Map<string, HTMLDivElement>());
+
+  useLayoutEffect(() => {
+    const onChange = () => {
+      const el = document.fullscreenElement;
+      const entry = [...docRefs.current.entries()].find(([, node]) => node === el);
+      setFullscreenId(entry ? entry[0] : null);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  const toggleFullscreen = (id: string) => {
+    const node = docRefs.current.get(id);
+    if (!node) return;
+    if (document.fullscreenElement === node) {
+      document.exitFullscreen();
+    } else {
+      node.requestFullscreen();
+    }
+  };
+
   /* The green pill is one real element that slides and resizes to sit
      behind whichever button is active, rather than each button toggling
      its own background - a CSS transition on a shared element is what
@@ -109,17 +136,42 @@ export default function BlogTabs() {
                   anything that won't render a PDF inline - phones,
                   mostly. */}
               <div className="bl-paper__doc">
-                <object
-                  className="bl-paper__frame"
-                  data={`${wp.pdf}#view=FitH`}
-                  type="application/pdf"
-                  aria-label={wp.title}
+                <div
+                  className="bl-paper__frameWrap"
+                  ref={(el) => {
+                    if (el) docRefs.current.set(wp.id, el);
+                    else docRefs.current.delete(wp.id);
+                  }}
                 >
-                  <div className="bl-paper__fallback">
-                    <p>Your browser can&rsquo;t show the paper inline.</p>
-                    <a href={wp.pdf} target="_blank" rel="noopener">Open the PDF</a>
-                  </div>
-                </object>
+                  <object
+                    className="bl-paper__frame"
+                    data={`${wp.pdf}#view=FitH`}
+                    type="application/pdf"
+                    aria-label={wp.title}
+                  >
+                    <div className="bl-paper__fallback">
+                      <p>Your browser can&rsquo;t show the paper inline.</p>
+                      <a href={wp.pdf} target="_blank" rel="noopener">Open the PDF</a>
+                    </div>
+                  </object>
+                  <button
+                    type="button"
+                    className="bl-paper__expand"
+                    onClick={() => toggleFullscreen(wp.id)}
+                    aria-label={fullscreenId === wp.id ? "Exit full screen" : "View full screen"}
+                    data-cursor={fullscreenId === wp.id ? "Close" : "Expand"}
+                  >
+                    {fullscreenId === wp.id ? (
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 3v4a2 2 0 0 1-2 2H3M15 3v4a2 2 0 0 0 2 2h4M9 21v-4a2 2 0 0 0-2-2H3M15 21v-4a2 2 0 0 1 2-2h4" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 9V5a2 2 0 0 1 2-2h4M15 3h4a2 2 0 0 1 2 2v4M21 15v4a2 2 0 0 1-2 2h-4M9 21H5a2 2 0 0 1-2-2v-4" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 <a className="bl-paper__file" href={wp.pdf} download={wp.file}>
                   Download PDF
                 </a>

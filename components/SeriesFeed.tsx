@@ -1,4 +1,4 @@
-import { ART, REELS, SERIES_CTA } from "@/lib/series-content";
+import { ART, FEED, REELS, SERIES_CTA } from "@/lib/series-content";
 
 /* ============================================================
    THE FEED - component two of two, and the way out under it.
@@ -17,8 +17,21 @@ import { ART, REELS, SERIES_CTA } from "@/lib/series-content";
    an embed captures the wheel the moment the pointer is over it, which
    on a horizontal rail is exactly where the pointer is.
 
-   So: hyperlinked thumbnails, styled as what they are - episodes of a
-   show, each one carrying its brand and its number.
+   ---- what the rail stopped being ----
+
+   Eight identical portrait cards in a straight line, each stamped with a
+   black PLACEHOLDER badge and a brand name reading "PENDING - Amul",
+   under a line promising that every frame opens the post on Instagram
+   while all eight hrefs were "#".
+
+   None of that ships. The badges and the invented brand names are gone;
+   the promise renders only once a tile actually has a URL behind it; and
+   the row is art-directed to match the story above it rather than
+   sitting under it as a tray of cards - the tiles run at two heights on
+   an alternating drop, and each episode number is set large and hung off
+   the corner of its own frame so it overlaps the next one. Frames that
+   break their own edges is the motif the whole page is built on, and the
+   feed is the last place it should stop.
 
    ---- the rail ----
 
@@ -40,53 +53,71 @@ function Glyph() {
 }
 
 export function SeriesFeed() {
+  /* the line that promises the link only exists while the link does */
+  const linked = REELS.some((r) => Boolean(r.href));
+
   return (
-    <section className="s-feed" id="feed" aria-label="The episodes on Instagram">
+    <section className="s-feed" id="feed" aria-label="The episodes">
       <div className="wrap s-feed__head">
         <span className="tag" data-reveal>
-          Straight from the feed
+          {FEED.tag}
         </span>
         <h2 className="s-feed__title" data-split>
-          Every episode, where it actually lives.
+          {FEED.title}
         </h2>
-        <p className="s-feed__note" data-reveal>
-          Each frame opens the post on Instagram.
-        </p>
+        {linked && (
+          <p className="s-feed__note" data-reveal>
+            {FEED.note}
+          </p>
+        )}
       </div>
 
       {/* the rail is outside .wrap on purpose - it runs off both edges of
           the screen, which is what tells the reader there is more of it
           than fits */}
       <div className="s-feed__rail" data-feed-rail>
-        {REELS.map((r) => {
+        {REELS.map((r, i) => {
           const tile = (
             <>
               <span className="s-ep__shot">
                 <img src={ART(r.thumb)} alt="" loading="lazy" decoding="async" />
               </span>
-              <span className="s-ep__glyph" aria-hidden="true">
-                <Glyph />
-              </span>
-              <span className="s-ep__slate">
-                <b>{r.ep}</b>
-                <em>{r.brand}</em>
-              </span>
+              {r.href && (
+                <span className="s-ep__glyph" aria-hidden="true">
+                  <Glyph />
+                </span>
+              )}
+              {/* Hung off the corner of the frame rather than set inside
+                  it, so it crosses into the episode before it. It is the
+                  tile's whole label, which is why the slate below only
+                  appears once an episode has a name of its own - a big
+                  "01" over a small "EP 01" is the same word twice. */}
+              <b className="s-ep__n" aria-hidden="true">
+                {r.ep.replace(/^EP\s*/i, "")}
+              </b>
+              <span className="sr-only">{r.ep}</span>
+              {r.title && (
+                <span className="s-ep__slate">
+                  <i>{r.title}</i>
+                </span>
+              )}
             </>
           );
 
-          /* A placeholder that is still clickable is a placeholder
-             somebody clicks on a client call, lands on "#", and loses
-             confidence over. So a pending tile is not a link at all, and
-             it says so on its face - visibly enough to survive a
-             screenshot going into a deck. */
-          return r.pending ? (
-            <div className="s-ep is-pending" data-ep-tile key={r.id}>
-              {tile}
-            </div>
-          ) : (
+          const props = {
+            className: "s-ep",
+            "data-ep-tile": true,
+            style: { ["--i" as string]: i },
+          } as const;
+
+          /* No URL yet, so it is not a link and it does not pretend to
+             be one. It is still a frame with an episode number on it,
+             which is the true statement - and it carries no badge,
+             because a page that goes in front of a client should not be
+             the place we keep our own to-do list. */
+          return r.href ? (
             <a
-              className="s-ep"
-              data-ep-tile
+              {...props}
               key={r.id}
               href={r.href}
               target="_blank"
@@ -95,6 +126,10 @@ export function SeriesFeed() {
             >
               {tile}
             </a>
+          ) : (
+            <div {...props} key={r.id}>
+              {tile}
+            </div>
           );
         })}
       </div>

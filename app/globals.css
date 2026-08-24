@@ -910,6 +910,135 @@ html.is-pinned .who{ margin-top:-100vh; }
 }
 
 /* ============================================================
+   3.5 · THE REEL
+   ============================================================ */
+/* No padding, no rule, no wrap. Every other section on this page is a
+   column of content inside the page's margins; this one is the margins
+   going away. .sec's border-top would be a hairline drawn across the top
+   of a film, so it is off (.no-border on the element). */
+.reel{ padding:0; }
+
+/* ---- the stage ----
+   One screen, held. It is pinned by initReel (lib/motion.ts) rather than
+   by position:sticky, and that is forced rather than chosen: body
+   carries overflow-x:hidden a few hundred lines up, which makes body a
+   scroll container, and a sticky descendant of a scroll container that
+   never itself scrolls never sticks. This was sticky for exactly one
+   revision and the symptom was the section scrolling past at full speed
+   while the scrub ran against it - so the window finished opening at
+   about the moment the film left the screen.
+
+   No height in scroll terms is set here. How long the lock lasts is one
+   number in initReel, because the length of the hold is an edit
+   decision and belongs next to the beats it is divided into.
+
+   width:100% is already the full viewport: <main> has no padding of its
+   own and .sec carries none either - the page's margins come from .wrap,
+   which this section does not use. So there is no full-bleed trick to
+   undo, which matters, because the pin re-parents this element into a
+   spacer and a negative margin measured off `50%` would be measured off
+   something else once it got there. */
+.reel__stage{
+  position:relative; width:100%; height:100vh;
+  /* the page's own black, so the shut state is not a box sitting on the
+     section - it is the section, with a window cut in it */
+  background:var(--bg);
+  overflow:hidden;
+}
+
+/* ---- the window ----
+   The film underneath is always the full stage - it never resizes and
+   never scales to fit a box. This is the aperture over it, and the whole
+   mechanic is one number: --reel-open, 0 for shut and 1 for full bleed,
+   written on this element every frame by initReel and read by everything
+   below through calc().
+
+   Which means the script drives a single unitless value and the
+   stylesheet keeps every measurement. --reel-x, --reel-y and --reel-r
+   are the *shut* frame - how far into the page the film sits as it
+   arrives and as it leaves - and they can be re-cut per breakpoint (see
+   the 860px block) without the script knowing there was a breakpoint.
+
+   --reel-y is deliberately the larger inset: shut, this is a wide
+   letterbox floating in the page's own margins, which is the shape the
+   eye reads as cinema before a single frame has moved. The radius is
+   the WHAT WE DO cards' 20px within a hair, so the shut frame belongs
+   to the same furniture as the section it is about to hand over to -
+   and it is the first thing to go, because a corner radius on a
+   full-screen frame is a browser window, not a screen. */
+.reel__frame{
+  position:absolute; inset:0;
+  --reel-x:16vw;
+  --reel-y:19vh;
+  --reel-r:22px;
+  --reel-open:0;
+  --reel-shut:calc(1 - var(--reel-open));
+  clip-path:inset(
+    calc(var(--reel-y) * var(--reel-shut))
+    calc(var(--reel-x) * var(--reel-shut))
+    round calc(var(--reel-r) * var(--reel-shut)));
+  /* some Safari versions still want the prefix for inset(); an
+     unrecognised property here is simply ignored */
+  -webkit-clip-path:inset(
+    calc(var(--reel-y) * var(--reel-shut))
+    calc(var(--reel-x) * var(--reel-shut))
+    round calc(var(--reel-r) * var(--reel-shut)));
+  /* a black plate behind the film, so the first paint - before a single
+     frame has decoded - is black rather than the element's transparency */
+  background:#000;
+}
+
+.reel__film{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; display:block;
+  /* The push. It sits 6% oversize while the window is shut and settles
+     to 1 as it opens, so the two moves are one move: the frame is still
+     coming toward you while the room is getting out of the way. On its
+     own transform rather than folded into the clip, because a clip crops
+     and a scale is the camera - they have to be free to disagree. */
+  transform:scale(calc(1 + .06 * var(--reel-shut)));
+  transform-origin:50% 50%;
+  will-change:transform;
+}
+
+/* ---- the bars ----
+   A lift of black at the top and bottom of the shut window, so the
+   letterbox reads as the film's own bars rather than as the section
+   showing through a hole. It goes with the window: at full bleed there
+   is nothing on the picture at all. */
+.reel__frame::after{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:1;
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 22%,
+    rgba(0,0,0,0) 78%, rgba(0,0,0,.55) 100%);
+  opacity:var(--reel-shut);
+}
+
+/* Nothing here is clickable, nothing has controls, and the film is not a
+   focus stop - it carries nothing a reader can act on, and the site's
+   own cursor has to pass straight through it. */
+.reel__film::-webkit-media-controls{ display:none !important; }
+.reel__stage{ pointer-events:none; }
+
+@media (max-width:860px){
+  /* Shut, the window is already nearly the width of the screen - there
+     are no page margins worth opening out of at this size - so the move
+     is almost entirely vertical and reads as the bars pulling back
+     rather than as a box growing. */
+  .reel__frame{ --reel-x:5vw; --reel-y:22vh; --reel-r:16px; }
+}
+
+/* Reduced motion gets the film - it is the content of this section, not
+   decoration laid over it - and none of the choreography. The window is
+   simply open, the camera is still, initReel builds no scrub and pins
+   nothing, so the stage is one plain screen of film in the flow of the
+   page. */
+@media (prefers-reduced-motion:reduce){
+  .reel__frame{ --reel-open:1; }
+  .reel__film{ will-change:auto; }
+}
+
+/* ============================================================
    4 · WHAT WE DO
    ============================================================ */
 .wcards{ margin-top:64px; display:grid; grid-template-columns:repeat(3,1fr); gap:26px; perspective:1200px; }

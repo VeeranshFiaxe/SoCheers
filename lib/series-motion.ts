@@ -47,14 +47,13 @@ export function initSeries(): () => void {
 
   const ctx = gsap.context(() => {
     gate(reduced);
-    titles(reduced);
+    posters(reduced);
     mosaics(reduced);
     apertures(reduced);
     strips(reduced);
     reelRows(reduced);
     phones(reduced);
     helds(reduced);
-    figures();
     rulers(reduced);
     feed(reduced, ac.signal);
     episodeRail();
@@ -110,29 +109,160 @@ function gate(reduced: boolean) {
 }
 
 /* ------------------------------------------------------------------
-   TITLE - the slow push. A card holds its frame while the type lands on
-   it, so the only movement is the frame creeping closer over the length
-   of the beat. Small numbers on purpose: a title card that visibly zooms
-   is a slideshow transition.
+   POSTER - the composition, and the one shot here whose motion is doing
+   something other than decorating a picture.
+
+   The four title cards used to be a still with a slow push on it. The
+   direction that replaced them asks for frames that interlace and for
+   subjects that sit outside their own frame, and a static composition
+   can say the first thing but only parallax can say the second: two
+   pictures at the same distance are a collage, and the thing that tells
+   a reader they are at different distances is that they move by
+   different amounts when the reader does.
+
+   So this function is a depth ladder and nothing else. Every layer gets
+   the same tween over the same scroll and differs only in how far it
+   travels:
+
+       the band pictures    +/- 5%    the back wall, barely moving
+       the frame behind     +/- 13%
+       the mark             +/- 6%    against the bands, not with them
+       the frames in front  +/- 21%
+       the cutout           +/- 30%   nearest the reader, travels most
+
+   The mark runs the opposite way to everything else on purpose. A layer
+   that moves against the stack separates from it much harder than one
+   that moves with it more slowly, and the mark is the one element here
+   that has to sit clearly between two picture planes rather than on
+   either of them.
+
+   Nothing in the ladder changes where anything ends up: at the middle of
+   the beat - which is where the composition is meant to be looked at -
+   every one of these is at zero, which is exactly where series.css put
+   it. That is what lets the whole shot work with the script switched
+   off, and it is why reduced motion here is a bare return rather than a
+   pile of set() calls undoing half-finished state.
    ------------------------------------------------------------------ */
-function titles(reduced: boolean) {
+function posters(reduced: boolean) {
   if (reduced) return;
-  gsap.utils.toArray<HTMLElement>('.sbeat[data-shot="title"] .sfill').forEach((el) => {
-    gsap.fromTo(
-      el,
-      { scale: 1.14, yPercent: -2 },
-      {
-        scale: 1,
-        yPercent: 2,
-        ease: "none",
-        scrollTrigger: {
-          trigger: el.closest(".sbeat") as HTMLElement,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
+
+  gsap.utils.toArray<HTMLElement>("[data-poster]").forEach((post) => {
+    const beat = post.closest(".sbeat") as HTMLElement;
+    if (!beat) return;
+
+    /* the through-scroll, shared by every layer. Only the distance
+       changes, which is the entire mechanic. */
+    const drift = (el: Element | Element[], from: number, to: number) =>
+      gsap.fromTo(
+        el,
+        { yPercent: from },
+        {
+          yPercent: to,
+          ease: "none",
+          scrollTrigger: { trigger: beat, start: "top bottom", end: "bottom top", scrub: true },
         },
-      },
-    );
+      );
+
+    /* the arrival, shared by the frames. Scrubbed against the top third
+       of the beat so the composition assembles while it is being read
+       into rather than before it. */
+    const enter = (el: Element | Element[], vars: gsap.TweenVars, from: gsap.TweenVars) =>
+      gsap.fromTo(el, from, {
+        ...vars,
+        ease: "power2.out",
+        scrollTrigger: { trigger: beat, start: "top 92%", end: "top 28%", scrub: true },
+      });
+
+    /* ---- the bands -------------------------------------------------
+       The picture inside the band moves, never the band: the band is the
+       hole the picture is seen through, and a hole that drifts is a
+       layout bug rather than a camera move. Alternate directions so the
+       stack interlaces - all five drifting the same way is one picture
+       with seams in it. */
+    const bands = gsap.utils.toArray<HTMLElement>("[data-pband]", post);
+    bands.forEach((band, i) => {
+      const media = band.firstElementChild;
+      if (!media) return;
+      const rate = i % 2 ? -5 : 5;
+      drift(media, -rate, rate);
+    });
+
+    if (bands.length) {
+      enter(
+        bands,
+        { scaleY: 1, opacity: 1, stagger: 0.05 },
+        { scaleY: 0.74, opacity: 0.15 },
+      );
+    }
+
+    /* ---- the lifted frames ----------------------------------------
+       One behind the words and the rest in front of them, and the ones
+       in front travel further - which is the sentence sitting between
+       two planes rather than on top of one. */
+    const back = gsap.utils.toArray<HTMLElement>(".spost__inset--back", post);
+    const front = gsap.utils.toArray<HTMLElement>(".spost__inset--front", post);
+
+    back.forEach((el) => drift(el, -13, 13));
+    front.forEach((el, i) => drift(el, -(21 + i * 4), 21 + i * 4));
+
+    if (back.length || front.length) {
+      enter(
+        [...back, ...front],
+        { scale: 1, opacity: 1, stagger: 0.07 },
+        { scale: 1.14, opacity: 0 },
+      );
+    }
+
+    /* ---- the mark -------------------------------------------------
+       Against the stack, and it does not get the site's line-splitter:
+       it carries a highlighted word inside it, and handing markup to a
+       splitter is how a heading renders correctly once and then never
+       again after a resize. */
+    const mark = post.querySelector<HTMLElement>("[data-poster-mark]");
+    if (mark) {
+      drift(mark, 6, -6);
+      /* opacity only. drift() already owns this element's translate, and
+         an arrival that also wrote `y` would be a second tween writing
+         the same transform - which is the jitter-on-a-slow-machine bug
+         the top of this file is about. */
+      gsap.fromTo(
+        mark,
+        { opacity: 0 },
+        {
+          opacity: 1,
+          ease: "power2.out",
+          scrollTrigger: { trigger: beat, start: "top 88%", end: "top 42%", scrub: true },
+        },
+      );
+    }
+
+    /* ---- the subject ----------------------------------------------
+       Nearest the reader, so it travels furthest, and it grows very
+       slightly across the beat. The scale is small enough not to read as
+       a zoom and large enough that the subject and the letters behind it
+       are visibly not on the same plane. */
+    const cut = post.querySelector<HTMLElement>("[data-pcut]");
+    if (cut) {
+      gsap.fromTo(
+        cut,
+        { yPercent: -30, scale: 0.97 },
+        {
+          yPercent: 30,
+          scale: 1.05,
+          ease: "none",
+          scrollTrigger: { trigger: beat, start: "top bottom", end: "bottom top", scrub: true },
+        },
+      );
+      gsap.fromTo(
+        cut,
+        { opacity: 0 },
+        {
+          opacity: 1,
+          ease: "power2.out",
+          scrollTrigger: { trigger: beat, start: "top 86%", end: "top 46%", scrub: true },
+        },
+      );
+    }
   });
 }
 
@@ -410,51 +540,27 @@ function phones(reduced: boolean) {
 }
 
 /* ------------------------------------------------------------------
-   FIGURE - the stat counts up on the scroll.
+   The stat beat used to be counted up from here, off a [data-count]
+   element. Both it and the counter are gone, and the reason is worth
+   leaving as a warning rather than as a deletion.
 
-   Reads the target out of the rendered text rather than taking a prop,
-   so the number lives in one place (STAT in lib/series-content.ts) and
-   the page still says something sensible with JavaScript off.
+   The markup was `<span className="s-stat__figure" data-count>`. In JSX
+   a bare attribute is `={true}`, and React stringifies data-* rather
+   than treating them as boolean HTML attributes, so what reached the DOM
+   was data-count="true". initCounters() in lib/motion.ts - which is
+   site-wide, runs on this page too, and claims every [data-count] on it
+   - then did parseFloat("true"), got NaN, tweened to NaN and wrote the
+   string "NaN" into the element on the first scroll past it.
 
-   textContent is written only when the rounded value actually changes.
-   onUpdate fires every scroll frame and a text write is a layout write;
-   at sixty a second, for a number with three states, that is the most
-   expensive thing on the screen.
+   So the page shipped a stat reading NaN under a claim reading "PENDING
+   - the drop in new-title adoption...". The figure was a stand-in the
+   client had never supplied a number for, so the beat is deleted rather
+   than repaired: a placeholder with a rendering bug in it is two reasons
+   not to have it.
 
-   Runs under reduced motion too - it is not decoration, it is the number
-   arriving, and its "animation" is a scroll position either way.
+   If a real number does land, the site-wide counter already does this
+   job - give it the value, as data-count="47", not a bare attribute.
    ------------------------------------------------------------------ */
-function figures() {
-  gsap.utils.toArray<HTMLElement>("[data-count]").forEach((el) => {
-    const raw = (el.textContent ?? "").trim();
-    const match = raw.match(/^(\d+(?:\.\d+)?)(.*)$/);
-    if (!match) return;
-
-    const target = parseFloat(match[1]);
-    const suffix = match[2] ?? "";
-    const decimals = (match[1].split(".")[1] ?? "").length;
-    const pad = match[1].split(".")[0].length;
-
-    const proxy = { v: 0 };
-    let shown = "";
-
-    ScrollTrigger.create({
-      trigger: el.closest(".sbeat") as HTMLElement,
-      start: "top 80%",
-      end: "center 55%",
-      scrub: true,
-      onUpdate: (self) => {
-        proxy.v = target * self.progress;
-        const next =
-          proxy.v.toFixed(decimals).padStart(decimals ? pad + decimals + 1 : pad, "0") + suffix;
-        if (next !== shown) {
-          shown = next;
-          el.textContent = next;
-        }
-      },
-    });
-  });
-}
 
 /* ------------------------------------------------------------------
    RULER - twelve months, drawn under the sentence about twelve months.

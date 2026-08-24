@@ -53,6 +53,78 @@ export function Who() {
   );
 }
 
+/* ------------------------------------------------------------------
+   3.5 · THE REEL
+
+   Not a section with a video in it. The page stops being a page for a
+   couple of screens of scroll and is a film instead, and then it is a
+   page again.
+
+   The shape of it, in the order the reader gets it:
+
+     · a small letterboxed film rides up into the page, sitting in the
+       page's own margins and reading as a clip on a black card;
+     · the scroll locks, and the window opens to the edges of the screen;
+     · it holds there, full bleed, for long enough that you have watched
+       some of it rather than watched it arrive;
+     · it closes back down to the card, the scroll unlocks, and the page
+       carries on into WHAT WE DO.
+
+   The whole mechanic is one clip-path. The film is full-bleed and fixed
+   at the size of the stage the entire time it is on screen - it never
+   resizes, never scales to fit a box - and what changes is how much of
+   it you are allowed to see. So the film does not grow into the room:
+   the room opens onto the film, which is the difference between a video
+   embed and a cut.
+
+   The scroll drives exactly one number - --reel-open on the frame, 0
+   shut and 1 full bleed, written by initReel in lib/motion.ts. The clip,
+   the bars and the camera's push are all calc()s off it in
+   app/globals.css, so the scrub costs no layout read and every actual
+   measurement stays in the stylesheet where a breakpoint can re-cut it.
+
+   The lock is ScrollTrigger's pin, not position:sticky, and that is not
+   a style preference - sticky does not work on this site at all. body
+   carries overflow-x:hidden (app/globals.css), which makes body its own
+   scroll container, and a sticky descendant of a scroll container that
+   never scrolls simply never sticks. Every other held section here -
+   the hero, the About panels - pins through the engine for the same
+   reason, so this one does too.
+
+   The video carries no src. initReel attaches it the first time the
+   stage is anywhere near the viewport and pauses it the moment it is
+   not: the file is the heaviest asset on the site by an order of
+   magnitude, and a reader who never gets past WHO WE ARE must never pay
+   for it. */
+export function Reel() {
+  return (
+    <section className="sec reel no-border" data-reel>
+      {/* Pinned by initReel, which wraps this in a spacer of its own and
+          holds it against the top of the viewport for the length of the
+          open, the hold and the close. Nothing here sets that length -
+          it is one number in the script. */}
+      <div className="reel__stage" data-reel-stage>
+        <div className="reel__frame" data-reel-frame>
+          <video
+            className="reel__film"
+            data-reel-film="/assets/SC Website Revamp/01. Home/Vibe Video SC.mp4"
+            muted
+            loop
+            playsInline
+            preload="none"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        </div>
+      </div>
+
+      {/* The one thing a screen reader gets: there is a film here, it
+          says nothing, you are not missing a sentence. */}
+      <p className="sr-only">A short film of SoCheers work and the people who make it.</p>
+    </section>
+  );
+}
+
 export function What() {
   return (
     <section className="sec what" id="what" data-section data-sec="2">

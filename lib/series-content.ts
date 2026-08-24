@@ -15,52 +15,80 @@
 
    The stills in public/assets/series/ are lifted from that same PDF.
 
-   ---- what this file stopped being ----
+   ---- the art direction revision ----
 
-   It used to carry three treatments, a process section and four example
-   seasons. The direction is settled now - cinematic, scroll-driven,
-   footage over stills - so the treatments are gone and with them the
-   switcher, and the page is the two things the brief asks for and
-   nothing else: the story, and the feed.
+   The direction that came back on this page: the beats were reading as
+   separate blocks - a picture, a sentence next to it, the next picture -
+   and the references sent with it are the opposite of that. They are
+   posters. Several frames working as one composition, the type set
+   inside the picture rather than beside it, and a subject cut out of its
+   background and lifted across the frame edges so the whole thing has
+   depth.
 
-   ---- two things still open with the client ----
+   That is the `poster` shot below, and the four beats that used to be
+   flat title cards now carry it. See components/SeriesStory.tsx for the
+   layer order and lib/series-motion.ts for what the scroll does to it.
+
+   ---- what is still open with the client ----
 
    1. THE NAME. The decks disagree: the older one is "The Re-Wiring", the
       newer and more complete one is "The Continuity Kink". CONCEPT below
       is the single place it is written down - change that one object and
       the whole page follows, including the <title>. Defaulted to the
       newer deck.
-   2. THE STAT. The brief calls for a data-backed number early, for
-      credibility, and the decks do not carry one. STAT is a marked
-      placeholder with the right shape; swap the three fields.
-
-   Everything marked PENDING is structurally correct and factually a
-   stand-in. None of it should ship to a live domain as-is.
+   2. THE EPISODE LINKS. REELS at the foot of this file has no live post
+      URLs yet. Until it does, the tiles are not links and the page does
+      not claim they are - see SeriesFeed.tsx. There is no placeholder
+      badge on them any more: this page goes in front of clients.
+   3. THE FOOTAGE. Every beat can carry `film`. The one that used to sit
+      on the cold open was the live site's *home page* banner - nothing
+      to do with the series - and it is gone rather than swapped for
+      another stand-in. Drop cuts into public/assets/series/film/ and add
+      one `film:` line per beat.
    ============================================================ */
 
 /* The concept's name, and the only place it is spelled. */
 export const CONCEPT = {
-  /* PENDING CLIENT CONFIRMATION - "The Continuity Kink" vs "The Rewiring".
-     Both decks are in play; this is the newer of the two. */
+  /* Open with the client - "The Continuity Kink" vs "The Rewiring". Both
+     decks are in play; this is the newer of the two. Note this is a
+     source comment: nothing renders the word "pending" on the page. */
   title: "The Continuity Kink",
   short: "Continuity Kink",
   alt: "The Rewiring",
 } as const;
 
 /* ------------------------------------------------------------------
+   THE TEXTURE PLATES.
+
+   Two files in public/assets/series/ are not photographs and were never
+   meant to be used as frames: kink.jpg is a sheet of film grain and
+   streaming.jpg is a warm light leak. Both were wired up as full-bleed
+   stills, which is why two beats on this page rendered as an empty grey
+   screen and an empty orange screen.
+
+   They are useful - just as grade, over a composition, not as one. Every
+   poster lays the grain over itself, and the leak is spent on the beats
+   that want warmth in an otherwise blue-cold page.
+   ------------------------------------------------------------------ */
+export const TEXTURE = {
+  grain: "kink.jpg",
+  leak: "streaming.jpg",
+} as const;
+
+/* ------------------------------------------------------------------
    THE SHOTS.
 
-   A beat's `shot` is how it is staged, and it is the whole of this
-   revamp: the brief asks for scroll-driven cinema rather than a column
-   of pictures with words next to them, and it asks specifically that the
-   staging pair with what the line says - "many open thoughts" wants many
-   windows, not a photograph of somebody thinking.
+   A beat's `shot` is how it is staged, and the staging is picked off the
+   sentence it carries - "many open thoughts" wants many windows, not a
+   photograph of somebody thinking. Each one is a mechanic rather than a
+   layout:
 
-   So the shot is picked per beat off the sentence it carries, and each
-   one is a mechanic rather than a layout:
-
-     title    - a card. The gate opens on the way in and shuts on the way
-                out; the line sits in the frame rather than beside it.
+     poster   - the composition. Several frames working as one picture,
+                the type set inside them, and a cut-out subject or a
+                lifted frame breaking across the edges so the layers read
+                as depth rather than as a stack. Two variants, `stack`
+                and `grid`, described under `variant` below. This is what
+                the four title cards became.
      mosaic   - many windows at once, tiling in on scroll. The abundance
                 beat. `jitter` makes the same wall arrive badly, for the
                 one about noise.
@@ -68,9 +96,8 @@ export const CONCEPT = {
                 as you read. Used once, on "everything moved behind the
                 screen", where the squeeze *is* the sentence.
      strip    - stacked letterbox bands, each travelling at its own rate.
-                The reference the client sent - a film poster cut into
-                horizontal frames - is this. `reverse` runs it backwards,
-                for the beat about returning to the familiar.
+                `reverse` runs it backwards, for the beat about returning
+                to the familiar.
      reel     - a row of verticals that compress into one as you scroll.
                 Eight episodes, into the cycle of the scroll.
      phone    - one vertical frame held beside the type. Phone footage
@@ -78,22 +105,20 @@ export const CONCEPT = {
                 hole, which on the beat that is about the phone would be
                 the wrong three quarters to throw away.
      held     - one frame, one slow push, type over it. The default, and
-                the quiet one: a page of nothing but mechanics is a
+                the quiet one: a page of nothing but compositions is a
                 showreel, and the argument needs somewhere to land.
-     figure   - the stat. A number and a source, no picture doing work.
 
    Adding a shot means a renderer in components/SeriesStory.tsx and a
    case in lib/series-motion.ts, in that order.
    ------------------------------------------------------------------ */
 export type Shot =
-  | "title"
+  | "poster"
   | "mosaic"
   | "aperture"
   | "strip"
   | "reel"
   | "phone"
-  | "held"
-  | "figure";
+  | "held";
 
 export type Beat = {
   id: string;
@@ -107,11 +132,52 @@ export type Beat = {
   slate?: string;
   /* one still, for the shots that hold one */
   art?: string;
-  /* many, for mosaic / strip / reel. Order is the order they arrive in. */
+  /* many, for mosaic / strip / reel / poster. Order is the order they
+     arrive in, and on a poster it is the order they are stacked. */
   frames?: string[];
-  /* an mp4 that plays in place of `art`. See FILM below for what is real
-     and what is waiting. */
+  /* an mp4 that plays in place of `art`. Nothing carries one right now -
+     see the note at the head of this file. */
   film?: string;
+
+  /* ---- poster only ---------------------------------------------------
+
+     variant - `stack` is the film-poster reference: full-width letterbox
+               bands of uneven height, one word set enormous across the
+               middle of them, and the subject rising through the word.
+               `grid` is the editorial reference: frames of different
+               sizes that overlap each other, the type block sitting on
+               the corner of one of them.
+
+     mark    - the word the composition is built around, set at poster
+               scale. Defaults to `lines`. Set it explicitly when the
+               line that should be big is the one further down the beat -
+               on the kink beat the sentence sets it up and the name is
+               the thing on the wall, so the name is the mark and the
+               sentence runs above it at reading size.
+
+     cutout  - a transparent PNG of a subject with its background already
+               removed. It is drawn ON TOP of the type, so the letters
+               pass behind it. This is the layer that makes the whole
+               thing read as three-dimensional, and it is the one thing
+               here that cannot be faked from a rectangular still.
+
+     insets  - rectangular frames lifted out of the stack: stills that
+               overhang the band edges. The first is drawn BEHIND the
+               type and the rest in FRONT of it, so the sentence is
+               sandwiched between two picture planes rather than laid
+               over one. Used where there is no cutout for a beat yet,
+               and useful alongside one either way.
+
+     accent  - a word inside `mark` that takes the highlight block behind
+               it, the way the reference blocks "CAPTURING". Matched
+               case-insensitively, first occurrence only.
+     -------------------------------------------------------------------- */
+  variant?: "stack" | "grid";
+  mark?: string;
+  cutout?: string;
+  insets?: string[];
+  accent?: string;
+
   /* mosaic only - the wall arrives badly rather than cleanly */
   jitter?: boolean;
   /* strip only - the bands travel against the scroll */
@@ -120,35 +186,30 @@ export type Beat = {
      back on itself. One beat uses it, and that beat is about January
      connecting to December. */
   ticks?: boolean;
+  /* held / poster - lays the warm leak over the composition */
+  warm?: boolean;
 };
 
 /* ------------------------------------------------------------------
    THE FILM.
 
-   The brief is explicit: video over stills wherever there is video. What
-   this repo actually has is the site's own banner film and two clips
-   from the About shoot - there is no series footage in the tree yet, and
-   no encoder in the repo to cut posters with, so nothing here is
-   invented to fill the gap.
+   The brief is video over stills wherever there is video. What this repo
+   has is two clips from the About shoot, and there is no series footage
+   in the tree at all.
 
-   Every beat can carry `film`. When the client's cuts land, dropping the
-   files into public/assets/series/film/ and adding one `film:` line per
-   beat is the whole change - the story component already prefers a film
-   over a still, plays it only while it is on screen, and keeps the still
-   as its poster so a beat is never blank while an mp4 opens.
+   What used to be here as well was the live site's home page banner,
+   playing full-bleed on the cold open. It is not series content, it was
+   loaded off socheers.net at runtime, and it was the first thing on the
+   page - so it is deleted rather than re-pointed. The cold open is a
+   composition now and does not need a moving frame to hold.
    ------------------------------------------------------------------ */
 const FILM = {
-  /* PENDING CLIENT FOOTAGE - the live site's banner film, standing in for
-     the opener's moving frame. The real one is a cut from the micro
-     series work. */
-  open: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
-
-  /* PENDING - two clips from the About shoot, used as two of the twelve
+  /* Stand-ins: two clips from the About shoot, used as two of the twelve
      windows on the abundance wall. They are there because a wall about
      endless streams should not be a wall of photographs, and because at
      1.4MB and 1.8MB they are the only files in the tree small enough to
-     autoplay without costing this page its own argument. Swap for series
-     footage when it exists. */
+     autoplay without costing this page its own argument. They read as
+     texture at tile size; swap for series footage when it exists. */
   wall1:
     "/assets/SC%20Website%20Revamp/02.%20About/Office%20Images%20-%20Culture/AQOhYVnOI0VVNqJsVbQi6Yb5-LTcKs4rC92euhXX47NeQuRJ8mREhXBZhCM-7zNl3PRpuryKVwP6npXxchaNqHGknY2FZ7C-.mp4",
   wall2:
@@ -157,9 +218,12 @@ const FILM = {
 
 /* The wall on the "peak content era" beat. Twelve windows, and the two
    films sit at 4 and 9 - far enough apart that neither is beside the
-   other, close enough that one of them is always near the eye. Held to
-   two on purpose: the client's note is that the balance has to stay this
-   side of animated. */
+   other, close enough that one of them is always near the eye.
+
+   The two texture plates used to be in here as tiles. A sheet of grain
+   and an orange gradient among ten photographs read as two windows that
+   had failed to load, which on a wall arguing for abundance is the worst
+   possible tile to have twice. */
 const WALL = [
   "peak-content.jpg",
   "night-scroll.jpg",
@@ -168,31 +232,42 @@ const WALL = [
   "chaos.jpg",
   "episodes.jpg",
   "behind-screen.jpg",
-  "streaming.jpg",
+  "micro-series.jpg",
   FILM.wall2,
   "wardrobe.jpg",
-  "micro-series.jpg",
-  "close-band.jpg",
+  "noise.jpg",
+  "open-wide.jpg",
 ];
 
 /* ------------------------------------------------------------------
    The story.
 
-   One array, read top to bottom. Fifteen beats, roughly ninety seconds
-   of scroll, and the order is the deck's order - the name of the thing
-   does not land until the reader has already recognised the behaviour in
-   themselves, which is what makes a coined term feel earned rather than
-   sold.
+   One array, read top to bottom. Fourteen beats, and the order is the
+   deck's order - the name of the thing does not land until the reader
+   has already recognised the behaviour in themselves, which is what
+   makes a coined term feel earned rather than sold.
+
+   The four posters sit at 1, 4, 9 and 14. That spacing is deliberate:
+   they are the beats that name something, they are the most worked
+   compositions on the page, and three screens of quieter staging between
+   each pair is what keeps them reading as moments rather than as a
+   showreel.
    ------------------------------------------------------------------ */
 export const BEATS: Beat[] = [
   {
+    /* THE COLD OPEN. Three frames overlapping rather than one held wide,
+       because the line is about being on both sides of a screen at once
+       and a single frame can only be on one of them. The empty-cinema
+       vertical is lifted out over the join. */
     id: "open",
-    shot: "title",
+    shot: "poster",
+    variant: "grid",
     eyebrow: "A SoCheers original",
     lines: ["Look at the world,", "in and out of the screen."],
+    accent: "screen.",
     slate: "COLD OPEN",
-    art: "open-wide.jpg",
-    film: FILM.open,
+    frames: ["open-wide.jpg", "micro-series.jpg", "night-scroll.jpg"],
+    insets: ["open-tall.jpg"],
   },
   {
     /* the older deck's opening, kept because it is the one thing it says
@@ -219,19 +294,35 @@ export const BEATS: Beat[] = [
     art: "behind-screen.jpg",
   },
   {
-    id: "stat",
-    shot: "figure",
-    lines: [],
-    art: "night-scroll.jpg",
-  },
-  {
+    /* ------------------------------------------------------------------
+       THE TITLE CARD, and the one the revision was asked for by name.
+
+       Five bands of uneven height, the sentence set at reading size high
+       in the frame, and the name of the thing set enormous across the
+       middle of the stack. The crowd - a real cut-out, background
+       already gone, everyone in 3D glasses looking straight out - rises
+       through the middle of the name so the letters pass behind them.
+
+       The frame it used to run on was kink.jpg, which is a sheet of
+       grain with nothing on it. That file is now the grade over this
+       composition instead, which is what it always was.
+       ------------------------------------------------------------------ */
     id: "kink",
-    shot: "title",
+    shot: "poster",
+    variant: "stack",
     eyebrow: "So we gave it a name",
     lines: ["In this chaos, the brain", "has developed a fetish."],
-    copy: "A continuity kink.",
+    mark: "A continuity kink.",
+    accent: "kink.",
     slate: "TITLE CARD",
-    art: "kink.jpg",
+    frames: [
+      "peak-content.jpg",
+      "episodes.jpg",
+      "behind-screen.jpg",
+      "noise.jpg",
+      "binge.jpg",
+    ],
+    cutout: "crowd-3d.png",
   },
   {
     /* the bands run against the scroll. The beat is about the mind going
@@ -260,7 +351,7 @@ export const BEATS: Beat[] = [
     copy:
       "From Netflix to the deepest corners of their Instagram feed, they are chasing one neurological pattern: continuity.",
     slate: "FOUR FRAMES, ONE PATTERN",
-    frames: ["binge.jpg", "night-scroll.jpg", "behind-screen.jpg", "streaming.jpg"],
+    frames: ["binge.jpg", "night-scroll.jpg", "behind-screen.jpg", "noise.jpg"],
   },
   {
     /* the same wall as the abundance beat, arriving badly. Nothing about
@@ -281,18 +372,25 @@ export const BEATS: Beat[] = [
       "episodes.jpg",
       "night-scroll.jpg",
       "behind-screen.jpg",
-      "close-band.jpg",
-      "streaming.jpg",
+      "wardrobe.jpg",
+      "micro-series.jpg",
     ],
   },
   {
+    /* the turn, and the warm one. Everything before this beat is graded
+       cold; the leak sits over this composition and the two after it, so
+       the cure looks like a different room to the problem. */
     id: "cure",
-    shot: "title",
+    shot: "poster",
+    variant: "grid",
+    warm: true,
     eyebrow: "And the cure to that noise",
     lines: ["The micro series."],
+    accent: "series.",
     copy: "20 to 60 seconds of bite-sized episodes, designed for continuity.",
     slate: "TITLE CARD",
-    art: "micro-series.jpg",
+    frames: ["episodes.jpg", "micro-series.jpg", "binge.jpg"],
+    insets: ["mokai-3.jpg"],
   },
   {
     /* eight verticals, and they close up into one as you read. The line
@@ -326,48 +424,70 @@ export const BEATS: Beat[] = [
   },
   {
     /* the ruler. Twelve months drawn under the line as you scroll, and
-       December joins back to January - which is the sentence. */
+       December joins back to January - which is the sentence.
+
+       The frame under it was close-band.jpg, which is a torn strip of
+       white paper on black - a graphic element, blown up to fill a
+       screen. Swapped for a photograph. */
     id: "discipline",
     shot: "held",
     ticks: true,
+    warm: true,
     lines: ["Retention is not a hack.", "It is a structural discipline."],
     copy:
       "You cannot buy it with a trend or fix it with a louder cut. It is the discipline of a showrunner: the ability to plant and seed twelve months of content so that January connects to December. Leave the door ajar and the audience walks through it every single day.",
     slate: "JAN - DEC",
-    art: "close-band.jpg",
+    art: "wardrobe.jpg",
   },
   {
+    /* was streaming.jpg, which is an orange gradient with nothing in it.
+       An empty cinema is the honest frame for a line about building
+       titles for the people who run them. */
     id: "credentials",
     shot: "held",
     lines: ["We didn't find this kink", "by accident."],
     copy:
       "We found it building titles with the streaming platforms that taught the world how to binge - Netflix, Prime, JioHotstar.",
     slate: "THE RECEIPTS",
-    art: "streaming.jpg",
+    art: "open-tall.jpg",
   },
   {
+    /* THE END CARD. The same construction as the kink poster and
+       deliberately so - the page opened on a composition and closes on
+       one, and the reader is meant to feel the rhyme. No cutout for this
+       beat yet, so the depth is carried by two lifted frames instead:
+       one behind the sentence, one in front of it. */
     id: "proof",
-    shot: "title",
+    shot: "poster",
+    variant: "stack",
     lines: ["You made it to the end", "because the narrative held you."],
-    copy: "You just proved the continuity loop.",
+    mark: "You just proved the continuity loop.",
+    accent: "loop.",
     slate: "END CARD",
-    art: "crowd-3d.png",
+    frames: [
+      "open-wide.jpg",
+      "chaos.jpg",
+      "peak-content.jpg",
+      "wardrobe.jpg",
+      "open-tall.jpg",
+    ],
+    insets: ["reel-3.jpg", "mokai-1.jpg"],
   },
 ];
 
-/* PENDING CLIENT - the credibility number the brief asks for, early and
-   sourced. The decks do not carry one. Shape is right, figures are not:
-   swap `figure`, `claim` and `source` and delete this comment. Rendered
-   by the "stat" beat above.
-
-   `figure` is counted up on scroll, so it wants to stay digits with an
-   optional trailing symbol - see the figure case in lib/series-motion.ts. */
-export const STAT = {
-  figure: "00%",
-  claim: "PENDING - the drop in new-title adoption against rewatching, or whichever number the team lands on.",
-  source: "Source pending",
-  pending: true,
-} as const;
+/* The eight verticals that run along the foot of the end plate, handing
+   the reader off to the feed. Same stills as the feed itself - it is the
+   same eight episodes, seen twice at two sizes, which is the join. */
+export const PLATE_STRIP = [
+  "mokai-1.jpg",
+  "reel-1.jpg",
+  "mokai-2.jpg",
+  "reel-2.jpg",
+  "mokai-3.jpg",
+  "reel-3.jpg",
+  "mokai-1.jpg",
+  "reel-2.jpg",
+];
 
 /* ------------------------------------------------------------------
    THE FEED - component two.
@@ -379,21 +499,48 @@ export const STAT = {
    seconds. A thumbnail and an <a> is the same content, one image, and it
    keeps the page's own scroll.
 
-   `href` is the real post URL - PENDING, these are the placeholders the
-   client's list will replace. `thumb` is a still from that post; the
-   client's content sheet supplies both. `brand` and `ep` are the slate
-   on the tile, so the rail reads as episodes rather than as a moodboard.
+   ---- what changed here ----
+
+   Every tile used to carry a brand name reading "PENDING - Amul" and a
+   black "PLACEHOLDER" badge in its corner, and the section promised that
+   each frame opens the post on Instagram while every href was "#". Three
+   different ways of showing a reader the page is not finished.
+
+   So: `href` is optional now. A tile without one is not a link, carries
+   no badge, and says nothing it cannot do - it is a frame with an
+   episode number on it, which is true. The line under the heading that
+   promises the link only renders once at least one tile has a real URL.
+
+   Adding the client's list is one line per tile: put the post URL in
+   `href` and the still from that post in `thumb`. Nothing else has to
+   change; the tiles become links, the promise appears under the heading,
+   and `title` is there for the episode's own name when they send them.
    ------------------------------------------------------------------ */
-export const REELS = [
-  { id: "r1", brand: "PENDING - Amul", ep: "EP 01", thumb: "reel-1.jpg", href: "#", pending: true },
-  { id: "r2", brand: "PENDING - Amul", ep: "EP 02", thumb: "reel-2.jpg", href: "#", pending: true },
-  { id: "r3", brand: "PENDING - Prabhu", ep: "EP 01", thumb: "reel-3.jpg", href: "#", pending: true },
-  { id: "r4", brand: "PENDING - Prabhu", ep: "EP 02", thumb: "mokai-1.jpg", href: "#", pending: true },
-  { id: "r5", brand: "PENDING - third brand", ep: "EP 01", thumb: "mokai-2.jpg", href: "#", pending: true },
-  { id: "r6", brand: "PENDING - third brand", ep: "EP 02", thumb: "mokai-3.jpg", href: "#", pending: true },
-  { id: "r7", brand: "PENDING - fourth brand", ep: "EP 01", thumb: "reel-2.jpg", href: "#", pending: true },
-  { id: "r8", brand: "PENDING - fourth brand", ep: "EP 02", thumb: "reel-3.jpg", href: "#", pending: true },
+export type Reel = {
+  id: string;
+  ep: string;
+  thumb: string;
+  href?: string;
+  title?: string;
+};
+
+export const REELS: Reel[] = [
+  { id: "r1", ep: "EP 01", thumb: "reel-1.jpg" },
+  { id: "r2", ep: "EP 02", thumb: "reel-2.jpg" },
+  { id: "r3", ep: "EP 03", thumb: "reel-3.jpg" },
+  { id: "r4", ep: "EP 04", thumb: "mokai-1.jpg" },
+  { id: "r5", ep: "EP 05", thumb: "mokai-2.jpg" },
+  { id: "r6", ep: "EP 06", thumb: "mokai-3.jpg" },
+  { id: "r7", ep: "EP 07", thumb: "reel-2.jpg" },
+  { id: "r8", ep: "EP 08", thumb: "reel-3.jpg" },
 ];
+
+export const FEED = {
+  tag: "Straight from the feed",
+  title: "Every episode, where it actually lives.",
+  /* only rendered once REELS carries a real href - see SeriesFeed.tsx */
+  note: "Each frame opens the post on Instagram.",
+} as const;
 
 /* Two ways out and no third: talk to us, or go and look at the production
    house. Tito Films sits at the foot of the page by the client's own

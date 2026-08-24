@@ -1,6 +1,6 @@
 import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
-import { Awards, Clients, What, Who } from "@/components/Sections";
+import { Awards, Clients, Reel, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
 
 export default function Home() {
@@ -18,6 +18,7 @@ export default function Home() {
       <main id="top" data-foot-lift>
         <Hero />
         <Who />
+        <Reel />
         <What />
         <Clients />
         <Awards />

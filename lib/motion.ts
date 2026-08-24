@@ -1866,6 +1866,180 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- the reel
+       A couple of screens of scroll where the page stops being a page.
+
+       Four jobs, and they are deliberately four rather than one.
+
+       a · the file. It is by a long way the heaviest thing on this site,
+           and it hangs off a section most readers reach and plenty do
+           not. So the <video> is rendered with no src at all
+           (components/Sections.tsx) and one gets attached the first time
+           the stage is within a screen of the viewport - close enough
+           that there is time to buffer, far enough that a reader who
+           turns back at WHO WE ARE never pays for it. The observer
+           disconnects itself the moment it has done that: it exists to
+           attach a string once, not to watch the page.
+
+       b · the transport. Playing is gated on the stage actually being on
+           screen, not on the preload margin above - a film running a
+           screen and a half off-stage is a decode budget spent on
+           nothing. It runs under reduced motion too: the film is this
+           section's content, and pausing it off screen is housekeeping
+           rather than choreography.
+
+       c · the lock, and d · the window, below. Those two are one
+           ScrollTrigger, and they are the only part reduced motion opts
+           out of. */
+    function initReel() {
+      const stage = document.querySelector<HTMLElement>("[data-reel-stage]");
+      const frame = document.querySelector<HTMLElement>("[data-reel-frame]");
+      const film = document.querySelector<HTMLVideoElement>("[data-reel-film]");
+      if (!stage || !frame || !film) return;
+
+      /* Both of the jobs below are IntersectionObservers rather than
+         ScrollTriggers, and that is a correction rather than a
+         preference.
+
+         The transport was a ScrollTrigger over the section's own box
+         first, and it paused the film halfway through the close - which
+         looks exactly like the video giving up as it shrinks. The cause
+         is that ScrollTrigger refreshes triggers in the order they were
+         created, and this one was created before the pin below it. So it
+         measured the section *before* the pin's spacer had added two
+         screens to it, and its "bottom top" end resolved about 200vh
+         earlier than the section actually ends - which is to say, right
+         in the middle of the close.
+
+         An observer cannot have that bug. It is handed live geometry by
+         the browser every time the element moves, it does not care that
+         the element spends part of its life at position:fixed under the
+         pin, and it has no notion of document order to get wrong. For a
+         question as simple as "is this on screen" that is the right
+         instrument. */
+
+      /* a · the file, fetched early. Attached once, a screen and a half
+             out, then the observer retires - it exists to set a string,
+             not to watch the page. This is the heaviest asset on the
+             site by an order of magnitude, so the lead time is
+             deliberately generous: it is the difference between the film
+             being buffered when the lock engages and it stalling
+             somewhere in the hold. */
+      const src = film.dataset.reelFilm;
+      if (src) {
+        const preload = new IntersectionObserver((entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          if (!film.src) film.src = src;
+          preload.disconnect();
+        }, { rootMargin: "150% 0px", threshold: 0 });
+        preload.observe(stage);
+        observers.push(preload);
+      }
+
+      /* b · the transport. Runs whenever any part of the stage is on
+             screen, plus a tenth of a screen either side so it is
+             already going by the time it is worth looking at, and stops
+             only once it is genuinely gone. Nothing about the open, the
+             hold or the close can reach this - the film plays for the
+             whole time it is visible and that is the entire rule. */
+      const transport = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting) {
+            /* the catch is not optional: a tab that has been denied
+               autoplay rejects, and an unhandled rejection here would be
+               thrown on every pass of the section */
+            film.play().catch(() => {});
+          } else if (!film.paused) {
+            film.pause();
+          }
+        }
+      }, { rootMargin: "10% 0px", threshold: 0 });
+      transport.observe(stage);
+      observers.push(transport);
+
+      /* Under reduced motion the stylesheet has already left the window
+         open, and nothing is pinned: the section is one plain screen of
+         film in the flow of the page. Writing --reel-open here would be
+         overriding the media query that said so. */
+      if (prefersReduced) return;
+
+      /* ---- the lock ----
+
+         ScrollTrigger's pin, the same way the hero and the About panels
+         hold a screen, and *not* position:sticky. That is worth spelling
+         out because sticky is the obvious tool and it does not work on
+         this site: body carries overflow-x:hidden (app/globals.css),
+         which makes body a scroll container, and a sticky descendant of
+         a scroll container that never itself scrolls never sticks. It
+         fails silently - the element simply scrolls - so the symptom was
+         not "the pin is broken", it was the whole section going past at
+         full speed while this timeline scrubbed against it, which put
+         full bleed at about the moment the film left the screen.
+
+         HOLD is the length of the lock and the only number in this
+         section anyone should need to move: 200% of the viewport, so
+         two screens of wheel are spent inside the film.
+
+         ---- the beats ----
+
+         The three durations below are read as shares of that: the
+         window opens over the first fifth, holds full bleed for half,
+         and closes over the rest. Which is the point of the section -
+         the open and the close are the cut, the hold is the film, and
+         the hold has to be long enough that the reader has watched some
+         of it rather than watched it arrive.
+
+         Not symmetrical, and on purpose. The close is half again as
+         long as the open, because the two are not the same event: the
+         open is an interruption and wants to be quick, the close is the
+         page taking itself back and reads as abrupt at the same speed.
+
+         Note what this leaves *outside* the lock. Before the pin
+         engages, the shut frame - a small letterboxed clip on a black
+         card - rides up into view on nothing but ordinary scroll, and
+         after the pin releases it rides out the same way. Those two
+         stretches are a screen each and they are free; they are what
+         makes the lock read as the film taking the screen rather than
+         as a video section beginning.
+
+         Eased in and out rather than linear so the window does not start
+         and stop dead on the wheel, and scrub:.5 so a flicked wheel
+         still arrives smoothly instead of snapping the aperture to
+         wherever the scroll landed. */
+      const HOLD = "+=200%";
+
+      const cut = { open: 0 };
+      const write = () => frame.style.setProperty("--reel-open", cut.open.toFixed(4));
+
+      gsap.timeline({
+        defaults: { ease: "power2.inOut" },
+        onUpdate: write,
+        scrollTrigger: {
+          trigger: stage,
+          start: "top top",
+          end: HOLD,
+          pin: stage,
+          pinSpacing: true,
+          /* the pin is a whole screen of black arriving at once, and on
+             a smoothed scroller the hand-off can land a frame late and
+             show as a jump. one frame of lead time is enough. */
+          anticipatePin: 1,
+          scrub: 0.5,
+        },
+      })
+        .to(cut, { open: 1, duration: 20 })
+        .to(cut, { open: 1, duration: 50 })
+        .to(cut, { open: 0, duration: 30 });
+
+      /* and the state the timeline has not been asked for yet - a reload
+         with the scroll already inside the lock would otherwise leave the
+         frame at whatever the stylesheet says until the first scroll
+         event, which on a section that is supposed to be full-bleed is a
+         small letterboxed window in the middle of a black screen with no
+         explanation. */
+      write();
+    }
+
     /* -------------------------------------------------- the footer
        The page ends by being lifted off a room that was always there.
 
@@ -2110,6 +2284,22 @@ export function initSite(): () => void {
     step("initMagnetic", initMagnetic);
 
     step("initHero", initHero);
+    /* Straight after the hero and before everything else, and the order
+       is load-bearing rather than tidy. ScrollTrigger refreshes triggers
+       in the order they were created, and both of these pin - which
+       means each one inserts a spacer that pushes every element below it
+       down the document. A trigger measured before that spacer exists
+       resolves its start and end against a page that is two screens
+       shorter than the one the reader gets.
+
+       Down where this used to sit, the reel's own two screens of pin
+       were added after initReveals, initCounters and the rest had
+       already measured WHAT WE DO, the client wall and the awards row -
+       so all of them were armed two screens early and had finished
+       before the reader arrived. The two pins therefore go first, in
+       document order: the hero is above the reel, so it settles the
+       page's height first, and the reel settles the rest. */
+    step("initReel", initReel);
     step("initMeaning", initMeaning);
     step("initSplits", initSplits);
     step("initReveals", initReveals);
