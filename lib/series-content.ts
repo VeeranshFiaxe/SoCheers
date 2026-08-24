@@ -40,7 +40,13 @@
       URLs yet. Until it does, the tiles are not links and the page does
       not claim they are - see SeriesFeed.tsx. There is no placeholder
       badge on them any more: this page goes in front of clients.
-   3. THE FOOTAGE. Every beat can carry `film`. The one that used to sit
+   3. THE CUT-OUT SUBJECTS. CROSSERS below is five slots for figures
+      that stand across the seam between two beats, and every one of them
+      is drawing a silhouette today. They are the placeholders the client
+      asked for while the real subjects are shot. `cutout` on a poster
+      beat is the same story: supported, unused, waiting on a PNG with
+      real alpha in it.
+   4. THE FOOTAGE. Every beat can carry `film`. The one that used to sit
       on the cold open was the live site's *home page* banner - nothing
       to do with the series - and it is gone rather than swapped for
       another stand-in. Drop cuts into public/assets/series/film/ and add
@@ -299,13 +305,22 @@ export const BEATS: Beat[] = [
 
        Five bands of uneven height, the sentence set at reading size high
        in the frame, and the name of the thing set enormous across the
-       middle of the stack. The crowd - a real cut-out, background
-       already gone, everyone in 3D glasses looking straight out - rises
-       through the middle of the name so the letters pass behind them.
+       middle of the stack.
 
-       The frame it used to run on was kink.jpg, which is a sheet of
-       grain with nothing on it. That file is now the grade over this
-       composition instead, which is what it always was.
+       ---- what came off this beat ----
+
+       crowd-3d.png. It was wired as the `cutout` - the subject drawn
+       over the type - and it is not a cut-out: it is a rectangular crop
+       of a cinema audience with its own hard edges still on it. Drawn
+       500px wide dead centre of the frame it did the two things a cutout
+       exists to avoid. It sat over the middle of the mark, so the page's
+       own title read "A co ... ink.", and because it is a rectangle with
+       visible sides it read as a picture dropped on top of the poster
+       rather than as a subject standing in it.
+
+       The depth it was there for is carried by CROSSERS now - see the
+       block under this array. `cutout` stays supported for the day a
+       real alpha PNG arrives; nothing carries one today.
        ------------------------------------------------------------------ */
     id: "kink",
     shot: "poster",
@@ -315,14 +330,18 @@ export const BEATS: Beat[] = [
     mark: "A continuity kink.",
     accent: "kink.",
     slate: "TITLE CARD",
-    frames: [
-      "peak-content.jpg",
-      "episodes.jpg",
-      "behind-screen.jpg",
-      "noise.jpg",
-      "binge.jpg",
-    ],
-    cutout: "crowd-3d.png",
+    /* Three, not five. See the note on the stack in app/series/series.css
+       for the arithmetic; the short version is that a band is as wide as
+       the column and as tall as its share of one screen, so every frame
+       you add crops every frame that was already there. These three are
+       picked to survive a wide crop: an eye, a lit screen in the dark,
+       and an interior that reads across its whole width. */
+    frames: ["peak-content.jpg", "binge.jpg", "micro-series.jpg"],
+    /* one frame behind the sentence and nothing in front of it. The
+       front plane on this beat is the figure crossing the seam above it
+       - a lifted still there as well would be two things fighting for
+       the same corner. */
+    insets: ["night-scroll.jpg"],
   },
   {
     /* the bands run against the scroll. The beat is about the mind going
@@ -464,15 +483,91 @@ export const BEATS: Beat[] = [
     mark: "You just proved the continuity loop.",
     accent: "loop.",
     slate: "END CARD",
-    frames: [
-      "open-wide.jpg",
-      "chaos.jpg",
-      "peak-content.jpg",
-      "wardrobe.jpg",
-      "open-tall.jpg",
-    ],
+    /* the same three-band column as the title card, and the last frame is
+       the empty cinema the page opened in */
+    frames: ["open-wide.jpg", "mokai-3.jpg", "open-tall.jpg"],
     insets: ["reel-3.jpg", "mokai-1.jpg"],
   },
+];
+
+/* ------------------------------------------------------------------
+   THE CROSSERS - the figures that stand between two beats.
+
+   Every other picture on this page is trapped inside one section:
+   `.sbeat` clips its own overflow, which is what keeps fourteen
+   full-screen compositions from bleeding into each other. That clip is
+   also why the page reads as fourteen separate screens no matter how
+   carefully the beats are graded to match - nothing is ever in two of
+   them at once.
+
+   A crosser is. It is drawn in a layer that sits over the whole story
+   rather than inside any beat, and it is placed on the seam between two
+   of them - half of it standing in the section above, half in the
+   section below. That is the only element on the page with a foot in two
+   beats, and it is what ties them together into one space instead of a
+   stack of frames.
+
+   ---- these are placeholders, and deliberately obvious ones ----
+
+   The client is sending cut-out subjects for these slots. Until they
+   land, each one draws a silhouette: a flat figure in the page's own
+   black with a hairline of the accent down its lit edge. It is a shape
+   that says "somebody stands here" without pretending to be a
+   photograph, and it is the shape the real PNG will be dropped into -
+   swap `pose` for a `src` and nothing else in the layer changes.
+
+   Nothing on the page names them as unfinished. Same rule as the feed
+   tiles: this page goes in front of a client, so the placeholder is
+   composed rather than badged.
+
+   ---- the fields ----
+
+     seam / edge - which boundary to stand on. `edge: "bottom"` puts the
+                   figure across the foot of that beat, `"top"` across
+                   its head. Measured at runtime by crossers() in
+                   lib/series-motion.ts, because the beats are sized in
+                   svh and a hard-coded offset is wrong on every second
+                   viewport.
+
+     side        - which edge of the screen it stands at. Never the
+                   middle: the middle is where the type is, and a figure
+                   over the sentence is the bug this whole block replaced.
+
+     depth       - `near` is solid, drawn large and travels furthest on
+                   the scroll; `far` is a wash, drawn small and barely
+                   moves. Two figures at the same distance are a pattern;
+                   two at different distances are a room.
+   ------------------------------------------------------------------ */
+export type Pose = "stand" | "phone" | "sit" | "pair";
+
+export type Crosser = {
+  id: string;
+  seam: string;
+  edge: "top" | "bottom";
+  side: "left" | "right";
+  pose: Pose;
+  depth: "near" | "far";
+};
+
+/* Five, and the spacing matters as much as it does for the posters: a
+   figure on every seam is a border, a figure on every third or fourth
+   seam is a character walking through the story. Two of them bracket the
+   title card and one stands at the foot of the strip that follows the
+   binge line - the three seams the composition needed most. */
+export const CROSSERS: Crosser[] = [
+  /* rises out of the phone beat and into the title card, at the right,
+     clear of the mark set across the middle of it */
+  { id: "c1", seam: "post", edge: "bottom", side: "right", pose: "stand", depth: "near" },
+  /* leaves the title card at the left, looking down - the beat under it
+     is the one about going back to what you already know */
+  { id: "c2", seam: "kink", edge: "bottom", side: "left", pose: "phone", depth: "far" },
+  /* sits across the foot of the four-frame strip, watching it */
+  { id: "c3", seam: "binge", edge: "bottom", side: "right", pose: "sit", depth: "near" },
+  /* two of them, at the turn - the cure beat is the first warm one */
+  { id: "c4", seam: "cure", edge: "bottom", side: "left", pose: "pair", depth: "far" },
+  /* stands into the end card, mirroring the one that stood into the
+     title card. The page opens and closes on the same figure. */
+  { id: "c5", seam: "proof", edge: "top", side: "right", pose: "stand", depth: "near" },
 ];
 
 /* The eight verticals that run along the foot of the end plate, handing

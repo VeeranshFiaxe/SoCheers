@@ -1,3 +1,4 @@
+import SeriesCrossers from "@/components/SeriesCrossers";
 import {
   ART,
   BEATS,
@@ -276,6 +277,22 @@ function ShotPoster({ beat }: { beat: Beat }) {
   return (
     <div className="sbeat__stage" data-stage>
       <div className={`spost spost--${variant}`} data-poster data-variant={variant}>
+        {/* 0 - the wall the poster hangs on. Stack only, and only because
+            the stack is a bounded column: the black either side of it is
+            the mount, and a mount with nothing behind it reads as a page
+            that failed to fill rather than as a composition. The grid
+            variant fills its own frame and does not need one. */}
+        {variant === "stack" && frames[0] && !isFilm(frames[0]) && (
+          <img
+            className="spost__ground"
+            src={ART(frames[0])}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+
         {/* 1 - the frames */}
         <div className="spost__bands" data-pbands>
           {frames.map((f, i) => (
@@ -423,17 +440,43 @@ function ShotAperture({ beat }: { beat: Beat }) {
   );
 }
 
-/* STRIP - the poster reference at its simplest. The frame is cut into
-   four letterboxed bands stacked down the screen, each holding its own
-   crop and each travelling at its own rate as you scroll, so a set of
-   stills reads as something moving without a single frame of video.
+/* STRIP - four frames, held as a filmstrip beside the type.
+
+   ---- what this was, and why it changed ----
+
+   Four full-bleed bands running the width of the screen. On a laptop
+   that is four slots about 170px tall and 1900px wide - a 11:1 crop of a
+   photograph, which is not a crop of anything: you get a band of somebody's
+   forearm and a band of a curtain. The direction that came back said it
+   plainly - four visuals, too cropped, they do not read.
+
+   So the strip is a strip now rather than a set of slots. The bands are
+   sized off their own height and take their width from a 21:9 ratio, so
+   they are recognisable frames at any viewport, and the column of them
+   sits to one side with the sentence in the space it leaves. The picture
+   behind is the first frame again, pushed right back - it gives the
+   column a room to hang in rather than a black void, and it is what the
+   figure crossing the seam is read against.
 
    `reverse` runs the bands against the scroll. That variant is used once,
    on the beat about the mind returning to what it already knows. */
 function ShotStrip({ beat }: { beat: Beat }) {
   const frames = beat.frames ?? [];
+  /* the ground the strip hangs on. Same picture as the first band, blown
+     up and pushed right back - see .sstrip__bg. */
+  const ground = frames.find((f) => !isFilm(f));
   return (
     <div className="sbeat__stage" data-stage>
+      {ground && (
+        <img
+          className="sfill sstrip__bg"
+          src={ART(ground)}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          decoding="async"
+        />
+      )}
       <div className="sstrip" data-strip data-reverse={beat.reverse ? "" : undefined}>
         {frames.map((f, i) => (
           <span className="sstrip__band" data-band style={{ ["--i" as string]: i }} key={`${f}-${i}`}>
@@ -566,6 +609,12 @@ export default function SeriesStory() {
           decoding="async"
         />
       </section>
+
+      {/* The figures on the seams. Last in the DOM and outside every
+          beat, because a beat clips its own overflow and the entire
+          point of these is to be in two beats at once. See
+          components/SeriesCrossers.tsx. */}
+      <SeriesCrossers />
     </div>
   );
 }

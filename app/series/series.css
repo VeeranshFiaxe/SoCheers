@@ -204,6 +204,115 @@
 @media (max-width:700px){ .sbeat__slate{ display:none; } }
 
 /* ============================================================
+   2b · THE CROSSERS
+
+   The figures that stand on the seam between two beats, and the only
+   things on this page that are in two sections at once.
+
+   ---- the layer, and why there has to be one ----
+
+   `.sbeat` clips its overflow. It has to: fourteen full-screen
+   compositions that bleed into each other is a page where nothing has an
+   edge. What that clip costs is depth between beats - every picture here
+   is sealed inside one screen, so however carefully fourteen beats are
+   graded to match they still read as fourteen separate screens.
+
+   This layer is a sibling of the beats rather than a child of one, so
+   nothing clips it. Each figure is hung on a measured seam with half of
+   it in the section above and half in the section below, which is the
+   join the beats cannot make for themselves.
+
+   ---- the two transforms, and who owns which ----
+
+   .s-cross__fig  top written in px by crossers(), transform owned by the
+                  scroll. It is the element that parallaxes.
+   .s-cross__in   translateY(-50%), never touched by script. It is what
+                  puts the figure's waist on the boundary rather than its
+                  head.
+
+   Splitting them is not fussiness: one element with a static centring
+   transform and a scrubbed tween on the same property is the jitter bug
+   the whole motion file is written to avoid.
+   ============================================================ */
+.s-story{ position:relative; }
+
+/* over every beat, so it must never eat a click meant for one - and
+   aria-hidden in the component, because these are stand-ins for pictures
+   and a picture of a person is not content. */
+/* overflow:hidden because the narrow-screen figures are pushed to a
+   negative offset on purpose - they stand half off the edge of the page,
+   and without the clip that is a horizontal scrollbar on a page whose
+   entire argument is its own scroll. */
+.s-cross{ position:absolute; inset:0; z-index:3; pointer-events:none; overflow:hidden; }
+
+/* No opacity:0 here. The arrival is a fromTo() in crossers(), the same
+   way the poster mark's is: a figure that is hidden in the stylesheet is
+   a figure that stays hidden on the one machine where the script did not
+   run. */
+.s-cross__fig{
+  position:absolute; top:0;
+  width:var(--w);
+  will-change:transform;
+}
+.s-cross__fig--left{ left:var(--off,3vw); }
+.s-cross__fig--right{ right:var(--off,3vw); }
+
+.s-cross__in{ display:block; transform:translateY(-50%); }
+
+.s-cross__svg{ display:block; width:100%; height:auto; }
+
+/* ---- the two distances ----
+
+   near  the page's own black, at full weight, with a hairline of accent
+         down the lit edge and a wide soft shadow under it. A body
+         between the reader and a screen.
+   far   the same figure further back: smaller, softer, and a wash rather
+         than a solid, so two figures never read as one repeated stamp.
+
+   The accent rim is a drop-shadow rather than a stroke on the paths,
+   because a stroke would thicken every limb by its own width and the
+   figures are already drawn as strokes. Offset toward the middle of the
+   screen on both sides - the light on this page comes off the frames,
+   and the frames are in the middle. */
+.s-cross__fig--near{
+  --w:clamp(120px,13vw,215px);
+  --off:clamp(14px,4vw,90px);
+  color:var(--film);
+  filter:
+    drop-shadow(0 26px 46px rgba(0,0,0,.72))
+    drop-shadow(0 0 24px rgba(11,11,12,.9));
+}
+.s-cross__fig--near.s-cross__fig--right{ filter:drop-shadow(-2px 0 0 rgba(47,229,137,.5)) drop-shadow(0 26px 48px rgba(0,0,0,.75)); }
+.s-cross__fig--near.s-cross__fig--left{ filter:drop-shadow(2px 0 0 rgba(47,229,137,.5)) drop-shadow(0 26px 48px rgba(0,0,0,.75)); }
+
+.s-cross__fig--far{
+  --w:clamp(86px,9vw,146px);
+  --off:clamp(10px,6vw,140px);
+  color:rgba(11,11,12,.82);
+  filter:blur(1.4px) drop-shadow(0 18px 34px rgba(0,0,0,.5));
+}
+.s-cross__fig--far.s-cross__fig--right{ filter:blur(1.4px) drop-shadow(-1px 0 0 rgba(241,236,225,.22)); }
+.s-cross__fig--far.s-cross__fig--left{ filter:blur(1.4px) drop-shadow(1px 0 0 rgba(241,236,225,.22)); }
+
+/* the phone screen - the one part of a figure that is not the
+   silhouette's colour, because it is the thing the body is a silhouette
+   against */
+.s-cross__lit{ fill:var(--accent); opacity:.72; }
+
+/* ---- the crossers on a narrow screen ----
+
+   They stay. A figure that only appears on a desktop is a decoration; a
+   figure standing on the seam is the join between two sections and the
+   join is needed more on a phone, where a beat is taller and the reader
+   sees less of it at once. They are drawn smaller and pushed harder into
+   the margin so they cannot land on the type, which on a narrow screen
+   runs the full width.  */
+@media (max-width:900px){
+  .s-cross__fig--near{ --w:clamp(96px,26vw,150px); --off:-4vw; }
+  .s-cross__fig--far{ --w:clamp(74px,20vw,116px); --off:-5vw; }
+}
+
+/* ============================================================
    3 · THE SEVEN SHOTS
    ============================================================ */
 
@@ -254,21 +363,76 @@
   will-change:transform;
 }
 
-/* stack - uneven heights, because five equal bands is a contact sheet
-   and the reference is a poster. The ratios are the reference's: a tall
-   one third of the way down carries the mark, and the ones either side
-   of it are the thin ones. */
-.spost--stack .spost__bands{
-  display:flex; flex-direction:column;
-  gap:clamp(3px,.5vh,7px);
-  padding:clamp(3vh,5vh,8vh) 0;
+/* ---- stack: the poster is a poster, not a wash ------------------
+
+   ---- the arithmetic that was wrong ----
+
+   Five full-bleed bands sharing one screen. A band is therefore as wide
+   as the window and as tall as its fifth of a screen: on a laptop that
+   is 1900 x 170, an eleven-to-one crop, and eleven-to-one is not a crop
+   of a photograph - it is a neck, an ear, a slice of a curtain. Worse,
+   it compounds. Every frame added to the array crops every frame that
+   was already in it, so the fix cannot be a better crop; it has to be
+   fewer frames in a narrower column.
+
+   So the stack is bounded now. --col is a poster shape rather than the
+   window, three bands share it instead of five, and the crops land near
+   three-to-one - wide, cinematic, and still a picture of something. The
+   black either side is not waste: it is the mount the poster hangs on,
+   it is where the lifted frames overhang to, and it is what stops the
+   composition reading as a full-bleed background with words on it.
+
+   --lift is how far a lifted frame reaches back over the column edge.
+   It is a token rather than a number in four places because it is the
+   one measurement the type has to stay clear of. */
+.spost--stack{
+  --col:min(94vw,900px);
+  --lift:clamp(16px,2.2vw,48px);
 }
+
+/* the room the poster hangs in. Without it the margins are flat black
+   and the column reads as a page that failed to fill, rather than as a
+   poster on a wall. */
+.spost--stack .spost__ground{
+  position:absolute; inset:0; z-index:0;
+  width:100%; height:100%; object-fit:cover;
+  opacity:.24;
+  transform:scale(1.14);
+  filter:blur(11px) saturate(.6) brightness(.66);
+}
+
+.spost--stack .spost__bands{
+  left:50%; right:auto;
+  width:var(--col);
+  transform:translateX(-50%);
+  display:flex; flex-direction:column;
+  gap:clamp(4px,.6vh,9px);
+  padding:clamp(3vh,5vh,8vh) 0;
+  filter:drop-shadow(0 44px 90px rgba(0,0,0,.62));
+}
+/* uneven heights, because three equal bands is a contact sheet and the
+   reference is a poster. The tall one is last and carries the frame that
+   reads widest. */
 .spost--stack .spost__band{ flex:var(--g,1) 1 0; transform-origin:center; }
-.spost--stack .spost__band:nth-child(1){ --g:1.15; }
-.spost--stack .spost__band:nth-child(2){ --g:.78; }
-.spost--stack .spost__band:nth-child(3){ --g:1.44; }
-.spost--stack .spost__band:nth-child(4){ --g:.8; }
-.spost--stack .spost__band:nth-child(5){ --g:1.22; }
+/* Biased up, not centred. Every frame in this folder is a person in a
+   room and in every one of them the face sits above the middle of the
+   plate - so a centred cover crop on a 3:1 band reliably cuts the eyes
+   off and keeps the chin, which is the single worst crop available. */
+.spost--stack .spost__band > img,
+.spost--stack .spost__band > video{ object-position:50% 38%; }
+/* except the thin one. The bias is there to protect a face in a band
+   tall enough to hold one; the middle band is a texture strip between
+   two frames and there is nothing in it to protect, so it takes the
+   middle of its plate like any ordinary crop. */
+.spost--stack .spost__band:nth-child(2) > img,
+.spost--stack .spost__band:nth-child(2) > video{ object-position:50% 50%; }
+.spost--stack .spost__band:nth-child(1){ --g:1; }
+.spost--stack .spost__band:nth-child(2){ --g:.72; }
+.spost--stack .spost__band:nth-child(3){ --g:1.24; }
+/* a fourth or fifth frame in the array is not drawn rather than silently
+   crushing the three that are composed. If the beat needs five, the
+   column needs to be a grid and that is a different shot. */
+.spost--stack .spost__band:nth-child(n+4){ display:none; }
 
 /* grid - the frames overlap on a twelve-column field rather than tiling
    in it. The ring in the page's own ground colour is what keeps two
@@ -327,19 +491,24 @@
 .spost__inset--back{ z-index:3; }
 .spost__inset--front{ z-index:5; }
 
+/* On the stack a lifted frame is hung on the column's own edge - mostly
+   out in the mount, reaching back over the pictures by --lift. That is
+   the whole reason the column is bounded: an inset with nowhere to
+   overhang to has to be placed on top of the composition, which is where
+   it lands on the type. Left one behind the words, right one in front. */
 .spost--stack .spost__inset{ aspect-ratio:9/16; }
 .spost--stack .spost__inset--back{
-  left:6%; top:19%;
-  width:clamp(104px,14vw,206px);
+  right:calc(50% + var(--col) / 2 - var(--lift)); left:auto;
+  top:30%;
+  width:clamp(96px,12vw,184px);
 }
 .spost--stack .spost__inset--f0{
-  right:7%; bottom:11%;
-  width:clamp(112px,15.5vw,224px);
+  left:calc(50% + var(--col) / 2 - var(--lift)); right:auto;
+  bottom:13%;
+  width:clamp(104px,13vw,198px);
 }
-.spost--stack .spost__inset--f1{
-  right:auto; left:17%; bottom:5%;
-  width:clamp(84px,10.5vw,152px);
-}
+/* two picture planes is the mechanic; a third is a scrapbook */
+.spost--stack .spost__inset--f1{ display:none; }
 
 .spost--grid .spost__inset{
   aspect-ratio:2/3;
@@ -400,18 +569,28 @@
    drifts to the floor of the frame. */
 .spost__copy--empty{ display:block; height:0; }
 
-/* stack - three zones down the frame. The sentence high and left, the
-   mark across the middle, the copy at the foot. */
+/* stack - three zones down the column. The sentence high and left, the
+   mark across the middle, the copy at the foot.
+
+   The type is inside the column now, not across the window. That is not
+   a tidy-up: a mark set 1500px wide over pictures 900px wide is a line
+   that runs off its own poster at both ends, which is what put the end
+   card's last word underneath a lifted frame. Nothing here may be wider
+   than the picture it is set on. */
 .spost--stack .spost__type{
-  inset:clamp(64px,11vh,132px) var(--pad) clamp(44px,7.5vh,92px);
+  left:50%; right:auto;
+  top:clamp(52px,9.5vh,116px); bottom:clamp(40px,7vh,88px);
+  width:var(--col);
+  transform:translateX(-50%);
+  padding:0 clamp(16px,2.2vw,38px);
   display:flex; flex-direction:column;
   align-items:flex-start; justify-content:space-between;
 }
-.spost--stack .spost__head{ max-width:34ch; }
+.spost--stack .spost__head{ max-width:30ch; }
 .spost--stack .spost__mark{
-  width:100%; max-width:17ch; margin:0 auto;
+  width:100%; max-width:12ch; margin:0 auto;
   text-align:center;
-  font-size:clamp(34px,7.6vw,124px);
+  font-size:clamp(32px,5.6vw,84px);
 }
 
 /* grid - one block, on the corner of a frame, left of the picture stack */
@@ -436,14 +615,23 @@
    that cannot be faked from a rectangular still - it needs a file with
    real alpha in it.
 
-   Centred with auto margins rather than a translate, because the scroll
-   owns this element's transform and two owners on one transform is the
-   bug that reads as jitter on a slow machine. */
+   ---- not centred, and that is the fix ----
+
+   It was: left:0; right:0; margin:0 auto, 500px wide, over a mark set
+   across the middle of the same frame. The one file ever wired into this
+   slot was a rectangular crop of a cinema audience, and what it drew was
+   the page's own title reading "A co ... ink." A layer whose whole job
+   is to be in front of the type has to be somewhere the type is not.
+
+   So it stands to one side of the mark instead of on it. Anchored right
+   rather than centred with auto margins, and no translate either way:
+   the scroll owns this element's transform, and two owners on one
+   transform is the bug that reads as jitter on a slow machine. */
 .spost__cut{
   position:absolute; z-index:6; pointer-events:none;
-  left:0; right:0; margin:0 auto;
+  right:5%; left:auto; margin:0;
   bottom:2%;
-  width:clamp(230px,33vw,500px);
+  width:clamp(200px,27vw,420px);
   will-change:transform;
 }
 .spost__cut > img{
@@ -455,14 +643,30 @@
 @media (max-width:900px){
   .sbeat[data-shot="poster"]{ min-height:120svh; }
 
+  /* the mount runs out on a narrow screen - the column is the width of
+     the page. So the lifted frames come back inside it and go to the
+     corners the mark does not reach: the mark is centred and vertically
+     middle, so the top-left and the bottom-right are the two places on
+     this composition that are always free. */
+  .spost--stack{ --col:100vw; --lift:0px; }
+  .spost--stack .spost__bands{ padding:clamp(2vh,4vh,7vh) 0; }
   .spost--stack .spost__type{
-    inset:clamp(52px,9vh,96px) var(--pad) clamp(34px,6vh,72px);
+    top:clamp(44px,8vh,90px); bottom:clamp(30px,5.5vh,66px);
+    padding:0 var(--pad);
   }
-  .spost--stack .spost__mark{ max-width:13ch; }
-  .spost--stack .spost__inset--back{ left:4%; top:15%; width:clamp(84px,22vw,130px); }
-  .spost--stack .spost__inset--f0{ right:4%; bottom:9%; width:clamp(88px,23vw,136px); }
-  .spost--stack .spost__inset--f1{ display:none; }
-  .spost__cut{ width:min(74vw,380px); bottom:1%; }
+  /* the desktop clamp bottoms out at 32px here, which is a heading
+     rather than a title card. On a narrow screen the column is the whole
+     page, so the mark can have the whole page's width. */
+  .spost--stack .spost__mark{ max-width:11ch; font-size:clamp(34px,9.4vw,62px); }
+  .spost--stack .spost__inset--back{
+    right:auto; left:clamp(8px,3vw,22px); top:11%;
+    width:clamp(74px,19vw,116px);
+  }
+  .spost--stack .spost__inset--f0{
+    left:auto; right:clamp(8px,3vw,22px); bottom:7%;
+    width:clamp(78px,20vw,124px);
+  }
+  .spost__cut{ width:min(58vw,300px); right:2%; bottom:1%; }
 
   .spost--grid .spost__bands{
     grid-template-rows:repeat(10,1fr);
@@ -526,31 +730,92 @@
 .sbeat[data-shot="aperture"] .sbeat__copy{ max-width:46ch; }
 
 /* ---- STRIP ---------------------------------------------------
-   The poster reference at its simplest - a frame cut into horizontal
-   bands. Four of them, each holding its own crop and each travelling at
-   its own rate.
+   Four frames, held as a filmstrip beside the sentence.
 
-   The pictures are 118% wide inside their bands so there is 9% of travel
-   each way and an edge can never show; the 9 in strips() is half of that
-   overhang and the arithmetic is not a coincidence.
+   ---- the crop this fixes ----
+
+   These were four full-bleed bands filling the stage: flex:1 each, so on
+   a laptop every one of them was about 170px tall and the full width of
+   the window. That is an eleven-to-one crop of a photograph, and an
+   eleven-to-one crop is not a crop - it is a band of somebody's forearm
+   and a band of a curtain. Four of them stacked read as a broken image
+   rather than as four shots.
+
+   So the band is sized off its own height and takes its width from the
+   ratio instead of the window. 21:9 is a real crop that a real frame is
+   really graded to, it holds at every viewport without a media query,
+   and four of them plus their gutters is a column rather than a wall -
+   which leaves the other half of the screen for the type that was
+   previously lying across the pictures.
+
+   The pictures are still 118% wide inside their bands so there is 9% of
+   travel each way and an edge can never show; the 9 in strips() is half
+   of that overhang and the arithmetic is not a coincidence.
    ------------------------------------------------------------- */
+
+/* the room the column hangs in. The first frame again, blown up, blurred
+   and pushed right back - a strip on flat black is a graphic, a strip in
+   a room is a shot, and the figure that crosses the seam at the foot of
+   this beat needs something to be a silhouette against. */
+.sstrip__bg{
+  z-index:0;
+  opacity:.42;
+  transform:scale(1.12);
+  filter:blur(7px) saturate(.66) brightness(.84);
+}
+
 .sstrip{
-  position:absolute; inset:0;
-  display:flex; flex-direction:column;
-  gap:clamp(3px,.5vh,7px);
-  padding:clamp(4vh,7vh,9vh) 0;
+  position:absolute; z-index:3;
+  top:50%; right:var(--pad); left:auto;
+  transform:translateY(-50%);
+  display:flex; flex-direction:column; align-items:flex-end;
+  gap:clamp(6px,1.1vh,14px);
 }
 .sstrip__band{
-  position:relative; flex:1 1 0; overflow:hidden;
+  position:relative; overflow:hidden;
+  height:clamp(96px,18vh,196px);
+  aspect-ratio:21/9;
+  border-radius:2px;
+  background:var(--panel);
   transform-origin:center;
+  /* the ring is the page's own black, so four overlapping-ish frames
+     still read as four frames. Same trick as the poster grid. */
+  box-shadow:
+    0 0 0 clamp(3px,.4vw,6px) var(--film),
+    0 30px 70px rgba(0,0,0,.62);
 }
+/* the cascade. Four frames flush down one edge is a contact sheet; four
+   stepped off each other is a strip somebody laid down by hand. */
+.sstrip__band:nth-child(even){ margin-right:clamp(14px,2.6vw,46px); }
+
 .sstrip__band img,
 .sstrip__band video{
   position:absolute; top:0; left:-9%;
   width:118%; height:100%; object-fit:cover;
   will-change:transform;
 }
-.sbeat[data-shot="strip"] .sbeat__line{ max-width:17ch; }
+
+/* the sentence keeps the half of the screen the column is not in */
+.sbeat[data-shot="strip"] .sbeat__line{ max-width:15ch; }
+.sbeat[data-shot="strip"] .sbeat__copy{ max-width:38ch; }
+
+@media (max-width:900px){
+  /* one column, centred, and the type below it. A 21:9 frame at phone
+     width is 170px tall - still a frame, and still four of them. */
+  .sstrip{
+    top:auto; bottom:clamp(60px,11vh,120px);
+    left:var(--pad); right:var(--pad);
+    transform:none;
+    align-items:stretch;
+    gap:5px;
+  }
+  .sstrip__band{ width:100%; height:auto; }
+  .sstrip__band:nth-child(even){ margin-right:0; }
+  .sbeat[data-shot="strip"]{ min-height:132svh; align-items:flex-start; }
+  .sbeat[data-shot="strip"] .sbeat__type{ padding-top:clamp(20px,5vh,60px); }
+  .sbeat[data-shot="strip"] .sbeat__line,
+  .sbeat[data-shot="strip"] .sbeat__copy{ max-width:none; }
+}
 
 /* ---- REEL ----------------------------------------------------
    Eight verticals in a row, closing into a stack as the beat is read.

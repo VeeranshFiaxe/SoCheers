@@ -55,6 +55,7 @@ export function initSeries(): () => void {
     phones(reduced);
     helds(reduced);
     rulers(reduced);
+    crossers(reduced);
     feed(reduced, ac.signal);
     episodeRail();
   });
@@ -263,6 +264,110 @@ function posters(reduced: boolean) {
         },
       );
     }
+  });
+}
+
+/* ------------------------------------------------------------------
+   THE CROSSERS - the figures standing on the seam between two beats.
+
+   Two jobs, and they are separate on purpose.
+
+   ---- one: put the figure on the seam ----
+
+   Every beat on this page is sized in svh, so where the boundary between
+   two of them falls is a property of the viewport and not of the
+   stylesheet. There is no offset that can be written down. So the seam is
+   measured: the figure's `top` is its beat's own top or bottom edge,
+   expressed relative to the story it is drawn over, and the half-height
+   lift that straddles it lives on the inner element in CSS.
+
+   place() runs inside a ScrollTrigger's onRefresh rather than off a
+   resize listener. That matters for two reasons: refresh is already
+   debounced and already fires on every resize, font load and image load
+   that could move a seam, and a trigger created in here is reverted with
+   the rest of the context when the page unmounts. A bare
+   addEventListener would outlive it.
+
+   ---- two: make it read as nearer than the page ----
+
+   A figure that sits still on a seam is a sticker on a join. What makes
+   it read as standing in the room is that it travels further than
+   anything behind it when the reader scrolls - the near ones a long way,
+   the far ones barely, which is the same depth ladder the posters use
+   and the reason two figures at different distances read as a room
+   rather than as one shape used twice.
+   ------------------------------------------------------------------ */
+function crossers(reduced: boolean) {
+  const story = document.querySelector<HTMLElement>("[data-s-story]");
+  const figs = gsap.utils.toArray<HTMLElement>("[data-cross]");
+  if (!story || !figs.length) return;
+
+  /* a crosser whose seam has been renamed or deleted in
+     lib/series-content.ts is not an error - beats come and go. It simply
+     does not draw, rather than stacking up at the top of the page. */
+  const seamOf = (fig: HTMLElement) =>
+    fig.dataset.seam ? document.getElementById(`beat-${fig.dataset.seam}`) : null;
+
+  const place = () => {
+    const base = story.getBoundingClientRect().top + window.scrollY;
+    figs.forEach((fig) => {
+      const seam = seamOf(fig);
+      if (!seam) {
+        fig.style.display = "none";
+        return;
+      }
+      const box = seam.getBoundingClientRect();
+      const edge = fig.dataset.edge === "top" ? box.top : box.bottom;
+      fig.style.top = `${Math.round(edge + window.scrollY - base)}px`;
+    });
+  };
+
+  /* The trigger exists for its onRefresh and nothing else - it is the
+     one hook that fires after every layout change ScrollTrigger already
+     knows about, and it dies with the context. */
+  ScrollTrigger.create({
+    trigger: story,
+    start: "top bottom",
+    end: "bottom top",
+    onRefresh: place,
+  });
+  place();
+
+  if (reduced) return;
+
+  figs.forEach((fig) => {
+    const seam = seamOf(fig);
+    if (!seam) return;
+
+    /* how far it travels, in px rather than percent: these are figures of
+       very different heights standing in the same room, and a share of
+       their own height would move the tall one further than the short
+       one for no reason a reader could name. */
+    const near = fig.dataset.depth === "near";
+    const dist = near ? 110 : 46;
+
+    gsap.fromTo(
+      fig,
+      { y: -dist },
+      {
+        y: dist,
+        ease: "none",
+        scrollTrigger: { trigger: seam, start: "top bottom", end: "bottom top", scrub: true },
+      },
+    );
+
+    /* the arrival. Opacity only - drift already owns this element's
+       translate, and the figure has to be up before the seam is on
+       screen, because half of it is standing in the beat above. */
+    gsap.fromTo(
+      fig,
+      { opacity: 0 },
+      {
+        opacity: near ? 1 : 0.72,
+        ease: "power2.out",
+        scrollTrigger: { trigger: seam, start: "top 96%", end: "top 55%", scrub: true },
+      },
+    );
   });
 }
 
