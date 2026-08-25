@@ -52,14 +52,12 @@ export const OVERTURE_WALLS = [
      here on, so this slot has more than three candidates now if the
      running order is ever re-cut. */
   { img: "/assets/SC Website Revamp/01. Home/Wall 2.jpg", label: "Attention" },
-  /* The fourth wall, and the second of the two the sequence is still slow
-     enough to actually look at. Wall 6 - the engraved ship - rather than
-     the Photoshop screen that used to be here: it is the same beat about
-     craft, made by hand rather than on a screen, and it is the one of the
-     four newly-turned walls that holds up at this size without going
-     quiet. The Photoshop frame is not lost, it swaps down into the slot
-     this came out of, so the run is exactly as long as it was. */
-  { img: "/assets/SC Website Revamp/01. Home/Wall 6.jpg", label: "Craft" },
+  /* Wall 6 - the engraved ship - used to hold a fourth slot here, as the
+     second of the two walls the sequence was still slow enough to look
+     at. It is out, and nothing is promoted up to replace it: cutting a
+     beat out of the front of the run is the point, so what follows just
+     moves one place forward and arrives one notch faster off the ramp in
+     lib/overture-motion.ts. */
   { img: IMG.brain, label: "Strategy" },
   { img: IMG.bootPhone, label: "Content" },
   { img: "/assets/who-culture.jpg", label: "Us" },
@@ -133,6 +131,19 @@ export const NAV_LINKS: { href: string; label: string; soon?: boolean }[] = [
   { href: "/work", label: "Work" },
   { href: "/ai-work", label: "AI Work" },
   { href: "/series", label: "Series" },
+  /* TEMPORARY - the two other passes at the same tab, sitting next to
+     the live one so all three can be compared in the browser.
+
+     Series 2.0 is the live tab's copy staged flat, with none of its
+     fourteen mechanics running - app/series-test/.
+     The Deck is the other direction entirely: the client's own
+     PowerPoint ported slide for slide, its words rather than the
+     rewrite's - app/series-deck/.
+
+     Remove these two lines and those two folders once a direction is
+     picked. Each page's own header comment lists what else goes with it. */
+  { href: "/series-test", label: "Series 2.0" },
+  { href: "/series-deck", label: "The Deck" },
   { href: "/blogs", label: "Insights" },
 ];
 

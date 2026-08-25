@@ -89,14 +89,20 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
                 data-cursor={c.label}
               >
                 {c.label}
-                <sup>{counts[c.id] ?? 0}</sup>
               </button>
             ))}
           </div>
 
-          {/* aria-live, because on a filter this is the only feedback a
-              screen reader gets that anything happened at all. */}
-          <p className="wk-count" aria-live="polite">
+          {/* The count is not drawn any more - the client does not want
+              a number on the tabs or under them, and they are right that
+              "23" next to a filter is a fact about the database rather
+              than about the work.
+
+              It stays as a live region because it is still the only
+              feedback a screen reader gets that pressing a tab did
+              anything at all: the tiles change silently, and without
+              this a filter is a button that appears to do nothing. */}
+          <p className="wk-count sr-only" aria-live="polite">
             {WORK_BROWSE.count(shown.length)}
           </p>
         </div>

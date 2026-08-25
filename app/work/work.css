@@ -80,25 +80,20 @@
   background:rgba(241,236,225,.35);
 }
 
-.wk-lede__brand{
-  margin-top:14px;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(40px,6.4vw,96px); line-height:.98; letter-spacing:-.04em;
-}
+/* The display line, and it is a sentence now rather than a brand name.
 
-/* The credits line. Labels in the accent, values in cream, wrapping as
-   one paragraph rather than as a list - it is read as a sentence of
-   facts, the way a poster's small print is. */
-.wk-lede__credits{
-  margin-top:16px;
-  display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 18px;
-  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.1em;
-  color:var(--cream);
-}
-.wk-lede__credits b{ font-weight:700; letter-spacing:.18em; }
-.wk-lede__credits i{
-  font-style:normal; text-transform:uppercase; letter-spacing:.18em;
-  color:var(--dim);
+   That is the whole reason this is not the 96px it was. A brand set at
+   96px is four words; the client's headlines run to twenty and ask a
+   question, and at that size one of them is six lines tall and reads as
+   shouting rather than as writing. The scale below tops out where a
+   twenty-word line still lands in three, which is a headline, and the
+   measure holds it there rather than letting it run the width of the
+   picture. */
+.wk-lede__head{
+  margin-top:16px; max-width:26ch;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(20px,2.05vw,32px); line-height:1.14; letter-spacing:-.015em;
+  text-wrap:balance;
 }
 
 .wk-lede__line{
@@ -157,11 +152,19 @@
    ring's corners, which reach slightly further than its edges. */
 .wk-also__track{
   display:grid; grid-auto-flow:column;
-  grid-auto-columns:minmax(112px,1fr);
+  /* wider than the portrait wall it replaced - a 16:9 tile at 112px is
+     63px tall and nothing in it is legible */
+  grid-auto-columns:minmax(176px,1fr);
   gap:clamp(9px,1vw,14px);
   overflow-x:auto; scrollbar-width:none;
   padding:8px 3px 6px;
   margin:-8px -3px -6px;
+  /* Room kept at the scrollport edges when the wall scrolls itself to
+     the selected tile. The ring cannot be clipped any more either way -
+     see the note over it - but a tile jammed flush against the edge
+     still reads as cut off, and this is what stops the browser doing
+     that. */
+  scroll-padding-inline:8px;
 }
 .wk-also__track::-webkit-scrollbar{ display:none; }
 .wk-also__track:focus-visible{ outline:1px solid var(--accent); outline-offset:6px; }
@@ -174,21 +177,56 @@
 }
 .wk-poster:hover{ opacity:1; transform:translateY(-3px); }
 .wk-poster[aria-selected="true"]{ opacity:1; }
+/* 16:9, not the reference's 2:3. Every thumbnail the client sent is a
+   wide still and there is no portrait crop of any of them; cropping one
+   to a poster takes the brand out of both sides. See the note in
+   components/WorkPinned.tsx. */
 .wk-poster__shot{
-  display:block; aspect-ratio:2/3; overflow:hidden; border-radius:6px;
+  display:block; aspect-ratio:16/9; overflow:hidden; border-radius:6px;
   background:var(--panel); position:relative;
 }
 /* The selected poster says so with a ring, not only with opacity -
-   opacity alone is not a state anyone can point at on a call. */
-.wk-poster[aria-selected="true"] .wk-poster__shot{ box-shadow:0 0 0 2px var(--accent); }
+   opacity alone is not a state anyone can point at on a call.
+
+   ---- why the ring is drawn inside the tile and not around it ----
+
+   It used to be `box-shadow:0 0 0 2px`, which paints *outside* the
+   element's box. That works everywhere except in a scroll container,
+   which this is: when the wall scrolls - and it scrolls itself, every
+   time the reel advances or a poster is picked by keyboard - the
+   browser aligns the selected tile's own edge with the edge of the
+   scrollport, and the two pixels living outside that edge have nowhere
+   to be. They get clipped. The left side goes first because that is the
+   edge the wall scrolls towards.
+
+   The padding on the track buys room for this at scroll position zero
+   and only there, which is why it looked fine until it moved.
+
+   So the ring is a border drawn on an overlay inside the tile instead.
+   Nothing about it lives outside the box any more, so there is nothing
+   for the scrollport to cut, at any scroll position, on any screen.
+
+   It has to be an ::after rather than an inset shadow: an inset shadow
+   paints under the element's content, and the content here is an image
+   filling the whole box, so the ring would be behind the picture. */
+.wk-poster__shot::after{
+  content:""; position:absolute; inset:0; z-index:3; pointer-events:none;
+  border:2px solid transparent; border-radius:inherit;
+  transition:border-color .35s var(--ease);
+}
+.wk-poster[aria-selected="true"] .wk-poster__shot::after{ border-color:var(--accent); }
 /* The turn left on the selected frame - see the note in
    components/WorkPinned.tsx. It sits inside the shot rather than under
    the name so that it reads as belonging to the picture that is
    currently up, and it is the only moving thing on the wall. The
    animation's duration and play state are set inline from
    PINNED_DWELL and the pause flags; the shape is here. */
+/* Inset by the width of the ring and drawn above it. Without this the
+   bar and the ring's bottom border are the same two pixels in the same
+   accent, so the one tile that shows the clock is the one tile where it
+   cannot be seen. */
 .wk-poster__clock{
-  position:absolute; left:0; right:0; bottom:0; height:2px; z-index:2;
+  position:absolute; left:2px; right:2px; bottom:2px; height:2px; z-index:4;
   transform-origin:left center;
   background:var(--accent);
   animation-name:wk-clock; animation-timing-function:linear; animation-fill-mode:forwards;
@@ -210,11 +248,16 @@
 @media (max-width:1000px){
   .wk-stage{ min-height:auto; padding-bottom:clamp(28px,4vh,44px); }
   .wk-stage__grid{ grid-template-columns:1fr; gap:clamp(26px,4vh,40px); }
-  .wk-lede__brand{ font-size:clamp(34px,9vw,58px); }
+  .wk-lede__head{ font-size:clamp(19px,3.6vw,26px); max-width:30ch; }
   .wk-also__track{ grid-auto-columns:minmax(104px,1fr); }
 }
 @media (max-width:620px){
-  .wk-lede__line{ display:none; }
+  /* The line under the headline used to be hidden here, back when it
+     was a placeholder synopsis and the phone screen was better off
+     without it. It is the client's own second sentence now and it is
+     what answers the headline's question - dropping it on a phone
+     leaves the reader with the question and no punchline. */
+  .wk-lede__line{ font-size:14px; }
   .wk-also__track{ grid-auto-columns:96px; }
 }
 
@@ -407,4 +450,51 @@
   .wk-tile:hover img{ transform:none; }
   .wk-tile__go{ transition:none; transform:none; opacity:1; }
   .wk-poster:hover{ transform:none; }
+}
+
+/* ============================================================
+   THE FILM, IN THE FRAME
+
+   The client's instruction for Netflix x MI: the film plays in the tile
+   it is already sitting in - not fullscreen, not a lightbox, not a new
+   page. So it takes the frame's own slot in the stack, above the
+   crossfading stills and below where the scrim would be, and the page
+   around it does not move at all: the header is still there, the stage
+   is still one screen tall, and scrolling still leaves it.
+
+   `contain`, not `cover`: this is the work, and cropping the top and
+   bottom off a 16:9 master to fill a taller stage is not a thing to do
+   to somebody's film. The letterbox is black, which is what a film's
+   surround is.
+   ============================================================ */
+.wk-stage__film{
+  position:absolute; inset:0; z-index:1;
+  background:#000;
+}
+.wk-stage__film video{
+  width:100%; height:100%; display:block;
+  object-fit:contain; background:#000;
+}
+.wk-stage__close{
+  position:absolute; z-index:2; top:clamp(90px,13vh,120px); right:var(--pad);
+  width:40px; height:40px; display:grid; place-items:center;
+  border:1px solid rgba(241,236,225,.3); border-radius:50%;
+  background:rgba(4,4,5,.6); backdrop-filter:blur(6px);
+  color:var(--cream); cursor:none;
+  transition:border-color .35s var(--ease), background .35s var(--ease);
+}
+.wk-stage__close:hover{ border-color:var(--cream); background:rgba(4,4,5,.85); }
+@media (hover:none){ .wk-stage__close{ cursor:pointer; } }
+
+/* While it plays, the writing and the poster wall are not on the
+   picture. They stay in the DOM - see the note in WorkPinned - they are
+   simply not in the way, and not clickable while they cannot be seen. */
+.wk-stage.is-rolling .wk-stage__grid{
+  opacity:0; pointer-events:none;
+  transition:opacity .45s var(--ease);
+}
+.wk-stage__grid{ transition:opacity .45s var(--ease); }
+
+@media (prefers-reduced-motion:reduce){
+  .wk-stage__grid, .wk-stage.is-rolling .wk-stage__grid{ transition:none; }
 }

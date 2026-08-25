@@ -18,12 +18,29 @@ export default function Blog() {
           in lib/motion.ts. */}
       <main id="top" className="bl-page" data-nav-light>
         <section className="bl-hero wrap">
-          <span className="tag" data-reveal>{BLOG_HERO.eyebrow}</span>
-          <h1 className="bl-hero__title" data-split>
-            {BLOG_HERO.lines[0]}
-            <em>{BLOG_HERO.lines[1]}</em>
-          </h1>
-          <p className="bl-hero__lede" data-reveal>{BLOG_HERO.lede}</p>
+          <div className="bl-hero__copy">
+            <span className="tag" data-reveal>{BLOG_HERO.eyebrow}</span>
+            <h1 className="bl-hero__title" data-split>
+              {BLOG_HERO.lines[0]}
+              <em>{BLOG_HERO.lines[1]}</em>
+            </h1>
+            <p className="bl-hero__lede" data-reveal>{BLOG_HERO.lede}</p>
+          </div>
+
+          {/* A transparent-background cutout, so it sits straight on the
+              cream ground with no frame or card around it - the artwork's
+              own edge is the edge. Decorative next to the h1 it illustrates,
+              hence the empty alt. */}
+          <div className="bl-hero__visual" data-reveal>
+            <img
+              src="/assets/SC Website Revamp/06. Blogs/reading visual.png"
+              alt=""
+              width={1536}
+              height={1024}
+              loading="eager"
+              decoding="async"
+            />
+          </div>
         </section>
 
         <BlogTabs />

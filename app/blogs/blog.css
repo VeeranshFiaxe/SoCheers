@@ -17,11 +17,79 @@
   background:#f4f2ec; color:var(--cream);
 }
 
-.bl-hero{ padding-top:clamp(160px,26vh,240px); padding-bottom:clamp(56px,8vh,96px); }
+/* Copy left, artwork right. The copy column is capped in ch rather than fr
+   so the title keeps its own measure and the visual takes whatever's left,
+   instead of the headline stretching to fill half a wide screen. */
+.bl-hero{
+  padding-top:clamp(92px,13vh,132px); padding-bottom:clamp(4px,1.2vh,16px);
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,0.92fr);
+  gap:clamp(28px,4vw,64px); align-items:center;
+
+  /* One knob for the whole fold. Copy and artwork both add this to their own
+     placement, so their relationship to each other is fixed and this only
+     slides the pair as a unit - down toward the tabs bar, up away from it.
+     Painted, like everything else in here, so the bar itself never moves. */
+  --hero-drop:60px;
+}
+/* The copy rides the top of the row rather than centring against the
+   artwork, which is what lifts it clear of the visual's mass. z-index:2
+   puts the whole copy column above the image: where the two overlap, the
+   type is the layer in front, so it stays readable over the PNG's dark
+   areas as well as showing through its transparent ones. */
+.bl-hero__copy{
+  min-width:0; position:relative; z-index:2; align-self:start;
+  /* a painted offset, same reasoning as the artwork's - the copy shifts
+     without its box moving, so nothing below the hero follows it. Positive
+     now: the section's top padding came down to shorten the hero, and this
+     puts the copy back below where that alone would have left it. */
+  transform:translateY(calc(14px + var(--hero-drop)));
+}
+/* The PNG is a cutout on transparent, so there's no card, border, radius or
+   shadow here on purpose - it reads as art dropped straight on the ground,
+   not a tile sitting above it. */
+.bl-hero__visual{
+  min-width:0; justify-self:end; width:100%;
+  position:relative; z-index:0; pointer-events:none;
+  /* The artwork's placement, in one variable */
+  --art-place:translate(1%,5%) translate(-10px,calc(-68px + var(--hero-drop))) scale(1.1);
+  /* how far the artwork is pulled up out of its own row */
+  --art-lift:clamp(-72px,-5vh,-24px);
+}
+
+.bl-hero__visual img{
+  display:block; width:100%; height:auto;
+  /* pulled up into the copy's row so the section doesn't stand as tall as
+     the full 3:2 artwork would make it */
+  margin-top:var(--art-lift);
+  /* Final placement is a transform, deliberately - a transform is painted,
+     not laid out, so nudging the artwork moves nothing else on the page:
+     the tabs bar below keeps its position exactly. The flat px offsets sit
+     after the percentages and before scale() in the chain, so they are true
+     pixels rather than pixels x the scale. At this depth the artwork can
+     still reach into the tabs section - allowed, and handled by the z-index
+     note on .bl-tabs.
+     (The [data-reveal] entrance animates the wrapper div, not this img, so
+     the two don't collide.) */
+  transform:var(--art-place);
+  transform-origin:50% 50%;
+}
 .bl-hero__title{
   font-family:var(--f-display); font-weight:700;
+  /* Full site heading scale - same clamp the other page heroes run, so this
+     h1 matches them rather than shrinking to fit its column. nowrap holds
+     "Things worth reading." on one line, which means it runs past the copy
+     column into the artwork on wide screens. That overlap is intended: the
+     copy carries z-index over the visual below, and the PNG's left side is
+     empty ground, so the type lands on nothing. */
   font-size:clamp(38px,6.4vw,92px); line-height:.98; letter-spacing:-.03em;
-  margin-top:22px; max-width:16ch; text-wrap:balance;
+  margin-top:22px; text-wrap:nowrap; white-space:nowrap;
+  /* width:max-content is load-bearing, not cosmetic. [data-split] wraps each
+     line in a .line-mask with overflow:hidden (app/globals.css) to mask the
+     rise-in, and that mask inherits this element's width - so at the copy
+     column's width it clips the nowrap line mid-word once the split runs.
+     Sizing the h1 to its own content makes the mask as wide as the line, so
+     it still masks vertically and never horizontally. */
+  width:max-content; max-width:none;
 }
 .bl-hero__lede{
   margin-top:26px; max-width:48ch;
@@ -29,7 +97,12 @@
 }
 
 /* ---------- the tabbed hub: Blogs / White Papers / Reports ---------- */
-.bl-tabs{ padding:clamp(40px,6vh,72px) 0 clamp(64px,9vh,110px); }
+/* position + z-index are here because the hero artwork now hangs down into
+   this section. .bl-hero__visual is a positioned element, and positioned
+   elements paint above static ones whatever the DOM order - so without this
+   the PNG would sit over the tab bar and swallow its clicks. This puts the
+   bar back in front. */
+.bl-tabs{ position:relative; z-index:1; padding:clamp(40px,6vh,72px) 0 clamp(64px,9vh,110px); }
 .bl-tabs__bar{
   position:relative;
   display:inline-flex; gap:4px; padding:4px;
@@ -49,9 +122,10 @@
   position:relative; z-index:1;
   font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
   color:var(--muted); background:transparent; border:none; border-radius:100px;
-  padding:11px 20px; cursor:pointer;
+  padding:11px 20px; cursor:none;
   transition:color .35s var(--ease);
 }
+@media (hover:none){ .bl-tabs__btn{ cursor:pointer; } }
 .bl-tabs__btn:hover{ color:var(--cream); }
 .bl-tabs__btn.is-active{ color:#04140b; }
 
@@ -207,6 +281,11 @@
 .bl-end__back:hover{ color:var(--cream); gap:16px; }
 
 @media (max-width:1024px){
+  /* Stacked below 1024, artwork first so the fold still opens on a picture
+     and the title isn't pushed under a full-width image. */
+  .bl-hero{ grid-template-columns:1fr; gap:clamp(20px,4vw,32px); }
+  .bl-hero__visual{ order:-1; max-width:560px; }
+
   .bl-paper__card{ grid-template-columns:1fr; }
   .bl-paper__open{ padding-top:clamp(20px,3vw,28px); }
   .bl-paper__frame{ max-height:70vh; }
@@ -214,4 +293,14 @@
 
 @media (max-width:860px){
   .bl-topics__grid{ grid-template-columns:1fr; }
+}
+
+/* Below 640px the clamp bottoms out at 38px and one line of 21 characters is
+   wider than the phone - which would push the whole page into a sideways
+   scroll rather than just overlapping something. Only here does the title go
+   back to wrapping. */
+@media (max-width:640px){
+  /* wrapping again down here, so the h1 goes back to filling its column -
+     max-content would defeat the wrap it just got back */
+  .bl-hero__title{ text-wrap:balance; white-space:normal; width:auto; max-width:14ch; }
 }

@@ -249,9 +249,11 @@
 @media (max-width:640px){ .cs-duo__in{ grid-template-columns:1fr; } }
 
 .cs-video{ max-width:none; scroll-margin-top:clamp(96px,14vh,132px); }
-.cs-video video{
-  width:100%; height:auto; display:block; border-radius:12px; background:#000;
-}
+/* A film cut for a phone is not a full-width picture. Anything that is
+   not 16:9 is held to a width a portrait frame can be looked at in and
+   centred on the column - without this a single 9:16 block is four
+   screens tall on a desktop. */
+.cs-video--set .cs-play{ max-width:min(420px,100%); margin-inline:auto; }
 
 /* A board is an artboard - tall, dense, and read by looking closely. It
    gets the full width it can take and a light ground, because these are
@@ -339,4 +341,232 @@
 
 @media (prefers-reduced-motion:reduce){
   .cs-next__card img, .cs-next__card:hover img{ transition:none; transform:none; }
+}
+
+/* ============================================================
+   THE PLAYER
+
+   One box for all three kinds of video - a file, a YouTube frame, a
+   Vimeo frame - because the page's rhythm should not change depending
+   on where a client happened to host their film. The aspect ratio is
+   set inline by the component from the block's `ratio`, so nothing here
+   reserves a height: the box is exactly as tall as the frame it holds,
+   and a row of them is a row of the same shape.
+
+   The facade is a real <button> carrying the still, and the player
+   replaces it on the click. See components/CaseVideo.tsx for why the
+   iframe is not there from the start.
+   ============================================================ */
+.cs-play{
+  position:relative; display:block; width:100%;
+  overflow:hidden; border-radius:12px; background:#000;
+  border:0; padding:0;
+}
+.cs-play > video,
+.cs-play > iframe,
+.cs-play > img{
+  position:absolute; inset:0; width:100%; height:100%; display:block; border:0;
+}
+.cs-play > video{ object-fit:contain; background:#000; }
+
+.cs-play--facade{ cursor:none; }
+@media (hover:none){ .cs-play--facade{ cursor:pointer; } }
+.cs-play--facade > img{ transition:transform .9s var(--ease), opacity .5s var(--ease); }
+/* A still under a play button needs to sit back a little or the button
+   fights it; on hover the frame comes forward, which is the only signal
+   this control needs. */
+.cs-play--facade::after{
+  content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background:rgba(4,4,5,.28);
+  transition:background .5s var(--ease);
+}
+.cs-play--facade:hover::after{ background:rgba(4,4,5,.12); }
+.cs-play--facade:hover > img{ transform:scale(1.03); }
+.cs-play__btn{
+  position:absolute; z-index:2; left:50%; top:50%; transform:translate(-50%,-50%);
+  display:grid; place-items:center;
+  width:clamp(54px,5vw,74px); aspect-ratio:1; border-radius:50%;
+  background:var(--accent); color:#04140b;
+  padding-left:3px; /* a triangle is optically left of centre in its box */
+  transition:transform .45s var(--ease);
+}
+.cs-play--facade:hover .cs-play__btn{ transform:translate(-50%,-50%) scale(1.08); }
+.cs-play--facade:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+@media (prefers-reduced-motion:reduce){
+  .cs-play--facade > img, .cs-play__btn,
+  .cs-play--facade:hover > img, .cs-play--facade:hover .cs-play__btn{ transition:none; }
+  .cs-play--facade:hover > img{ transform:none; }
+  .cs-play__btn, .cs-play--facade:hover .cs-play__btn{ transform:translate(-50%,-50%); }
+}
+
+/* ============================================================
+   THE REEL - the cutdowns
+
+   Auto-fit rather than a fixed column count, because the number of
+   edits a campaign produced is content and not layout: three fills the
+   width, five wraps to two rows, and neither needed a class saying so.
+   The minimum is per shape - a phone-cut film stops being watchable
+   long before a 16:9 one does.
+   ============================================================ */
+.cs-reel{ max-width:none; }
+.cs-reel__in{
+  display:grid; gap:clamp(10px,1.2vw,18px);
+  grid-template-columns:repeat(auto-fit,minmax(min(var(--min,220px),100%),1fr));
+}
+.cs-reel--tall{ --min:200px; }
+.cs-reel--square{ --min:260px; }
+.cs-reel--four-five{ --min:240px; }
+.cs-reel--wide{ --min:320px; }
+.cs-reel__cell{ min-width:0; }
+.cs-reel__label{
+  display:block; margin-top:10px;
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--dim);
+}
+
+/* ---- the gallery ----
+   `--cols` is set inline off the block. Below the breakpoint it is a
+   request rather than an instruction: four columns drops to what fits
+   instead of to four unreadable slivers. */
+.cs-gal{ max-width:none; }
+.cs-gal__in{
+  display:grid; gap:clamp(10px,1.2vw,18px);
+  grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));
+}
+@media (min-width:760px){
+  .cs-gal__in{ grid-template-columns:repeat(var(--cols,3),1fr); }
+}
+.cs-gal__in img{ border-radius:12px; aspect-ratio:4/5; background:var(--panel); }
+
+/* ============================================================
+   SCOPE - what was made
+
+   The reference's numbered service grid, read as the scope of one
+   piece of work. The number is the item's position and is drawn as a
+   figure rather than a list marker, because it is part of the type
+   here and not punctuation.
+   ============================================================ */
+.cs-scope{ max-width:none; }
+.cs-scope__in{
+  list-style:none; margin-top:clamp(24px,3.4vh,38px);
+  display:grid; gap:1px; background:var(--line);
+  border-block:1px solid var(--line);
+  grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));
+}
+.cs-scope__item{
+  background:var(--bg); padding:clamp(22px,2.6vw,34px) clamp(18px,2vw,28px);
+  display:flex; flex-direction:column; gap:10px;
+}
+.cs-scope__no{
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.24em;
+  color:var(--accent);
+}
+.cs-scope__t{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(17px,1.5vw,22px); line-height:1.15; letter-spacing:-.015em;
+  text-transform:uppercase;
+}
+.cs-scope__p{ font-size:15px; line-height:1.6; color:var(--muted); }
+
+/* ============================================================
+   STEPS - how it was made
+
+   Same list mechanics, plus an optional frame per phase. The frame is
+   absent for most of them most of the time and that is the point: a
+   card without a picture is not a card with a gap where one would go,
+   it is a shorter card.
+   ============================================================ */
+.cs-steps{ max-width:none; }
+.cs-steps__in{
+  list-style:none; margin-top:clamp(24px,3.4vh,38px);
+  display:grid; gap:clamp(16px,2vw,28px);
+  grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));
+}
+.cs-step{ display:flex; flex-direction:column; gap:10px; min-width:0; }
+.cs-step__shot{
+  display:block; overflow:hidden; border-radius:12px; background:var(--panel);
+  aspect-ratio:4/3; margin-bottom:4px;
+}
+.cs-step__no{
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.24em;
+  color:var(--accent);
+}
+/* The rule under the number is what makes four of these read as a
+   sequence rather than as four unrelated cards. */
+.cs-step__no::after{
+  content:""; display:block; margin-top:10px; height:1px; background:var(--line);
+}
+.cs-step__t{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(16px,1.35vw,20px); line-height:1.2; letter-spacing:-.01em;
+  text-transform:uppercase;
+}
+.cs-step__p{ font-size:15px; line-height:1.6; color:var(--muted); }
+
+/* ============================================================
+   CREDITS
+   ============================================================ */
+.cs-credits__in{
+  margin-top:clamp(20px,2.6vh,30px);
+  border-top:1px solid var(--line);
+}
+.cs-credit{
+  display:grid; grid-template-columns:minmax(0,150px) minmax(0,1fr);
+  gap:clamp(14px,2vw,28px);
+  padding:15px 0; border-bottom:1px solid var(--line);
+}
+.cs-credit dt{
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dim); padding-top:4px;
+}
+.cs-credit dd{ font-size:16px; line-height:1.5; color:var(--cream); }
+@media (max-width:560px){
+  .cs-credit{ grid-template-columns:1fr; gap:6px; }
+}
+
+/* ---- the attribution row under a quote ----
+   The face is optional and so is the job title; with neither, this is
+   the row of small caps it always was and nothing has moved. */
+.cs-quote__by{ display:flex; align-items:center; gap:14px; margin-top:18px; }
+.cs-quote__face{
+  flex:0 0 auto; width:44px; height:44px; border-radius:50%;
+  overflow:hidden; background:var(--panel);
+}
+.cs-quote__by cite{ margin-top:0; }
+.cs-quote__by cite span{
+  display:block; margin-top:4px; letter-spacing:.16em; color:var(--muted);
+}
+
+/* ============================================================
+   FAQ
+
+   <details>, so it works with the JavaScript off and find-in-page can
+   still reach a closed answer. The marker is drawn here because the
+   native one is a triangle nobody asked for.
+   ============================================================ */
+.cs-faq__in{ margin-top:clamp(20px,2.6vh,30px); border-top:1px solid var(--line); }
+.cs-faq__row{ border-bottom:1px solid var(--line); }
+.cs-faq__row summary{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:20px;
+  padding:19px 0; cursor:none; list-style:none;
+  font-size:clamp(16px,1.3vw,19px); line-height:1.4; color:var(--cream);
+  transition:color .35s var(--ease);
+}
+@media (hover:none){ .cs-faq__row summary{ cursor:pointer; } }
+.cs-faq__row summary::-webkit-details-marker{ display:none; }
+.cs-faq__row summary:hover{ color:var(--accent); }
+.cs-faq__mark{
+  position:relative; flex:0 0 auto; width:13px; height:13px; margin-top:6px;
+}
+.cs-faq__mark::before,
+.cs-faq__mark::after{
+  content:""; position:absolute; left:0; top:6px; width:13px; height:1px;
+  background:currentColor; transition:transform .35s var(--ease);
+}
+.cs-faq__mark::after{ transform:rotate(90deg); }
+.cs-faq__row[open] .cs-faq__mark::after{ transform:rotate(0deg); }
+.cs-faq__row p{
+  padding:0 0 22px; max-width:64ch;
+  font-size:16px; line-height:1.68; color:var(--muted);
 }

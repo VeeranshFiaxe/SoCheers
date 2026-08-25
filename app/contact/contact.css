@@ -123,7 +123,8 @@
   padding:14px 16px; resize:vertical;
   transition:border-color .25s;
 }
-.ctf__field select{ appearance:none; cursor:pointer; }
+.ctf__field select{ appearance:none; cursor:none; }
+@media (hover:none){ .ctf__field select{ cursor:pointer; } }
 .ctf__field input:focus,
 .ctf__field select:focus,
 .ctf__field textarea:focus{ outline:none; border-color:var(--accent); }
@@ -133,9 +134,10 @@
   margin-top:28px; display:inline-flex; align-items:center; gap:14px;
   font-family:var(--f-display); font-weight:700; font-size:16px;
   background:var(--accent); color:#04140b; border:none; border-radius:50px;
-  padding:15px 30px; cursor:pointer;
+  padding:15px 30px; cursor:none;
   transition:transform .3s var(--ease), gap .3s var(--ease);
 }
+@media (hover:none){ .ctf__submit{ cursor:pointer; } }
 .ctf__submit:hover{ gap:18px; transform:translateY(-1px); }
 
 /* ---------- what the send turns into ----------

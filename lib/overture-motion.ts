@@ -58,18 +58,31 @@ const GAP = 620;
 
 /* how long each wall takes to go over. Runs out, so a longer wall list just
    keeps the last (fastest) value - the point of the ramp is that it ends up
-   somewhere faster than you can follow, not that every entry is tuned. */
-const FALL = [1.25, 0.95, 0.72, 0.55, 0.42, 0.33, 0.27, 0.24, 0.22, 0.2, 0.19, 0.185, 0.18, 0.175];
-/* and how much of the previous fall has to finish before the next starts */
-const OVERLAP = [1.1, 0.95, 0.84, 0.78, 0.72, 0.68, 0.64, 0.62, 0.6, 0.59, 0.58, 0.57, 0.56, 0.55];
+   somewhere faster than you can follow, not that every entry is tuned.
+
+   The first two entries are the sequence's own tempo being set and are
+   deliberately untouched: the opening walls are the ones you are meant to
+   be able to look at, and a faster first fall reads as the room being
+   rushed rather than as it accelerating. Everything from the third on is
+   steeper than it was - the ramp is what makes this feel like it is
+   running away from you, so the way to take time out of the run without
+   taking the effect out of it is to lean harder on the part that is
+   already leaning. */
+const FALL = [1.25, 0.95, 0.66, 0.48, 0.35, 0.27, 0.22, 0.19, 0.17, 0.16, 0.15, 0.145, 0.14, 0.135];
+/* and how much of the previous fall has to finish before the next starts -
+   same idea, tightened from the third entry on so the tail overlaps into
+   itself harder rather than each wall waiting its turn */
+const OVERLAP = [1.1, 0.95, 0.8, 0.72, 0.66, 0.6, 0.56, 0.54, 0.52, 0.51, 0.5, 0.49, 0.48, 0.47];
 /* the first SOUND_WALLS falls are the ones with an actual thing in the
    picture - each gets its own impact thud. Everything past that is texture
    going over too fast to individually track, and a thud per one of those
    started counting as more walls falling than the eye could actually see -
-   so they still jolt and dust, just silently. Covers the original seven
-   plus the first extra batch (Planning/Audience/Pulse); only the newest,
-   fastest four (Attitude/Reverie/Voyage/Horizon) fall silent. */
-const SOUND_WALLS = 10;
+   so they still jolt and dust, just silently. Nine rather than ten since
+   Craft - the ship - came out of the front of the list (OVERTURE_WALLS in
+   lib/content.ts): this counts positions, so keeping it at ten would have
+   handed a thud to the first wall of the silent tail instead of leaving
+   the same pictures sounding as before. */
+const SOUND_WALLS = 9;
 
 /* Both clocks start the moment the mark is on screen and waiting, not from
    page load - the wait a visitor actually feels is the one after there is

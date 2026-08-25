@@ -19,9 +19,10 @@ import { ASHOK } from "@/lib/ai-content";
 
    The brief for it was "part of the story, not standing separately", so
    it is not a card, not a bordered figure and not a hero image with the
-   text underneath. It is set into the same column the story runs in, at
-   the top, where the first four beats are: the reader meets him at the
-   moment the story introduces him and then reads on past him.
+   text underneath. It stands to the side of the column the story runs
+   in and stays there: sticky, so the beats scroll up past him while he
+   holds, and then he lifts away with the last of them because the
+   sticky is scoped to the beats and not to the section.
 
    Three things do the blending, all of them in ai.css:
 
@@ -31,11 +32,15 @@ import { ASHOK } from "@/lib/ai-content";
        black into the page's black, and the mask fades what is left out
        at the bottom and the sides. There is no edge anywhere, which is
        the whole trick - a rectangle is what would make it an insert.
-     - it is not centred and it is not full width. It sits in the right
-       half of the measure with the type running past it.
+     - he holds the left of the measure with the type running down the
+       right of him; he is never the full width of anything.
      - no border, no radius, no shadow, no caption. The only other thing
        on this page with a frame is a tile in the wall of work, and this
        is deliberately not one of those.
+
+   Narrow screens drop the whole arrangement: there is no room for a
+   column beside a column, so he goes back to sitting in the flow above
+   the beats and scrolls with them.
 
    alt text rather than aria-hidden: he is the subject of the story, not
    an ornament, and a reader who cannot see the picture should still be
@@ -58,40 +63,42 @@ export default function AiStory() {
           </h2>
         </div>
 
-        {/* Ordered after the heading and before the beats, so that with no
-            CSS at all it still lands in the one place it makes sense: the
-            reader is shown him immediately after being told his name.
+        {/* Ashok sits beside the story rather than above it: he is stuck
+            to the side of the column while the beats scroll past him, and
+            he only leaves when the last beat does - the sticky lives
+            inside .ai-story__body, so it releases at the end of the
+            narration and rides up with it.
 
-            Centred as its own block rather than floated: a browser lays
-            out one line of text as a single contiguous run, so it can
-            only route it around the open side of *one* float at a time -
-            there is no way to get real prose wrapping both edges of a
-            centred image at once (that needs a layout engine like Word's,
-            not CSS). Centred and full-stopped is the honest version of
-            that; the beats run above and below it instead. */}
-        <div className="ai-story__figure" data-reveal>
-          <img
-            src={ASHOK.figure.src}
-            alt={ASHOK.figure.alt}
-            width={1024}
-            height={1536}
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
+            Ordered before the beats so that with no CSS at all it still
+            lands in the one place it makes sense: the reader is shown him
+            immediately after being told his name. */}
+        <div className="ai-story__body">
+          <div className="ai-story__aside">
+            <div className="ai-story__figure" data-reveal>
+              <img
+                src={ASHOK.figure.src}
+                alt={ASHOK.figure.alt}
+                width={1024}
+                height={1536}
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
 
-        {/* data-highlight: the nine beats light up word by word, line by
-            line, as the reader scrolls past them - see initWordHighlight
-            in lib/motion.ts. The words start dim (each paragraph keeps its
-            own colour - a beat and a lift beat stay visually distinct,
-            only their opacity moves) and read in as the section scrolls
-            through, rather than arriving all at once with the paragraph. */}
-        <div className="ai-story__beats" data-highlight>
-          {ASHOK.beats.map((b, i) => (
-            <p className="ai-beat" data-lift={b.lift ? "" : undefined} key={i}>
-              {b.copy}
-            </p>
-          ))}
+          {/* data-highlight: the nine beats light up word by word, line by
+              line, as the reader scrolls past them - see initWordHighlight
+              in lib/motion.ts. The words start dim (each paragraph keeps its
+              own colour - a beat and a lift beat stay visually distinct,
+              only their opacity moves) and read in as the section scrolls
+              through, rather than arriving all at once with the paragraph. */}
+          <div className="ai-story__beats" data-highlight>
+            {ASHOK.beats.map((b, i) => (
+              <p className="ai-beat" data-lift={b.lift ? "" : undefined} key={i}>
+                {b.copy}
+              </p>
+            ))}
+          </div>
         </div>
 
         <div className="ai-story__out" data-reveal>

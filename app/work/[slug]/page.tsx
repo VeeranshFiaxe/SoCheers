@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import WorkMotion from "@/components/WorkMotion";
 import CaseBlocks from "@/components/CaseBlocks";
 import CaseNav from "@/components/CaseNav";
-import { CASES, caseHeadings, findCase } from "@/lib/work-content";
+import { CASES, caseBlocks, caseHasFilm, caseHeadings, findCase } from "@/lib/work-content";
 
 /* Five known cases, so they prerender. A slug that is not one of them is
    a 404 rather than an empty template - a case page with nothing in it
@@ -72,6 +72,12 @@ export default async function Case({
   const c = findCase(slug);
   if (!c) notFound();
 
+  /* The list the page renders, which is the case's own blocks plus the
+     film if it named one without placing it. Read once and passed to
+     both the contents list and the renderer, so the two cannot see
+     different pages. See caseBlocks() in lib/work-content.ts. */
+  const blocks = caseBlocks(c);
+
   return (
     <>
       {/* The room under the page. Same three parts the home page needs and
@@ -105,7 +111,7 @@ export default async function Case({
                 case without one does not get a disabled button or a
                 button that scrolls somewhere vague - it gets no button,
                 and the row closes up around the absence. */}
-            {c.film && (
+            {caseHasFilm(c) && (
               <a className="cs-hero__go" href="#film" data-magnetic data-cursor="Play">
                 <span className="cs-hero__play" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
@@ -121,11 +127,11 @@ export default async function Case({
           <div className="grid-lines grid-lines--mark" aria-hidden="true"><i /><i /><i /><i /></div>
 
           <div className="wrap cs-article__in">
-            <CaseNav items={caseHeadings(c.blocks)} />
+            <CaseNav items={caseHeadings(blocks)} />
 
             <article className="cs-body">
               <p className="cs-lede" data-reveal>{c.intro}</p>
-              <CaseBlocks blocks={c.blocks} />
+              <CaseBlocks blocks={blocks} />
             </article>
           </div>
         </div>

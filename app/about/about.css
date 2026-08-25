@@ -1867,6 +1867,25 @@
 }
 .stage__frame img.is-active{ opacity:1; }
 
+/* ---- frame 01, the film ----
+   The same cut the home page plays, inside the same box as the
+   photographs and crossfading on the same rule - it is a frame of this
+   stage, not a video that has been given a section of its own. Cover, so
+   it fills the 16:9 whatever the file's own aspect turns out to be, and
+   no controls: the rail is the whole navigation here.
+
+   The near-black under it is what shows for the moment between the
+   section coming into view and the first frame decoding. --panel would
+   have been the frame's own paper, which reads as an empty slot; a dark
+   ground reads as a screen about to light. */
+.stage__film{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  background:#0b0b0c;
+  opacity:0; transition:opacity .55s var(--ease);
+}
+.stage__film.is-active{ opacity:1; }
+.stage__film::-webkit-media-controls{ display:none !important; }
+
 /* The hold, running out. Sat inside the frame on its bottom edge, above
    the vignette so it is never dimmed by it. React replaces this node on
    every change of frame (it is keyed on the index), which restarts the
@@ -1931,14 +1950,19 @@
    rather than a scroller - the whole point is that the count is visible. */
 .stage__rail{
   margin-top:clamp(10px,1.4vh,16px);
-  display:grid; grid-template-columns:repeat(10,1fr); gap:6px;
+  /* Auto columns rather than a count: the rail carries the film and then
+     every photograph, so the number of cells is whatever the content is
+     and hard-coding ten meant the film pushed a photograph onto a second
+     row the day it went in. */
+  display:grid; grid-auto-flow:column; grid-auto-columns:1fr; gap:6px;
 }
 .stage__thumb{
   position:relative; overflow:hidden; display:block; padding:0;
-  aspect-ratio:16/9; border-radius:5px; cursor:pointer;
+  aspect-ratio:16/9; border-radius:5px; cursor:none;
   background:var(--panel); border:1px solid var(--line);
   transition:border-color .4s var(--ease), transform .4s var(--ease);
 }
+@media (hover:none){ .stage__thumb{ cursor:pointer; } }
 .stage__thumb img{
   width:100%; height:100%; object-fit:cover; display:block;
   /* the unselected frames are held back rather than hidden: greyed and
@@ -1952,6 +1976,28 @@
 .stage__thumb.is-active{ border-color:var(--accent); }
 .stage__thumb.is-active img{ filter:none; }
 .stage__thumb:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+/* The film's cell. No still: a frame grabbed out of the video would sit
+   in this rail looking like an eleventh photograph of the office, and the
+   one thing this cell has to say at thumbnail size is that it is not a
+   photograph. A dark tile with a play mark cut into it says that at any
+   size, and it needs no asset. */
+.stage__thumb--film{
+  background:#101013;
+  border-color:rgba(255,255,255,.14);
+}
+.stage__thumb--film span{
+  /* translate rather than auto margins: the box is a zero-sized element
+     wearing an asymmetric border, so margin:auto would centre the padding
+     box and hang the triangle five pixels to the left of the cell. */
+  position:absolute; left:50%; top:50%; transform:translate(-45%,-50%);
+  width:0; height:0;
+  border-style:solid; border-width:6px 0 6px 10px;
+  border-color:transparent transparent transparent rgba(244,242,236,.62);
+  transition:border-left-color .45s var(--ease);
+}
+.stage__thumb--film:hover span,
+.stage__thumb--film.is-active span{ border-left-color:var(--cream); }
 
 /* The auto-advance is off entirely under reduced motion (AboutStage.tsx
    folds it into the same `paused` flag as focus and off-screen), and the
@@ -2070,12 +2116,13 @@
      equal specificity, so it simply wins, and the height cap stops
      mattering the moment the frame is allowed the full column. */
   .stage{ width:100%; }
-  /* Ten cells across a phone leaves each thumbnail a few pixels wide, so
-     the rail wraps to two rows of five rather than shrinking. The frame
-     itself is untouched - it is the same 16:9 at every width, which is
-     the whole reason this layout replaced a mosaic that had to be
-     re-authored for narrow screens. */
-  .stage__rail{ grid-template-columns:repeat(5,1fr); gap:5px; }
+  /* The frame itself is untouched by any of this - it is the same 16:9 at
+     every width, which is the whole reason this layout replaced a mosaic
+     that had to be re-authored for narrow screens. */
+  /* Eleven cells across a phone leaves each a few pixels wide, so the
+     rail wraps rather than shrinks: two rows, the film leading the first
+     one. grid-auto-flow goes back to rows for the template to apply. */
+  .stage__rail{ grid-auto-flow:row; grid-template-columns:repeat(6,1fr); gap:5px; }
   .stage__meta{ font-size:10px; letter-spacing:.14em; }
   /* The frame takes the full column here, so there is no margin left for
      the spill to fill - what is left of it is the halo just past the

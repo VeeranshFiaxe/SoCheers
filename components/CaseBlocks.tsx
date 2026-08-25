@@ -1,4 +1,5 @@
 import type { CaseBlock } from "@/lib/work-content";
+import CaseVideo from "./CaseVideo";
 
 /* ============================================================
    THE CASE TEMPLATE'S RENDERER.
@@ -69,25 +70,120 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
               </figure>
             );
 
-          /* Controls, no autoplay, and a real poster. A case film is
-             something a reader chooses to watch - starting it for them
-             on a page they are still reading is the behaviour the client
-             already told us fails, in the note about video competing
-             with text for the same attention. */
+          /* Nothing autoplays. A case film is something a reader chooses
+             to watch - starting it for them on a page they are still
+             reading is the behaviour the client already told us fails,
+             in the note about video competing with text for the same
+             attention. What the URL points at - a file, YouTube, Vimeo -
+             is CaseVideo's problem, not this switch's. */
           /* `id="film"` is what the hero's one action points at. Only
              the first video carries it - a case with two films has one
              that is *the* film, and it is the one the page opens with. */
           case "video":
             return (
               <figure
-                className="cs-video"
+                className={b.ratio && b.ratio !== "wide" ? "cs-video cs-video--set" : "cs-video"}
                 key={key}
                 id={blocks.findIndex((o) => o.type === "video") === i ? "film" : undefined}
                 data-reveal
               >
-                <video src={b.src} poster={b.poster} controls preload="none" playsInline />
+                <CaseVideo src={b.src} poster={b.poster} ratio={b.ratio} label={b.caption} />
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
+            );
+
+          /* The cutdowns. `--tall` is the common case and the one the
+             layout has to survive: three phone-shaped films side by side
+             is a row, six of them is two rows, and neither is a stack of
+             full-width portrait video. */
+          case "reel":
+            return (
+              <figure className={`cs-reel cs-reel--${b.ratio ?? "tall"}`} key={key} data-reveal>
+                <div className="cs-reel__in">
+                  {b.items.map((it, j) => (
+                    <div className="cs-reel__cell" key={`${it.src}-${j}`}>
+                      <CaseVideo src={it.src} poster={it.poster} ratio={b.ratio ?? "tall"} label={it.label} />
+                      {it.label && <span className="cs-reel__label">{it.label}</span>}
+                    </div>
+                  ))}
+                </div>
+                {b.caption && <figcaption>{b.caption}</figcaption>}
+              </figure>
+            );
+
+          /* Any number of stills. The column count is the writer's call
+             for the same reason `bleed` is - how many frames read well
+             in a row is a judgement about the frames. */
+          case "gallery":
+            return (
+              <figure className="cs-gal" key={key} data-reveal>
+                <div className="cs-gal__in" style={{ "--cols": b.cols ?? 3 } as React.CSSProperties}>
+                  {b.items.map((it, j) => (
+                    <img key={`${it.src}-${j}`} src={it.src} alt={it.caption ?? ""} loading="lazy" />
+                  ))}
+                </div>
+                {b.caption && <figcaption>{b.caption}</figcaption>}
+              </figure>
+            );
+
+          /* What was made. Numbered off the index, so reordering the
+             list is not also renumbering it by hand. */
+          case "scope":
+            return (
+              <section className="cs-scope" key={key}>
+                {b.heading && <h2 className="cs-copy__h" id={`heading-${i}`} data-split>{b.heading}</h2>}
+                <ol className="cs-scope__in" data-reveal>
+                  {b.items.map((it, j) => (
+                    <li className="cs-scope__item" key={it.title}>
+                      <span className="cs-scope__no">{String(j + 1).padStart(2, "0")}</span>
+                      <h3 className="cs-scope__t">{it.title}</h3>
+                      {it.body && <p className="cs-scope__p">{it.body}</p>}
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            );
+
+          /* How it was made. The frame per phase is optional and the
+             row closes up without it - a process where two of four
+             stages have a picture should not leave two grey boxes. */
+          case "steps":
+            return (
+              <section className="cs-steps" key={key}>
+                {b.heading && <h2 className="cs-copy__h" id={`heading-${i}`} data-split>{b.heading}</h2>}
+                <ol className="cs-steps__in" data-reveal>
+                  {b.items.map((it, j) => (
+                    <li className="cs-step" key={it.title}>
+                      {it.src && (
+                        <span className="cs-step__shot">
+                          <img src={it.src} alt="" loading="lazy" />
+                        </span>
+                      )}
+                      <span className="cs-step__no">{String(j + 1).padStart(2, "0")}</span>
+                      <h3 className="cs-step__t">{it.title}</h3>
+                      <p className="cs-step__p">{it.body}</p>
+                    </li>
+                  ))}
+                </ol>
+              </section>
+            );
+
+          /* The billing. A definition list because that is what it is,
+             and because a two-column table would break at the first
+             credit with four names in it. */
+          case "credits":
+            return (
+              <section className="cs-credits" key={key}>
+                {b.heading && <h2 className="cs-copy__h" id={`heading-${i}`} data-split>{b.heading}</h2>}
+                <dl className="cs-credits__in" data-reveal>
+                  {b.items.map((it) => (
+                    <div className="cs-credit" key={it.label}>
+                      <dt>{it.label}</dt>
+                      <dd>{it.value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
             );
 
           /* A case board is a tall, dense artboard - it is read by
@@ -115,12 +211,48 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
               </div>
             );
 
+          /* The face and the job title are the reference's testimonial
+             card; with neither set this is the plain pull quote it has
+             always been, and the attribution row closes up around what
+             is missing rather than reserving space for it. */
           case "quote":
             return (
-              <blockquote className="cs-quote" key={key} data-reveal>
+              <blockquote className={b.avatar ? "cs-quote cs-quote--who" : "cs-quote"} key={key} data-reveal>
                 <p>{b.text}</p>
-                <cite>{b.who}</cite>
+                <footer className="cs-quote__by">
+                  {b.avatar && (
+                    <span className="cs-quote__face">
+                      <img src={b.avatar} alt="" loading="lazy" />
+                    </span>
+                  )}
+                  <cite>
+                    {b.who}
+                    {b.role && <span>{b.role}</span>}
+                  </cite>
+                </footer>
               </blockquote>
+            );
+
+          /* Answers to what a reader asks after seeing the work - the
+             brief, the turnaround, what it was shot on. Native
+             <details>, so it opens with no JavaScript and find-in-page
+             can still reach the closed ones. */
+          case "faq":
+            return (
+              <section className="cs-faq" key={key}>
+                {b.heading && <h2 className="cs-copy__h" id={`heading-${i}`} data-split>{b.heading}</h2>}
+                <div className="cs-faq__in" data-reveal>
+                  {b.items.map((it) => (
+                    <details className="cs-faq__row" key={it.q}>
+                      <summary>
+                        {it.q}
+                        <span className="cs-faq__mark" aria-hidden="true" />
+                      </summary>
+                      <p>{it.a}</p>
+                    </details>
+                  ))}
+                </div>
+              </section>
             );
         }
       })}

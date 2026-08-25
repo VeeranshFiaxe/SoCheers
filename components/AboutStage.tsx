@@ -36,7 +36,19 @@ const PANEL_ID = "ab-stage-panel";
 const tabId = (n: number) => `ab-stage-tab-${n}`;
 const pad = (n: number) => String(n).padStart(2, "0");
 
-export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
+export default function AboutStage({
+  shots,
+  film,
+}: {
+  shots: SpaceShot[];
+  /* The film, and it is frame 01 - not a separate block above the stage.
+     The section is one frame with a rail under it; a video parked over
+     the top of that would be a second treatment of the same idea, and it
+     would push the photographs off the first screen entirely. Here the
+     film is simply what the frame is showing when you arrive, and the
+     rail says how much else there is. */
+  film?: { src: string; cap: string };
+}) {
   const [i, setI] = useState(0);
 
   /* Two reasons to hold: something inside it has focus, or the section is
@@ -57,7 +69,19 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
      that disagrees with the markup Next sent. */
   const [reduced, setReduced] = useState(false);
 
+  /* Index 0 is the film when there is one, so every photograph is one
+     further along. Kept as two numbers rather than a merged array of
+     union-typed slides: the photographs are handed straight to the same
+     <img> loop and the same rail cells they always were, and only the
+     three places that actually care about the film branch on `n === 0`. */
+  const filmAt = film ? 0 : -1;
+  const count = shots.length + (film ? 1 : 0);
+  const onFilm = i === filmAt;
+  /* what the frame is showing, when it is showing a photograph */
+  const shotIdx = film ? i - 1 : i;
+
   const rootRef = useRef<HTMLDivElement>(null);
+  const filmRef = useRef<HTMLVideoElement>(null);
   /* The rail owns a roving tabindex: one stop for the whole strip rather
      than ten in a row, and the arrow keys move between them. Refs so the
      newly-selected tab can actually take focus when it is chosen by
@@ -106,17 +130,47 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
      pending timeout down and starts a fresh, full DWELL_MS. The timer
      cannot carry anything over from the frame before it. */
   useEffect(() => {
-    if (paused) return;
+    if (paused || onFilm) return;
     const t = window.setTimeout(
-      () => setI((n) => (n + 1) % shots.length),
+      /* wraps to the first photograph, never back to the film: the film
+         is the way in, and a slideshow that drops you into the middle of
+         a video every ten frames is a different section. Once you are in
+         the photographs the cycle stays there. */
+      () => setI((n) => (n + 1 === count ? (film ? 1 : 0) : n + 1)),
       DWELL_MS,
     );
     return () => window.clearTimeout(t);
-  }, [i, paused, shots.length]);
+  }, [i, paused, count, onFilm, film]);
+
+  /* The film's own transport, and its src.
+
+     No src in the markup: this is the heaviest asset on the site and the
+     section is most of a page down, so the string is set the first time
+     the stage is anywhere near the viewport and not before. After that it
+     plays whenever it is the frame that is up and the section is on
+     screen, and pauses for everything else - another frame chosen, the
+     section scrolled past, reduced motion. play() is caught because a tab
+     that has denied autoplay rejects, and an unhandled rejection here
+     would be thrown on every pass of the section. */
+  useEffect(() => {
+    const v = filmRef.current;
+    if (!v || !film) return;
+    if (!v.src && onScreen) {
+      /* Reduced motion still gets a picture, not an empty black box: the
+         markup asks for nothing, and this is the one place that decides
+         how much to fetch. "metadata" is enough for the browser to paint
+         the first frame, which is exactly what a reader who has asked for
+         no motion should see - the film, held still. */
+      v.preload = reduced ? "metadata" : "auto";
+      v.src = film.src;
+    }
+    if (onFilm && onScreen && !reduced) v.play().catch(() => {});
+    else if (!v.paused) v.pause();
+  }, [film, onFilm, onScreen, reduced]);
 
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const last = shots.length - 1;
+      const last = count - 1;
       let next: number | null = null;
       if (e.key === "ArrowRight" || e.key === "ArrowDown") next = i === last ? 0 : i + 1;
       else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = i === 0 ? last : i - 1;
@@ -127,7 +181,7 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
       viaKey.current = true;
       setI(next);
     },
-    [i, shots.length],
+    [i, count],
   );
 
   useEffect(() => {
@@ -136,7 +190,14 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
     tabRefs.current[i]?.focus();
   }, [i]);
 
-  const shot = shots[i];
+  /* The frame's photograph. On the film slide there is none, and the
+     symbol field still needs an image to resolve - it is given the first
+     photograph, which is the one that comes up the moment anybody leaves
+     the film. So the grid behind the frame is already the picture you are
+     about to see rather than a blank field or a still of the video, which
+     it cannot sample from a <video> anyway. */
+  const shot = shots[Math.max(0, shotIdx)];
+  const cap = onFilm && film ? film.cap : shot.cap;
 
   return (
     <div
@@ -174,16 +235,35 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
         aria-labelledby={tabId(i)}
         data-clip
       >
+        {/* The film, stacked in the same box as the photographs and faded
+            in and out by the same rule. It sits first so every photo
+            paints over it: only one layer is ever at full opacity, and
+            the video is the one that is up when the section is reached.
+            No controls and no pointer target - the rail is the whole
+            navigation here, the same as it is for the stills. */}
+        {film && (
+          <video
+            ref={filmRef}
+            className={onFilm ? "stage__film is-active" : "stage__film"}
+            muted
+            loop
+            playsInline
+            preload="none"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+        )}
+
         {shots.map((s, n) => (
           <img
             key={s.src}
             src={s.src}
             alt={s.alt}
-            className={n === i ? "is-active" : undefined}
+            className={n === shotIdx ? "is-active" : undefined}
             style={s.pos ? { objectPosition: s.pos } : undefined}
             /* only the visible frame is exposed - otherwise the section
                reads out as ten stacked photographs */
-            aria-hidden={n !== i}
+            aria-hidden={n !== shotIdx}
             loading={n === 0 ? undefined : "lazy"}
             draggable={false}
           />
@@ -195,7 +275,10 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
             visibly snaps back to empty the instant you pick a frame
             yourself. That restart IS the reset; the timeout above and
             this bar are started by the same render. */}
-        {!reduced && (
+        {/* Nothing to run down on the film: it holds until a frame is
+            picked, so a bar draining towards a change that is not coming
+            would be lying about what the section is doing. */}
+        {!reduced && !onFilm && (
           <span
             className="stage__prog"
             key={i}
@@ -223,12 +306,12 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
           {/* keyed so React swaps the node rather than editing it in
               place, which is what lets the CSS fade run on every change
               instead of only the first */}
-          <span key={i}>{shot.cap}</span>
+          <span key={i}>{cap}</span>
         </p>
         <span className="stage__idx" aria-hidden="true">
           <b>{pad(i + 1)}</b>
           <i>/</i>
-          {pad(shots.length)}
+          {pad(count)}
         </span>
       </div>
 
@@ -238,7 +321,32 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
         aria-label="The office, frame by frame"
         onKeyDown={onKeyDown}
       >
-        {shots.map((s, n) => (
+        {/* The film's cell. A still would have to be pulled out of the
+            video by hand and would then sit in the rail looking like an
+            eleventh photograph of the office; a dark tile with a play
+            mark says what it is at thumbnail size, which is the only size
+            this is ever seen at. */}
+        {film && (
+          <button
+            type="button"
+            role="tab"
+            id={tabId(0)}
+            aria-controls={PANEL_ID}
+            aria-selected={onFilm}
+            aria-label={film.cap}
+            tabIndex={onFilm ? 0 : -1}
+            ref={(el) => { tabRefs.current[0] = el; }}
+            className={onFilm ? "stage__thumb stage__thumb--film is-active" : "stage__thumb stage__thumb--film"}
+            onClick={() => setI(0)}
+            data-cursor={film.cap}
+          >
+            <span aria-hidden="true" />
+          </button>
+        )}
+
+        {shots.map((s, n0) => {
+          const n = film ? n0 + 1 : n0;
+          return (
           <button
             key={s.src}
             type="button"
@@ -261,7 +369,8 @@ export default function AboutStage({ shots }: { shots: SpaceShot[] }) {
               draggable={false}
             />
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

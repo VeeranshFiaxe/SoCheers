@@ -81,6 +81,24 @@ body{
 }
 @media (hover:none){ body{ cursor:auto; } }
 
+/* ---- the hand, taken back off ----
+   body{cursor:none} above is inherited, and inheritance loses to a rule
+   set on the element itself - including the browser's own. Every UA
+   stylesheet carries `a:any-link{cursor:pointer}` (and the same for
+   <summary> and <select>), so every link on this site was quietly
+   swapping the ring for the pointing hand and back again. This is the
+   answer to that rather than a preference: the ring IS the cursor here,
+   and it reads as a different pointer arriving whenever it vanished.
+
+   Enumerated rather than `*{cursor:none}` on purpose - the text caret in
+   the contact form's inputs is a real affordance and it stays. Scoped to
+   hover:hover so touch, where there is no ring at all, keeps the native
+   behaviour the media query above hands it. */
+@media (hover:hover){
+  a, a:any-link, button, summary, select, label,
+  [role="button"], [role="tab"], [data-cursor], [data-magnetic]{ cursor:none; }
+}
+
 a{ color:inherit; text-decoration:none; }
 img{ display:block; width:100%; height:100%; object-fit:cover; }
 em{ font-style:italic; }
@@ -408,11 +426,20 @@ html.sc-seen .loader{ display:none; }
    smoked glass over black, frosted white over cream, both crossfading on
    the same is-on-light switch so the capsule never sits as a dark slab on
    the About page's light panels. */
+/* TEMPORARY, alongside the two extra tabs in NAV_LINKS (lib/content.ts):
+   the row is absolutely positioned, so its containing block is the
+   header's padding box and eight tabs no longer fit inside it - the flex
+   items were being squeezed until "AI Work", "Series 2.0" and "The Deck"
+   each broke over two lines and the capsule grew to two rows tall.
+   width:max-content sizes the capsule to the row it actually holds rather
+   than to the space left over, and the nowrap below keeps each label on
+   its own single line. Both go when those two tabs go. */
 .nav__links{
-  display:flex; align-items:center; gap:2px;
+  display:flex; align-items:center; gap:2px; flex-wrap:nowrap;
   position:absolute; top:50%;
   left:calc(50% + var(--hero-cx, 0px));
   transform:translate(-50%, -50%);
+  width:max-content; max-width:none;
   padding:5px; border-radius:999px;
   background:var(--nav-island); border:1px solid var(--nav-island-line);
   backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
@@ -423,7 +450,8 @@ html.sc-seen .loader{ display:none; }
 .nav__links .nav__soon{
   font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.12em; text-transform:uppercase;
   display:inline-flex; align-items:center;
-  padding:9px 16px; border-radius:999px;
+  white-space:nowrap; flex:0 0 auto;
+  padding:9px 14px; border-radius:999px;
   transition:background .32s var(--ease), color .35s var(--ease);
 }
 /* the clipped box is the label, one level in from the padded target -
@@ -476,6 +504,13 @@ html.sc-seen .loader{ display:none; }
 .nav__cta:hover::before{ transform:translateY(0); }
 .nav__cta:hover{ color:#04140b; border-color:var(--accent); }
 .nav__cta:hover svg{ transform:translateX(4px); }
+/* TEMPORARY, same reason as the width:max-content above: with eight tabs
+   the wider capsule starts reaching for the lockup and the CTA before the
+   860px cut-off hides it, so it tightens rather than collides. */
+@media (max-width:1280px){
+  .nav__links a,
+  .nav__links .nav__soon{ padding:8px 11px; letter-spacing:.08em; font-size:11px; }
+}
 @media (max-width:860px){ .nav__links{ display:none; } }
 
 /* ============================================================
@@ -1245,7 +1280,8 @@ html.is-pinned .who{ margin-top:-100vh; }
 .contact__social a:hover{ color:var(--accent); border-color:rgba(47,229,137,.5); transform:translateY(-3px); }
 
 .cmodal__close,
-.cmodal__submit{ font-family:inherit; border:none; cursor:pointer; }
+.cmodal__submit{ font-family:inherit; border:none; cursor:none; }
+@media (hover:none){ .cmodal__close, .cmodal__submit{ cursor:pointer; } }
 
 /* ------------------------------------------------------------
    Contact popup (placeholder brief form)
@@ -2081,9 +2117,10 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
    taken back off so it reads as the piece of type next to it. */
 .foot__top{
   font:inherit; letter-spacing:inherit; color:inherit;
-  background:none; border:0; padding:0; cursor:pointer;
+  background:none; border:0; padding:0; cursor:none;
   transition:color .3s var(--ease);
 }
+@media (hover:none){ .foot__top{ cursor:pointer; } }
 .foot__top:hover{ color:var(--accent); }
 
 .foot__legal{

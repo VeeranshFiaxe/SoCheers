@@ -5,7 +5,7 @@ import AboutStage from "./AboutStage";
 import Link from "next/link";
 import {
   ABOUT_IMG, ABOUT_INTRO, BELIEF, DRIVERS,
-  FOUNDERS, SPACE_COPY, SPACE_SHOTS, WHY_WE_EXIST,
+  FOUNDERS, SPACE_COPY, SPACE_FILM, SPACE_SHOTS, WHY_WE_EXIST,
 } from "@/lib/about-content";
 
 /* 1 · the opener lives in components/AboutHero.tsx - it carries enough
@@ -408,7 +408,12 @@ export function AboutSpace() {
         <h2 className="ab-space__title" data-split>The space.</h2>
         <p className="ab-space__copy" data-reveal>{SPACE_COPY}</p>
 
-        <AboutStage shots={SPACE_SHOTS} />
+        {/* The film is frame 01 inside the stage - same box, same rail,
+            same caption line as the photographs. It is what the frame is
+            showing when the section is reached, and it holds there until
+            somebody picks a still: the video is the room, the ten shots
+            are for anyone who wants to walk through it. */}
+        <AboutStage shots={SPACE_SHOTS} film={SPACE_FILM} />
       </div>
     </section>
   );

@@ -19,16 +19,22 @@ import Link from "next/link";
 
    Layout inside the stage, matching the reference:
 
-     left half    the genre row, the brand set large, the credits, the
-                  synopsis, and the one action
+     left half    the small row, the client's headline, the line under
+                  it, and the one action
      right half   "MORE PINNED WORK" - the poster wall, with its arrows
 
    ---- two things carried over deliberately, and one not ----
 
-   Kept: the poster wall is portrait, and it is inside the frame rather
-   than under it. Both matter - a landscape rail reads as a separate
-   section no matter how close you push it, and the moment it is its own
-   section the composition is gone.
+   Kept: the poster wall is inside the frame rather than under it. That
+   one matters - a rail under the picture reads as a separate section no
+   matter how close you push it, and the moment it is its own section
+   the composition is gone.
+
+   Not kept as drawn: the reference's posters are portrait and these
+   were too, until the real thumbnails arrived. All five are 16:9 and
+   there is no second crop of any of them, so the wall is 16:9 - a
+   centre-cut 2:3 poster of a wide still loses the brand out of both
+   sides on most of them.
 
    Not kept: the rating. Campaign metadata in its place, per the brief.
    There is no substitute score anywhere here.
@@ -68,9 +74,19 @@ export default function WorkPinned() {
      the pointer is still sitting on it. */
   const [held, setHeld] = useState({ hover: false, focus: false, hidden: false });
   const [ticking, setTicking] = useState(false);
+  /* Whether the film on the current frame is running. It is a plain
+     boolean rather than a per-slug map because only one frame is ever
+     up: moving the stage stops the film, which is the effect below and
+     the only sane reading of "play it in the tile" - a film still
+     playing behind the frame that replaced it is a sound with no
+     picture. */
+  const [rolling, setRolling] = useState(false);
   const railRef = useRef<HTMLDivElement>(null);
   const active = PINNED[i];
-  const paused = held.hover || held.focus || held.hidden;
+  /* A film that is playing holds the reel open on its own account. The
+     dwell would otherwise move the stage on five seconds into a
+     two-minute film. */
+  const paused = held.hover || held.focus || held.hidden || rolling;
 
   const go = useCallback((n: number) => {
     setI((prev) => (n + PINNED.length) % PINNED.length);
@@ -106,6 +122,9 @@ export default function WorkPinned() {
     return () => window.clearTimeout(t);
   }, [i, ticking, paused, go]);
 
+  /* Leaving the frame stops the film. See `rolling` above. */
+  useEffect(() => { setRolling(false); }, [i]);
+
   /* Arrow keys walk the wall once it has focus. Tabbing through five
      posters to reach the last one is not what anyone expects of a rail. */
   const onKey = (e: React.KeyboardEvent) => {
@@ -123,7 +142,11 @@ export default function WorkPinned() {
 
   return (
     <section
-      className="wk-stage"
+      /* `is-rolling` takes the writing and the poster wall off the
+         frame while the film is up. They do not unmount - the reader is
+         two clicks from wanting them back, and a stage that rebuilds
+         itself around every play is a stage that jumps. */
+      className={rolling ? "wk-stage is-rolling" : "wk-stage"}
       aria-label="Featured work"
       onFocusCapture={() => setHeld((h) => ({ ...h, focus: true }))}
       onBlurCapture={() => setHeld((h) => ({ ...h, focus: false }))}
@@ -139,7 +162,46 @@ export default function WorkPinned() {
           <img src={c.hero} alt="" />
         </div>
       ))}
-      <span className="wk-stage__scrim" aria-hidden="true" />
+
+      {/* ---- the film, in the frame ----
+
+          The client's instruction, and it is a specific one: the film
+          plays where the still already is. No lightbox, no fullscreen,
+          no navigation - the picture the reader is looking at starts
+          moving. So this sits in the same stacking slot as the frames,
+          above them and below the scrim, and it exists only while it is
+          playing: stopping it unmounts the element rather than pausing
+          it, which is also what frees the network for the rest of the
+          page.
+
+          `controls` is on because a two-minute film a reader cannot
+          scrub is a film they will not finish, and the whole composition
+          stays put underneath it. */}
+      {rolling && active.link.kind === "film" && (
+        <div className="wk-stage__film">
+          <video
+            src={active.link.src}
+            poster={active.hero}
+            controls
+            autoPlay
+            playsInline
+            onEnded={() => setRolling(false)}
+          />
+          <button
+            type="button"
+            className="wk-stage__close"
+            onClick={() => setRolling(false)}
+            aria-label="Close the film"
+            data-cursor="Close"
+          >
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+      )}
+
+      {/* The scrim is what the type stands on, so it goes when the film
+          does not need to be read over. */}
+      {!rolling && <span className="wk-stage__scrim" aria-hidden="true" />}
 
       <div className="wrap wk-stage__grid">
         {/* ---- left: the title block ---- */}
@@ -148,30 +210,71 @@ export default function WorkPinned() {
             {active.tags.map((t) => <li key={t}>{t}</li>)}
           </ul>
 
-          {/* The brand is the headline - where the reference has the film
-              title. The campaign's own name goes in the credits under it:
-              "Netflix × MI" is what a reader recognises, and the title of
-              the campaign is something they learn afterwards. */}
-          <h1 className="wk-lede__brand">{active.brand}</h1>
+          {/* The client's own headline, and it is the display line -
+              where the reference has the film's title. It replaced the
+              brand set large, which was the right call when the copy
+              did not exist yet and the wrong one the moment it did:
+              "NETFLIX X MI X SOCheers" is already the row above, and a
+              headline that asks the reader a question is a better first
+              thing to read than a name they can see in the picture.
 
-          <div className="wk-lede__credits">
-            <b>{active.year}</b>
-            {active.title && (
-              <span><i>Campaign:</i> {active.title}</span>
-            )}
-            {active.credits.map((c) => (
-              <span key={c.label}><i>{c.label}:</i> {c.value}</span>
-            ))}
-          </div>
+              Verbatim, in the case the client set it. Nothing here
+              title-cases or trims - see the note over PINNED. */}
+          <h1 className="wk-lede__head">{active.headline}</h1>
 
           <p className="wk-lede__line">{active.line}</p>
 
-          <Link className="wk-lede__go" href={`/work/${active.slug}`} prefetch data-magnetic data-cursor="Open">
-            <span className="wk-lede__play" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-            </span>
-            View case
-          </Link>
+          {/* ---- the one action, and it is a different action per piece ----
+
+              Three kinds, switched on rather than inferred - see
+              PinnedLink in lib/work-content.ts. What they have in
+              common is that there is exactly one of them and it says
+              what it does: "Play the film" plays a film, "View on
+              Instagram" leaves the site and says so. A reader should
+              never have to click to find out which of those is about
+              to happen. */}
+          {active.link.kind === "film" && (
+            <button
+              type="button"
+              className="wk-lede__go"
+              onClick={() => setRolling(true)}
+              data-magnetic
+              data-cursor="Play"
+            >
+              <span className="wk-lede__play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+              </span>
+              Play the film
+            </button>
+          )}
+
+          {/* rel is not boilerplate here: `noopener` is what stops the
+              opened tab from reaching back into this one through
+              window.opener, and it costs nothing. */}
+          {active.link.kind === "external" && (
+            <a
+              className="wk-lede__go"
+              href={active.link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-magnetic
+              data-cursor="Open"
+            >
+              <span className="wk-lede__play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M7 17L17 7M9 7h8v8" /></svg>
+              </span>
+              View
+            </a>
+          )}
+
+          {active.link.kind === "case" && (
+            <Link className="wk-lede__go" href={`/work/${active.link.slug}`} prefetch data-magnetic data-cursor="Open">
+              <span className="wk-lede__play" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+              </span>
+              View case
+            </Link>
+          )}
         </div>
 
         {/* ---- right: the poster wall ---- */}
@@ -207,8 +310,23 @@ export default function WorkPinned() {
                 aria-selected={n === i}
                 className={c.pending ? "wk-poster is-pending" : "wk-poster"}
                 key={c.slug}
-                onClick={() => setI(n)}
-                data-cursor={c.brand}
+                /* Picking a frame selects it. Picking the frame that is
+                   already up opens it - the film plays, an Instagram
+                   piece goes to Instagram. The client asked for the
+                   thumbnail itself to be the way in, and a reader who
+                   clicks the same tile twice is asking for something to
+                   happen.
+
+                   The new tab is opened with `noopener` for the same
+                   reason the anchor beside it carries rel="noopener": a
+                   tab opened without it can reach back into this one
+                   through window.opener. */
+                onClick={() => {
+                  if (n !== i) { setI(n); return; }
+                  if (c.link.kind === "film") setRolling(true);
+                  else if (c.link.kind === "external") window.open(c.link.href, "_blank", "noopener,noreferrer");
+                }}
+                data-cursor={n === i ? (c.link.kind === "film" ? "Play" : "View") : c.brand}
               >
                 <span className="wk-poster__shot">
                   <img src={c.thumb} alt="" loading="lazy" />

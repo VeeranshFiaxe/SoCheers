@@ -1330,6 +1330,93 @@ export function initSite(): () => void {
       });
     }
 
+    /* -------------------------------------------------- the story's portrait
+       Ashok holds beside the beats while they scroll past him and then
+       leaves with the last of them (components/AiStory.tsx).
+
+       That is the behaviour of position:sticky, written here instead for
+       the same reason the reel's hold is: body carries overflow-x:hidden,
+       which makes body a scroll container that never itself scrolls, and
+       a sticky descendant of one of those never sticks. See the note
+       above .reel__stage in globals.css - this is the second thing on the
+       site to hit it.
+
+       ---- why this is a transform and not a pin ----
+
+       It was a ScrollTrigger pin for one revision and the catch was
+       visible every time: a pin swaps the element to position:fixed on
+       the frame the start is crossed, and on a smoothed scroller the
+       page's own motion is still easing towards where the scroll position
+       says it is. So the swap lands against a page that has not arrived yet
+       and he stops dead a few pixels early - the abrupt "clunk" as he
+       catches.
+
+       Nothing here changes position. He stays in the grid cell for the
+       whole section and is simply translated down by exactly as much as
+       the beats travel, which is the same picture with no handoff frame
+       in it at all. The distance is the difference in the two columns'
+       heights and nothing else - the moment his own bottom reaches the
+       body's bottom he has run out of container, which is the frame
+       sticky would let go on, so he rides up with the last beat.
+
+       scrub is `true` and not a number, and that is the whole feel of it.
+       A numeric scrub eases him towards the scroll over some fraction of
+       a second, which sounds smoother and is worse: it means that while
+       he is supposed to be standing still he is always a few pixels
+       behind where he should be and closing, and a thing that is
+       perpetually catching up reads as a thing travelling down the page
+       with the reader. `true` binds him to the scroll position exactly,
+       so during the hold he does not move at all - the beats go past a
+       man standing still.
+
+       He is still smooth through the catch because he never changes
+       positioning and because ScrollTrigger is driven off Lenis's own
+       scroll event (see the top of this file), so the number he is
+       measured against is the smoothed one the page is actually drawn
+       at - not the raw wheel delta.
+
+       invalidateOnRefresh because the travel is measured, not authored:
+       a resize, a font settling or an image finally arriving all change
+       the height of the beats, and the tween has to re-read it. */
+    function initStoryHold() {
+      const aside = document.querySelector<HTMLElement>(".ai-story__aside");
+      const body = document.querySelector<HTMLElement>(".ai-story__body");
+      if (!aside || !body) return;
+      // reduced motion gets the plain document: he scrolls with the beats
+      if (prefersReduced) return;
+
+      /* The same 900px the two-column layout in ai.css is gated on: below
+         it he is back in the flow above the beats and there is no hold to
+         run. gsap.matchMedia builds it on the way in and reverts it on the
+         way out, so a window dragged across the breakpoint puts the
+         portrait back rather than leaving it held against a layout that no
+         longer has a column beside it. */
+      const mm = gsap.matchMedia();
+      cleanups.push(() => mm.revert());
+
+      mm.add("(min-width:900px)", () => {
+        // where he stops: centred in the viewport, with a floor that keeps
+        // him clear of the header on windows too short to centre him in.
+        const top = () => Math.max(84, (window.innerHeight - aside.offsetHeight) / 2);
+        // never negative: a beats column shorter than the portrait has no
+        // hold in it, and a negative travel would walk him up the page
+        const travel = () => Math.max(0, body.offsetHeight - aside.offsetHeight);
+
+        gsap.fromTo(aside, { y: 0 }, {
+          y: travel,
+          ease: "none",
+          scrollTrigger: {
+            trigger: aside,
+            start: () => `top ${top()}px`,
+            endTrigger: body,
+            end: () => `bottom ${top() + aside.offsetHeight}px`,
+            scrub: true,
+            invalidateOnRefresh: true,
+          },
+        });
+      });
+    }
+
     /* -------------------------------------------------- work tiles pixel reveal */
     function initTiles() {
       document.querySelectorAll<HTMLElement>("[data-tile]").forEach((tile) => {
@@ -1809,7 +1896,14 @@ export function initSite(): () => void {
          stylesheet does the rest (see --nav-ink in globals.css). */
       const lights = gsap.utils.toArray<HTMLElement>("[data-nav-light], .is-light");
       const readGround = () => {
-        if (!nav || !lights.length) return;
+        if (!nav) return;
+        /* A route with no light grounds at all is an answer - "dark" - not
+           a reason to skip the write. The header is rendered once in the
+           layout and survives the navigation, so bailing here left the
+           previous page's class on it: Insights turned the ink black and
+           every dark page after it kept it, until something happened to
+           land on a page that had lights of its own to say otherwise. */
+        if (!lights.length) { nav.classList.remove("is-on-light"); return; }
         const r = nav.getBoundingClientRect();
         /* the logo's own middle, not the header's bottom edge: the header
            is padded well past its ink, and the corner the mark sits in is
@@ -1822,8 +1916,12 @@ export function initSite(): () => void {
         nav.classList.toggle("is-on-light", light);
       };
       /* pages that are cream from the top have to be right on the first
-         frame, before anything has scrolled */
+         frame, before anything has scrolled. Same reasoning for the hide:
+         the header is the same element across a navigation, so a route
+         left mid-scroll with the bar tucked away would arrive on the next
+         page still tucked away. */
       readGround();
+      nav?.classList.remove("is-hidden");
 
       let lastY = 0;
       ScrollTrigger.create({
@@ -2304,6 +2402,7 @@ export function initSite(): () => void {
     step("initSplits", initSplits);
     step("initReveals", initReveals);
     step("initWordHighlight", initWordHighlight);
+    step("initStoryHold", initStoryHold);
     step("initTiles", initTiles);
     step("initWCardCycle", initWCardCycle);
     step("initCounters", initCounters);

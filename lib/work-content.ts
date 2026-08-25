@@ -13,13 +13,19 @@
 
    ---- what is real here and what is not ----
 
-   The five pinned campaign names are real and come from the client. The
-   brand list on the browse wall is real. Everything else - every line of
-   copy, every year, every image - is a stand-in. The client's own asset
-   folders (public/assets/SC Website Revamp/03. Work/) are in the repo and
-   are empty: BFSI, FMCG, Entertainment, B2B_ and Pinned Work_ all exist
-   with nothing in them, which is a useful confirmation of the categories
-   and no help at all with the pictures.
+   The pinned stage is finished. All five pieces have the client's own
+   thumbnails, links, headlines and lines, and Netflix x MI has its
+   film. Nothing on that section is a placeholder.
+
+   The browse wall under it is half done: the brand list is the
+   client's, the pictures are not - the drive folders under
+   public/assets/SC Website Revamp/03. Work/ have the pinned work in
+   them and almost nothing else, so every tile below the stage is still
+   a stand-in image with a stand-in campaign name.
+
+   The case template is written and empty. Its five entries are the
+   old placeholder set, they are not reachable from anywhere on the
+   site, and they are waiting on real case write-ups.
 
    Everything marked PENDING swaps out without touching a component.
    ============================================================ */
@@ -38,8 +44,15 @@ export const WORK_CATEGORIES = [
   { id: "fmcg", label: "FMCG" },
   { id: "fashion", label: "Fashion & Beauty" },
   { id: "entertainment", label: "Entertainment" },
-  { id: "b2b", label: "B2B" },
-  { id: "lifestyle", label: "Lifestyle" },
+  /* The client's own last filter, and it settles a question this file
+     used to carry an open note about: Croma, Carlton, Cordelia Cruises,
+     TCS and Cipla Innoventia were filed under invented Lifestyle and
+     B2B tabs because nothing they had fitted them. Both tabs are gone
+     and those five are here, which is what the client wanted and is
+     also the honest answer - a category named "Others" is not a gap in
+     the taxonomy, it is the taxonomy admitting an agency does work that
+     does not sort. */
+  { id: "others", label: "Others" },
 ] as const;
 
 export type CategoryId = (typeof WORK_CATEGORIES)[number]["id"];
@@ -73,129 +86,183 @@ export const PINNED_DWELL = 5000;
    credits and the rail of other work all sit *on* it. There is no copy
    section above it - the work is what opens the page.
 
-   The fields below are that screen's information, one for one:
+   The fields below are that screen's information:
 
-     tags     the genre row      DRAMA | ROMANCE | SCI-FI
-     brand    the title          "Her"
-     year     + credits          2013 | DIRECTOR: ... | STARS: ...
-     line     the synopsis
-     thumb    the poster wall    "PEOPLE ALSO LIKED"
+     tags      the genre row      DRAMA | ROMANCE | SCI-FI
+     headline  the title          "Her"
+     line      the synopsis
+     thumb     the poster wall    "PEOPLE ALSO LIKED"
 
-   The one thing that does not carry over is the rating. The client was
-   explicit that it becomes campaign metadata instead, and they are right
-   - a score on agency work is a number nobody awarded, and inventing the
-   furniture of a review site makes the real facts beside it look
-   invented too. Nothing here replaces it; the row simply is not there.
-
-   `line` is the two-to-three lines the brief allows. It is short on
-   purpose and it gets shorter the more recognisable the brand is - the
-   client's own framing, and correct: a Netflix frame does not need to
-   be introduced.
+   Two things from the reference are deliberately not here. The rating,
+   because a score on agency work is a number nobody awarded, and
+   inventing the furniture of a review site makes the real facts beside
+   it look invented too. And the credits block - year, client, scope -
+   which was carried until the client's own copy arrived and turned out
+   to be a headline and one line with no room for a third row of small
+   print under it. Neither is replaced by anything; the rows simply are
+   not there.
    ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------
+   WHAT HAPPENS WHEN A PINNED PIECE IS OPENED.
+
+   The five featured pieces do not all go to the same kind of place, and
+   this is the client's own instruction rather than a design choice:
+
+     film      the film plays in the stage frame it is already sitting
+               in. Not a lightbox, not a new page, not fullscreen - the
+               picture the reader is looking at becomes the picture that
+               is playing. Netflix × MI is this.
+
+     external  the work lives on Instagram and the tile is a door to it.
+               Four of the five are this.
+
+     case      a case page on this site, /work/<slug>. None of the five
+               are this today; the template is built and waiting, so
+               swapping a piece over is a one-line change here rather
+               than a component change.
+
+   Making this a tagged union rather than three optional fields is the
+   same rule the case blocks follow: a piece cannot accidentally be two
+   kinds of thing at once, and the component switches on `kind` instead
+   of guessing from which field happens to be set.
+   ------------------------------------------------------------------ */
+export type PinnedLink =
+  | { kind: "film"; src: string }
+  /* No label. It used to carry one so the button could say "View on
+     Instagram"; the client wants "View" on all of them, so the word is
+     the component's and there is nothing per-piece left to say. */
+  | { kind: "external"; href: string }
+  | { kind: "case"; slug: string };
+
 export type PinnedCase = {
   slug: string;
-  /* The big line on the frame - where the reference has the film's title,
-     this has the brand. "Netflix × MI" is the thing a reader recognises;
-     the campaign's own name is a credit, not a headline. */
+  /* where this one goes when it is opened - see PinnedLink */
+  link: PinnedLink;
+  /* What the poster wall calls it, and what the cursor says over its
+     tile. Not drawn on the stage itself: the small row above the
+     headline already names the piece, and a brand set large above a
+     headline that opens with the same brand is the name twice. */
   brand: string;
-  title: string;
-  /* the genre row - "DRAMA | ROMANCE | SCI-FI" in the reference. Category
-     and formats, which is the same job: what kind of thing am I looking
-     at, answered before the title is read. */
+  /* The small row over the headline - the reference's genre line, and
+     the client writes it as one: who it was for and what the work was.
+     A list rather than a string so the rule between the parts is drawn
+     rather than typed; see .wk-lede__tags. */
   tags: string[];
-  year: string;
-  /* "DIRECTOR: ... STARS: ..." - the labelled credits under the title.
-     A list rather than fixed fields because not every case has the same
-     ones, and a case with two credits should not render three with a
-     blank in it. */
-  credits: { label: string; value: string }[];
+  /* The client's own headline, verbatim, upper case as they set it.
+     This is the display line on the stage - it is what the piece has to
+     say, and it says it better than the brand name does. */
+  headline: string;
+  /* The line under it. One sentence, and it answers the headline. */
   line: string;
   hero: string;
-  /* The rail frame - portrait, like the poster wall in the reference. A
-     different crop of the same campaign where one exists: a rail of the
-     hero images scaled down is a rail of unreadable wide shots. */
+  /* The rail frame. The reference's poster wall is portrait and this
+     was too, until the real thumbnails arrived: all five are 16:9, one
+     per piece, and there is no second crop. Cropping a wide still to a
+     2:3 poster centre-cuts the brand out of most of them, so the wall
+     is 16:9 now and this is usually the same file as `hero`. It stays a
+     separate field for the day a piece arrives with a proper portrait
+     key art. */
   thumb: string;
+  /* Set while the piece is still waiting on its writing. It draws the
+     PENDING badge on the poster and nothing else - the piece is real,
+     the words are not there yet. */
   pending?: boolean;
 };
 
-/* The five are the client's. The copy, the metadata and every image are
-   PENDING - the client is sending final lines separately, in this shape:
-   "This was the campaign we did with ___." */
+/* The five the client named, in the order they named them. All five
+   are complete: their thumbnails, their links, their film, and their
+   own headlines and lines - verbatim, in the case they set them.
+   Nothing on this stage is a placeholder any more.
+
+   ---- the small row ----
+
+   The client wrote it out for two of the five: "NETFLIX X MI X
+   SOCheers, (Social + Film)" and "(Social + MicroSeries IP +
+   Packaging)". The other three follow that pattern - who it was for,
+   then what the work was - and were filled in from what each piece
+   actually is rather than invented: Pantaloons ran as a fortnightly
+   drop campaign, Broadway as a reel that pulled a crowd to a room, SRH
+   as the same social-plus-film shape as its MI sibling. They are worth
+   a glance from the client, and they are one line each to change.
+
+   ---- the film ----
+
+   Netflix x MI plays in the frame. The file is the web cut made by
+   scripts/build-film.mjs from the 476MB 4K master the client uploaded -
+   see the note in that script for what was done to it and why the
+   master is not what the page loads.
+
+   ---- the Instagram links ----
+
+   Written without the `igsi=` parameter they arrived with. That is a
+   share token tied to the account the link was copied from, it is not
+   needed to open the post, and it does not belong in a public page's
+   markup. The post ids are exactly as sent.
+   ------------------------------------------------------------------ */
 export const PINNED: PinnedCase[] = [
   {
     slug: "netflix-mi",
+    link: { kind: "film", src: "/assets/work/pinned/netflix-mi.mp4" },
     brand: "Netflix × MI",
-    title: "PENDING - campaign title",
-    tags: ["Entertainment", "Film", "Social"],
-    year: "PENDING",
-    credits: [
-      { label: "Client", value: "Netflix × Mumbai Indians" },
-      { label: "Scope", value: "PENDING - scope" },
-    ],
-    line: "PENDING - two or three lines on what this was. Placeholder set to the length the real line should run to, so the layout is proven at the right measure.",
-    hero: "/assets/work-entertainment.png",
-    thumb: "/assets/series/reel-1.jpg",
-    pending: true,
+    tags: ["NETFLIX X MI X SOCheers", "Social + Film"],
+    headline:
+      "HOW DO YOU GET THE MUMBAI INDIANS TO ANNOUNCE NETFLIX AS THEIR NEW ENTERTAINMENT PARTNER WHEN THEY’RE BUSY WATCHING IT?",
+    line: "Get the man who can become pretty much anyone.",
+    hero: "/assets/work/pinned/netflix-mi.jpg",
+    thumb: "/assets/work/pinned/netflix-mi.jpg",
   },
   {
-    slug: "titan-made-in-india",
-    brand: "Titan",
-    title: "Made in India",
-    tags: ["Lifestyle", "Film", "Social"],
-    year: "PENDING",
-    credits: [
-      { label: "Client", value: "Titan" },
-      { label: "Scope", value: "PENDING - scope" },
-    ],
-    line: "PENDING - two or three lines on what this was. Placeholder set to the length the real line should run to, so the layout is proven at the right measure.",
-    hero: "/assets/work-lifestyle.jpg",
-    thumb: "/assets/series/reel-2.jpg",
-    pending: true,
-  },
-  {
-    slug: "broadway-bombay",
-    brand: "Broadway",
-    title: "Broadway Bombay",
-    tags: ["Lifestyle", "Content", "Social"],
-    year: "PENDING",
-    credits: [
-      { label: "Client", value: "Broadway" },
-      { label: "Scope", value: "PENDING - scope" },
-    ],
-    line: "PENDING - two or three lines on what this was. Placeholder set to the length the real line should run to, so the layout is proven at the right measure.",
-    hero: "/assets/series/open-wide.jpg",
-    thumb: "/assets/series/reel-3.jpg",
-    pending: true,
-  },
-  {
-    slug: "odyssey",
-    brand: "Odyssey",
-    title: "PENDING - campaign title",
-    tags: ["Lifestyle", "Campaign"],
-    year: "PENDING",
-    credits: [
-      { label: "Client", value: "Odyssey" },
-      { label: "Scope", value: "PENDING - scope" },
-    ],
-    line: "PENDING - two or three lines on what this was. Placeholder set to the length the real line should run to, so the layout is proven at the right measure.",
-    hero: "/assets/brain-DH7sqVir.jpg",
-    thumb: "/assets/series/mokai-2.jpg",
-    pending: true,
+    slug: "netflix-srh",
+    link: {
+      kind: "external",
+      href: "https://www.instagram.com/p/DYMMLGPjbRn/",
+    },
+    brand: "Netflix × SRH",
+    tags: ["NETFLIX X SRH X SOCheers", "Social + Film"],
+    headline: "SOME ANNOUNCEMENTS ARE BETTER WHEN YOU TAKE THEM SLOWLY SLOWLY.",
+    line: "Until the banger became SRH’S unofficial anthem.",
+    hero: "/assets/work/pinned/netflix-srh.jpg",
+    thumb: "/assets/work/pinned/netflix-srh.jpg",
   },
   {
     slug: "pantaloons-eoss",
+    link: {
+      kind: "external",
+      href: "https://www.instagram.com/p/DadHSmiCGdZ/",
+    },
     brand: "Pantaloons",
-    title: "EOSS",
-    tags: ["Fashion & Beauty", "Campaign", "Social"],
-    year: "PENDING",
-    credits: [
-      { label: "Client", value: "Pantaloons" },
-      { label: "Scope", value: "PENDING - scope" },
-    ],
-    line: "PENDING - two or three lines on what this was. Placeholder set to the length the real line should run to, so the layout is proven at the right measure.",
-    hero: "/assets/photoshop-face-BOtm4GGN.jpg",
-    thumb: "/assets/series/mokai-3.jpg",
-    pending: true,
+    tags: ["PANTALOONS X SOCheers", "Social + Campaign"],
+    headline:
+      "FOR A BRAND WITH THIS MUCH LEGACY, HOW DO YOU KEEP IT MOVING THIS FAST?",
+    line: "With drops coming every two weeks, we make sure they find their way into closets as much as they do into feeds.",
+    hero: "/assets/work/pinned/pantaloons-eoss.jpg",
+    thumb: "/assets/work/pinned/pantaloons-eoss.jpg",
+  },
+  {
+    slug: "broadway",
+    link: {
+      kind: "external",
+      href: "https://www.instagram.com/reel/DZNJBxaMb0n/",
+    },
+    brand: "Broadway",
+    tags: ["BROADWAY X SOCheers", "Social + Film"],
+    headline: "GETTING BANDRA TO LOOK AWAY FROM BOOJEE IS NO SMALL ASK.",
+    line: "We made Broadway worth the detour, bringing 20,000+ people through the doors.",
+    hero: "/assets/work/pinned/broadway.jpg",
+    thumb: "/assets/work/pinned/broadway.jpg",
+  },
+  {
+    slug: "prava",
+    link: {
+      kind: "external",
+      href: "https://www.instagram.com/reel/DaiGcRnICTO/",
+    },
+    brand: "Prava",
+    tags: ["PRAVA X SOCheers", "Social + MicroSeries IP + Packaging"],
+    headline: "GETTING A WATER BRAND MORE PERSONALITY THAN YOU’D EXPECT.",
+    line: "Start with a can that has a lot more going on than water.",
+    hero: "/assets/work/pinned/prava.jpg",
+    thumb: "/assets/work/pinned/prava.jpg",
   },
 ];
 
@@ -237,12 +304,9 @@ export type WorkAsset = {
    confirmed categories. The images are repo placeholders cycled so that
    both orientations and a range of aspect ratios are exercised.
 
-   Four of these are flagged in the brief as not having a clean category:
-   Croma, Carlton and Cordelia Cruises are filed under Lifestyle, and TCS
-   and Cipla Innoventia under B2B. That is a judgement call, not the
-   client's instruction - worth putting in front of them, because it is
-   one tag per asset to change and it decides which filter they appear
-   under. */
+   The five that had no clean category - Croma, Carlton, Cordelia
+   Cruises, TCS and Cipla Innoventia - are under "Others" now, which is
+   the client's own answer to the question this note used to ask. */
 const P = [
   "/assets/work-bfsi.png",
   "/assets/work-entertainment.png",
@@ -299,13 +363,12 @@ export const WORK_ASSETS: WorkAsset[] = [
   brand(15, "Ab Hoga Hissab", "entertainment"),
   brand(16, "JioHotstar", "entertainment", "video"),
   brand(17, "Family Man × Alexa", "entertainment"),
-  /* B2B - category assigned by us, see the note above */
-  brand(18, "TCS", "b2b"),
-  brand(19, "Cipla Innoventia", "b2b"),
-  /* Lifestyle - same caveat */
-  brand(20, "Croma", "lifestyle", "video"),
-  brand(21, "Carlton", "lifestyle"),
-  brand(22, "Cordelia Cruises", "lifestyle"),
+  /* Others */
+  brand(18, "TCS", "others"),
+  brand(19, "Cipla Innoventia", "others"),
+  brand(20, "Croma", "others", "video"),
+  brand(21, "Carlton", "others"),
+  brand(22, "Cordelia Cruises", "others"),
 ];
 
 /* ------------------------------------------------------------------
@@ -331,14 +394,49 @@ export const WORK_ASSETS: WorkAsset[] = [
    (cardboard-spaceship.com/portfolio/vyepti) - one narrative column with
    full-bleed visuals breaking out of it - not its content.
    ------------------------------------------------------------------ */
+/* The frame a moving picture is played in. Named rather than free, so a
+   set of social cutdowns cannot arrive as seven slightly different
+   heights: "wide" is a film, "tall" is anything cut for a phone, "square"
+   is a feed post. Default is wide, because most things are. */
+export type Ratio = "wide" | "tall" | "square" | "four-five";
+
 export type CaseBlock =
   | { type: "copy"; heading?: string; body: string }
   | { type: "image"; src: string; w: number; h: number; caption?: string; bleed?: boolean }
   | { type: "duo"; a: string; b: string; caption?: string }
-  | { type: "video"; src: string; poster: string; caption?: string }
+  /* `src` is a file URL *or* a YouTube / Vimeo link - see parseVideo() in
+     lib/video.ts. A poster is optional for the hosted providers because
+     they have one of their own; for an .mp4 it is worth setting, since
+     the alternative is a black rectangle until the reader presses play. */
+  | { type: "video"; src: string; poster?: string; ratio?: Ratio; caption?: string }
+  /* Several films in a row - the social cutdowns, the six-second edits,
+     the regional versions. One block rather than a run of video blocks
+     because they are one thing, and because a row of phone-shaped films
+     wants to be a row rather than a stack. */
+  | { type: "reel"; items: { src: string; poster?: string; label?: string }[]; ratio?: Ratio; caption?: string }
   | { type: "board"; src: string; w: number; h: number; caption?: string }
+  /* Any number of stills as a grid. `duo` stays because a considered
+     pair is its own composition; this is for the six frames from the
+     shoot that are a gallery and not a layout. */
+  | { type: "gallery"; items: { src: string; caption?: string }[]; cols?: 2 | 3 | 4; caption?: string }
+  /* The reference's numbered service grid, read as scope: what was
+     actually made. Numbered by position, so reordering does not mean
+     renumbering by hand. */
+  | { type: "scope"; heading?: string; items: { title: string; body?: string }[] }
+  /* The reference's process timeline. Phases in order, each with a line
+     and optionally a frame from that phase. */
+  | { type: "steps"; heading?: string; items: { title: string; body: string; src?: string }[] }
+  /* The billing block every work piece ends up needing: client, scope,
+     year, the people. Label / value pairs so it never has to be a
+     fixed set of fields. */
+  | { type: "credits"; heading?: string; items: { label: string; value: string }[] }
   | { type: "stats"; items: { figure: string; label: string }[] }
-  | { type: "quote"; text: string; who: string };
+  /* `role` and `avatar` are the reference's testimonial card; without
+     them this is the plain pull quote it has always been. */
+  | { type: "quote"; text: string; who: string; role?: string; avatar?: string }
+  /* Native <details>, so it opens without JavaScript and is findable by
+     the browser's own find-in-page. */
+  | { type: "faq"; heading?: string; items: { q: string; a: string }[] };
 
 export type CaseStudy = {
   slug: string;
@@ -353,10 +451,15 @@ export type CaseStudy = {
      of numbers, there is no version of this page that reads as finished
      without a picture at the top. So it is required, not optional. */
   hero: string;
-  /* Set when the case has a film. It turns the hero into the poster for
-     it and puts the one action on the frame; without it the hero is a
-     still and there is no button, which is the same absence rule the
-     block list follows. */
+  /* Set when the case has a film and you have not placed it in the block
+     list yourself. It puts "Watch the film" on the frame and drops the
+     film in as the first thing under the lede - so the shortest possible
+     work piece is a hero, a film link and one paragraph, and it is a
+     finished page.
+
+     Leave it off when the film belongs somewhere else in the story and
+     put a `video` block where you want it: the button appears for any
+     case that has a film in it, wherever it sits. See caseBlocks(). */
   film?: string;
   blocks: CaseBlock[];
   pending?: boolean;
@@ -375,6 +478,70 @@ export type CaseStudy = {
 const LOREM =
   "PENDING - the write-up for this section. Set to roughly the length the real copy should run so the column measure and the rhythm between visuals can be judged now rather than after the content sheet lands.";
 
+/* ============================================================
+   HOW TO ADD A WORK PIECE.
+
+   One entry in the array below. There is no route to create, no
+   component to touch and no image list to register - the slug becomes
+   /work/<slug>, the page prerenders, and the card appears at the foot
+   of every other case.
+
+   ---- the smallest one that is finished ----
+
+     {
+       slug: "brand-campaign",
+       brand: "Brand",
+       title: "Campaign name",
+       meta: ["2025", "FMCG", "Film"],
+       intro: "The one paragraph under the title.",
+       hero: "/assets/.../still.jpg",
+       film: "https://www.youtube.com/watch?v=XXXXXXXXXXX",
+       blocks: [{ type: "copy", heading: "The brief", body: "..." }],
+     }
+
+   That is a hero, a film that plays where the reader expects it, a
+   heading and a paragraph, and it reads as a complete page. `film` may
+   be a YouTube link, a Vimeo link or an .mp4 - see lib/video.ts - and
+   nothing downstream needs to know which.
+
+   ---- everything that can go in `blocks` ----
+
+   In any order, any number of times, and anything absent is simply not
+   written. Do not add an empty one to "keep the rhythm": the rhythm is
+   what is there.
+
+     { type: "copy",   heading: "The challenge", body: "..." }
+     { type: "image",  src, w, h, caption?, bleed? }        one still
+     { type: "duo",    a, b, caption? }                     a considered pair
+     { type: "gallery",items: [{ src, caption? }], cols?: 2|3|4 }
+     { type: "video",  src, poster?, ratio?, caption? }     file / YouTube / Vimeo
+     { type: "reel",   items: [{ src, poster?, label? }], ratio? }   the cutdowns
+     { type: "board",  src, w, h, caption? }                a tall artboard
+     { type: "scope",  heading?, items: [{ title, body? }] }        what we made
+     { type: "steps",  heading?, items: [{ title, body, src? }] }   how it was made
+     { type: "stats",  items: [{ figure, label }] }
+     { type: "quote",  text, who, role?, avatar? }
+     { type: "credits",heading?, items: [{ label, value }] }
+     { type: "faq",    heading?, items: [{ q, a }] }
+
+   `ratio` is "wide" | "tall" | "square" | "four-five" and defaults to
+   wide for a film and tall for a reel - so a set of Reels cutdowns is
+   `{ type: "reel", items: [...] }` and nothing else.
+
+   Any block carrying a `heading` shows up in the rail's contents list
+   on its own; that list is derived, never written out. See
+   caseHeadings().
+
+   ---- the two things worth knowing ----
+
+   Blocks with a heading are what the reader navigates by, so a page of
+   nothing but pictures gets no contents list. That is correct, not a
+   bug - there is nothing to list.
+
+   Copy is written as it will read. Nothing here title-cases, truncates
+   or reflows a line, so a headline with a deliberate lower-case "i" or
+   a line break the client asked for survives exactly as typed.
+   ============================================================ */
 export const CASES: CaseStudy[] = [
   {
     slug: "netflix-mi",
@@ -385,29 +552,69 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work-entertainment.png",
     film: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
     pending: true,
+    /* The reference page's full section vocabulary, in one case, so
+       every block type can be looked at rendered before the real work
+       pieces land. Open this next to /work/odyssey, which has three
+       blocks: if the short one still reads as finished, the template
+       holds. */
     blocks: [
       { type: "copy", heading: "The client", body: LOREM },
       { type: "copy", heading: "The challenge", body: LOREM },
       { type: "duo", a: "/assets/series/kink.jpg", b: "/assets/series/binge.jpg", caption: "PENDING - caption" },
       { type: "copy", heading: "Our approach", body: LOREM },
+      { type: "scope", heading: "What we made", items: [
+        { title: "PENDING - the film", body: LOREM },
+        { title: "PENDING - the cutdowns", body: LOREM },
+        { title: "PENDING - the stills", body: LOREM },
+        { title: "PENDING - the always-on", body: LOREM },
+      ] },
       { type: "image", src: "/assets/work-entertainment.png", w: 1600, h: 900, bleed: true, caption: "PENDING - caption" },
       { type: "copy", heading: "The execution", body: LOREM },
       { type: "video", src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", caption: "PENDING - the case film" },
+      /* PENDING - three of the same file standing in for the cutdowns.
+         Real ones are usually YouTube or Vimeo links, which go in the
+         same field. */
+      { type: "reel", caption: "PENDING - the cutdowns", items: [
+        { src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/kink.jpg", label: "PENDING - 30s" },
+        { src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/binge.jpg", label: "PENDING - 15s" },
+        { src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", label: "PENDING - 6s" },
+      ] },
+      { type: "steps", heading: "How it was made", items: [
+        { title: "PENDING - discovery", body: LOREM, src: "/assets/series/kink.jpg" },
+        { title: "PENDING - pre-production", body: LOREM },
+        { title: "PENDING - the shoot", body: LOREM, src: "/assets/series/binge.jpg" },
+        { title: "PENDING - post", body: LOREM },
+      ] },
       { type: "board", src: "/assets/series/close-band.jpg", w: 1252, h: 495, caption: "PENDING - the case board" },
+      { type: "gallery", cols: 3, caption: "PENDING - frames from the shoot", items: [
+        { src: "/assets/series/kink.jpg" },
+        { src: "/assets/series/binge.jpg" },
+        { src: "/assets/series/streaming.jpg" },
+      ] },
       { type: "copy", heading: "The outcome", body: LOREM },
       { type: "stats", items: [
         { figure: "00M", label: "PENDING - reach" },
         { figure: "00%", label: "PENDING - engagement" },
         { figure: "00K", label: "PENDING - shares" },
       ] },
-      { type: "quote", text: "PENDING - a line from the client or the press.", who: "PENDING - attribution" },
+      { type: "quote", text: "PENDING - a line from the client or the press.", who: "PENDING - attribution", role: "PENDING - title, brand" },
+      { type: "credits", heading: "Credits", items: [
+        { label: "Client", value: "PENDING" },
+        { label: "Agency", value: "SoCheers" },
+        { label: "Scope", value: "PENDING" },
+        { label: "Year", value: "PENDING" },
+      ] },
+      { type: "faq", heading: "Questions", items: [
+        { q: "PENDING - a question a reader asks after seeing this.", a: LOREM },
+        { q: "PENDING - the second one.", a: LOREM },
+      ] },
     ],
   },
   {
     slug: "titan-made-in-india",
     brand: "Titan",
     title: "Made in India",
-    meta: ["PENDING", "Lifestyle", "Film · Social"],
+    meta: ["PENDING", "Others", "Film · Social"],
     intro: LOREM,
     hero: "/assets/work-lifestyle.jpg",
     film: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
@@ -429,7 +636,7 @@ export const CASES: CaseStudy[] = [
     slug: "broadway-bombay",
     brand: "Broadway",
     title: "Broadway Bombay",
-    meta: ["PENDING", "Lifestyle", "Content · Social"],
+    meta: ["PENDING", "Others", "Content · Social"],
     intro: LOREM,
     hero: "/assets/series/open-wide.jpg",
     pending: true,
@@ -449,7 +656,7 @@ export const CASES: CaseStudy[] = [
     slug: "odyssey",
     brand: "Odyssey",
     title: "PENDING - campaign title",
-    meta: ["PENDING", "Lifestyle", "Campaign"],
+    meta: ["PENDING", "Others", "Campaign"],
     intro: LOREM,
     hero: "/assets/brain-DH7sqVir.jpg",
     pending: true,
@@ -492,14 +699,43 @@ export const CASE_NAV = {
 
 export const findCase = (slug: string) => CASES.find((c) => c.slug === slug);
 
+/* ------------------------------------------------------------------
+   THE BLOCKS A CASE ACTUALLY RENDERS.
+
+   Everything on the page reads the list through here rather than off
+   `c.blocks`, because there is one thing the page adds: a case that
+   names a film but does not place it gets that film first, under the
+   lede. That is the whole of the magic, and it exists so the minimum
+   viable work piece is three fields - hero, film, one paragraph -
+   rather than a hero, a film, a paragraph and a correctly positioned
+   video block that repeats the URL.
+
+   A case that already has a video block is left exactly as written: the
+   author has said where the film goes, and this does not second-guess
+   them or add a second copy of it.
+   ------------------------------------------------------------------ */
+export const caseBlocks = (c: CaseStudy): CaseBlock[] =>
+  c.film && !c.blocks.some((b) => b.type === "video")
+    ? [{ type: "video", src: c.film, poster: c.hero }, ...c.blocks]
+    : c.blocks;
+
+/* Whether the frame gets its one action. Derived from the blocks rather
+   than from `c.film` on its own - the button scrolls to the film, so the
+   only honest condition for showing it is that there is a film on the
+   page to scroll to. */
+export const caseHasFilm = (c: CaseStudy) =>
+  caseBlocks(c).some((b) => b.type === "video");
+
 /* The contents list for the rail, derived from the blocks rather than
    written out. The id is the block's own index and not a counter over
    the headings, so it stays the same rule in both places that need it -
    here and in the renderer - and neither has to know how many headings
    came before it. */
+const HEADED = new Set(["copy", "scope", "steps", "credits", "faq"]);
+
 export const caseHeadings = (blocks: CaseBlock[]) =>
   blocks.flatMap((b, i) =>
-    b.type === "copy" && b.heading
+    HEADED.has(b.type) && "heading" in b && b.heading
       ? [{ id: `heading-${i}`, label: b.heading }]
       : [],
   );
