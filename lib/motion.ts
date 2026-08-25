@@ -16,6 +16,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import Lenis from "lenis";
 import { OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
+import { keepPlaying } from "./autoplay";
 import { MEANING, WCARD_SFX } from "./content";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
@@ -2016,22 +2017,49 @@ export function initSite(): () => void {
          question as simple as "is this on screen" that is the right
          instrument. */
 
-      /* a · the file, fetched early. Attached once, a screen and a half
-             out, then the observer retires - it exists to set a string,
-             not to watch the page. This is the heaviest asset on the
-             site by an order of magnitude, so the lead time is
-             deliberately generous: it is the difference between the film
-             being buffered when the lock engages and it stalling
-             somewhere in the hold. */
+      /* a · the file, fetched early.
+;
+             This used to wait on an observer a screen and a half out,
+             on the theory that a reader who never reaches WHO WE ARE
+             should not pay for the heaviest asset on the site. That
+             theory cost more than it saved: a screen and a half is a
+             second or two of scrolling, which is not enough runway to
+             buffer a film on anything but a fast line, so the common
+             case was the lock engaging over an empty frame. The reel is
+             the second section of the home page - practically everyone
+             who lands here reaches it - so it is fetched as soon as the
+             page is quiet, and preload="metadata" in the markup means
+             the element has dimensions and a first frame long before
+             that.
+
+             requestIdleCallback keeps it behind the things that decide
+             what the first screen looks like; the timeout is the
+             backstop for browsers that never go idle (and for Safari,
+             which has no such callback at all). */
+      /* One source, and it is h264. A VP9 webm was cut of this same
+         film to sit in front of it and came out half again as large at
+         matched quality - this footage is flat colour and hard cuts,
+         which is the shape x264 is already good at. A second file that
+         is bigger than the first is not a fallback, it is a regression,
+         so there is only the mp4. */
       const src = film.dataset.reelFilm;
-      if (src) {
-        const preload = new IntersectionObserver((entries) => {
-          if (!entries.some((e) => e.isIntersecting)) return;
-          if (!film.src) film.src = src;
-          preload.disconnect();
-        }, { rootMargin: "150% 0px", threshold: 0 });
-        preload.observe(stage);
-        observers.push(preload);
+      if (src && !film.src) {
+        const fetchFilm = () => {
+          if (ac.signal.aborted || film.src) return;
+          film.src = src;
+          /* an explicit load(): setting .src on an element that was
+             parsed with preload="none" does not always start the fetch
+             on its own */
+          film.load();
+        };
+        const idle = (window as unknown as {
+          requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+        }).requestIdleCallback;
+        if (idle) idle(fetchFilm, { timeout: 2500 });
+        else {
+          const t = window.setTimeout(fetchFilm, 1200);
+          cleanups.push(() => window.clearTimeout(t));
+        }
       }
 
       /* b · the transport. Runs whenever any part of the stage is on
@@ -2040,17 +2068,19 @@ export function initSite(): () => void {
              only once it is genuinely gone. Nothing about the open, the
              hold or the close can reach this - the film plays for the
              whole time it is visible and that is the entire rule. */
+      /* The intent goes to keepPlaying rather than to play() directly.
+         A bare play().catch(() => {}) asks exactly once per pass and
+         swallows the answer, which is why the film "sometimes" did not
+         run: the one ask often landed before a frame had decoded, or
+         against an autoplay policy that would have relented the moment
+         the reader touched anything. lib/autoplay.ts holds the intent
+         and re-asserts it - on readiness, on a stall, on the first
+         gesture - until it takes. */
+      const projector = keepPlaying(film);
+      cleanups.push(() => projector.destroy());
+
       const transport = new IntersectionObserver((entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting) {
-            /* the catch is not optional: a tab that has been denied
-               autoplay rejects, and an unhandled rejection here would be
-               thrown on every pass of the section */
-            film.play().catch(() => {});
-          } else if (!film.paused) {
-            film.pause();
-          }
-        }
+        for (const e of entries) projector.want(e.isIntersecting);
       }, { rootMargin: "10% 0px", threshold: 0 });
       transport.observe(stage);
       observers.push(transport);

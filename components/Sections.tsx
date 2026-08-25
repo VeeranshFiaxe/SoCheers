@@ -91,11 +91,14 @@ export function Who() {
    the hero, the About panels - pins through the engine for the same
    reason, so this one does too.
 
-   The video carries no src. initReel attaches it the first time the
-   stage is anywhere near the viewport and pauses it the moment it is
-   not: the file is the heaviest asset on the site by an order of
-   magnitude, and a reader who never gets past WHO WE ARE must never pay
-   for it. */
+   The video carries no src in the markup: initReel attaches it once the
+   page has gone quiet, so the film never competes with the first screen
+   for bandwidth, and pauses it the moment the stage is off screen.
+
+   What it does carry is a poster - the film's own title card, a frame
+   and a half in, because the first second of it is black and a black
+   frame is indistinguishable from a broken one. Whatever the network is
+   doing, this section is never an empty box. */
 export function Reel() {
   return (
     <section className="sec reel no-border" data-reel>
@@ -107,11 +110,12 @@ export function Reel() {
         <div className="reel__frame" data-reel-frame>
           <video
             className="reel__film"
-            data-reel-film="/assets/SC Website Revamp/01. Home/Vibe Video SC.mp4"
+            data-reel-film="/media/vibe-video.mp4"
+            poster="/media/vibe-video-poster.jpg"
             muted
             loop
             playsInline
-            preload="none"
+            preload="metadata"
             aria-hidden="true"
             tabIndex={-1}
           />

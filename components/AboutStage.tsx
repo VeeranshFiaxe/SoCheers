@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { SpaceShot } from "@/lib/about-content";
 import StageAscii from "./StageAscii";
+import { keepPlaying } from "@/lib/autoplay";
 
 /* ============================================================
    THE SPACE, one frame at a time.
@@ -47,7 +48,7 @@ export default function AboutStage({
      would push the photographs off the first screen entirely. Here the
      film is simply what the frame is showing when you arrive, and the
      rail says how much else there is. */
-  film?: { src: string; cap: string };
+  film?: { src: string; poster?: string; cap: string };
 }) {
   const [i, setI] = useState(0);
 
@@ -152,6 +153,21 @@ export default function AboutStage({
      section scrolled past, reduced motion. play() is caught because a tab
      that has denied autoplay rejects, and an unhandled rejection here
      would be thrown on every pass of the section. */
+  /* The projector is built once and lives as long as the element does:
+     it is the thing that keeps asking, so tearing it down and rebuilding
+     it every time the frame changes would throw away the backoff and the
+     gesture listener that are the entire point of it. */
+  const projector = useRef<ReturnType<typeof keepPlaying> | null>(null);
+  useEffect(() => {
+    const v = filmRef.current;
+    if (!v || !film) return;
+    projector.current = keepPlaying(v);
+    return () => {
+      projector.current?.destroy();
+      projector.current = null;
+    };
+  }, [film]);
+
   useEffect(() => {
     const v = filmRef.current;
     if (!v || !film) return;
@@ -164,8 +180,12 @@ export default function AboutStage({
       v.preload = reduced ? "metadata" : "auto";
       v.src = film.src;
     }
-    if (onFilm && onScreen && !reduced) v.play().catch(() => {});
-    else if (!v.paused) v.pause();
+    /* The intent, not a one-shot play(). What stood here was
+       play().catch(() => {}), which asks exactly once per pass and
+       throws the answer away - so a rejection for a frame that had not
+       decoded yet, or an autoplay policy that would have relented on the
+       reader's next tap, was permanent. lib/autoplay.ts keeps asking. */
+    projector.current?.want(Boolean(onFilm && onScreen && !reduced));
   }, [film, onFilm, onScreen, reduced]);
 
   const onKeyDown = useCallback(
@@ -245,6 +265,7 @@ export default function AboutStage({
           <video
             ref={filmRef}
             className={onFilm ? "stage__film is-active" : "stage__film"}
+            poster={film.poster}
             muted
             loop
             playsInline

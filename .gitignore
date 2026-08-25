@@ -5,4 +5,8 @@ next-env.d.ts
 *.tsbuildinfo
 .DS_Store
 .env*.local
-public/assets/SC Website Revamp/03. Work/Pinned Work/Netflix x MI & SRH/NETFLIX X MI video_.mp4
+# Video masters. These live outside public/ so they are never served;
+# assets/*.src.* is the convention (see also assets/about-3d-man.src.glb).
+# The Netflix master is a 476MB broadcast delivery - too large for GitHub,
+# and there is nothing in it the web cut does not have.
+assets/netflix-mi.src.mp4

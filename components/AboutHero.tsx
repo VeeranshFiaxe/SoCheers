@@ -19,12 +19,28 @@ export default function AboutHero() {
     <section className="ab-open" data-sec="0">
       <div className="ab-open__media" data-ab-parallax>
         <div className="ab-open__mediaIn">
+          {/* Ours, off our own deploy. This ran off the old WordPress
+              install for a while - nine megabytes fetched from a server
+              that has nothing to do with this site being up, so every
+              load of this page was a bet on someone else's box. It is
+              half the size now and it ships with the page.
+
+              The poster is the film's first frame, so the opener is the
+              picture the moment the markup lands and stays it whatever
+              the network does; autoplay here is a request, not a
+              guarantee, and initAbout re-asks until it takes (see
+              lib/autoplay.ts). muted is what makes the request askable
+              at all - a film with sound is never allowed to start
+              itself, and this one has no audio track to begin with. */}
           <video
-            src="https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4"
+            data-ab-film
+            poster="/media/about-hero-poster.jpg"
             autoPlay
             muted
             loop
             playsInline
+            preload="auto"
+            src="/media/about-hero.mp4"
           />
         </div>
       </div>

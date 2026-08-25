@@ -201,7 +201,8 @@ export type SpaceShot = {
    frame reads as the first of eleven rather than as a different piece of
    furniture bolted above them. */
 export const SPACE_FILM = {
-  src: "/assets/SC Website Revamp/01. Home/Vibe Video SC.mp4",
+  src: "/media/vibe-video.mp4",
+  poster: "/media/vibe-video-poster.jpg",
   cap: "The film",
 };
 

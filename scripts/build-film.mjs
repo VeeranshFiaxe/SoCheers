@@ -38,18 +38,17 @@
 
    ---- what this does not touch ----
 
-   The master. It stays exactly where the client put it, under
-   public/assets/SC Website Revamp/. It should not be *served* from
-   there - and it should probably not be in git either; see the note at
-   the end of this file.
+   The master. It has been moved out of public/ - it now sits at
+   assets/netflix-mi.src.mp4, alongside the other source masters, where
+   the build can still read it but no deploy will ever serve it. It
+   stays out of git; see the note at the end of this file.
    ============================================================ */
 import { spawnSync } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { statSync } from "node:fs";
 import ffmpeg from "ffmpeg-static";
 
-const SRC =
-  "public/assets/SC Website Revamp/03. Work/Pinned Work/Netflix x MI & SRH/NETFLIX X MI video_.mp4";
+const SRC = "assets/netflix-mi.src.mp4";
 const OUT = "public/assets/work/pinned/netflix-mi.mp4";
 
 await mkdir("public/assets/work/pinned", { recursive: true });

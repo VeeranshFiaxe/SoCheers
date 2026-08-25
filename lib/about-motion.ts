@@ -13,11 +13,34 @@
    ============================================================ */
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { keepPlaying } from "./autoplay";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export function initAbout(): () => void {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* -------------------------------------------------- the opener film
+     Outside the gsap context on purpose, and above the reduced-motion
+     gate: this is not an animation. It is the page's ground, it runs
+     under reduced motion the same as anywhere else, and it has to be
+     torn down by hand rather than by ctx.revert().
+
+     autoPlay in the markup is a request the browser is free to refuse -
+     Low Power Mode, a tab restored in the background, Safari's policy -
+     and refusing it silently is exactly how this page sometimes opened
+     on a still. keepPlaying re-asks on readiness, on a stall and on the
+     reader's first gesture, until it takes. The observer is the other
+     half: no decoding a film that is three screens up the page. */
+  const opener = document.querySelector<HTMLVideoElement>("[data-ab-film]");
+  const projector = opener ? keepPlaying(opener) : null;
+  let watch: IntersectionObserver | null = null;
+  if (opener && projector) {
+    watch = new IntersectionObserver((entries) => {
+      for (const e of entries) projector.want(e.isIntersecting);
+    }, { rootMargin: "10% 0px", threshold: 0 });
+    watch.observe(opener.closest("section") ?? opener);
+  }
 
   const ctx = gsap.context(() => {
     /* -------------------------------------------------- the hero
@@ -406,5 +429,9 @@ export function initAbout(): () => void {
     }
   });
 
-  return () => ctx.revert();
+  return () => {
+    watch?.disconnect();
+    projector?.destroy();
+    ctx.revert();
+  };
 }
