@@ -364,6 +364,32 @@ html.sc-seen .loader{ display:none; }
 .nav__links .nav__soon,
 .nav .nav__cta{ color:var(--nav-ink); transition:color .35s var(--ease), border-color .35s var(--ease); }
 .nav .nav__cta{ border-color:var(--nav-ink); }
+/* And the CTA sits on the same island the links row does.
+
+   In the header it is one small outlined pill with nothing behind it, and
+   an outline in --nav-ink is only legible against whatever the ink was
+   chosen for. Over a photograph or a film that is a bet on the frame: the
+   About page's opener runs bright through the middle and the CTA is up in
+   the corner it passes through, so the button came and went with the
+   footage. The row beside it never had that problem because it floats on
+   a translucent capsule, and this is that capsule - same fill, same
+   hairline, same blur - so the two read as one set of controls and
+   neither depends on what is underneath.
+
+   Scoped to .nav on purpose: the same class is used as an ordinary button
+   in the flow of a page (.ab-end, the Insights foot), where it sits on
+   known paper and an island would be a floating chip in a paragraph. */
+.nav .nav__cta{
+  background:var(--nav-island);
+  border-color:var(--nav-island-line);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 30px rgba(0,0,0,.14);
+  transition:color .35s var(--ease), border-color .35s var(--ease),
+             background .35s var(--ease);
+}
+/* the accent still fills it on hover, so the border goes back to being
+   the edge of the green rather than the island's hairline */
+.nav .nav__cta:hover{ border-color:var(--accent); }
 /* and the green each link rolls up to. The site's accent is tuned to sit
    on black; on a cream ground it is the light palette's darker green, the
    same value .is-light re-points --accent to. */
@@ -786,7 +812,7 @@ html.is-pinned .who{ margin-top:-100vh; }
 .who__lede,
 .who__pitch{
   font-family:var(--f-display);
-  font-size:clamp(26px,3.2vw,48px); line-height:1.14; letter-spacing:-.015em;
+  font-size:clamp(24px,2.95vw,44px); line-height:1.14; letter-spacing:-.015em;
 }
 .who__lede{
   font-weight:700; color:var(--cream);
@@ -1062,29 +1088,10 @@ html.is-pinned .who{ margin-top:-100vh; }
 .reel__film::-webkit-media-controls{ display:none !important; }
 .reel__stage{ pointer-events:none; }
 
-/* ---- the label ----
-   The band of page above the shut letterbox is exactly --reel-y tall,
-   so the copy is given that band and centred in it. Squared rather than
-   linear so it clears out early in the open: by the time the window is
-   a third of the way to full bleed the words are effectively gone, and
-   nothing is ever read over moving picture. */
-.reel__intro{
-  position:absolute; z-index:2; pointer-events:none;
-  left:var(--reel-x); right:var(--reel-x);
-  top:0; height:var(--reel-y);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
-  text-align:center;
-  opacity:calc(var(--reel-shut) * var(--reel-shut));
-}
-.reel__tag{
-  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.3em; text-transform:uppercase;
-  color:var(--accent); display:inline-flex; align-items:center; gap:.7em;
-}
-.reel__tag::before{ content:""; width:24px; height:1px; background:var(--accent); display:inline-block; }
-.reel__line{
-  font-size:clamp(15px,1.35vw,19px); line-height:1.5; color:var(--muted);
-  max-width:46ch; margin:0;
-}
+/* No label above the shut letterbox. The tag and the line of copy that
+   used to be centred in that band are gone (components/Sections.tsx) -
+   the band is empty page again, and the film introduces itself by
+   arriving. */
 
 /* ---- the transport ----
    Invisible on purpose. It is the size of whatever is showing, it
@@ -1125,7 +1132,6 @@ html.is-pinned .who{ margin-top:-100vh; }
      is almost entirely vertical and reads as the bars pulling back
      rather than as a box growing. */
   .reel__stage{ --reel-x:5vw; --reel-y:22vh; --reel-r:16px; }
-  .reel__line{ font-size:14px; }
 }
 
 /* Reduced motion gets the film - it is the content of this section, not
@@ -1136,9 +1142,6 @@ html.is-pinned .who{ margin-top:-100vh; }
 @media (prefers-reduced-motion:reduce){
   .reel__stage{ --reel-open:1; }
   .reel__film{ will-change:auto; }
-  /* the window is open from the start, so there is no shut card for the
-     label to belong to and nowhere to put it that is not on the picture */
-  .reel__intro{ display:none; }
 }
 
 /* ============================================================
@@ -1714,20 +1717,26 @@ html.is-pinned .who{ margin-top:-100vh; }
    property being set eight times rather than eight things kept in step. */
 .ovt__lit{ opacity:var(--lit); }
 
-/* the halo tight around the envelope. Centred on the lamp box, which is
-   centred on the glass, so it needs no offsets of its own. */
+/* The halo tight around the light. The lamp box is centred on the ring,
+   and the light is not: the disc sits where the printed mark puts it,
+   27.6 units left of the ring's centre and 24.3 above it (LOGO_DISC in
+   lib/logo-paths.ts), so the halo is carried the same distance. Centred
+   on the box it was a ring of glow around a bulb whose bright half was
+   up in the corner of it. */
 .ovt__bloom{
   position:absolute; left:50%; top:50%;
   width:calc(440 * var(--u)); height:calc(440 * var(--u));
-  margin:calc(-220 * var(--u)) 0 0 calc(-220 * var(--u)); pointer-events:none;
+  margin:calc(-244.3 * var(--u)) 0 0 calc(-247.6 * var(--u)); pointer-events:none;
   background:radial-gradient(circle closest-side,
     rgba(255,236,196,.5) 0%, rgba(255,190,110,.26) 36%, rgba(255,150,60,0) 74%);
   mix-blend-mode:screen; opacity:var(--lit);
 }
-/* and the light it throws into the room */
+/* and the light it throws into the room, off the same centre */
 .ovt__glow{
   position:absolute; left:50%; top:50%; width:130vmax; height:130vmax;
-  margin-left:-65vmax; margin-top:-65vmax; pointer-events:none; z-index:-1;
+  margin-left:calc(-65vmax - 27.6 * var(--u));
+  margin-top:calc(-65vmax - 24.3 * var(--u));
+  pointer-events:none; z-index:-1;
   background:radial-gradient(circle closest-side,
     rgba(255,214,152,.40) 0%, rgba(255,178,96,.17) 15%,
     rgba(255,150,60,.06) 33%, rgba(255,140,50,0) 62%);

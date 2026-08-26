@@ -35,11 +35,34 @@ export const MARK = {
   gap: 32.5,
   /* inside face of the ring - the glass */
   glass: 79.75,
-  /* the off-centre disc. In print it overhangs the ring; here it is kept
-     inside the glass, because a bulb whose light spills past its own
-     envelope stops reading as a bulb. */
+  /* the off-centre disc, pulled in so it sits wholly inside the glass.
+     This is the disc the small clipped bulbs are drawn around - the
+     footer's pendant and the contact form's - where the mark is only a
+     few dozen pixels across and anything spilling past the envelope
+     would land outside the box those two are given. The printed mark's
+     own disc is LOGO_DISC below. */
   blob: { cx: 188, cy: 164, r: 70 },
 };
+
+/* ---- the disc as the logo actually draws it ----
+
+   Bigger than the glass and pushed up and to the left, so it breaks out
+   past the ring at the top left and the ring's stroke crosses it. That
+   overhang is the most recognisable thing about the mark - a disc tucked
+   neatly inside the ring is a different logo - so anything drawn large
+   enough to carry it should.
+
+   Measured off public/assets/logo/lockup-blob.png against the ring in
+   public/assets/logo/lockup-ink.png, both baked from the design book by
+   scripts/build-logo.py. In that artwork the ring's centre line is at
+   (500, 299) with a radius of 239.25 and the disc is at (425, 233) with
+   a radius of 233; scaled into this file's 400-wide space by the ring
+   (88 / 239.25) that is the disc below.
+
+   Drawn under the ring and *not* clipped to the glass - see the Lamp in
+   components/Overture.tsx, which is the one place on the site with the
+   room to show it. */
+export const LOGO_DISC = { cx: 172.4, cy: 151.7, r: 85.7 };
 
 /* The ring at an arbitrary radius, so the same arc can be re-run a few
    units in or out to build the highlight and the shadow that turn a flat

@@ -138,17 +138,13 @@ export function AboutIntro() {
         </p>
       </div>
 
-      {/* The hand-off from black to cream, and the whole of it - there is
-          no card arriving over this section and no pin under it, just this
-          band at the top of the panel (see .ab-bridge in about.css).
-
-          One warm ramp, and nothing else. It carried two layers of noise
-          and they read as a starry sky sitting between the film and the
-          paper; the ramp's stops do the join on their own. Purely
-          decorative and entirely static - no canvas, no script, nothing
-          repainting after first paint. The ghost field above it is what
-          crosses the fade now. */}
-      <span className="ab-bridge" aria-hidden="true" />
+      {/* Nothing at the top of this panel any more. There was a band here
+          - a long warm ramp from black to cream, the whole hand-off from
+          the film to the page - and there is no black left on this route
+          to ramp out of: the opener is printed on this same off-white and
+          the film dissolves straight into it at its own foot (see
+          .ab-open__veil in about.css). The panel starts on the colour it
+          finishes on, so the join has nothing to hide. */}
     </section>
   );
 }
@@ -391,7 +387,7 @@ export function AboutDrives() {
    is the last picture on the page now - see AboutCrowd below, rendered
    under the office stage in app/about/page.tsx */
 
-/* 6 · the office - ten frames, shown one at a time.
+/* 6 · the office - nine frames, shown one at a time.
 
    This was a mosaic of eight photos in eight different shapes. It put the
    whole floor on screen at once, which is both more than the section was

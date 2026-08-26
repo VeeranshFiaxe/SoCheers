@@ -157,7 +157,7 @@ export const DRIVERS = [
 export const SPACE_COPY =
   "Imagine the meeting rooms named Idhar, Udhar, Jidhar, Kidhar. Because when someone asks “Where are you?” you can say “Idhar” and still be in a room called Idhar.";
 
-/* The office, ten frames, one at a time (see components/AboutStage.tsx -
+/* The office, nine frames, one at a time (see components/AboutStage.tsx -
    a single cinematic frame with a rail of thumbnails under it, rather
    than the mosaic this used to be).
 
@@ -170,9 +170,9 @@ export const SPACE_COPY =
 
    The people come first and the rooms follow. The section is about the
    place, but a rail that opens on four empty doorways is a property
-   listing - so the offsite, the run, the birthday and Khaugalli day lead
-   it, and the rooms are what you find further along once the frame has
-   already shown you who is in them. No room sits next to itself: the
+   listing - so the run, the birthday, Khaugalli day and the two parties
+   lead it, and the rooms are what you find further along once the frame
+   has already shown you who is in them. No room sits next to itself: the
    rail shows every thumbnail at once, and a run of near-identical doors
    in it reads as a mistake.
 
@@ -192,7 +192,12 @@ export type SpaceShot = {
 };
 
 export const SPACE_SHOTS: SpaceShot[] = [
-  { src: "/assets/about/people-offsite.webp", alt: "The whole of SoCheers on its twelfth-birthday offsite", cap: "The offsite, all of us" },
+  /* No offsite frame at the head of this rail. It was
+     public/assets/about/people-offsite.webp, which is the same photograph
+     as ABOUT_IMG.people - pixel for pixel, only re-encoded - and that one
+     is already the picture the people section two panels above is built
+     around. Shown twice on one page it stops being the team and starts
+     being a stock image. The run leads now. */
   { src: "/assets/about/people-run.webp", alt: "The SoCheers team after a morning run, medals up", cap: "The morning run" },
   { src: "/assets/about/people-cake.webp", alt: "A birthday in the SoCheers kitchen", cap: "A birthday, in the kitchen" },
   { src: "/assets/about/people-khaugalli.webp", alt: "Khaugalli day at the SoCheers office", cap: "Khaugalli day", pos: "center 42%" },

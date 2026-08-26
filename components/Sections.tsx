@@ -100,13 +100,9 @@ export function Who() {
    frame is indistinguishable from a broken one. Whatever the network is
    doing, this section is never an empty box.
 
-   Two things sit on the stage beside the frame, and both are written
-   off the same --reel-open the clip is:
+   One thing sits on the stage beside the frame, and it is written off
+   the same --reel-open the clip is:
 
-     · a label in the page's margin above the shut letterbox, so the
-       film is introduced rather than merely appearing. It belongs to
-       the small clip on a card and fades out with it, so nothing is
-       ever printed over the full-bleed picture;
      · an invisible button the size of the aperture, which stops and
        starts the film. It draws nothing - the word rides in the site's
        own cursor disc, PAUSE and then PLAY - and it is hidden entirely
@@ -133,19 +129,12 @@ export function Reel() {
           />
         </div>
 
-        {/* The label.
-
-            The film used to arrive unannounced - a black card with a
-            moving letterbox in it, and no word anywhere saying what you
-            were looking at. This sits in the page's own top margin
-            above the shut frame, in the same mono the section tags use,
-            and it is written off --reel-shut: it belongs to the clip on
-            a card, not to the full-bleed film, so it is gone before the
-            window is halfway open and never sits on the picture. */}
-        <div className="reel__intro" aria-hidden="true">
-          <span className="reel__tag">THE REEL</span>
-          <p className="reel__line">The work, cut together - films, campaigns, and the people behind them.</p>
-        </div>
+        {/* No label. There was one here - a tag and a line of copy in the
+            page's top margin above the shut letterbox - and the film
+            arrives on its own now: the card climbing into the page is
+            the announcement, and a sentence introducing a picture that
+            is about to fill the screen was the section clearing its
+            throat. */}
 
         {/* The transport.
 

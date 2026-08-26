@@ -63,7 +63,7 @@
      - see the note over .wk-also__track - and at 1.05fr they were
      shrinking below the size where a 16:9 still says anything. The lede
      gives the room up cheaply: it is held to 56ch and the headline to
-     26ch, so neither of them was using the width it had. */
+     34ch, so neither of them was using the width it had. */
   display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);
   align-items:end; gap:clamp(24px,3vw,52px);
 }
@@ -90,14 +90,16 @@
    That is the whole reason this is not the 96px it was. A brand set at
    96px is four words; the client's headlines run to twenty and ask a
    question, and at that size one of them is six lines tall and reads as
-   shouting rather than as writing. The scale below tops out where a
-   twenty-word line still lands in three, which is a headline, and the
-   measure holds it there rather than letting it run the width of the
-   picture. */
+   shouting rather than as writing. The size and the measure are set off
+   the longest of the five - Netflix x MI, which is the only one that
+   asks its question in two clauses - so that one lands in four lines and
+   the shorter four land in two or three. Every piece is set the same:
+   the wall crossfades between them and a headline that changed size
+   between frames would read as the type moving, not the picture. */
 .wk-lede__head{
-  margin-top:16px; max-width:26ch;
+  margin-top:16px; max-width:34ch;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(20px,2.05vw,32px); line-height:1.14; letter-spacing:-.015em;
+  font-size:clamp(18px,1.75vw,27px); line-height:1.18; letter-spacing:-.015em;
   text-wrap:balance;
 }
 
@@ -261,7 +263,7 @@
 @media (max-width:1000px){
   .wk-stage{ min-height:auto; padding-bottom:clamp(28px,4vh,44px); }
   .wk-stage__grid{ grid-template-columns:1fr; gap:clamp(26px,4vh,40px); }
-  .wk-lede__head{ font-size:clamp(19px,3.6vw,26px); max-width:30ch; }
+  .wk-lede__head{ font-size:clamp(17px,3.2vw,22px); max-width:34ch; }
   /* Full width under the lede now, so five across still has room. */
   .wk-also__track{ grid-auto-columns:minmax(0,1fr); }
 }

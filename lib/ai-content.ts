@@ -75,7 +75,17 @@ export const AI_THOUGHTS: Thought[] = [
 
 export const AI_HERO = {
   eyebrow: "AI work",
-  lines: ["The machine can make it.", "It still can't mean it."],
+  /* The client's own line, and it is the headline now rather than a
+     postscript under it. It used to read "The machine can make it. / It
+     still can't mean it." with this sentence set as an aside between the
+     hero and the grid; the aside is gone (there is no AI_PS any more)
+     and the words that were in it say the same thing in the client's
+     voice, so they are the claim the page opens on. Verbatim, less the
+     "PS :" the old placement needed.
+
+     Split in two because the second sentence takes the accent italic,
+     and the break between them is a decision rather than a wrap. */
+  lines: ["The ideas still come from us.", "The speed just comes from somewhere else."],
   lede:
     "Everything below was made with AI. None of it was decided by one. That distinction is the whole page - it takes about a minute.",
   /* The figure the bubbles come out of. It was a drawn SVG silhouette
@@ -97,27 +107,16 @@ export const AI_HERO = {
   },
 } as const;
 
-/* ------------------------------------------------------------------
-   The postscript.
+/* The postscript is gone.
 
-   What used to sit here was the entry fork and the Ashok story behind
-   it - a parable the reader chose into before the work. Both are gone:
-   the page now runs hero -> this line -> the work, with nothing to
-   answer on the way through.
-
-   Which is why this is two sentences and not a section, and why there
-   is no label under them: the argument the story took nine beats to make
-   is the argument, and the client's own line makes it in twenty words.
-   Set as a postscript rather than as a headline because it is an aside
-   to the work, not a preamble to it - the reader is already on their way
-   down to the grid, and a button telling them so was one thing too many
-   under a line this short.
-
-   The copy is the client's, verbatim, spacing included ("PS :").
+   There used to be one line between the hero and the work - the client's
+   "PS : The ideas still come from us. The speed just comes from somewhere
+   else." - set as an aside under a headline that said the same thing in
+   the site's voice. Two goes at one argument, and the page's measure is
+   under a minute end to end. The client's sentence won: it is AI_HERO's
+   headline above, and the section it used to fill (components/AiPs.tsx)
+   no longer exists. The page runs hero -> work.
    ------------------------------------------------------------------ */
-export const AI_PS = {
-  copy: "PS : The ideas still come from us. The speed just comes from somewhere else.",
-} as const;
 
 
 /* ------------------------------------------------------------------

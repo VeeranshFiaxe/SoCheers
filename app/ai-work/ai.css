@@ -54,30 +54,34 @@
   padding:0 clamp(14px,2vw,26px) clamp(10px,1.6vw,22px) 0;
 }
 
-/* Two lines, one sentence each, and it is held to that rather than left
-   to the wrap to decide: the break between them is the <br> in the
-   markup and nothing else is allowed to break.
+/* One sentence per block, two blocks, and each of them allowed to take
+   as many lines as it needs.
 
-   Which is what makes the size a ratio rather than a taste. The longer
-   sentence sets about 11.3em wide in Satoshi Bold at this tracking, so
-   at 5.4vw it asks for roughly 61% of the viewport - comfortably inside
-   the wrap's measure at every width down to the breakpoint below, with
-   enough headroom that a font swap or a fallback face cannot push it
-   into an overflow. The cap is where the ratio stops and the type simply
-   stops growing.
+   This used to be white-space:nowrap with the size set as a ratio off
+   the longer sentence - two lines, one sentence each, at up to 84px. The
+   copy is the client's own line now (AI_HERO in lib/ai-content.ts), and
+   its second sentence is nearly twice the length of the one that sizing
+   was derived from: held to a single line it sets wider than the wrap
+   itself at any headline size, so the choice was a headline at half the
+   size or a headline that wraps. It wraps.
 
-   Below 700px there is no width for a ratio to work in, so the nowrap
-   comes off and the headline is allowed to set as four lines, larger,
-   the way a phone wants it. */
+   What is still held is the break between the sentences - that is the
+   <br> in the markup, not a wrap - so the measure below decides only how
+   each sentence breaks inside itself, and the two never run together on
+   one line. The measure is in ch so it tracks the face rather than the
+   viewport, and it is short on purpose: a stacked block of large type in
+   the left of the frame reads as a title, where the same words run flat
+   across it read as a caption on the picture behind them. */
 .ai-hero__title{
   margin-top:26px;
+  max-width:21ch;
   font-family:var(--f-display); font-weight:700;
-  font-size:min(5.2vw, 84px); line-height:1.04; letter-spacing:-.035em;
-  white-space:nowrap;
+  font-size:min(4.4vw, 64px); line-height:1.04; letter-spacing:-.035em;
+  text-wrap:balance;
   text-shadow:0 2px 30px rgba(11,11,12,.75), 0 1px 8px rgba(11,11,12,.55);
 }
 @media (max-width:700px){
-  .ai-hero__title{ white-space:normal; font-size:clamp(32px,8.4vw,46px); }
+  .ai-hero__title{ max-width:none; font-size:clamp(30px,7.8vw,44px); }
 }
 .ai-hero__title em{ color:var(--accent); }
 
@@ -218,60 +222,25 @@
   .ai-bubble{ animation:ai-bubble-in .01s both; }
 }
 
-/* ============================================================
-   THE POSTSCRIPT
+/* The postscript is gone.
 
-   One line between the hero and the wall, and the styling's whole job is
-   to stop it becoming a section. No min-height, no reserved screen, and
-   nothing under the line: the rule above it separates it from the hero,
-   the padding is a fraction of what the story section took, and the work
-   starts immediately under it - which is why the link down to the work
-   is gone, it was pointing at the next thing on the page.
-
-   What stood here before was the fork (a question and two doors) and the
-   collapsing panels it opened - see components/AiPs.tsx. Both are gone,
-   along with the grid-row collapse that made the page end at the gate,
-   because nothing is hidden on this page any more.
+   One line used to sit between the hero and the wall - a rule, a
+   sentence, and nothing under it - and before that the fork and the
+   panels it opened. The sentence is the hero's headline now (AI_HERO in
+   lib/ai-content.ts), so there is no section here at all and the work
+   starts straight off the hero.
    ============================================================ */
-/* One value, both sides, and the wall below gives up its own top padding
-   to it (see .ai-work). That is the whole fix: the line used to sit with
-   ~90px of air above it and ~230px below, because its bottom padding and
-   the work section's top padding were stacking - two rules each doing
-   the same job, neither knowing about the other. The gap under a section
-   belongs to one of the two sections touching it, and here it is this
-   one, so the line sits dead centre between the rule above it and "The
-   work" below it at every width.
-
-   The value itself is down from where it started. A single sentence does
-   not need a screen of its own - it needs enough room not to read as
-   part of the hero, which is what this is. */
-.ai-ps{
-  --ps-air:clamp(44px,7vh,76px);
-  border-top:1px solid var(--line);
-  background:var(--bg);
-  padding:var(--ps-air) 0;
-}
-.ai-ps__in{
-  display:flex; flex-direction:column; align-items:center; text-align:center;
-}
-/* Display face, but set below the hero's size and at the muted colour with
-   only the sentence's own weight carrying it: a postscript that matches the
-   headline for size is a second headline, and this one is meant to read as
-   an aside on the way past. */
-.ai-ps__copy{
-  max-width:34ch;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(20px,2.4vw,32px); line-height:1.28; letter-spacing:-.02em;
-  color:var(--cream); text-wrap:balance;
-}
 
 /* ============================================================
    THE WALL
    ============================================================ */
-/* No top padding: the air above "The work" is the postscript's bottom
-   padding and nothing else, which is what keeps that line equidistant
-   from the two sections it sits between - see .ai-ps. */
-.ai-work{ background:var(--bg); padding:0 0 clamp(90px,15vh,170px); }
+/* The top padding is its own again. It used to be zero, because the air
+   above "The work" was the postscript's bottom padding and the two would
+   otherwise have stacked; with the postscript gone there is nothing above
+   this section but the hero, and a wall of work starting hard against the
+   bottom of a full-screen hero has no join at all. Same value the
+   postscript was spending on that side. */
+.ai-work{ background:var(--bg); padding:clamp(44px,7vh,76px) 0 clamp(90px,15vh,170px); }
 
 .ai-tabs{
   margin-top:26px; display:flex; gap:8px; flex-wrap:wrap;

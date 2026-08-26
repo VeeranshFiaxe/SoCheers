@@ -395,10 +395,9 @@ export function initAbout(): () => void {
        over the previous slide - and it read as one.
 
        It is gone, along with the card. The intro is cream like every
-       panel under it, and the black-to-cream change is a gradient at the
-       *top* of it, joining it to the film (see .ab-bridge in about.css):
-       no pin, no cover, nothing moving except the page, and the colour
-       simply changes underneath as you scroll through it.
+       panel under it and like the opener above it, so there is no colour
+       change left to stage at this join at all: no pin, no cover, nothing
+       moving except the page.
 
        What is left is the hold. The join inside the founders panel is a
        fixed three seconds of choreography (see the founders block above)

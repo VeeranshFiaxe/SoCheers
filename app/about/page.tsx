@@ -21,10 +21,11 @@ export default function About() {
       <main id="top">
         <AboutHero />
 
-        {/* One stack, one colour. The film hands over to the cream at the
-            top of the first panel (see .ab-bridge in about.css) and the
-            page stays on it all the way down, so there is no theme switch
-            at any seam below the opener. */}
+        {/* One stack, one colour - and the opener is on it too. The film
+            dissolves into this cream at its own foot (.ab-open__veil in
+            about.css) rather than handing over through a ramp at the top
+            of the first panel, so the page is one off-white from the very
+            top and there is no theme switch at any seam on it. */}
         <div className="ab-stack">
           <AboutIntro />
           <AboutFounders />

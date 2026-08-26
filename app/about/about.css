@@ -12,75 +12,91 @@
    ============================================================ */
 
 /* ---------- 1 · the opener ---------- */
+/* The page is one colour from the very top now, the film included: the
+   opener's own ground is the same off-white every panel below it is
+   printed on, so nothing on this route is ever black. It used to be the
+   artwork's navy, which was invisible under a film that covers its box -
+   and very visible for the frame before the film had decoded, and along
+   any edge a fractional viewport height left uncovered. */
 .ab-open{
   position:relative; height:100svh; min-height:600px;
   display:flex; align-items:center; overflow:hidden;
-  /* the artwork's own navy, so any edge cover leaves is invisible */
-  background:#05062e;
+  background:#f4f2ec;
 }
 .ab-open__media{ position:absolute; inset:-5% 0; z-index:0; will-change:transform; }
 .ab-open__mediaIn{ position:absolute; inset:0; }
-/* Graded down rather than left at full strength: the film is the ground
-   the headline stands on now, not the subject, and at native contrast the
-   type had to fight it for every line. */
-/* Nearer its own contrast than it was. The grade was pulled this far down
-   because the film was the ground a full-size headline stood on; with the
-   type out of the frame it can be the subject again. */
+/* At its own brightness. It was graded down twice - once when the film
+   became the ground a full-size headline stood on, and it never came
+   back up - and the darkening was most of what made the top of this page
+   read as a black room with a video in it. The type keeps its ground
+   through the wash below, which is a scrim over one half of the frame
+   rather than a stop pulled across the whole of it. */
 .ab-open__media video{
   width:100%; height:100%; object-fit:cover; display:block;
-  filter:saturate(.88) contrast(1.02) brightness(.88);
+  filter:saturate(.9) contrast(1.02);
 }
 
-/* The wash. The type stands in the middle-left of the frame now, so the
-   shade comes from the left edge - across the half the block sits on and
-   gone well before the middle, which keeps the right of the film at its
-   own contrast. The foot keeps a short fade of its own for the scroll
-   cue, and to start the hand-off the veil below finishes. */
+/* The wash, and it is the only shade left on this page.
+
+   It is here for one reason - the block of type stands in the middle-left
+   of the frame and is set in cream, and cream over a moving picture is
+   unreadable without a ground under it. So the shade comes from the left
+   edge, across the half the block sits on, and is gone well before the
+   middle; the right of the film is at its own contrast, which is where
+   the eye is when it decides what colour this page is.
+
+   The foot's own fade is gone with it. It used to darken the bottom
+   third to hand over to the veil below, and the veil hands over to paper
+   now, so the two were pulling opposite ways - the film went dark and
+   then immediately went white. */
 .ab-open__wash{
   position:absolute; inset:0; z-index:1; pointer-events:none;
-  background:
-    linear-gradient(to right,
-      rgba(6,6,10,.8) 0%,
-      rgba(6,6,10,.6) 26%,
-      rgba(6,6,10,.24) 52%,
-      rgba(6,6,10,0) 78%),
-    linear-gradient(to top,
-      rgba(6,6,10,.6) 0%,
-      rgba(6,6,10,.24) 14%,
-      rgba(6,6,10,0) 34%);
+  background:linear-gradient(to right,
+    rgba(6,6,10,.72) 0%,
+    rgba(6,6,10,.52) 24%,
+    rgba(6,6,10,.2) 50%,
+    rgba(6,6,10,0) 76%);
 }
-/* The hand-off downward, into section 2.
+/* The hand-off downward, into section 2 - and it is now the entire
+   transition between the opener and the body of the page.
 
-   It used to commit to solid --bg at 9% off the floor and run the whole
-   climb in four stops. Two things were wrong with that. The bottom tenth
-   of the opener was flat black, and the top of the next panel is flat
-   black too, so the two of them together made a dead band across the
-   join that read as a seam even though there is no edge there at all -
-   the eye finds the place where an image stops having detail. And four
-   stops over an alpha ramp is not enough: alpha is not perceptually
-   linear over a photograph, so the middle of the climb went dark much
-   faster than the ends and the film looked like it was being switched
-   off rather than fading.
+   It used to fade the foot of the film to near-black, and a long ramp
+   at the top of the next panel (.ab-bridge, since deleted) climbed from
+   that black back up to the paper. Two joins and a screen of gradient
+   between them, to get from a film to a page that are both sitting on
+   the same colour. So the black is gone and this is the whole of it: the
+   film dissolves into the off-white the rest of the stack is printed on,
+   at its own foot, and the next section simply begins.
 
-   Now it starts higher, finishes lower and is stopped throughout. The
-   commit to solid is at 2% instead of 9%, so the flat band is a fifth of
-   what it was, and the stops are crowded through the middle where the
-   ramp was accelerating. Same distance, same destination, no step. */
+   Stopped rather than linear for the same reason it always was. Alpha is
+   not perceptually linear over a photograph, and the eye reads the last
+   few percent of a pale ramp far more sharply than the first - so the
+   stops are crowded at the solid end and the last of them are nearly the
+   same value, and there is no point you can name as the moment the film
+   became paper.
+
+   Weaker than the first pass, and shorter with it. That one ran to 46% of
+   the section and was still at half strength a fifth of the way up, which
+   put a haze over the bottom of the picture rather than a join under it -
+   the film was going pale well before it had any reason to. It commits to
+   solid at the same place (it has to: the section ends there and the
+   panel below starts on this colour, so anything less is a visible cut)
+   and then gets out of the way roughly twice as fast. */
 .ab-open__veil{
   position:absolute; inset:0; z-index:1; pointer-events:none;
   background:linear-gradient(to top,
-    var(--bg) 0%, var(--bg) 2%,
-    rgba(11,11,12,.94) 8%,
-    rgba(11,11,12,.86) 13%,
-    rgba(11,11,12,.75) 19%,
-    rgba(11,11,12,.62) 26%,
-    rgba(11,11,12,.48) 34%,
-    rgba(11,11,12,.35) 43%,
-    rgba(11,11,12,.23) 52%,
-    rgba(11,11,12,.13) 62%,
-    rgba(11,11,12,.06) 72%,
-    rgba(11,11,12,.02) 80%,
-    rgba(11,11,12,0) 88%);
+    #f4f2ec 0%, #f4f2ec 1.2%,
+    rgba(244,242,236,.93) 3.4%,
+    rgba(244,242,236,.83) 5.4%,
+    rgba(244,242,236,.71) 7.4%,
+    rgba(244,242,236,.58) 9.5%,
+    rgba(244,242,236,.46) 11.6%,
+    rgba(244,242,236,.35) 13.8%,
+    rgba(244,242,236,.25) 16%,
+    rgba(244,242,236,.16) 18.4%,
+    rgba(244,242,236,.09) 20.8%,
+    rgba(244,242,236,.04) 23.4%,
+    rgba(244,242,236,0) 27%);
 }
 
 /* ---------- the opener's type ----------
@@ -161,13 +177,21 @@
    between the two sections rather than as one turning into the other.
    The ramp does the whole hand-off on its own now. */
 
+/* In the page's ink, not in --muted. --muted on this route is the dark
+   theme's token - cream at half strength - and the corner this sits in
+   is the bottom of the film, which is where the veil above has already
+   arrived at solid paper. Cream on cream is nothing at all, so the cue
+   names the light palette's own muted value itself, the same way the
+   fixed header does when it crosses a light ground (.nav.is-on-light in
+   globals.css). */
 .ab-open__cue{
   position:absolute; right:var(--pad); bottom:clamp(48px,9vh,104px); z-index:2;
   display:flex; align-items:center; gap:12px;
-  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.3em; color:var(--muted);
+  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.3em;
+  color:rgba(11,11,12,.62);
 }
 .ab-open__cue-line{
-  width:54px; height:1px; background:var(--muted);
+  width:54px; height:1px; background:rgba(11,11,12,.62);
   transform-origin:left; animation:abCue 2.4s var(--ease) infinite;
 }
 @keyframes abCue{
@@ -217,13 +241,42 @@
 
    The intro used to be black, which put a hard theme switch one screen
    into the page: the film ended, a black room began, and the page turned
-   over to paper again at the foot of it. The room is gone. The film now
-   hands straight to the paper the whole stack is printed on, and the
-   black-to-cream ramp that used to close this panel has moved to the top
-   of it, where it is the join with the film rather than a section of its
-   own (see .ab-bridge). */
+   over to paper again at the foot of it. The room went, and the ramp that
+   replaced it moved to the top of this panel; that ramp is gone too. The
+   opener is printed on this colour as well now, so there is no change to
+   make at this join or anywhere above it - the page is one off-white from
+   the first pixel, and the film simply dissolves into it. */
 .ab-intro   { background:#f4f2ec; z-index:1; }
-.ab-founders{ background:#f4f2ec; z-index:2; }
+/* Clipped across, not down.
+
+   .ab-panel above clips both axes, and this panel needs the horizontal
+   half of that: the write-ups fly in from 150px outside their own article
+   (see the founders block in lib/about-motion.ts) and without a clip
+   across, that is a horizontal scrollbar on the document.
+
+   Down was doing damage. The joined frame lifts on hover with a long soft
+   shadow under it - 90px of blur hung 46 below the frame - and the panel
+   has about 68px of padding beneath the picture on a laptop, so the last
+   third of that shadow was being cut off dead flat: a hard horizontal
+   edge under a photograph that is meant to be floating. `clip visible`
+   keeps the axis that was doing a job and drops the one that was only
+   drawing a box. */
+/* ...and it is the one panel out of the run order, above the people
+   section rather than under it.
+
+   Letting the shadow out of the box (overflow, above) is only half of
+   getting it onto the page. Every panel here paints an opaque cream, and
+   they are deliberately stacked in reading order so each covers the one
+   before it - which means the shadow that now escapes the foot of this
+   panel lands underneath the next one's background and is painted out
+   just the same. Same flat edge, one layer further out.
+
+   So this panel goes over the top of the run instead. Nothing else about
+   the seam trick below needs it in sequence: a panel's hairline is drawn
+   one pixel *above* its own top edge, which is outside this panel's box,
+   so the people section still fills the sliver at the join whether it is
+   over this or under it. */
+.ab-founders{ background:#f4f2ec; z-index:6; overflow:clip visible; }
 .ab-people  { background:#f4f2ec; z-index:3; }
 .ab-drives  { background:#f4f2ec; z-index:4; }
 .ab-space   { background:#f4f2ec; z-index:5; }
@@ -240,14 +293,22 @@
    say nothing is happening.
 
    So every panel paints one pixel of its own colour above its own top
-   edge. Each is a higher z-index than the one before it (the stack is
-   ordered above), so a panel's shadow always lands over its predecessor
-   and fills that sliver with the colour the join is meant to be. It is a
-   shadow, so it takes up no space and moves nothing.
+   edge. The panels are z-ordered (the stack is ordered above), so a
+   panel's hairline lands over its predecessor and fills that sliver with
+   the colour the join is meant to be. It is a shadow, so it takes up no
+   space and moves nothing.
 
-   The opener paints black for the same reason, against the hero above
-   it - invisible where the two already agree, and there if the same
-   rounding ever bites at that join. */
+   The order is ascending with one exception - the founders panel is
+   lifted over the whole run so its hover shadow is not painted out by the
+   panel below (see the note there). That does not cost this trick
+   anything: the hairline a panel draws is one pixel above its own top
+   edge, which is outside the box of the panel above it, so nothing the
+   founders panel paints can reach the sliver at either of its joins.
+
+   The intro's is cream like the rest of them now. It painted black for
+   as long as the join above it was a film with a black foot; the film
+   ends on this same off-white, so black there would be the one visible
+   hairline on the page. */
 /* And the reserved band under the founders hold, which is the same
    problem one size up.
 
@@ -266,7 +327,7 @@
    other pin on the site inherits a background it did not ask for. */
 .ab-stack > .pin-spacer{ background:#f4f2ec; }
 
-.ab-intro{ box-shadow:0 -1px 0 #0b0b0c; }
+.ab-intro{ box-shadow:0 -1px 0 #f4f2ec; }
 .ab-founders,
 .ab-people,
 .ab-drives,
@@ -307,147 +368,21 @@
    the ramp is the same shape, it is simply spent faster. */
 
 /* ============================================================
-   THE BRIDGE  ·  black to cream
+   THE BRIDGE  ·  gone
 
-   The whole transition between the opener and the body of the page. It
-   was a card sliding up over a pinned section first, which was a slide
-   change; then a plain multi-stop ramp, which was smooth in the sense
-   that nothing jumped and grey in the sense that half its length was
-   flat mid-grey with nothing happening in it. Any two-colour ramp has
-   that problem - sRGB puts the midpoint of #0b0b0c and #f4f2ec somewhere
-   around a dead putty, and a long band of it reads as fog, not as a
-   change.
+   There was a band at the top of this panel that did the whole change
+   from the opener's black to the paper below - a long warm ramp, tuned
+   over several passes, routed through ash rather than grey because a
+   plain two-colour ramp between #0b0b0c and #f4f2ec spends half its
+   length as flat putty.
 
-   ---- why this is noise and not a dither grid ----
-
-   The obvious answer was an ordered dither: checkerboards of cream over
-   the dark, halving as they go down. It was terrible, and predictably so
-   in hindsight. A checkerboard is 50% ink everywhere - it has no density
-   to vary, so it cannot dissolve anything; it is a flat texture that
-   sits on the page. And stacking three of them puts three regular grids
-   over each other, which is a recipe for exactly one thing: they beat
-   against each other into visible plaid. Two grids of different pitch
-   always find an alignment somewhere.
-
-   So there is no grid. Both layers are fractal noise - generated once by
-   an feTurbulence in an inline SVG, thresholded to hard on/off so it
-   reads as pixels rather than as blur, and stitched so it tiles without
-   a seam. Noise has no pitch, so nothing can beat against anything, and
-   two layers at different frequencies stay two grains rather than
-   becoming a third pattern.
-
-   The ramp also stopped going through neutral grey, which is the other
-   half of why the plain version read as fog: sRGB's midpoint between
-   #0b0b0c and #f4f2ec is a dead putty. Routed through warm ash instead,
-   the whole band stays on the cream's own hue and reads as one material
-   getting lighter rather than as a grey wash between two colours.
-
-   Static, and free: two background-images and two masks, no canvas, no
-   script, nothing repainting after first paint. Nothing animates, so
-   there is nothing to switch off under reduced motion either.
+   None of that is needed any more. The opener is printed on the same
+   off-white as the stack and the film dissolves into it at its own foot
+   (.ab-open__veil above), so there are not two colours to get between:
+   the panel starts on the colour it ends on. The element is gone from
+   components/AboutSections.tsx and what was --bridge-h here is now
+   --intro-top, which is nav clearance and nothing else.
    ============================================================ */
-/* At the TOP of the panel now, not the foot of it.
-
-   Nothing about the ramp changed except which end of the section it is
-   hung on. It used to run black-to-cream at the bottom of a black panel,
-   because the panel was black and the one below it was cream. The panel
-   is cream now, so the only join left to make is the one above it - the
-   film's dark foot to the paper - and that is this same band, doing the
-   same thing, at the other end. */
-.ab-bridge{
-  position:absolute; left:0; right:0; top:0; z-index:0;
-  /* Shorter again, and deliberately. It ran at 380-760px, which is most
-     of a screen on a laptop: long enough that the band read as its own
-     empty section rather than as a join between two. What made the old
-     280-540px version feel abrupt was never the length on its own - it
-     was the ramp doing most of its lightening in the last third, so the
-     paper arrived instead of emerging. That is fixed in the stops below
-     (crowded at the pale end, where the eye is sharpest), so the distance
-     can come back down without the step coming back with it.
-
-     Down again, and by a third: 32vh was long enough that the join read
-     as its own empty section between two real ones. The ramp is what has
-     to stay smooth, not the band, and the ramp has kept its length by
-     taking back the dead hold above it (see the stops). */
-  display:block; height:var(--bridge-h); pointer-events:none;
-  /* Warm ash, not grey. The last stop is exactly the panel colour below,
-     which is what makes the join between the two sections unfindable.
-
-     The band is a third shorter than it was and the ramp inside it is
-     barely shorter at all, which is the whole trick. It used to hold flat
-     near-black through its first ninth before starting to lighten - that
-     hold existed because the payoff was sitting inside the top of the
-     band and had to be read off something dark. The payoff moved up out
-     of the band two rounds ago and the hold stayed behind, so a ninth of
-     the height was being spent on black drawn over black. It reads as
-     exactly what the shortening was asked to remove: dead dark space
-     above a gradient.
-
-     So the hold is gone and the tuned ramp below is the same sequence of
-     colours it always was, its positions rescaled to start at 3% instead
-     of 11%. Shorter band, near-identical run of colour, and the dark tail
-     above it cut.
-
-     Banding is not a risk at this length and would not have been at twice
-     it: the ramp moves about 233 levels of red over 165 to 275 pixels, so
-     every 8-bit step is under a pixel wide. What makes a gradient band is
-     a small colour range spread over a long distance, which is the
-     opposite of this one. The two grain layers below are the belt to that
-     brace.
-
-     The pale end is stopped much more finely than the dark end. A ramp
-     climbing at a constant rate is not perceptually constant: the eye
-     reads the last few percent of lightness far more sharply than the
-     first, so an evenly-stopped gradient always lands on the paper as a
-     small step. The stops above 80% are deliberately crowded and the last
-     two are almost the same colour, so the cream is reached asymptotically
-     and there is no point you can name as the moment it turned white. */
-  background:linear-gradient(to bottom,
-    #0b0b0c 0%,
-    #0b0b0c 3.0%,
-    #100e0e 7.4%,
-    #141211 11.7%,
-    #191614 16.1%,
-    #1f1b18 20.4%,
-    #26211c 24.8%,
-    #2e2823 29.2%,
-    #372f28 33.0%,
-    #41382f 36.8%,
-    #4b4136 40.6%,
-    #564b3e 44.4%,
-    #615546 48.2%,
-    #6d5f4f 52.0%,
-    #786a58 55.3%,
-    #847561 58.6%,
-    #90806b 61.9%,
-    #9b8b75 65.1%,
-    #a6967f 68.4%,
-    #b1a189 71.7%,
-    #bbac94 74.9%,
-    #c5b69e 77.7%,
-    #cec0a9 80.4%,
-    #d6cab3 83.1%,
-    #ddd2bd 85.8%,
-    #e3dac6 88.0%,
-    #e8e0ce 90.2%,
-    #ece5d6 92.2%,
-    #efeadd 94.0%,
-    #f1ede3 95.6%,
-    #f3f0e8 97.3%,
-    #f4f1eb 98.9%,
-    #f4f2ec 100.0%);
-}
-
-/* No grain over the ramp. Two layers of thresholded noise used to sit on
-   it - coarse white coming in over the dark end, fine black dying out on
-   the pale end - and what they added up to was a field of speckle in the
-   dark half that read as a starry sky. The ramp is stopped finely enough
-   at the pale end (see the stops above) to reach the cream without a step
-   on its own, which is all the grain was ever insurance against. */
-
-@media (max-width:860px){
-  .ab-bridge{ height:clamp(170px,24vh,260px); }
-}
 
 /* The founders panel used to carry a tail of the bridge's fine grain on
    its top edge, because the bridge finished on the boundary between the
@@ -488,15 +423,17 @@
    ============================================================ */
 
 /* Exactly one screen, and centred in it rather than stacked by padding.
-   The top padding is not spacing, it is the length of the bridge above
-   (see .ab-bridge), so the content has to sit clear of the band the page
-   changes colour in. */
+
+   NOTE - the comment blocks that follow are the record of how this
+   panel's paddings and height were arrived at, and they are written
+   against a bridge that no longer exists: a ramp that occupied the top
+   padding and had to be cleared. Every relationship they describe still
+   holds, --intro-top has simply stopped being a gradient's length and
+   gone back to being nav clearance. */
 /* The top padding is nav clearance and nothing else. The nav floats over
    this panel at about 72px, and the claim is the tallest thing that comes
    near it, so there has to be enough room above the type that the two are
-   never reading as one stack. The bottom padding is not spacing either -
-   it is the length of the bridge below (see .ab-bridge), so the content
-   has to sit clear of the band the page changes colour in.
+   never reading as one stack.
 
    Both were cut back to buy the figure its height. The bridge in
    particular was running to 285px, which on a short window was a third of
@@ -518,12 +455,15 @@
    read off a mid-brown wash rather than off black. Now the bridge starts
    below the copy, not through it. */
 .ab-intro{
-  /* The bridge's height, named once. It is used three times below - the
-     section's height, the section's bottom padding and the bridge's own
-     height - and those three have to agree or the ramp climbs through the
-     copy, which is exactly what was happening when they were three
-     separate clamps. */
-  --bridge-h:clamp(165px, 21vh, 275px);
+  /* The room above the composition, named once because the section's own
+     height is worked out from it below as well.
+
+     It was --bridge-h - the length of the ramp that used to occupy this
+     padding - and with the ramp gone what is left is the job the padding
+     had before the ramp took it over: clearance under the fixed header,
+     which floats over this panel at about 72px and would otherwise read
+     as one stack with the claim. So it is a third of what it was. */
+  --intro-top:clamp(96px, 12vh, 156px);
 
   /* A full screen for the composition, and the bridge underneath it.
 
@@ -581,7 +521,7 @@
      The bridge is still added on top, and still has to be: it occupies
      the panel's top padding, so the composition only gets a full screen
      if the section is a full screen plus the band. */
-  min-height:calc(max(var(--fig-h), 56svh) + var(--bridge-h));
+  min-height:calc(max(var(--fig-h), 56svh) + var(--intro-top));
   display:flex; flex-direction:column; justify-content:center;
   /* The top padding is the bridge's length: the ramp occupies it, so the
      composition has to sit clear of the band the page is changing colour
@@ -598,7 +538,7 @@
      puts the cap-tops of the claim within a few pixels of the line the
      ramp finishes on - the type would start where the colour stops
      changing. The extra is small and it is clearance, not spacing. */
-  padding:calc(var(--bridge-h) + clamp(18px,2.6vh,44px)) 0 clamp(24px,3vh,44px);
+  padding:calc(var(--intro-top) + clamp(18px,2.6vh,44px)) 0 clamp(24px,3vh,44px);
 }
 /* above the bridge, so nothing here is ever washed by it */
 .ab-intro > .wrap{ position:relative; z-index:2; }
@@ -2120,7 +2060,7 @@
      ramp that is no longer at this end of the panel. */
   .ab-intro{
     --fig-h:min(clamp(300px, 54svh, 470px), 88vw);
-    min-height:calc(max(var(--fig-h) / 0.62, 66svh) + var(--bridge-h));
+    min-height:calc(max(var(--fig-h) / 0.62, 66svh) + var(--intro-top));
   }
   /* The desktop rule takes the figure's empty tail off the stage's height.
      Here it cannot: the stage is a flex column and the list and the payoff

@@ -14,6 +14,7 @@ import {
   BARS,
   BAR_STROKE,
   LAMP_VIEWBOX,
+  LOGO_DISC,
   MARK,
   RING,
   ringArc,
@@ -60,9 +61,10 @@ const WALLS = [
    beside it instead.
 
    Everything below is the flat geometry from lib/logo-paths.ts given
-   mass: the monoline ring becomes glass with a tube of dark moulding
-   round it, the base bars are the same moulding, and the disc becomes
-   the light. The parts that carry --lit are the only ones that change
+   mass: the monoline ring becomes a tube of dark moulding, the base bars
+   are the same moulding, and the disc - the printed one, wider than the
+   ring and overhanging it at the top left the way the lockup draws it -
+   becomes the light. Two shapes, which is how many the logo has. The parts that carry --lit are the only ones that change
    between cold and hot, which is what lets the ignition stutter be a
    single custom property being set eight times. */
 const RING_INNER = ringArc(MARK.r - 6);
@@ -98,13 +100,15 @@ function Lamp() {
           <stop offset="1" stopColor="#2c2c34" />
         </linearGradient>
 
-        {/* Cold glass: almost nothing but the room reflected in it. The
-            centre is darker than the rim - you are looking through it into
-            an unlit envelope. */}
-        <radialGradient id="ovt-glass-off" cx="0.36" cy="0.3" r="0.86">
-          <stop offset="0" stopColor="#2b2d34" />
-          <stop offset="0.55" stopColor="#141519" />
-          <stop offset="1" stopColor="#0a0b0e" />
+        {/* The disc, cold. Warm rather than the blue-grey this was when it
+            was painting a glass envelope: it is the brand's yellow with
+            the light off, not a window. Lit from the upper left like
+            everything else in the room, and darker at the rim than at the
+            centre so it reads as a ball and not as a flat cut-out. */}
+        <radialGradient id="ovt-disc-off" cx="0.36" cy="0.3" r="0.86">
+          <stop offset="0" stopColor="#2e2a21" />
+          <stop offset="0.55" stopColor="#191510" />
+          <stop offset="1" stopColor="#0c0a07" />
         </radialGradient>
 
         {/* Hot: the brand disc, incandescent. Centred on the disc rather
@@ -116,8 +120,8 @@ function Lamp() {
           <stop offset="0.62" stopColor="#ffcb0c" />
           <stop offset="1" stopColor="#ff9b1a" />
         </radialGradient>
-        {/* and what that disc throws against the inside of the envelope */}
-        <radialGradient id="ovt-glass-on" cx="0.46" cy="0.4" r="0.7">
+        {/* and the soft wash of it over its own face, under the hot core */}
+        <radialGradient id="ovt-disc-wash" cx="0.46" cy="0.4" r="0.7">
           <stop offset="0" stopColor="#fff4d2" stopOpacity="0.9" />
           <stop offset="0.4" stopColor="#ffce7d" stopOpacity="0.5" />
           <stop offset="0.78" stopColor="#ff9b36" stopOpacity="0.2" />
@@ -131,49 +135,72 @@ function Lamp() {
           <feGaussianBlur stdDeviation="16" />
         </filter>
 
-        {/* nothing the light does is allowed out through the glass */}
+        {/* the disc is the envelope now, so nothing the light does is
+            allowed out past its own edge */}
         <clipPath id="ovt-clip">
-          <circle cx={MARK.cx} cy={MARK.cy} r={MARK.glass} />
+          <circle cx={LOGO_DISC.cx} cy={LOGO_DISC.cy} r={LOGO_DISC.r} />
         </clipPath>
       </defs>
 
-      {/* 1 · the envelope, cold */}
-      <circle cx={MARK.cx} cy={MARK.cy} r={MARK.glass} fill="url(#ovt-glass-off)" />
+      {/* 1 · the disc, and it is the only mass in here.
 
-      {/* 2 · the disc inside it - the logo's own crescent, and the light
-             source. Cold it is a warm-grey shape you can only just find;
-             hot it is the whole reason the room is visible. */}
+             There used to be two: a circle of cold glass filling the ring
+             exactly, and the brand's disc over the top of it. That was
+             fine while the disc was tucked inside the glass and the two
+             were near enough concentric - but the disc sits where the
+             printed mark puts it now, wider than the ring and up and to
+             the left of it, so the pair read as a full ball with a lump
+             growing off one side. The logo has two shapes in it, the ring
+             and the disc, and so does this: the envelope circle is gone,
+             and what is inside the ring beyond the disc is the room, seen
+             through glass with nothing behind it to show.
+
+             It is LOGO_DISC, and it is not clipped to the ring: in the
+             printed mark the disc breaks out past the ring at the top
+             left and the ring's stroke crosses it. That overhang is the
+             mark - a disc tucked tidily inside the ring is a different
+             logo - and it is what makes this fixture and the flat lockup
+             it docks into the same drawing. The ring is painted after
+             this, which is the order the artwork has: the line work
+             crosses the yellow, never the other way round. */}
+      <circle cx={LOGO_DISC.cx} cy={LOGO_DISC.cy} r={LOGO_DISC.r} fill="url(#ovt-disc-off)" />
+
+      {/* 2 · and the same disc alight. Everything carrying --lit is
+             centred on it rather than on the ring, so the light comes
+             from where the logo says it comes from. */}
+      <circle
+        className="ovt__lit"
+        cx={LOGO_DISC.cx}
+        cy={LOGO_DISC.cy}
+        r={LOGO_DISC.r + 14}
+        fill="#ffcf82"
+        filter="url(#ovt-softer)"
+        opacity="0"
+      />
+      <circle
+        className="ovt__lit"
+        cx={LOGO_DISC.cx}
+        cy={LOGO_DISC.cy}
+        r={LOGO_DISC.r}
+        fill="url(#ovt-blob-on)"
+        filter="url(#ovt-soft)"
+        opacity="0"
+      />
       <g clipPath="url(#ovt-clip)">
-        <circle cx={MARK.blob.cx} cy={MARK.blob.cy} r={MARK.blob.r} fill="#26221a" />
         <circle
           className="ovt__lit"
-          cx={MARK.blob.cx}
-          cy={MARK.blob.cy}
-          r={MARK.blob.r + 14}
-          fill="#ffcf82"
-          filter="url(#ovt-softer)"
+          cx={LOGO_DISC.cx}
+          cy={LOGO_DISC.cy}
+          r={LOGO_DISC.r}
+          fill="url(#ovt-disc-wash)"
           opacity="0"
         />
-        <circle
-          className="ovt__lit"
-          cx={MARK.blob.cx}
-          cy={MARK.blob.cy}
-          r={MARK.blob.r}
-          fill="url(#ovt-blob-on)"
-          filter="url(#ovt-soft)"
-          opacity="0"
-        />
-        <circle
-          className="ovt__lit"
-          cx={MARK.cx}
-          cy={MARK.cy}
-          r={MARK.glass}
-          fill="url(#ovt-glass-on)"
-          opacity="0"
-        />
-        {/* the glass surface, over everything inside it */}
-        <ellipse cx="160" cy="112" rx="5" ry="7.5" fill="#fff" opacity="0.4" transform="rotate(-24 160 112)" />
-        <ellipse cx="240" cy="220" rx="16" ry="9" fill="#fff" opacity="0.06" transform="rotate(28 240 220)" />
+        {/* the two catchlights on its face - the same pair that used to
+            sit on the envelope, carried across at the same fraction of
+            the radius and in the same direction, so the light still
+            comes from the upper left. */}
+        <ellipse cx="129.4" cy="82.9" rx="5" ry="7.5" fill="#fff" opacity="0.4" transform="rotate(-24 129.4 82.9)" />
+        <ellipse cx="215.3" cy="198.9" rx="16" ry="9" fill="#fff" opacity="0.06" transform="rotate(28 215.3 198.9)" />
       </g>
 
       {/* 3 · the mark itself - the ring and the three bars of the base, in
