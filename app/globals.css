@@ -973,20 +973,32 @@ html.is-pinned .who{ margin-top:-100vh; }
    undo, which matters, because the pin re-parents this element into a
    spacer and a negative margin measured off `50%` would be measured off
    something else once it got there. */
+/* The aperture's four numbers live here rather than on .reel__frame,
+   even though the frame is the only thing that cuts with them, because
+   two of the stage's other children have to line up with the window
+   they describe: the label sits in the margin above it and the
+   transport is inset to it exactly. Declared on the stage they simply
+   inherit, and there is still one place to re-cut them per breakpoint.
+   --reel-open is written here every frame by initReel. */
 .reel__stage{
   position:relative; width:100%; height:100vh;
   /* the page's own black, so the shut state is not a box sitting on the
      section - it is the section, with a window cut in it */
   background:var(--bg);
   overflow:hidden;
+  --reel-x:16vw;
+  --reel-y:19vh;
+  --reel-r:22px;
+  --reel-open:0;
+  --reel-shut:calc(1 - var(--reel-open));
 }
 
 /* ---- the window ----
    The film underneath is always the full stage - it never resizes and
    never scales to fit a box. This is the aperture over it, and the whole
    mechanic is one number: --reel-open, 0 for shut and 1 for full bleed,
-   written on this element every frame by initReel and read by everything
-   below through calc().
+   written on the stage every frame by initReel and read by everything
+   below - here, the label and the transport - through calc().
 
    Which means the script drives a single unitless value and the
    stylesheet keeps every measurement. --reel-x, --reel-y and --reel-r
@@ -1003,11 +1015,6 @@ html.is-pinned .who{ margin-top:-100vh; }
    full-screen frame is a browser window, not a screen. */
 .reel__frame{
   position:absolute; inset:0;
-  --reel-x:16vw;
-  --reel-y:19vh;
-  --reel-r:22px;
-  --reel-open:0;
-  --reel-shut:calc(1 - var(--reel-open));
   clip-path:inset(
     calc(var(--reel-y) * var(--reel-shut))
     calc(var(--reel-x) * var(--reel-shut))
@@ -1049,18 +1056,76 @@ html.is-pinned .who{ margin-top:-100vh; }
   opacity:var(--reel-shut);
 }
 
-/* Nothing here is clickable, nothing has controls, and the film is not a
-   focus stop - it carries nothing a reader can act on, and the site's
-   own cursor has to pass straight through it. */
+/* The film itself is still not a control and not a focus stop - no
+   browser chrome on it, and the site's own cursor passes straight
+   through everything on the stage except the one button below. */
 .reel__film::-webkit-media-controls{ display:none !important; }
 .reel__stage{ pointer-events:none; }
+
+/* ---- the label ----
+   The band of page above the shut letterbox is exactly --reel-y tall,
+   so the copy is given that band and centred in it. Squared rather than
+   linear so it clears out early in the open: by the time the window is
+   a third of the way to full bleed the words are effectively gone, and
+   nothing is ever read over moving picture. */
+.reel__intro{
+  position:absolute; z-index:2; pointer-events:none;
+  left:var(--reel-x); right:var(--reel-x);
+  top:0; height:var(--reel-y);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+  text-align:center;
+  opacity:calc(var(--reel-shut) * var(--reel-shut));
+}
+.reel__tag{
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.3em; text-transform:uppercase;
+  color:var(--accent); display:inline-flex; align-items:center; gap:.7em;
+}
+.reel__tag::before{ content:""; width:24px; height:1px; background:var(--accent); display:inline-block; }
+.reel__line{
+  font-size:clamp(15px,1.35vw,19px); line-height:1.5; color:var(--muted);
+  max-width:46ch; margin:0;
+}
+
+/* ---- the transport ----
+   Invisible on purpose. It is the size of whatever is showing, it
+   carries no ink of its own, and the affordance is the cursor - which
+   is how every other actionable thing on this page announces itself.
+   The one exception is the keyboard: a focus ring has to be visible to
+   somebody who cannot see the cursor's disc, so focus-visible draws the
+   frame and prints the word the disc would have said. */
+.reel__toggle{
+  position:absolute; z-index:3;
+  top:calc(var(--reel-y) * var(--reel-shut));
+  bottom:calc(var(--reel-y) * var(--reel-shut));
+  left:calc(var(--reel-x) * var(--reel-shut));
+  right:calc(var(--reel-x) * var(--reel-shut));
+  padding:0; border:0; background:none; cursor:none;
+  pointer-events:auto;
+  display:flex; align-items:flex-end; justify-content:center;
+}
+.reel__hint{
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+  color:#04140b; background:var(--accent); border-radius:999px; padding:8px 18px;
+  margin-bottom:clamp(18px,4vh,40px);
+  opacity:0; transform:translateY(8px); transition:opacity .25s, transform .25s var(--ease);
+}
+.reel__toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:-10px; }
+.reel__toggle:focus-visible .reel__hint{ opacity:1; transform:none; }
+
+/* Touch has no hover and no cursor disc, so a full-bleed invisible
+   button over the film would be a tap that stops the picture with
+   nothing having offered to. The film runs, and that is all it does. */
+@media (hover:none){
+  .reel__toggle{ display:none; }
+}
 
 @media (max-width:860px){
   /* Shut, the window is already nearly the width of the screen - there
      are no page margins worth opening out of at this size - so the move
      is almost entirely vertical and reads as the bars pulling back
      rather than as a box growing. */
-  .reel__frame{ --reel-x:5vw; --reel-y:22vh; --reel-r:16px; }
+  .reel__stage{ --reel-x:5vw; --reel-y:22vh; --reel-r:16px; }
+  .reel__line{ font-size:14px; }
 }
 
 /* Reduced motion gets the film - it is the content of this section, not
@@ -1069,8 +1134,11 @@ html.is-pinned .who{ margin-top:-100vh; }
    nothing, so the stage is one plain screen of film in the flow of the
    page. */
 @media (prefers-reduced-motion:reduce){
-  .reel__frame{ --reel-open:1; }
+  .reel__stage{ --reel-open:1; }
   .reel__film{ will-change:auto; }
+  /* the window is open from the start, so there is no shut card for the
+     label to belong to and nowhere to put it that is not on the picture */
+  .reel__intro{ display:none; }
 }
 
 /* ============================================================

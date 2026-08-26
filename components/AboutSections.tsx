@@ -5,7 +5,7 @@ import AboutStage from "./AboutStage";
 import Link from "next/link";
 import {
   ABOUT_IMG, ABOUT_INTRO, BELIEF, DRIVERS,
-  FOUNDERS, SPACE_COPY, SPACE_FILM, SPACE_SHOTS, WHY_WE_EXIST,
+  FOUNDERS, SPACE_COPY, SPACE_SHOTS, WHY_WE_EXIST,
 } from "@/lib/about-content";
 
 /* 1 · the opener lives in components/AboutHero.tsx - it carries enough
@@ -57,7 +57,11 @@ import {
    claim out from behind his head as the section arrives. */
 export function AboutIntro() {
   return (
-    <section className="ab-panel ab-intro" data-sec="1">
+    /* .is-light for the same reason every other panel on this stack has
+       it: the panel is cream now, so --cream, --muted and --accent have to
+       point at their light-ground equivalents or the claim, the list and
+       the payoff are all set in the colour of the paper they are on. */
+    <section className="ab-panel ab-intro is-light" data-sec="1">
       {/* Hung on the section, not on the stage.
 
           It was inside the stage, which is only as tall as the figure -
@@ -136,16 +140,15 @@ export function AboutIntro() {
 
       {/* The hand-off from black to cream, and the whole of it - there is
           no card arriving over this section and no pin under it, just this
-          band at the foot of the panel (see .ab-bridge in about.css).
+          band at the top of the panel (see .ab-bridge in about.css).
 
-          A warm ramp with two layers of noise over it: the paper arrives
-          as grain eating into the dark, and the dark leaves as finer grain
-          dying out on the paper. Purely decorative and entirely static -
-          no canvas, no script, nothing repainting after first paint. */}
-      <span className="ab-bridge" aria-hidden="true">
-        <i className="ab-bridge__a" />
-        <i className="ab-bridge__b" />
-      </span>
+          One warm ramp, and nothing else. It carried two layers of noise
+          and they read as a starry sky sitting between the film and the
+          paper; the ramp's stops do the join on their own. Purely
+          decorative and entirely static - no canvas, no script, nothing
+          repainting after first paint. The ghost field above it is what
+          crosses the fade now. */}
+      <span className="ab-bridge" aria-hidden="true" />
     </section>
   );
 }
@@ -408,12 +411,9 @@ export function AboutSpace() {
         <h2 className="ab-space__title" data-split>The space.</h2>
         <p className="ab-space__copy" data-reveal>{SPACE_COPY}</p>
 
-        {/* The film is frame 01 inside the stage - same box, same rail,
-            same caption line as the photographs. It is what the frame is
-            showing when the section is reached, and it holds there until
-            somebody picks a still: the video is the room, the ten shots
-            are for anyone who wants to walk through it. */}
-        <AboutStage shots={SPACE_SHOTS} film={SPACE_FILM} />
+        {/* The photographs, one frame at a time. The film that used to
+            open this stage is gone - the section is the stills now. */}
+        <AboutStage shots={SPACE_SHOTS} />
       </div>
     </section>
   );

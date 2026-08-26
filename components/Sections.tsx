@@ -98,7 +98,19 @@ export function Who() {
    What it does carry is a poster - the film's own title card, a frame
    and a half in, because the first second of it is black and a black
    frame is indistinguishable from a broken one. Whatever the network is
-   doing, this section is never an empty box. */
+   doing, this section is never an empty box.
+
+   Two things sit on the stage beside the frame, and both are written
+   off the same --reel-open the clip is:
+
+     · a label in the page's margin above the shut letterbox, so the
+       film is introduced rather than merely appearing. It belongs to
+       the small clip on a card and fades out with it, so nothing is
+       ever printed over the full-bleed picture;
+     · an invisible button the size of the aperture, which stops and
+       starts the film. It draws nothing - the word rides in the site's
+       own cursor disc, PAUSE and then PLAY - and it is hidden entirely
+       where there is no hover to announce it. */
 export function Reel() {
   return (
     <section className="sec reel no-border" data-reel>
@@ -120,6 +132,44 @@ export function Reel() {
             tabIndex={-1}
           />
         </div>
+
+        {/* The label.
+
+            The film used to arrive unannounced - a black card with a
+            moving letterbox in it, and no word anywhere saying what you
+            were looking at. This sits in the page's own top margin
+            above the shut frame, in the same mono the section tags use,
+            and it is written off --reel-shut: it belongs to the clip on
+            a card, not to the full-bleed film, so it is gone before the
+            window is halfway open and never sits on the picture. */}
+        <div className="reel__intro" aria-hidden="true">
+          <span className="reel__tag">THE REEL</span>
+          <p className="reel__line">The work, cut together - films, campaigns, and the people behind them.</p>
+        </div>
+
+        {/* The transport.
+
+            No visible control on the picture: the site already draws a
+            green disc under the cursor with a word in it, so the film
+            gets the same treatment as everything else here and the word
+            is PAUSE. data-cursor is swapped on the click, and the
+            cursor reads it live (initCursor, lib/motion.ts), so the
+            disc says PLAY the moment it has stopped without the reader
+            having to leave the frame and come back.
+
+            It is inset to the aperture rather than to the stage - the
+            same two vars the clip is cut with - so the hit area is
+            whatever you can actually see, and the black margins around
+            a shut frame stay dead. */}
+        <button
+          type="button"
+          className="reel__toggle"
+          data-reel-toggle
+          data-cursor="Pause"
+          aria-label="Pause the film"
+        >
+          <span className="reel__hint" aria-hidden="true">Pause</span>
+        </button>
       </div>
 
       {/* The one thing a screen reader gets: there is a film here, it

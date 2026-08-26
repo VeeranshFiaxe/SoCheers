@@ -43,6 +43,11 @@
 export type FilmHandle = {
   /** on screen and should be running, or gone and should not be */
   want(on: boolean): void;
+  /** the reader has asked for it to stop, and that outranks everything
+      above: every listener here exists to undo a pause nobody chose, so
+      a pause somebody *did* choose has to be visible to them or the
+      keeper simply presses play again a quarter of a second later */
+  hold(on: boolean): void;
   destroy(): void;
 };
 
@@ -55,6 +60,7 @@ const MAX_RELOADS = 2;
 
 export function keepPlaying(video: HTMLVideoElement): FilmHandle {
   let wanted = false;
+  let held = false;
   let dead = false;
   let tries = 0;
   let reloads = 0;
@@ -65,7 +71,7 @@ export function keepPlaying(video: HTMLVideoElement): FilmHandle {
   };
 
   const attempt = () => {
-    if (dead || !wanted) return;
+    if (dead || !wanted || held) return;
     /* already running - nothing to prove, and reset the patience so a
        later stall starts from a short wait rather than a long one */
     if (!video.paused && !video.ended) { tries = 0; return; }
@@ -84,7 +90,7 @@ export function keepPlaying(video: HTMLVideoElement): FilmHandle {
   };
 
   const retry = () => {
-    if (dead || !wanted || timer || tries >= MAX_TRIES) return;
+    if (dead || !wanted || held || timer || tries >= MAX_TRIES) return;
     const wait = Math.min(250 * 2 ** tries, 4000);
     tries += 1;
     timer = window.setTimeout(() => { timer = 0; attempt(); }, wait);
@@ -155,6 +161,21 @@ export function keepPlaying(video: HTMLVideoElement): FilmHandle {
       } else {
         clear();
         if (!video.paused) video.pause();
+      }
+    },
+    /* The reader's own stop. It does not clear `wanted` - whether the
+       film is on screen is a separate fact, and the caller keeps
+       writing it while the hold stands - so letting go resumes only if
+       the section is still there to resume into. */
+    hold(on: boolean) {
+      if (dead || on === held) return;
+      held = on;
+      if (on) {
+        clear();
+        if (!video.paused) video.pause();
+      } else {
+        tries = 0;
+        attempt();
       }
     },
     destroy() {

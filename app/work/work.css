@@ -59,8 +59,13 @@
 
 .wk-stage__grid{
   position:relative; z-index:2; width:100%;
-  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
-  align-items:end; gap:clamp(24px,4vw,64px);
+  /* The wall carries the wider half. Five tiles are all up at once now
+     - see the note over .wk-also__track - and at 1.05fr they were
+     shrinking below the size where a 16:9 still says anything. The lede
+     gives the room up cheaply: it is held to 56ch and the headline to
+     26ch, so neither of them was using the width it had. */
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);
+  align-items:end; gap:clamp(24px,3vw,52px);
 }
 
 /* ---- left: the title block ---- */
@@ -152,10 +157,18 @@
    ring's corners, which reach slightly further than its edges. */
 .wk-also__track{
   display:grid; grid-auto-flow:column;
-  /* wider than the portrait wall it replaced - a 16:9 tile at 112px is
-     63px tall and nothing in it is legible */
-  grid-auto-columns:minmax(176px,1fr);
-  gap:clamp(9px,1vw,14px);
+  /* Every pinned piece on the wall at once, which is the client's
+     instruction: the wall is the set, not a window onto the set. A tile
+     floor of 176px was what made it a rail - five of those need ~940px
+     and the column is nowhere near that, so two of the five lived off
+     the right edge behind a scroll nobody was going to perform on a
+     screen they scroll vertically.
+
+     So the floor goes and the tiles divide whatever the column has.
+     What keeps them legible is the column being wider - see the grid
+     above - not a minimum that forces the overflow back. */
+  grid-auto-columns:minmax(0,1fr);
+  gap:clamp(8px,.7vw,12px);
   overflow-x:auto; scrollbar-width:none;
   padding:8px 3px 6px;
   margin:-8px -3px -6px;
@@ -249,7 +262,8 @@
   .wk-stage{ min-height:auto; padding-bottom:clamp(28px,4vh,44px); }
   .wk-stage__grid{ grid-template-columns:1fr; gap:clamp(26px,4vh,40px); }
   .wk-lede__head{ font-size:clamp(19px,3.6vw,26px); max-width:30ch; }
-  .wk-also__track{ grid-auto-columns:minmax(104px,1fr); }
+  /* Full width under the lede now, so five across still has room. */
+  .wk-also__track{ grid-auto-columns:minmax(0,1fr); }
 }
 @media (max-width:620px){
   /* The line under the headline used to be hidden here, back when it
@@ -258,7 +272,13 @@
      what answers the headline's question - dropping it on a phone
      leaves the reader with the question and no punchline. */
   .wk-lede__line{ font-size:14px; }
-  .wk-also__track{ grid-auto-columns:96px; }
+  /* Five across a phone is a 60px tile, which is a colour swatch. The
+     wall folds to three up and two under instead - still every piece
+     visible without a scroll, at a size that reads. */
+  .wk-also__track{
+    grid-auto-flow:row; grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
 }
 
 /* ============================================================

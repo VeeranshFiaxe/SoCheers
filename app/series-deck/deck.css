@@ -31,7 +31,7 @@
    because that is what is on the file.
 
    Every selector is .dk-. Nothing here is imported by /series or
-   /series-test and nothing there is imported by this.
+   /series and nothing there is imported by this.
    ============================================================ */
 
 .dk-page{

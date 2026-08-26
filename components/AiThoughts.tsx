@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import AiFigure from "./AiFigure";
-import { AI_THOUGHTS } from "@/lib/ai-content";
+import { AI_HERO, AI_THOUGHTS } from "@/lib/ai-content";
 
 /* ============================================================
    THE HERO'S NOISE - a figure, and everything being shouted at him.
@@ -18,13 +17,17 @@ import { AI_THOUGHTS } from "@/lib/ai-content";
 
    ---- the figure ----
 
-   Drawn, flat and vector - components/AiFigure.tsx - not the About
-   page's 3D torso. That man belongs to that page, and a signature set
-   piece stops being one the moment it is on two of them. The reference
-   is a flat illustration anyway: a head tipped back, eyes up, lit from
-   behind by the noise itself.
+   The client's own artwork: a person whose head is a stack of CRTs,
+   every screen showing a piece of what the machine is being asked for.
+   It replaced a drawn SVG silhouette that was standing in for the
+   reference, and it is the better half of this picture - the bubbles are
+   what is being said to him, and the screens are what comes back.
 
-   He stands in the middle of the hero and the field covers the whole
+   Deliberately not the About page's 3D torso: that man belongs to that
+   page, and a signature set piece stops being one the moment it is on
+   two of them.
+
+   He stands towards the right of the hero and the field covers the whole
    section, so the bubbles come out of his head and run to both edges -
    the picture the reference is drawing. The copy sits in the bottom
    left, which is the one corner the fan is composed to leave alone.
@@ -119,7 +122,18 @@ export default function AiThoughts() {
       </div>
 
       <div className="ai-stage__man">
-        <AiFigure />
+        {/* eager, and no lazy attribute: it is the hero's own picture and
+            it is on screen at load, so deferring it only buys a hole in
+            the first paint. */}
+        <img
+          className="ai-figure"
+          src={AI_HERO.figure.src}
+          alt=""
+          width={AI_HERO.figure.w}
+          height={AI_HERO.figure.h}
+          decoding="async"
+          fetchPriority="high"
+        />
       </div>
     </div>
   );

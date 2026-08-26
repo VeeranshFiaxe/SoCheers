@@ -20,11 +20,10 @@ export const metadata: Metadata = {
    The third pass at the Series tab, and the one that goes the other way
    to both of the first two.
 
-     /series       the deck rewritten for the web. Fourteen beats, seven
+     /series       that same rewrite staged flat - the live tab.
+     /series-1     the deck rewritten for the web. Fourteen beats, seven
                    stagings, fourteen scroll mechanics, sentences cut
-                   down to a ninety-second read.
-     /series-test  that same rewrite staged flat, to see whether the
-                   argument survives without the mechanics.
+                   down to a ninety-second read. Off the nav.
      /series-deck  this. Not the rewrite at all - the PowerPoint. Twenty
                    slides in their own order, in their own words, on
                    their own pictures, with the site's motion under them
@@ -53,8 +52,8 @@ export const metadata: Metadata = {
    ---- deleting it ----
 
    app/series-deck/, components/DeckStory.tsx, components/DeckMotion.tsx,
-   lib/deck-content.ts, lib/deck-motion.ts, the third Series entry in
-   NAV_LINKS, and public/assets/series/retention.jpg (this route is the
+   lib/deck-content.ts, lib/deck-motion.ts, its line in
+   the note in NAV_LINKS, and public/assets/series/retention.jpg (this route is the
    only thing that references it). Nothing else in the tree imports any
    of them, and this route imports nothing from the other two beyond one
    copy object - DECK_CTA, which is SERIES_CTA under another name.

@@ -5,23 +5,12 @@
 
    Unlike Series, this page has no deck behind it. Everything below is
    built from call notes only; the shared content PDF carried no AI Work
-   section at all. So the *structure* here is the client's (the entry
-   choice, the Ashok story, the four segments) and the *words* are a
-   stand-in written to the right length and tone. Confirm a written spec
-   exists somewhere before any of this copy is treated as final.
+   section at all. So the *structure* here is the client's (the hero,
+   the postscript, the four segments) and the *words* are a stand-in
+   written to the right length and tone, with the exception of the
+   postscript itself, which is the client's own line. Confirm a written
+   spec exists somewhere before any of this copy is treated as final.
 
-   ---- the thing the story must not do ----
-
-   The client was clear twice over: Ashok is not a joke at a brand's
-   expense. He is the reasonable version of a real decision - the tools
-   genuinely did get good, and hiring nobody genuinely was the obvious
-   read. The story only works if the reader can imagine making the same
-   call. The moment it reads as "look at this idiot", it argues for the
-   agency by insulting the person deciding whether to hire one.
-
-   Their own draft intro line ("you read a little funny story before you
-   see the work") was flagged by them as too casual and is being replaced
-   on their side, so nothing here leans on it.
    ============================================================ */
 
 /* ------------------------------------------------------------------
@@ -89,94 +78,47 @@ export const AI_HERO = {
   lines: ["The machine can make it.", "It still can't mean it."],
   lede:
     "Everything below was made with AI. None of it was decided by one. That distinction is the whole page - it takes about a minute.",
-} as const;
+  /* The figure the bubbles come out of. It was a drawn SVG silhouette
+     for one revision - a head-and-shoulders shape standing in for the
+     client's reference - and this is the client's own artwork replacing
+     it: a person under a stack of CRTs, every screen showing a piece of
+     what the machine is being asked for. It says the page's argument
+     better than a silhouette did, and it arrives already carrying the
+     green.
 
-/* The fork. Two doors, and the brief is specific that the funny one is
-   optional rather than the way in - a reader who came to see the work
-   should not have to read a parable to get to it. */
-export const AI_GATE = {
-  question: "Before the work, there's a short story about a man called Ashok.",
-  yes: "Yes, I'm up for a little giggle",
-  no: "No, I'd rather see the work now",
+     Delivered as a clean cut-out on transparency, so it is placed rather
+     than composited - no blend mode, no edge to hide. See the note over
+     .ai-stage__man in app/ai-work/ai.css for how it is stood in the
+     hero. */
+  figure: {
+    src: "/assets/SC%20Website%20Revamp/05.%20AI%20work/AI%20work%20visual.png",
+    w: 1137,
+    h: 1383,
+  },
 } as const;
 
 /* ------------------------------------------------------------------
-   The Ashok story.
+   The postscript.
 
-   ---- this is the client's own copy, and it is final ----
+   What used to sit here was the entry fork and the Ashok story behind
+   it - a parable the reader chose into before the work. Both are gone:
+   the page now runs hero -> this line -> the work, with nothing to
+   answer on the way through.
 
-   Delivered as one block of prose. The only thing done to it here is
-   punctuation: every em dash in the original has been replaced with the
-   mark the sentence was already using anyway (a colon where the clause
-   explains, commas where it interrupts), because the em dash reads as a
-   machine's favourite piece of punctuation and this is a page arguing
-   the opposite. No word has been changed, added or dropped.
+   Which is why this is two sentences and not a section, and why there
+   is no label under them: the argument the story took nine beats to make
+   is the argument, and the client's own line makes it in twenty words.
+   Set as a postscript rather than as a headline because it is an aside
+   to the work, not a preamble to it - the reader is already on their way
+   down to the grid, and a button telling them so was one thing too many
+   under a line this short.
 
-   The opening sentence is set as the heading rather than as the first
-   paragraph - it is the hook, it is one line long, and the display face
-   is what it was written for. It is not repeated in the body.
-
-   The breaks are the paragraph breaks of the original. `lift` marks the
-   two lines that stop narrating and start arguing; the styling for it is
-   in app/ai-work/ai.css.
+   The copy is the client's, verbatim, spacing included ("PS :").
    ------------------------------------------------------------------ */
-export const ASHOK = {
-  title: "Ashok didn't sleep the night ChatGPT Go dropped.",
-  /* The portrait. It is not an illustration sitting beside the story, it
-     is the man the story is about, set into the column and faded out at
-     the edges so the page keeps reading as one thing - see the note in
-     components/AiStory.tsx. */
-  figure: {
-    src: "/assets/SC%20Website%20Revamp/05.%20AI%20work/Ashok.png",
-    alt: "Ashok, in a suit and sunglasses, phone in hand, surrounded by floating dashboards, charts and sticky notes.",
-  },
-  beats: [
-    {
-      copy:
-        "By Monday, he'd put his agency on PIP. “AI's here. Why are we paying them ₹6 lakhs a month when my team with Go can get it done on their own?”",
-    },
-    {
-      copy:
-        "Fast-forward 60 days. The internal team proudly delivers a ‘content calendar’: twelve posts, one strategy deck, and a three-page Google Doc of ‘AI-generated campaign ideas.’ The CFO is thrilled. “Look at this cost-saving.”",
-    },
-    {
-      copy:
-        "Until the strategy lead walks in with a new ‘urgent’ brief: a high-gloss ₹10 lakh shoot needed in ten days to save the next launch.",
-    },
-    {
-      copy:
-        "Ashok stares at the plan in silence. The captions sound like a first-year intern wrote them. The mood boards are Pinterest rejects. That competitor that used to lag behind? Already eating into Gozo's market share.",
-    },
-    {
-      lift: true,
-      copy:
-        "Here's the thing about AI nobody says out loud: yes, it's cheap. Yes, it's fast. But cheap and fast without taste, insight, and strategy is just noise. That's where we come in.",
-    },
-    {
-      copy:
-        "We've used these same tools, but with sharper strategy, better taste, and faster workflows, to create CGI, videos, and campaigns that look like Paris studios but move at Indian startup speed.",
-    },
-    {
-      copy:
-        "Havmor scaled campaigns 3x faster, at a fraction of the cost. Belgian got visuals that outperformed paid spends without a single physical shoot. Lindor turned around ideas in a week that usually take months.",
-    },
-    {
-      copy:
-        "Ashok's team? Still stuck asking the AI for ‘quirky caption ideas.’ Gozo? Still losing share. And Ashok? Quietly posting: looking for agencies. Yet again.",
-    },
-    {
-      lift: true,
-      copy:
-        "Because by now we all know, and so does Ashok, that AI is not a replacement. But with the right hands, it's a multiplier.",
-    },
-  ] as readonly { copy: string; lift?: boolean }[],
-  /* After the story the reader is put back into the work rather than left
-     at the bottom of a parable - the brief calls this out specifically. */
-  out: {
-    line: "That's the story. Here's the work.",
-    label: "See the work",
-  },
+export const AI_PS = {
+  copy: "PS : The ideas still come from us. The speed just comes from somewhere else.",
 } as const;
+
 
 /* ------------------------------------------------------------------
    The work itself.

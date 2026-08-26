@@ -288,7 +288,16 @@ export function initAbout(): () => void {
            opening state above is what the section sits in until then */
         defaults: { ease: "power2.out", immediateRender: false },
         scrollTrigger: {
-          trigger: section, start: "top top",
+          /* The same start as the hold at the foot of this file, and it
+             has to be the same: that pin is what the join plays inside, so
+             the moment the panel stops is the moment this fires. They were
+             both "top top" while the panel was a screen tall - pinning its
+             top to the top of the window was the same thing as centring
+             it. The panel is shorter than the window now, so its top never
+             reaches the top of the window while it is held: left at "top
+             top" this fired only once the pin had released and the panel
+             was scrolling away, which is late enough to look broken. */
+          trigger: section, start: "center center",
           toggleActions: "play none none reverse",
           invalidateOnRefresh: true,
           /* the founders hold pins this same section, and a pin moves the
@@ -385,16 +394,33 @@ export function initAbout(): () => void {
        stopped page. That is a slide transition - a rectangle flying in
        over the previous slide - and it read as one.
 
-       It is gone, along with the card. The black-to-cream change is a
-       gradient at the foot of the intro now (see .ab-intro::after in
-       about.css): no pin, no cover, nothing moving except the page, and
-       the colour simply changes underneath as you scroll through it.
+       It is gone, along with the card. The intro is cream like every
+       panel under it, and the black-to-cream change is a gradient at the
+       *top* of it, joining it to the film (see .ab-bridge in about.css):
+       no pin, no cover, nothing moving except the page, and the colour
+       simply changes underneath as you scroll through it.
 
        What is left is the hold. The join inside the founders panel is a
        fixed three seconds of choreography (see the founders block above)
        and it needs the section to stand still while it plays. pinSpacing
        stays ON: the space is reserved, so nothing below is pulled up over
        the top of it. The panel stops, the join plays, the page scrolls on.
+
+       It starts from the panel's centre, not its top. That used to be the
+       same thing: the panel was exactly one screen tall, so pinning its
+       top to the top of the window put its middle in the middle. It is as
+       tall as its own contents now (see .ab-founders in about.css - a
+       screen-tall section around a 520px composition was a couple of
+       hundred pixels of empty cream above and below it), and pinning a
+       short panel by its top would hold the composition up in the top
+       third of the window with the next section standing under it for the
+       whole hold. Centre to centre holds it where the join is meant to be
+       watched, and the neighbours it leaves visible at the edges are the
+       same cream this one is.
+
+       The hold is a little shorter for that reason - the panel no longer
+       fills the window while it plays, so there is less reason to sit in
+       it.
 
        Skipped under 1101px, where the join does not run and the panels are
        stacked to one column anyway. */
@@ -405,8 +431,8 @@ export function initAbout(): () => void {
 
       ScrollTrigger.create({
         trigger: panel,
-        start: "top top",
-        end: () => "+=" + window.innerHeight,
+        start: "center center",
+        end: () => "+=" + window.innerHeight * 0.75,
         pin: true,
         invalidateOnRefresh: true,
       });

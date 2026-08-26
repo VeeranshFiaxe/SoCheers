@@ -191,21 +191,6 @@ export type SpaceShot = {
   pos?: string;
 };
 
-/* The film that opens the stage - frame 01, ahead of the photographs.
-
-   It is the same cut the home page plays (components/Sections.tsx), and
-   the same file: one video for the site, so it is in the browser's cache
-   for whichever page the reader reaches second.
-
-   `cap` sits on the same hairline the photographs' captions use, so the
-   frame reads as the first of eleven rather than as a different piece of
-   furniture bolted above them. */
-export const SPACE_FILM = {
-  src: "/media/vibe-video.mp4",
-  poster: "/media/vibe-video-poster.jpg",
-  cap: "The film",
-};
-
 export const SPACE_SHOTS: SpaceShot[] = [
   { src: "/assets/about/people-offsite.webp", alt: "The whole of SoCheers on its twelfth-birthday offsite", cap: "The offsite, all of us" },
   { src: "/assets/about/people-run.webp", alt: "The SoCheers team after a morning run, medals up", cap: "The morning run" },

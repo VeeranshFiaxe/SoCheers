@@ -27,10 +27,15 @@ export default function Blog() {
             <p className="bl-hero__lede" data-reveal>{BLOG_HERO.lede}</p>
           </div>
 
-          {/* A transparent-background cutout, so it sits straight on the
+          {/* The reading visual is parked, not deleted - uncomment to bring it
+              back and the hero returns to two columns on its own (blog.css
+              keys the grid off whether this element is present).
+
+              A transparent-background cutout, so it sits straight on the
               cream ground with no frame or card around it - the artwork's
               own edge is the edge. Decorative next to the h1 it illustrates,
-              hence the empty alt. */}
+              hence the empty alt.
+
           <div className="bl-hero__visual" data-reveal>
             <img
               src="/assets/SC Website Revamp/06. Blogs/reading visual.png"
@@ -41,6 +46,7 @@ export default function Blog() {
               decoding="async"
             />
           </div>
+          */}
         </section>
 
         <BlogTabs />

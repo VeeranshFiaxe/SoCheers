@@ -31,6 +31,11 @@
      Painted, like everything else in here, so the bar itself never moves. */
   --hero-drop:60px;
 }
+/* With the artwork out of the markup there is no second column to fill, so
+   the copy takes the whole width rather than sitting in half a grid with a
+   dead half beside it. Keyed off the element's presence, so putting the
+   visual back is a markup change only. */
+.bl-hero:not(:has(.bl-hero__visual)){ grid-template-columns:minmax(0,1fr); }
 /* The copy rides the top of the row rather than centring against the
    artwork, which is what lifts it clear of the visual's mass. z-index:2
    puts the whole copy column above the image: where the two overlap, the

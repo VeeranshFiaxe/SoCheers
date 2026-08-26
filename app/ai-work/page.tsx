@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import "./ai.css";
 import AiMotion from "@/components/AiMotion";
-import AiGate from "@/components/AiGate";
 import AiThoughts from "@/components/AiThoughts";
-import AiStory from "@/components/AiStory";
+import AiPs from "@/components/AiPs";
 import AiGrid from "@/components/AiGrid";
 import { AI_HERO } from "@/lib/ai-content";
 
@@ -17,8 +16,8 @@ export const metadata: Metadata = {
    AI WORK.
 
    Under a minute end to end, which is the brief's own measure and the
-   reason this page is short on set pieces: it is a hero, a fork, a story
-   somebody can skip, and a wall of work.
+   reason this page is short on set pieces: it is a hero, one line of
+   postscript, and a wall of work.
 
    ---- one caveat, carried up from lib/ai-content.ts ----
 
@@ -64,13 +63,12 @@ export default function AiWork() {
           </div>
         </section>
 
-        {/* The fork, and everything it guards. Both the story and the
-            wall are handed to AiGate rather than rendered after it: until
-            a door is picked, the page ends at the question - which is how
-            the scroll stops there without anything hijacking the wheel.
-            Both panels are still in the server's HTML; the collapse only
-            applies once the component is live. See components/AiGate.tsx. */}
-        <AiGate story={<AiStory />} work={<AiGrid />} />
+        {/* The line, and then the work. There is no fork here any more
+            and nothing collapsed behind one: the page runs straight from
+            the hero through the postscript into the grid, so everything
+            it has to say is in the document in the order it is read. */}
+        <AiPs />
+        <AiGrid />
       </main>
 
       <AiMotion />

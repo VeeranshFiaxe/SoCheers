@@ -176,14 +176,19 @@ export type PinnedCase = {
 
    ---- the small row ----
 
-   The client wrote it out for two of the five: "NETFLIX X MI X
-   SOCheers, (Social + Film)" and "(Social + MicroSeries IP +
-   Packaging)". The other three follow that pattern - who it was for,
-   then what the work was - and were filled in from what each piece
-   actually is rather than invented: Pantaloons ran as a fortnightly
-   drop campaign, Broadway as a reel that pulled a crowd to a room, SRH
-   as the same social-plus-film shape as its MI sibling. They are worth
-   a glance from the client, and they are one line each to change.
+   What the work was, and on the first piece only, who it was for.
+
+   Every one of the five used to open with a "<BRAND> X SOCheers" part,
+   because the client wrote the row out that way for Netflix x MI and
+   the rest were filled in to match. Read as a set - and the wall shows
+   the set - it was the same construction five times over a headline
+   that already names the brand, and the agency's own name repeated on
+   every frame of its own site.
+
+   So the naming part is kept where the client actually wrote it and
+   dropped everywhere else. The "Social + ..." half is per-piece and
+   stays on all five: it is the only place the page says what the work
+   was.
 
    ---- the film ----
 
@@ -218,7 +223,7 @@ export const PINNED: PinnedCase[] = [
       href: "https://www.instagram.com/p/DYMMLGPjbRn/",
     },
     brand: "Netflix × SRH",
-    tags: ["NETFLIX X SRH X SOCheers", "Social + Film"],
+    tags: ["Social + Film"],
     headline: "SOME ANNOUNCEMENTS ARE BETTER WHEN YOU TAKE THEM SLOWLY SLOWLY.",
     line: "Until the banger became SRH’S unofficial anthem.",
     hero: "/assets/work/pinned/netflix-srh.jpg",
@@ -231,7 +236,7 @@ export const PINNED: PinnedCase[] = [
       href: "https://www.instagram.com/p/DadHSmiCGdZ/",
     },
     brand: "Pantaloons",
-    tags: ["PANTALOONS X SOCheers", "Social + Campaign"],
+    tags: ["Social + Campaign"],
     headline:
       "FOR A BRAND WITH THIS MUCH LEGACY, HOW DO YOU KEEP IT MOVING THIS FAST?",
     line: "With drops coming every two weeks, we make sure they find their way into closets as much as they do into feeds.",
@@ -245,7 +250,7 @@ export const PINNED: PinnedCase[] = [
       href: "https://www.instagram.com/reel/DZNJBxaMb0n/",
     },
     brand: "Broadway",
-    tags: ["BROADWAY X SOCheers", "Social + Film"],
+    tags: ["Social + Film"],
     headline: "GETTING BANDRA TO LOOK AWAY FROM BOOJEE IS NO SMALL ASK.",
     line: "We made Broadway worth the detour, bringing 20,000+ people through the doors.",
     hero: "/assets/work/pinned/broadway.jpg",
@@ -258,7 +263,7 @@ export const PINNED: PinnedCase[] = [
       href: "https://www.instagram.com/reel/DaiGcRnICTO/",
     },
     brand: "Prava",
-    tags: ["PRAVA X SOCheers", "Social + MicroSeries IP + Packaging"],
+    tags: ["Social + MicroSeries IP + Packaging"],
     headline: "GETTING A WATER BRAND MORE PERSONALITY THAN YOU’D EXPECT.",
     line: "Start with a can that has a lot more going on than water.",
     hero: "/assets/work/pinned/prava.jpg",

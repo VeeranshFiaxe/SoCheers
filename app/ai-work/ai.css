@@ -21,8 +21,8 @@
    The client's reference, read as composition rather than as something
    to trace: a figure standing under a swarm of speech bubbles, all of
    them talking at him at once. The words are in components/AiThoughts
-   .tsx and the man is components/AiFigure.tsx; what happens here is the
-   framing.
+   .tsx, and so is the figure - the client's own artwork, a person under
+   a stack of CRTs; what happens here is the framing.
 
    The stage is the section's ground, not an object in the corner of it.
    The figure stands in the middle of the hero, the field of bubbles
@@ -94,11 +94,15 @@
 /* ---------- the stage: one figure, and the noise over him ---------- */
 .ai-stage{ position:absolute; inset:0; z-index:1; pointer-events:none; }
 
-/* The figure is anchored to the bottom edge of the section and cropped
-   from the top by whatever height the hero has - the drawing is built
-   for that (see components/AiFigure.tsx), so the crop is framing rather
-   than damage. Centred a little right of middle: dead centre would put
-   his head directly over the end of the headline. */
+/* The figure is anchored to the bottom edge of the section: it is a
+   cut-out on transparency (see the note over AI_HERO.figure in
+   lib/ai-content.ts), so it is fitted whole inside its box rather than
+   cropped - object-fit:contain with the bottom pinned, which keeps the
+   screens the picture is actually about above the fold at every height.
+
+   Nothing composites it. The old drawn silhouette needed a glow behind
+   it to sit in the section; this arrives with its own, on real alpha,
+   and a blend mode over it would only dull the green. */
 /* Centred on 80% rather than 58%, and a little shorter with it.
 
    He moved because the headline grew: it is one line per sentence now
@@ -128,9 +132,15 @@
 }
 .ai-figure{
   display:block; width:100%; height:100%;
-  /* dies out into the page rather than ending on the section's edge */
-  -webkit-mask-image:linear-gradient(to bottom, #000 0 86%, transparent 100%);
-  mask-image:linear-gradient(to bottom, #000 0 86%, transparent 100%);
+  /* fitted, not filled: the artwork is a person and cropping it to a box
+     would take the screens off the top or the shoulders off the sides.
+     Pinned to the bottom so that whatever the hero's height leaves him
+     is measured from his feet up. */
+  object-fit:contain; object-position:bottom center;
+  /* dies out into the page rather than ending on the section's edge -
+     the delivered file stops on a hard line at the bottom of the torso */
+  -webkit-mask-image:linear-gradient(to bottom, #000 0 82%, transparent 100%);
+  mask-image:linear-gradient(to bottom, #000 0 82%, transparent 100%);
 }
 
 /* The field the bubbles are placed in - their x/y are percentages of
@@ -209,219 +219,59 @@
 }
 
 /* ============================================================
-   THE FORK
+   THE POSTSCRIPT
 
-   Until a door is picked there is nothing below this section - see
-   components/AiGate.tsx for why the scroll is stopped by the page being
-   short rather than by anything touching the wheel.
+   One line between the hero and the wall, and the styling's whole job is
+   to stop it becoming a section. No min-height, no reserved screen, and
+   nothing under the line: the rule above it separates it from the hero,
+   the padding is a fraction of what the story section took, and the work
+   starts immediately under it - which is why the link down to the work
+   is gone, it was pointing at the next thing on the page.
+
+   What stood here before was the fork (a question and two doors) and the
+   collapsing panels it opened - see components/AiPs.tsx. Both are gone,
+   along with the grid-row collapse that made the page end at the gate,
+   because nothing is hidden on this page any more.
    ============================================================ */
-/* No reserved height while it is shut, and nothing padding it out into a
-   screen of its own: the fork is a question and two buttons, and the
-   page ending directly underneath them is the whole mechanism. A held
-   half-screen of black under the doors reads as a section that failed to
-   load, not as an invitation. */
-.ai-gate{
+/* One value, both sides, and the wall below gives up its own top padding
+   to it (see .ai-work). That is the whole fix: the line used to sit with
+   ~90px of air above it and ~230px below, because its bottom padding and
+   the work section's top padding were stacking - two rules each doing
+   the same job, neither knowing about the other. The gap under a section
+   belongs to one of the two sections touching it, and here it is this
+   one, so the line sits dead centre between the rule above it and "The
+   work" below it at every width.
+
+   The value itself is down from where it started. A single sentence does
+   not need a screen of its own - it needs enough room not to read as
+   part of the hero, which is what this is. */
+.ai-ps{
+  --ps-air:clamp(44px,7vh,76px);
   border-top:1px solid var(--line);
-  padding:clamp(54px,9vh,96px) 0 clamp(60px,10vh,104px);
+  background:var(--bg);
+  padding:var(--ps-air) 0;
 }
-.ai-gate__in{ display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; }
-.ai-gate__q{
-  max-width:36ch;
+.ai-ps__in{
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+}
+/* Display face, but set below the hero's size and at the muted colour with
+   only the sentence's own weight carrying it: a postscript that matches the
+   headline for size is a second headline, and this one is meant to read as
+   an aside on the way past. */
+.ai-ps__copy{
+  max-width:34ch;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(19px,2.2vw,30px); line-height:1.24; letter-spacing:-.02em;
-  text-wrap:balance;
-}
-.ai-gate__doors{ margin-top:clamp(22px,3.4vh,36px); display:flex; gap:14px; flex-wrap:wrap; justify-content:center; }
-.ai-gate__door{
-  display:inline-flex; align-items:center; padding:14px 26px;
-  border:1px solid var(--faint); border-radius:999px;
-  font:inherit; font-size:14px; color:var(--muted); background:none; cursor:none;
-  transition:border-color .4s var(--ease), color .4s var(--ease), background .4s var(--ease), opacity .4s var(--ease);
-}
-.ai-gate__door:hover{ border-color:var(--cream); color:var(--cream); }
-@media (hover:none){ .ai-gate__door{ cursor:pointer; } }
-/* The funny door is the one with the colour on it, and that is the whole
-   hierarchy: the client's own framing is that the story is the offer and
-   the work is the default, so one of these is an invitation and the other
-   is a way out. */
-.ai-gate__door--yes{ background:var(--accent); border-color:var(--accent); color:#04140b; font-weight:500; }
-.ai-gate__door--yes:hover{ background:transparent; color:var(--accent); border-color:var(--accent); }
-
-/* The collapse. A single grid row taken from full to nothing, rather
-   than a height animation: the panel's height is not knowable in CSS and
-   animating to `auto` does not interpolate, so the grid row is the one
-   way to get a real collapse out of content nobody measured. `inert` on
-   the same element (see components/AiGate.tsx) is what takes it out of
-   reach while it is shut.
-
-   minmax(0, Nfr) rather than the plain `1fr -> 0fr` this is usually
-   written as, and the difference is the whole bug it was written to fix:
-   a bare `0fr` track still takes its *automatic minimum size*, which is
-   the min-content height of what is in it. On a paragraph that reads as
-   a panel that will not quite shut; under a wall of ninety images it was
-   a shut gate with fifteen thousand pixels of invisible page hanging off
-   the bottom of it. Naming the minimum as 0 is what actually collapses
-   the track, and minmax interpolates the same way, so the transition is
-   unchanged.
-
-   The min-height on the child is still required - it stops the item
-   itself refusing to shrink inside the track - but on its own it was
-   never enough. */
-/* The height is not animated, and that is deliberate - see choose() in
-   components/AiGate.tsx. A panel that takes three quarters of a second to
-   grow is a document that is too short to scroll into for three quarters
-   of a second, and the growth itself happens below the fold with a scroll
-   travelling over it: nobody has ever seen it. So the row opens at once
-   and the panel fades up, and the arrival is carried by the story's own
-   type coming in as the reader lands on it.
-
-   The 0fr row is still what does the collapsing, because it is also what
-   makes the page end at the gate before a door is picked. */
-.ai-hold{
-  overflow:hidden;
-  display:grid; grid-template-rows:minmax(0,1fr);
-  transition:opacity .5s var(--ease);
-}
-.ai-hold > *{ min-height:0; }
-.ai-hold[data-collapsed]{ grid-template-rows:minmax(0,0fr); opacity:0; }
-@media (prefers-reduced-motion:reduce){ .ai-hold{ transition:none; } }
-
-/* ============================================================
-   THE STORY
-   ============================================================ */
-.ai-story{ background:var(--bg); padding:clamp(80px,13vh,150px) 0; }
-/* Narrow screens: one column, in source order - heading, portrait, beats.
-   The two-column arrangement is opted into further down, at 900px, where
-   there is actually room for a column beside a column. */
-.ai-story__in{ max-width:760px; --fig-w:clamp(220px,28vw,320px); }
-
-.ai-story__head{ text-align:center; }
-.ai-story__title{
-  max-width:680px;
-  margin:24px auto 0;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(26px,4vw,44px); line-height:1.1; letter-spacing:-.03em;
-  text-align:center; text-wrap:balance;
-}
-
-/* ---------- the portrait ----------
-   Composited into the page rather than placed on it. The delivered PNG is
-   a figure on near-black with a warm/green glow behind him and the page's
-   own ground is #0b0b0c, so `screen` puts his black into the page's black
-   and there is nothing left to draw an edge with. The mask then takes the
-   remaining glow out at the bottom and the two sides, which is what stops
-   the last visible thing being a rectangle.
-
-   No border, no radius, no shadow, no caption: the only other framed
-   objects on this page are the tiles in the wall of work, and this is
-   deliberately not one of those.
-
-   ---- held to the side ----
-   He is stuck to the side of the measure while the beats run up past him,
-   and he leaves with the last of them. That is one sticky and no script:
-   the aside is sticky inside .ai-story__body, and the body is exactly as
-   tall as the beats, so the moment the last beat clears the viewport the
-   sticky has run out of container and he travels up with it. Nothing to
-   pin, nothing to unpin, and it degrades to a plain block wherever
-   position:sticky is not honoured.
-
-   align-self:start is load-bearing - a grid item stretches to the row by
-   default, which would make the aside as tall as the beats and leave the
-   sticky nothing to slide within. */
-.ai-story__figure{
-  position:relative;
-  width:var(--fig-w);
-  margin:clamp(24px,4vh,44px) auto;
-  pointer-events:none;
-}
-.ai-story__figure img{
-  display:block; width:100%; height:auto;
-  mix-blend-mode:screen;
-  -webkit-mask-image:
-    linear-gradient(to bottom, #000 58%, rgba(0,0,0,.45) 82%, transparent 99%),
-    linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
-  mask-image:
-    linear-gradient(to bottom, #000 58%, rgba(0,0,0,.45) 82%, transparent 99%),
-    linear-gradient(to right, transparent 0, #000 12%, #000 88%, transparent 100%);
-  -webkit-mask-composite:source-in;
-  mask-composite:intersect;
-}
-
-.ai-story__beats{ margin-top:clamp(28px,4vh,44px); }
-/* No index down the left. Numbering nine paragraphs turns a story into a
-   list of points, and the whole reason this is a story is that a list of
-   points was the wrong way to make the argument. */
-.ai-beat{
-  font-size:clamp(16px,1.3vw,19px); line-height:1.66; color:var(--muted);
-  text-align:center;
-}
-.ai-beat + .ai-beat{ margin-top:clamp(20px,3vh,32px); }
-/* The two beats that stop narrating and start arguing - the one that says
-   what AI is without taste, and the one that says what it is with the
-   right hands. They are set as the page's own voice rather than as more
-   narration. Marked in lib/ai-content.ts, not guessed at from position. */
-.ai-beat[data-lift]{ color:var(--cream); font-size:clamp(18px,1.6vw,23px); line-height:1.5; }
-
-@media (min-width:900px){
-  .ai-story__in{ max-width:1060px; }
-
-  .ai-story__body{
-    margin-top:clamp(30px,5vh,54px);
-    display:grid;
-    grid-template-columns:var(--fig-w) minmax(0,1fr);
-    gap:clamp(36px,5vw,72px);
-    align-items:start;
-  }
-
-  /* The hold itself is initStoryHold in lib/motion.ts, not position:
-     sticky - body carries overflow-x:hidden, which makes body a scroll
-     container that never scrolls, and sticky inside one of those never
-     sticks. Documented once already above .reel__stage in globals.css.
-
-     align-self:start is still load-bearing: a grid item stretches to the
-     row by default, so without it the aside would be as tall as all nine
-     beats and the hold would measure itself off the wrong box.
-
-     The background is insurance for the composite. The portrait is
-     mix-blend-mode:screen dropping its own black into the page's, and the
-     hold transforms this element, which isolates it and would otherwise
-     leave the blend nothing to reach through to. Painting the page's own
-     ground inside the aside makes the held and unheld cases identical.
-
-     will-change tells the compositor the transform is coming, so the
-     first frame of the catch is not the one that promotes the layer. */
-  .ai-story__aside{
-    align-self:start;
-    background:var(--bg);
-    will-change:transform;
-  }
-  .ai-story__figure{ margin:0; }
-
-  .ai-story__beats{ margin-top:0; }
-  /* Ranged left once there is a column to range it in: centred prose only
-     reads as prose while the measure is the whole page. */
-  .ai-beat{ text-align:left; }
-}
-
-.ai-story__out{
-  margin-top:clamp(38px,6vh,64px); padding-top:26px; border-top:1px solid var(--line);
-  display:flex; align-items:center; justify-content:space-between; gap:18px; flex-wrap:wrap;
-}
-.ai-story__outline{ font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--muted); }
-.ai-story__go{
-  display:inline-flex; align-items:center; gap:9px; padding:13px 24px;
-  border-radius:999px; background:var(--cream); color:var(--bg);
-  font-size:14px; font-weight:500;
-}
-
-@media (max-width:420px){
-  .ai-story__in{ --fig-w:min(230px,72%); }
+  font-size:clamp(20px,2.4vw,32px); line-height:1.28; letter-spacing:-.02em;
+  color:var(--cream); text-wrap:balance;
 }
 
 /* ============================================================
    THE WALL
    ============================================================ */
-.ai-work{ background:var(--bg); padding:clamp(70px,11vh,130px) 0 clamp(90px,15vh,170px); }
+/* No top padding: the air above "The work" is the postscript's bottom
+   padding and nothing else, which is what keeps that line equidistant
+   from the two sections it sits between - see .ai-ps. */
+.ai-work{ background:var(--bg); padding:0 0 clamp(90px,15vh,170px); }
 
 .ai-tabs{
   margin-top:26px; display:flex; gap:8px; flex-wrap:wrap;

@@ -1,9 +1,9 @@
 import { ART, BEATS, TEXTURE, type Beat } from "@/lib/series-content";
 
 /* ============================================================
-   SERIES 2.0 - ONE SHOT, FOURTEEN TIMES, NUDGED.
+   SERIES - ONE SHOT, FOURTEEN TIMES, NUDGED.
 
-   A throwaway comparison for /series-test, answering one question: what
+   The staging for /series, answering one question: what
    does this argument read like if every beat is staged the same way
    instead of each one getting its own mechanic?
 
@@ -53,7 +53,7 @@ import { ART, BEATS, TEXTURE, type Beat } from "@/lib/series-content";
    until a splitter reaches them, and no motion runs on this route.
 
    The copy is BEATS, untouched and in the deck's order. Nothing in this
-   file writes words. app/series/** is not imported by any of it and must
+   file writes words. app/series-1/** is not imported by any of it and must
    not be: this is a parallel page so the two can be opened side by side,
    and so throwing it away is throwing away three files.
    ============================================================ */
@@ -135,7 +135,7 @@ const framesFor = (beat: Beat) => FRAMES[beat.id] ?? DEFAULT_FRAMES;
    the sentence.
 
    The colour is the one thing this page changes about it - see --hi in
-   app/series-test/series-test.css.
+   app/series/series.css.
    ------------------------------------------------------------------ */
 function Hi({ text, accent }: { text: string; accent?: string }) {
   if (!accent) return <>{text}</>;

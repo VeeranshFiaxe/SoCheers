@@ -28,9 +28,12 @@ type Grid = { tiles: HTMLElement[]; cols: number; rows: number };
    Every a[href^="#"] on the site is bound to Lenis down in initLenis, so
    a link is still the way to move the page and this is not a second
    route to the same thing. What it is for is a scroll that has to happen
-   *after* something else does - components/AiGate.tsx opens a panel and
-   then goes to it, and an anchor would have left for the target's old
-   position on the click that started the expansion.
+   *after* something else does: a caller that has just grown the document
+   and wants to go to the new part of it, where an anchor would have left
+   for the target's old position on the click that started the change.
+   The AI tab's entry fork was that caller until it was removed, so
+   nothing calls this today - it is kept because the failure it handles
+   (below) is one any future caller of its kind will hit.
 
    Module-level rather than passed around: initSite() owns one scroller
    for the life of the page, and a caller that fires before it boots (or
@@ -46,8 +49,8 @@ let active: Lenis | null = null;
    not a reason to silently do nothing. */
 export function smoothTo(target: HTMLElement | number, duration = 1.2): void {
   if (active) {
-    /* Remeasured first, and this is the whole reason the gate's scroll
-       used to go nowhere. Lenis does not read the document height when it
+    /* Remeasured first, and this is the whole reason a scroll into
+       freshly-grown page used to go nowhere. Lenis does not read the document height when it
        is asked to scroll - it keeps its own `limit` and clamps every
        target to it, and that number is refreshed by a ResizeObserver,
        which does not fire until after the frame the DOM changed in. So a
@@ -56,9 +59,8 @@ export function smoothTo(target: HTMLElement | number, duration = 1.2): void {
        shorter page: the target is clamped to the old bottom and the
        reader lands short of it, or does not move at all.
 
-       AiGate is exactly that caller. resize() is synchronous, so by the
-       time scrollTo runs the limit is the one the reader can actually
-       see. */
+       resize() is synchronous, so by the time scrollTo runs the limit is
+       the one the reader can actually see. */
     active.resize();
     active.scrollTo(target, { duration, force: true });
     return;
@@ -1275,149 +1277,6 @@ export function initSite(): () => void {
       });
     }
 
-    /* -------------------------------------------------- word-by-word highlight
-       The Ashok story's beats (components/AiStory.tsx, [data-highlight]):
-       every word starts dim and brightens to full opacity as the reader
-       scrolls, in reading order - left to right, then down to the next
-       line, straight through all nine paragraphs on one scrub tied to the
-       whole block's height. Opacity only, never colour: a beat and a
-       "lift" beat are already two different colours in ai.css, and this
-       has no opinion about that - it just moves how much of whichever
-       colour is showing.
-
-       One SplitText per paragraph (line detection needs each paragraph's
-       own box) but their words are pooled into a single array and given
-       one shared scrollTrigger, so the cascade reads as one continuous
-       sweep through the block rather than nine separate ones restarting
-       at each paragraph's own trigger point. */
-    function initWordHighlight() {
-      document.querySelectorAll<HTMLElement>("[data-highlight]").forEach((host) => {
-        const paras = Array.from(host.querySelectorAll<HTMLElement>(":scope > p"));
-        if (!paras.length) return;
-
-        const build = () => {
-          if (ac.signal.aborted) return;
-          if (prefersReduced) return; // leave the paragraphs at their plain, fully-lit CSS colour
-
-          const words: Element[] = [];
-          paras.forEach((p) => {
-            const split = new SplitText(p, { type: "lines,words", linesClass: "hl-line", wordsClass: "hl-word" });
-            splits.push(split);
-            words.push(...split.words);
-          });
-          if (!words.length) return;
-
-          // duration is deliberately much longer than the stagger interval
-          // between words, so each word's own fade is still running when the
-          // next one starts - overlapping ramps read as one continuous wave
-          // brightening through the line rather than a row of words
-          // blinking on individually. scrub:1 lags a little behind the raw
-          // scroll delta for the same reason: it smooths out mouse-wheel /
-          // trackpad jitter instead of snapping the wave to every tick.
-          // start/end is stretched to most of the block's own height (rather
-          // than a fixed viewport band) so the wave has real scroll distance
-          // to cover - the previous "top 80% / bottom 50%" window let the
-          // whole cascade finish in well under one screen of scrolling,
-          // which is what read as rushed no matter how the per-word easing
-          // was tuned.
-          gsap.set(words, { opacity: 0.4 });
-          gsap.to(words, {
-            opacity: 1, ease: "sine.inOut", duration: 1.6, stagger: 0.55,
-            scrollTrigger: { trigger: host, start: "top 90%", end: "bottom 15%", scrub: 1.2 },
-          });
-        };
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(build, build);
-        else build();
-      });
-    }
-
-    /* -------------------------------------------------- the story's portrait
-       Ashok holds beside the beats while they scroll past him and then
-       leaves with the last of them (components/AiStory.tsx).
-
-       That is the behaviour of position:sticky, written here instead for
-       the same reason the reel's hold is: body carries overflow-x:hidden,
-       which makes body a scroll container that never itself scrolls, and
-       a sticky descendant of one of those never sticks. See the note
-       above .reel__stage in globals.css - this is the second thing on the
-       site to hit it.
-
-       ---- why this is a transform and not a pin ----
-
-       It was a ScrollTrigger pin for one revision and the catch was
-       visible every time: a pin swaps the element to position:fixed on
-       the frame the start is crossed, and on a smoothed scroller the
-       page's own motion is still easing towards where the scroll position
-       says it is. So the swap lands against a page that has not arrived yet
-       and he stops dead a few pixels early - the abrupt "clunk" as he
-       catches.
-
-       Nothing here changes position. He stays in the grid cell for the
-       whole section and is simply translated down by exactly as much as
-       the beats travel, which is the same picture with no handoff frame
-       in it at all. The distance is the difference in the two columns'
-       heights and nothing else - the moment his own bottom reaches the
-       body's bottom he has run out of container, which is the frame
-       sticky would let go on, so he rides up with the last beat.
-
-       scrub is `true` and not a number, and that is the whole feel of it.
-       A numeric scrub eases him towards the scroll over some fraction of
-       a second, which sounds smoother and is worse: it means that while
-       he is supposed to be standing still he is always a few pixels
-       behind where he should be and closing, and a thing that is
-       perpetually catching up reads as a thing travelling down the page
-       with the reader. `true` binds him to the scroll position exactly,
-       so during the hold he does not move at all - the beats go past a
-       man standing still.
-
-       He is still smooth through the catch because he never changes
-       positioning and because ScrollTrigger is driven off Lenis's own
-       scroll event (see the top of this file), so the number he is
-       measured against is the smoothed one the page is actually drawn
-       at - not the raw wheel delta.
-
-       invalidateOnRefresh because the travel is measured, not authored:
-       a resize, a font settling or an image finally arriving all change
-       the height of the beats, and the tween has to re-read it. */
-    function initStoryHold() {
-      const aside = document.querySelector<HTMLElement>(".ai-story__aside");
-      const body = document.querySelector<HTMLElement>(".ai-story__body");
-      if (!aside || !body) return;
-      // reduced motion gets the plain document: he scrolls with the beats
-      if (prefersReduced) return;
-
-      /* The same 900px the two-column layout in ai.css is gated on: below
-         it he is back in the flow above the beats and there is no hold to
-         run. gsap.matchMedia builds it on the way in and reverts it on the
-         way out, so a window dragged across the breakpoint puts the
-         portrait back rather than leaving it held against a layout that no
-         longer has a column beside it. */
-      const mm = gsap.matchMedia();
-      cleanups.push(() => mm.revert());
-
-      mm.add("(min-width:900px)", () => {
-        // where he stops: centred in the viewport, with a floor that keeps
-        // him clear of the header on windows too short to centre him in.
-        const top = () => Math.max(84, (window.innerHeight - aside.offsetHeight) / 2);
-        // never negative: a beats column shorter than the portrait has no
-        // hold in it, and a negative travel would walk him up the page
-        const travel = () => Math.max(0, body.offsetHeight - aside.offsetHeight);
-
-        gsap.fromTo(aside, { y: 0 }, {
-          y: travel,
-          ease: "none",
-          scrollTrigger: {
-            trigger: aside,
-            start: () => `top ${top()}px`,
-            endTrigger: body,
-            end: () => `bottom ${top() + aside.offsetHeight}px`,
-            scrub: true,
-            invalidateOnRefresh: true,
-          },
-        });
-      });
-    }
-
     /* -------------------------------------------------- work tiles pixel reveal */
     function initTiles() {
       document.querySelectorAll<HTMLElement>("[data-tile]").forEach((tile) => {
@@ -1549,18 +1408,42 @@ export function initSite(): () => void {
         });
       }
 
+      /* Which element the disc is currently reading. Kept because some of
+         these words change while you are still standing on them - the
+         reel's transport is PAUSE until you press it and PLAY after, and
+         the AI grid's tiles do the same - and a label written once on
+         mouseenter would go on saying PAUSE at a stopped film until the
+         reader left the frame and came back. */
+      let reading: HTMLElement | null = null;
+
       document.querySelectorAll<HTMLElement>("[data-cursor]").forEach((el) => {
         on(el, "mouseenter", () => {
+          reading = el;
           cursor.classList.add("is-active");
           ring?.classList.add("is-active");
           if (label) label.textContent = el.getAttribute("data-cursor");
         });
         on(el, "mouseleave", () => {
+          if (reading === el) reading = null;
           cursor.classList.remove("is-active");
           ring?.classList.remove("is-active");
           if (label) label.textContent = "";
         });
       });
+
+      /* One observer for the whole page rather than one per element, and
+         filtered to the single attribute, so it costs nothing until a
+         word actually changes. React rewriting data-cursor on a hovered
+         tile comes through here too. */
+      if (label) {
+        const relabel = new MutationObserver((records) => {
+          for (const r of records) {
+            if (r.target === reading) label.textContent = (r.target as HTMLElement).getAttribute("data-cursor");
+          }
+        });
+        relabel.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["data-cursor"] });
+        cleanups.push(() => relabel.disconnect());
+      }
     }
 
     /* -------------------------------------------------- cursor spotlight */
@@ -2085,6 +1968,36 @@ export function initSite(): () => void {
       transport.observe(stage);
       observers.push(transport);
 
+      /* The reader's own stop.
+
+         The button (components/Sections.tsx) has no ink: the word lives
+         in the cursor's disc, so all this has to do is keep the disc,
+         the accessible name and the film saying the same thing.
+
+         The pause goes through projector.hold rather than film.pause().
+         A bare pause() would be undone within the second - lib/autoplay.ts
+         listens for exactly that, on the assumption that a pause nobody
+         asked for is a policy or a stall. hold() is how it is told this
+         one was asked for.
+
+         It deliberately outlives the section: scroll away from a paused
+         film and back, and it is still paused. The transport keeps
+         writing want() underneath, so letting go picks up wherever the
+         reader is. */
+      const toggle = document.querySelector<HTMLElement>("[data-reel-toggle]");
+      if (toggle) {
+        const hint = toggle.querySelector<HTMLElement>(".reel__hint");
+        let paused = false;
+        on(toggle, "click", () => {
+          paused = !paused;
+          projector.hold(paused);
+          const word = paused ? "Play" : "Pause";
+          toggle.setAttribute("data-cursor", word);
+          toggle.setAttribute("aria-label", `${word} the film`);
+          if (hint) hint.textContent = word;
+        });
+      }
+
       /* Under reduced motion the stylesheet has already left the window
          open, and nothing is pinned: the section is one plain screen of
          film in the flow of the page. Writing --reel-open here would be
@@ -2105,17 +2018,22 @@ export function initSite(): () => void {
          full bleed at about the moment the film left the screen.
 
          HOLD is the length of the lock and the only number in this
-         section anyone should need to move: 200% of the viewport, so
-         two screens of wheel are spent inside the film.
+         section anyone should need to move: 160% of the viewport, so a
+         screen and a half of wheel is spent inside the film.
 
          ---- the beats ----
 
-         The three durations below are read as shares of that: the
-         window opens over the first fifth, holds full bleed for half,
-         and closes over the rest. Which is the point of the section -
-         the open and the close are the cut, the hold is the film, and
-         the hold has to be long enough that the reader has watched some
-         of it rather than watched it arrive.
+         The three durations below are read as shares of that, and the
+         two that matter are the cuts: the open costs 40vh of scroll and
+         the close 60vh, which is where they were when the move felt
+         right and is why HOLD and the shares moved together rather than
+         HOLD alone. What changed is the middle. Full bleed used to be
+         held for a screen; it is held for 60vh now - the hold is the
+         one beat that is not a move, so it is the one beat where extra
+         length reads as the page having stopped rather than as the film
+         being given room. It is still long enough to have watched some
+         of the film rather than watched it arrive, which is the floor
+         under this number.
 
          Not symmetrical, and on purpose. The close is half again as
          long as the open, because the two are not the same event: the
@@ -2134,10 +2052,13 @@ export function initSite(): () => void {
          and stop dead on the wheel, and scrub:.5 so a flicked wheel
          still arrives smoothly instead of snapping the aperture to
          wherever the scroll landed. */
-      const HOLD = "+=200%";
+      const HOLD = "+=160%";
 
       const cut = { open: 0 };
-      const write = () => frame.style.setProperty("--reel-open", cut.open.toFixed(4));
+      /* on the stage, not the frame: the label and the transport are the
+         frame's siblings and both are written off this number, so it has
+         to land somewhere all three inherit it from */
+      const write = () => stage.style.setProperty("--reel-open", cut.open.toFixed(4));
 
       gsap.timeline({
         defaults: { ease: "power2.inOut" },
@@ -2155,9 +2076,9 @@ export function initSite(): () => void {
           scrub: 0.5,
         },
       })
-        .to(cut, { open: 1, duration: 20 })
-        .to(cut, { open: 1, duration: 50 })
-        .to(cut, { open: 0, duration: 30 });
+        .to(cut, { open: 1, duration: 20 })   // the open  - 40vh of scroll
+        .to(cut, { open: 1, duration: 30 })   // the hold  - 60vh, was 100
+        .to(cut, { open: 0, duration: 30 });  // the close - 60vh
 
       /* and the state the timeline has not been asked for yet - a reload
          with the scroll already inside the lock would otherwise leave the
@@ -2431,8 +2352,6 @@ export function initSite(): () => void {
     step("initMeaning", initMeaning);
     step("initSplits", initSplits);
     step("initReveals", initReveals);
-    step("initWordHighlight", initWordHighlight);
-    step("initStoryHold", initStoryHold);
     step("initTiles", initTiles);
     step("initWCardCycle", initWCardCycle);
     step("initCounters", initCounters);

@@ -1,92 +1,62 @@
 import type { Metadata } from "next";
 import "./series.css";
-import SeriesMotion from "@/components/SeriesMotion";
-import SeriesStory from "@/components/SeriesStory";
-import { SeriesClose, SeriesFeed } from "@/components/SeriesFeed";
+import SeriesTestStory from "@/components/SeriesTestStory";
+import SiteMotion from "@/components/SiteMotion";
 import { CONCEPT, SERIES_CTA } from "@/lib/series-content";
 
 export const metadata: Metadata = {
   title: `${CONCEPT.title} · SoCheers`,
-  description:
-    "Post-lockdown the audience stopped hunting for discovery and started hunting for lore. The micro series is what that behaviour is asking for - and SoCheers builds them.",
+  description: "A flat pass at the Series tab - one layout for every beat.",
 };
 
 /* ============================================================
-   SERIES.
+   SERIES - the flat pass, and the live tab.
 
-   One page, one scroll, two components - the story you read, and the
-   episodes as links out. That is the brief, verbatim, and it is worth
-   keeping written down what it replaced.
+   This started as /series-test, the scratch route: the same copy as the
+   first pass, in the same order, staged flat - every section is the
+   sentence on the left and four frames on the right, and nothing moves.
+   It was there to see whether the argument survives without the fourteen
+   mechanics carrying it. It does, so it is the tab now.
 
-   ---- what came out, and why ----
+   The pass it replaced is still in the tree at /series-1 and off the
+   nav - see the note in NAV_LINKS (lib/content.ts).
 
-   1. THE NETFLIX WALL. A grid of preview tiles you pick from was
-      proposed for this tab early and turned down. A tile wall asks the
-      reader to choose what to look at, and the argument here only lands
-      in order - you cannot skip to the middle of an insight.
+   ---- what "static" means here, and what it does not ----
 
-   2. THE THREE TREATMENTS. The page carried a `?t=film|still|type`
-      switcher so the client could compare directions on one URL. The
-      direction is now chosen: cinematic, scroll-driven, footage over
-      stills. Keeping the two that lost would be three pages drifting
-      apart, so they are deleted rather than commented out.
+   initSeries() is not mounted: none of the fourteen scroll mechanics
+   run, and every piece of this page's own staging sits at rest.
 
-   3. THE PROCESS AND THE EXAMPLE SEASONS. Two evidence sections that
-      sat between the story and the feed. The revamped brief is two
-      components; the how-it-gets-made belongs in a deck or on /contact,
-      and the seasons *are* the feed.
+   SiteMotion IS mounted, and has to be. initSite() owns the chrome that
+   belongs to the whole site rather than to any one route - the custom
+   cursor and its ring, the spotlight, the scroll-progress bar and the
+   Lenis scroll. All four are markup in app/layout.tsx that never moves
+   or lights up until initSite() reaches it, so a route without it is
+   not a still version of the site, it is the site with its cursor
+   missing. That was the first thing anyone noticed.
 
-   4. THE STAT. A beat carrying a figure the client had never sent, and
-      it did not even render as a placeholder: it rendered as the word
-      NaN. See the note where figures() used to be in lib/series-motion
-      .ts for how a bare JSX data attribute got it there.
-
-   5. THE OPENING FILM. The first thing on this page was an mp4 pulled
-      off socheers.net at runtime - the live site's own *home page*
-      banner, standing in for series footage that does not exist. It was
-      unrelated to a word of the argument under it.
-
-   ---- what is not real yet, and how it is handled ----
-
-   Nothing on this page says "PENDING" or "PLACEHOLDER" out loud any
-   more. The eight feed tiles have no post URLs yet, so they are simply
-   not links and the line promising that they open Instagram does not
-   render until one of them is. What is still standing in is recorded in
-   the comments in lib/series-content.ts, which is where a note about
-   unfinished work belongs - not on a page a client is going to open.
-
-   The imagery is lifted from the client's own deck and is placeholder
-   for a different reason: it is their reference, not their licence.
+   It is also why the feed and CTA blocks from the live tab are still
+   not reused: those are built around [data-split], which is a different
+   argument - a heading that only exists once a splitter has run.
    ============================================================ */
-export default function Series() {
+export default function SeriesTest() {
   return (
     <>
-      <main id="top" className="s-page">
-        {/* The episode rail. Fixed, hairline, and only alive while the
-            story is - see episodeRail() in lib/series-motion.ts. */}
-        <aside className="s-rail" aria-hidden="true">
-          <span className="s-rail__label">EP</span>
-          <span className="s-rail__num" data-s-num>01</span>
-          <span className="s-rail__track">
-            <i data-s-fill />
-          </span>
-        </aside>
+      <main id="top" className="st-page">
+        <header className="st-head">
+          <div className="wrap">
+            <span className="st-head__tag">Series</span>
+            <h1 className="st-head__title">{CONCEPT.title}</h1>
+            <p className="st-head__note">
+              One treatment for every section, no scroll work.
+            </p>
+          </div>
+        </header>
 
-        {/* one - the story */}
-        <SeriesStory />
-
-        {/* two - the episodes, as links */}
-        <SeriesFeed />
-
-        <SeriesClose />
+        <SeriesTestStory />
       </main>
 
-      {/* The production house, at the foot of the page by name, because
-          the client asked for it there specifically and the CTA above
-          hands off to it too. Kept out of the CTA block so the page ends
-          on a credit rather than on a second button. */}
-      <footer className="s-foot">
-        <div className="wrap s-foot__in">
+      <footer className="st-foot">
+        <div className="wrap st-foot__in">
           <span>{CONCEPT.title}</span>
           <a href={SERIES_CTA.secondary.href} target="_blank" rel="noopener noreferrer">
             Produced with {SERIES_CTA.secondary.label}
@@ -94,7 +64,8 @@ export default function Series() {
         </div>
       </footer>
 
-      <SeriesMotion />
+      {/* the shared engine only - no initSeries(). See the note above. */}
+      <SiteMotion />
     </>
   );
 }

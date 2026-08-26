@@ -228,23 +228,25 @@ export default function WorkPinned() {
 
               Three kinds, switched on rather than inferred - see
               PinnedLink in lib/work-content.ts. What they have in
-              common is that there is exactly one of them and it says
-              what it does: "Play the film" plays a film, "View on
-              Instagram" leaves the site and says so. A reader should
-              never have to click to find out which of those is about
-              to happen. */}
+              common is that there is exactly one of them, and the
+              client wants it reading the same way on every frame: the
+              film button said "Play the film" and says "View case"
+              now, beside "View" on the pieces that leave for
+              Instagram. The play glyph is still on it, which is the
+              only thing left telling the reader the film opens in
+              place rather than on another page. */}
           {active.link.kind === "film" && (
             <button
               type="button"
               className="wk-lede__go"
               onClick={() => setRolling(true)}
               data-magnetic
-              data-cursor="Play"
+              data-cursor="View"
             >
               <span className="wk-lede__play" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
               </span>
-              Play the film
+              View case
             </button>
           )}
 

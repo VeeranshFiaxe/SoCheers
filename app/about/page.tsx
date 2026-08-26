@@ -21,10 +21,10 @@ export default function About() {
       <main id="top">
         <AboutHero />
 
-        {/* Everything past the opener is a card in one stack: each panel
-            rides up over the one before it on a rounded top edge, and each
-            sits a shade lighter, so the page walks from black to white as
-            one continuous move rather than switching theme at a seam. */}
+        {/* One stack, one colour. The film hands over to the cream at the
+            top of the first panel (see .ab-bridge in about.css) and the
+            page stays on it all the way down, so there is no theme switch
+            at any seam below the opener. */}
         <div className="ab-stack">
           <AboutIntro />
           <AboutFounders />

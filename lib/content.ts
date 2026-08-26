@@ -131,19 +131,19 @@ export const NAV_LINKS: { href: string; label: string; soon?: boolean }[] = [
   { href: "/work", label: "Work" },
   { href: "/ai-work", label: "AI Work" },
   { href: "/series", label: "Series" },
-  /* TEMPORARY - the two other passes at the same tab, sitting next to
-     the live one so all three can be compared in the browser.
+  /* HIDDEN, NOT DELETED - the two earlier passes at this tab are still in
+     the tree and still reachable by URL, they are just off the nav while
+     the picked direction is the one on show.
 
-     Series 2.0 is the live tab's copy staged flat, with none of its
-     fourteen mechanics running - app/series-test/.
-     The Deck is the other direction entirely: the client's own
-     PowerPoint ported slide for slide, its words rather than the
-     rewrite's - app/series-deck/.
+     /series      what used to be /series-test: the copy staged flat, one
+                  treatment per beat - app/series/.
+     /series-1    the first pass, the rewrite with its fourteen scroll
+                  mechanics - app/series-1/.
+     /series-deck the client's own PowerPoint ported slide for slide, its
+                  words rather than the rewrite's - app/series-deck/.
 
-     Remove these two lines and those two folders once a direction is
-     picked. Each page's own header comment lists what else goes with it. */
-  { href: "/series-test", label: "Series 2.0" },
-  { href: "/series-deck", label: "The Deck" },
+     Put a line back here to show one again; each page's own header
+     comment lists what goes with it if one is ever deleted instead. */
   { href: "/blogs", label: "Insights" },
 ];
 
