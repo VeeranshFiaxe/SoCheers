@@ -10,6 +10,7 @@ import {
 import {
   BARS,
   BAR_STROKE,
+  LOGO_DISC,
   MARK,
   PENDANT_VIEWBOX,
   RING,
@@ -82,17 +83,20 @@ function Pendant() {
           <stop offset="1" stopColor="#0a0b0e" />
         </radialGradient>
 
-        <radialGradient id="foot-blob-on" cx="0.42" cy="0.36" r="0.78">
-          <stop offset="0" stopColor="#fffdf2" />
-          <stop offset="0.28" stopColor="#ffe9a0" />
-          <stop offset="0.62" stopColor="#ffcb0c" />
-          <stop offset="1" stopColor="#ff9b1a" />
+        {/* Alight, and centred, never going near white - the overture's
+            lamp made the same move (ovt-blob-on) and this pendant has to
+            read as the same bulb. An off-centre white core is a painted
+            filament; what should be lighting up is the logo's yellow, so
+            the falloff is a shade of that yellow at either end. */}
+        <radialGradient id="foot-blob-on" cx="0.5" cy="0.5" r="0.76">
+          <stop offset="0" stopColor="#ffd94a" />
+          <stop offset="0.6" stopColor="#ffcb0c" />
+          <stop offset="1" stopColor="#ffab14" />
         </radialGradient>
-        <radialGradient id="foot-glass-on" cx="0.46" cy="0.4" r="0.7">
-          <stop offset="0" stopColor="#fff4d2" stopOpacity="0.9" />
-          <stop offset="0.4" stopColor="#ffce7d" stopOpacity="0.5" />
-          <stop offset="0.78" stopColor="#ff9b36" stopOpacity="0.2" />
-          <stop offset="1" stopColor="#ff7a1a" stopOpacity="0.05" />
+        <radialGradient id="foot-glass-on" cx="0.5" cy="0.5" r="0.72">
+          <stop offset="0" stopColor="#ffd76a" stopOpacity="0.3" />
+          <stop offset="0.6" stopColor="#ffbe3c" stopOpacity="0.16" />
+          <stop offset="1" stopColor="#ff9b1a" stopOpacity="0.04" />
         </radialGradient>
 
         <filter id="foot-soft" x="-60%" y="-60%" width="220%" height="220%">
@@ -110,23 +114,34 @@ function Pendant() {
       {/* the envelope, cold */}
       <circle cx={MARK.cx} cy={MARK.cy} r={MARK.glass} fill="url(#foot-glass-off)" />
 
-      {/* the brand disc inside it, which is both the logo's own crescent
-          and the filament */}
+      {/* The brand disc inside it, which is both the logo's own crescent
+          and the filament - and it is LOGO_DISC, the disc the printed
+          mark actually draws, not the tucked-in MARK.blob this used to
+          use. The mark's disc is bigger than the glass and pushed up and
+          to the left of it, so the glass reads as filled with yellow bar
+          a crescent on the far side; blob's gentler offset lost that and
+          left the disc looking centred. The overhang is clipped away
+          rather than drawn (the pendant's box is cropped to the ink), so
+          all that survives here is the offset, which is the part that
+          reads. And because the pendant hangs at rotation 180 (see
+          initFooter in lib/motion.ts), up-and-left in these coordinates
+          is down-and-right on the screen - the mark seen upside down,
+          which is the whole conceit. */}
       <g clipPath="url(#foot-clip)">
-        <circle cx={MARK.blob.cx} cy={MARK.blob.cy} r={MARK.blob.r} fill="#26221a" />
+        <circle cx={LOGO_DISC.cx} cy={LOGO_DISC.cy} r={LOGO_DISC.r} fill="#26221a" />
         <circle
           className="foot__lit"
-          cx={MARK.blob.cx}
-          cy={MARK.blob.cy}
-          r={MARK.blob.r + 14}
+          cx={LOGO_DISC.cx}
+          cy={LOGO_DISC.cy}
+          r={LOGO_DISC.r + 14}
           fill="#ffcf82"
           filter="url(#foot-softer)"
         />
         <circle
           className="foot__lit"
-          cx={MARK.blob.cx}
-          cy={MARK.blob.cy}
-          r={MARK.blob.r}
+          cx={LOGO_DISC.cx}
+          cy={LOGO_DISC.cy}
+          r={LOGO_DISC.r}
           fill="url(#foot-blob-on)"
           filter="url(#foot-soft)"
         />
@@ -137,9 +152,11 @@ function Pendant() {
           r={MARK.glass}
           fill="url(#foot-glass-on)"
         />
-        {/* and the surface of the glass, over everything behind it */}
-        <ellipse cx="160" cy="112" rx="5" ry="7.5" fill="#fff" opacity="0.4" transform="rotate(-24 160 112)" />
-        <ellipse cx="240" cy="220" rx="16" ry="9" fill="#fff" opacity="0.06" transform="rotate(28 240 220)" />
+        {/* No catchlights on the glass. The overture keeps its pair for
+            the dark bulb only (.ovt__cold) - but this fixture is drawn at
+            opacity var(--lit) and so is only ever seen alight, and a
+            specular pair over a live light source is the rendered,
+            intricate kind of mark this is not. */}
       </g>
 
       {/* the ring and the three bars of the base, in one material,
@@ -247,7 +264,7 @@ function Globe() {
 
         {/* and the one country this is actually about, lifted out of it.
             Still cream, not accent: the accent belongs to the pin, and two
-            greens a few pixels apart would be one green too many. */}
+            of it a few pixels apart would be one too many. */}
         <path
           d={GLOBE_INDIA}
           fill="rgba(241,236,225,.42)"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { acquirePointerField } from "@/lib/pointer-field";
 
 /* ==============================================================
    The figure beside the intro line: a suited man with a CRT for a
@@ -196,7 +197,6 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
     if (!el) return;
 
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const canHover = window.matchMedia("(hover: hover)").matches;
 
     /* A rough read on what this machine is willing to do. Both hints
        are advisory and both are missing on some browsers, so absence is
@@ -253,7 +253,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
 
       /* Lit to sit on a near-black panel: a cool key, a dimmer fill so
          the shadowed side does not go to nothing, and a touch of the
-         page's own green raking across from behind the right shoulder,
+         page's own pink raking across from behind the right shoulder,
          which is what separates a grey figure from a grey background
          without needing a rim pass to do it. */
       scene.add(new THREE.HemisphereLight(0xcfe0ff, 0x090a0b, 0.85));
@@ -261,7 +261,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
       key.position.set(-1.6, 2.4, 3.2);
       const fill = new THREE.DirectionalLight(0x9fc4ff, 0.7);
       fill.position.set(2.6, 0.4, 1.8);
-      const rim = new THREE.DirectionalLight(0x2fe589, 1.15);
+      const rim = new THREE.DirectionalLight(0xee346e, 1.15);   // the About page's accent
       rim.position.set(2.2, 1.6, -2.4);
       scene.add(key, fill, rim);
 
@@ -291,7 +291,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
           uLook: { value: new THREE.Vector2() },
           uBlink: { value: 0 },
           uGlow: { value: new THREE.Vector3(0.945, 0.925, 0.882) },  // #f1ece1
-          uTint: { value: new THREE.Vector3(0.184, 0.898, 0.537) },  // #2fe589
+          uTint: { value: new THREE.Vector3(0.933, 0.204, 0.431) },  // #ee346e
         },
       });
       const eyes = new THREE.Mesh(new THREE.PlaneGeometry(SCREEN.w, SCREEN.h), eyeMat);
@@ -339,15 +339,21 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
 
       /* ---------------------------------------------------- the cursor */
 
-      /* The pointer is only recorded here; where it sits relative to the
-         figure is worked out once per frame in the loop. The element
-         moves under a stationary cursor all the way down this page, so
-         the answer has to be recomputed on scroll anyway - and doing it
-         per frame rather than per mousemove keeps it to one layout read
-         however fast the mouse is going. */
-      let px = 0, py = 0, moved = false;
-      function onMove(e: MouseEvent) { px = e.clientX; py = e.clientY; moved = true; }
-      if (canHover && !reduced) window.addEventListener("mousemove", onMove, { passive: true });
+      /* The pointer is read once per frame in the loop rather than
+         recorded on an event: the figure moves under a stationary cursor
+         all the way down this page, so the answer has to be recomputed on
+         scroll anyway - and one layout read a frame beats one per
+         mousemove however fast the mouse is going.
+
+         Which is also what gives him someone to look at on a phone. The
+         shared field (lib/pointer-field.ts) rests near the middle of the
+         screen when no one is touching, so as he scrolls up past it he
+         raises his eyes to meet the reader and follows them down - and a
+         finger put anywhere on the screen takes his attention the way a
+         cursor does. He is the set piece of this page; leaving him
+         sweeping an empty room on the devices most people read it on was
+         the single biggest thing missing from the mobile build. */
+      const pointer = reduced ? null : acquirePointerField();
 
       /* ---------------------------------------------------- the loop */
 
@@ -372,7 +378,9 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
            somewhere the head cannot reach, where the head stops at its
            limit and the eyes stay pointed the rest of the way. */
         let wantYaw: number, wantPitch: number, reachY: number, reachP: number;
-        if (moved) {
+        const attn = pointer?.read();
+        if (attn?.live) {
+          const px = attn.x, py = attn.y;
           const r = el!.getBoundingClientRect();
           /* measured against the viewport, not the element: the head
              should keep following while the cursor is off reading the
@@ -384,10 +392,10 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
           reachY = Math.max(-2.5, Math.min(2.5, dx)) * MAX_YAW;
           reachP = pitchFor(Math.max(-2.5, Math.min(2.5, dy)));
         } else {
-          /* Never perfectly still: with no cursor to answer to - a
-             touch screen, or a pointer that has not moved yet - the
-             head keeps a slow sweep of its own, which reads as alive
-             where a frozen figure reads as a failed asset. */
+          /* Never perfectly still: with nobody to answer to - a pointer
+             that has not moved yet, or motion turned off - the head keeps
+             a slow sweep of its own, which reads as alive where a frozen
+             figure reads as a failed asset. */
           const ph = phaseRef.current;
           wantYaw = Math.sin(t * 0.34 + ph) * MAX_YAW * 0.62;
           wantPitch = pitchFor(Math.sin(t * 0.23 + 1.1 + ph) * 0.45);
@@ -464,7 +472,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
         pause();
         io.disconnect();
         ro.disconnect();
-        window.removeEventListener("mousemove", onMove);
+        pointer?.release();
         document.removeEventListener("visibilitychange", onVis);
         renderer.domElement.removeEventListener("webglcontextlost", onLost);
         root.traverse((o) => {

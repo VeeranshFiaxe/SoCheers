@@ -10,9 +10,14 @@ export function Who() {
   return (
     <section className="sec who no-border" id="who" data-section data-sec="1">
       <div className="wrap">
-        <span className="tag" data-reveal>WHO WE ARE</span>
+        {/* Three columns, the way the mock reads it: the claim on the
+            left, the mark in the middle, the pitch on the right, and the
+            counts as their own centred row under all three. The tag rides
+            with the claim rather than sitting above the whole grid, so it
+            stays tied to the sentence it introduces. */}
         <div className="who__grid">
           <div className="who__copy">
+            <span className="tag" data-reveal>WHO WE ARE</span>
             <p className="who__lede" data-split>
               {/* A hard break, not a non-breaking space: the line splitter
                   (SplitText, see initSplits in lib/motion.ts) re-wraps this
@@ -23,21 +28,6 @@ export function Who() {
               <br />
               an independent, integrated creative agency.
             </p>
-            <p className="who__pitch" data-split>
-              We build brands consumers fall for. We make content people can&apos;t help but{" "}
-              <span className="who__share">share.</span>
-            </p>
-            <div className="who__stats">
-              {STATS.map((s) => (
-                <div className="stat" key={s.label} data-reveal data-cursor={`${s.count}+`}>
-                  <div className="stat__num">
-                    <span data-count={s.count}>0</span>
-                    <i>+</i>
-                  </div>
-                  <div className="stat__label">{s.label}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* The mark, held in the air as a few tens of thousands of
@@ -47,6 +37,27 @@ export function Who() {
           <div className="who__photo">
             <ParticleLogo />
           </div>
+
+          <div className="who__say">
+            <p className="who__pitch" data-split>
+              We build brands consumers fall for. We make content people can&apos;t help but{" "}
+              <span className="who__share">share.</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="who__stats">
+          {STATS.map((s) => (
+            <div className="stat" key={s.label} data-reveal data-cursor={`${s.count}+`}>
+              <div className="stat__num">
+                {/* data-count-hue: the count runs through the design book's
+                        solids on its way up - initCounters in lib/motion.ts. */}
+                    <span data-count={s.count} data-count-hue>0</span>
+                <i>+</i>
+              </div>
+              <div className="stat__label">{s.label}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -139,7 +150,7 @@ export function Reel() {
         {/* The transport.
 
             No visible control on the picture: the site already draws a
-            green disc under the cursor with a word in it, so the film
+            disc of accent under the cursor with a word in it, so the film
             gets the same treatment as everything else here and the word
             is PAUSE. data-cursor is swapped on the click, and the
             cursor reads it live (initCursor, lib/motion.ts), so the
@@ -188,7 +199,16 @@ export function What() {
               <div className="wcard__body">
                 <h3 className="wcard__name" data-roll><RollText>{b.name}</RollText></h3>
                 <ul className="wcard__list">
-                  {b.items.map((i) => <li key={i}>{i}</li>)}
+                  {/* data-frame is the line's own picture, as a position in
+                      the stack of <img>s above - the cycle in
+                      initWCardCycle() (lib/motion.ts) parks on it while the
+                      pointer is on the line. An item whose image somehow
+                      isn't in its bucket's reel indexes to -1, which that
+                      code reads as "no frame of its own" and leaves the
+                      reel running rather than blanking the card. */}
+                  {b.items.map((it) => (
+                    <li key={it.label} data-frame={b.images.indexOf(it.img)}>{it.label}</li>
+                  ))}
                 </ul>
               </div>
             </article>
@@ -289,14 +309,20 @@ function scatter(names: string[], count: number, salt: string): number[] {
    Paired with a scale rather than left alone, and the pairing is not an
    accident: the two hardest leans are the smallest lifts. A name that
    both jumps and turns the furthest is the one that stops being readable,
-   so the further it turns the less it grows. */
+   so the further it turns the less it grows.
+
+   The lifts are a notch up from where they started - the pop was reading
+   as the name settling rather than as the name being picked out. The
+   angles are not: they were already at the ceiling described above, and
+   raising both is what turns a hover into a stamp. Rest size is untouched
+   either way; all of this is on the hover transform only. */
 const TILTS = [
-  { deg: "-2.4deg", pop: 1.11 },
-  { deg: "-1.5deg", pop: 1.14 },
-  { deg: "-0.8deg", pop: 1.16 },
-  { deg: "0.8deg",  pop: 1.16 },
-  { deg: "1.5deg",  pop: 1.14 },
-  { deg: "2.4deg",  pop: 1.11 },
+  { deg: "-2.4deg", pop: 1.19 },
+  { deg: "-1.5deg", pop: 1.22 },
+  { deg: "-0.8deg", pop: 1.25 },
+  { deg: "0.8deg",  pop: 1.25 },
+  { deg: "1.5deg",  pop: 1.22 },
+  { deg: "2.4deg",  pop: 1.19 },
 ];
 
 export function Clients() {
@@ -305,7 +331,14 @@ export function Clients() {
      solids, the same six the awards row further down is struck through
      with. Nothing is coloured at rest, on purpose: thirty brands in six
      colours all at once is a logo sheet, and the point of this row is
-     that it reads as a list of names you already recognise. */
+     that it reads as a list of names you already recognise.
+
+     The stars between them are the exception, and they are the palette's
+     only outing at rest on this row. They were all one colour, which made
+     the separator read as a rule the row was printed with; dealt out of
+     the same six solids they read as punctuation instead. They get their
+     own deal - a third salt - so a star is not the colour of either name
+     it sits between. */
   return (
     <section className="sec clients" data-section data-sec="3">
       <div className="wrap">
@@ -316,10 +349,13 @@ export function Clients() {
         {CLIENT_ROWS.map((row, r) => {
           const ink = scatter(row.names, SOLIDS.length, "");
           const lean = scatter(row.names, TILTS.length, "·tilt");
+          const star = scatter(row.names, SOLIDS.length, "·star");
           return (
             <div className="cmarquee" key={r} aria-hidden="true">
               {/* the track is duplicated so the loop can wrap on half its width */}
-              <div className="cmarquee__track" data-marquee={row.dir}>
+              {/* a notch off the shared 30 - see the note over initMarquees
+                  in lib/motion.ts for what the number actually means */}
+              <div className="cmarquee__track" data-marquee={row.dir} data-marquee-base="34">
                 {[0, 1].map((copy) =>
                   row.names.map((n, i) => (
                     <Fragment key={`${copy}-${i}`}>
@@ -335,7 +371,7 @@ export function Clients() {
                       >
                         {n}
                       </span>
-                      <span className="s">✦</span>
+                      <span className="s" style={{ "--star": SOLIDS[star[i]] } as CSSProperties}>✦</span>
                     </Fragment>
                   )),
                 )}
@@ -360,7 +396,7 @@ export function Awards() {
      bigger and in caps, and every name is struck through with a purple
      marker swipe (#97509f, off the design book's own solids) that fills
      the whole name when you point at it. The wall above is grey type and
-     one green star; this is the loudest strip on the page, which is the
+     one coloured star; this is the loudest strip on the page, which is the
      right way round for the section about being noticed.
 
      Names only. The year used to ride above each one as a small mono
@@ -388,7 +424,19 @@ export function Awards() {
           about one screen; twelve is not, whatever the window. */}
       <div className="awards__rows" aria-hidden="true">
         <div className="amarquee">
-          <div className="amarquee__track" data-marquee="left">
+          {/* Slower than the client wall's 34, and by more than the gap
+              between the numbers looks: this track's half is the wider of
+              the two, so the same base buys it more speed. See initMarquees
+              in lib/motion.ts.
+
+              Which is also why this is 60 and not the 42 that was settled
+              on at the old type size: the names went up about half again
+              (.amarquee__show b in globals.css), the track went up with
+              them, and holding the base would have handed back the whole
+              slowdown as speed. The number moved to keep the row moving at
+              the rate it was signed off at - re-time this alongside any
+              further change to the size. */}
+          <div className="amarquee__track" data-marquee="left" data-marquee-base="60">
             {[0, 1, 2, 3].map((copy) =>
               AWARDS.map((a, i) => (
                 <Fragment key={`${copy}-${i}`}>

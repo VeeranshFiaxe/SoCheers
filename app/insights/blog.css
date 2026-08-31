@@ -1,5 +1,5 @@
 /* ============================================================
-   BLOG / WHITEPAPER PAGE  (/blogs)
+   INSIGHTS PAGE  (/insights)
 
    Route-scoped, white background throughout - the one page in the site
    that opens light instead of walking there. Re-points the same theme
@@ -13,7 +13,7 @@
   --line:rgba(11,11,12,.14);
   --faint:rgba(11,11,12,.08);
   --panel:rgba(11,11,12,.05);
-  --accent:oklch(0.55 0.17 152);
+  --accent:var(--accent-deep);
   background:#f4f2ec; color:var(--cream);
 }
 
@@ -21,14 +21,29 @@
    so the title keeps its own measure and the visual takes whatever's left,
    instead of the headline stretching to fill half a wide screen. */
 .bl-hero{
-  padding-top:clamp(92px,13vh,132px); padding-bottom:clamp(4px,1.2vh,16px);
+  /* Laid out, not painted, and that is the fix rather than a preference.
+
+     --hero-drop used to be a translateY on the copy column, on the
+     reasoning that a transform moves nothing else on the page. True, and
+     exactly the problem: the section's box stayed where it was while the
+     type inside it was drawn 74px lower, so the lede was painted straight
+     through the tabs bar underneath. Nothing was overlapping in layout -
+     which is why no amount of padding on the bar would have cleared it.
+
+     The drop is the section's own top padding now. The copy lands on the
+     same line it did before, and the section is that much taller, so
+     everything below it moves down with it instead of being run over.
+
+     The knob still does what it says: it slides the fold as a unit. The
+     difference is that the page follows. */
+  padding-top:calc(clamp(92px,13vh,132px) + var(--hero-drop));
+  /* and the foot carries the copy's own 14px overhang (see .bl-hero__copy)
+     plus real air, so the lede finishes clear of the bar rather than a
+     hairline above it */
+  padding-bottom:calc(14px + clamp(16px,2.4vh,32px));
   display:grid; grid-template-columns:minmax(0,1fr) minmax(0,0.92fr);
   gap:clamp(28px,4vw,64px); align-items:center;
 
-  /* One knob for the whole fold. Copy and artwork both add this to their own
-     placement, so their relationship to each other is fixed and this only
-     slides the pair as a unit - down toward the tabs bar, up away from it.
-     Painted, like everything else in here, so the bar itself never moves. */
   --hero-drop:60px;
 }
 /* With the artwork out of the markup there is no second column to fill, so
@@ -43,11 +58,13 @@
    areas as well as showing through its transparent ones. */
 .bl-hero__copy{
   min-width:0; position:relative; z-index:2; align-self:start;
-  /* a painted offset, same reasoning as the artwork's - the copy shifts
-     without its box moving, so nothing below the hero follows it. Positive
-     now: the section's top padding came down to shorten the hero, and this
-     puts the copy back below where that alone would have left it. */
-  transform:translateY(calc(14px + var(--hero-drop)));
+  /* All that is left here is the copy's offset against the artwork beside
+     it - the fold's own drop moved into .bl-hero's top padding, where the
+     rest of the page can see it. This much still has to be painted: it is
+     a relationship between the two columns, not between the section and
+     what follows it, and .bl-hero's bottom padding carries the overhang
+     it creates. */
+  transform:translateY(14px);
 }
 /* The PNG is a cutout on transparent, so there's no card, border, radius or
    shadow here on purpose - it reads as art dropped straight on the ground,
@@ -56,7 +73,10 @@
   min-width:0; justify-self:end; width:100%;
   position:relative; z-index:0; pointer-events:none;
   /* The artwork's placement, in one variable */
-  --art-place:translate(1%,5%) translate(-10px,calc(-68px + var(--hero-drop))) scale(1.1);
+  /* no --hero-drop in here any more: the whole section is dropped by its
+     own top padding, so the artwork comes down with it and adding the knob
+     a second time would double the move */
+  --art-place:translate(1%,5%) translate(-10px,-68px) scale(1.1);
   /* how far the artwork is pulled up out of its own row */
   --art-lift:clamp(-72px,-5vh,-24px);
 }
@@ -132,7 +152,7 @@
 }
 @media (hover:none){ .bl-tabs__btn{ cursor:pointer; } }
 .bl-tabs__btn:hover{ color:var(--cream); }
-.bl-tabs__btn.is-active{ color:#04140b; }
+.bl-tabs__btn.is-active{ color:var(--accent-ink); }
 
 /* ---------- the dead tabs: present, dimmed, unclickable ----------
    Blogs and Reports have nothing in them yet. They stay in the bar so the
@@ -157,6 +177,42 @@
 }
 .bl-tabs__btn.is-soon:hover::after,
 .bl-tabs__btn.is-soon:focus-visible::after{ opacity:1; transform:translate(-50%,0); }
+/* A tooltip is a thing you get for hovering, and there is no hovering
+   here - so on touch the reason a dead tab is dead has to be on the
+   button rather than under it. Same word out of the same data-soon
+   attribute, demoted from a floating tip to a badge inside the pill,
+   which is the only version of it that can be read without a pointer. */
+@media (hover:none){
+  .bl-tabs__btn.is-soon{ display:inline-flex; align-items:center; gap:8px; }
+  .bl-tabs__btn.is-soon::after{
+    position:static; transform:none; opacity:1;
+    padding:4px 8px; font-size:9px; letter-spacing:.12em;
+    background:transparent; color:inherit;
+    border:1px solid color-mix(in srgb, var(--cream) 22%, transparent);
+  }
+}
+
+/* ---------- the phone ----------
+   The bar is an inline-flex pill with no wrap in it, which is right: the
+   indicator behind the labels is absolutely positioned and measured in
+   JS off each button's offsetLeft (components/BlogTabs.tsx), so a bar
+   that wrapped would leave it on the wrong row. Three uppercase tabs do
+   not fit across a phone, so the bar scrolls sideways instead - the pill
+   is inside the scrolling box and travels with it, and the tabs keep
+   their full targets rather than being squeezed to fit. */
+@media (max-width:560px){
+  .bl-tabs__bar{
+    display:flex; max-width:100%;
+    overflow-x:auto; overscroll-behavior-x:contain;
+    scrollbar-width:none; -webkit-overflow-scrolling:touch;
+  }
+  .bl-tabs__bar::-webkit-scrollbar{ display:none; }
+  .bl-tabs__btn{ flex:0 0 auto; padding:11px 15px; font-size:11px; letter-spacing:.07em; }
+  /* The soon-badge doubles a tab's width, which is what tips the row over
+     from "scrolls a little" to "scrolls a lot". It keeps the word and
+     loses the box. */
+  .bl-tabs__btn.is-soon::after{ padding:0; border:none; opacity:.62; }
+}
 
 .bl-tabs__panel{ margin-top:clamp(28px,4vh,44px); }
 
@@ -226,19 +282,125 @@
   aspect-ratio:auto; max-height:none; width:100%; height:100%;
   border:none; border-radius:0;
 }
-.bl-paper__expand{
-  position:absolute; top:12px; right:12px; z-index:1;
-  display:flex; align-items:center; justify-content:center;
-  width:34px; height:34px; border-radius:9px;
-  background:color-mix(in srgb, var(--bg) 78%, transparent);
-  color:#fff; backdrop-filter:blur(4px);
-  opacity:0; transform:translateY(-4px);
-  transition:opacity .3s var(--ease), transform .3s var(--ease), background .3s var(--ease);
+/* ---- the transport ------------------------------------------------
+
+   One control on the reader, and it is the whole frame. No ink, no
+   chrome, no border: the affordance is the cursor, the same way it is
+   on the film on the home page (.reel__toggle in app/globals.css).
+
+   It is also the fix for the one place the site's own cursor used to
+   disappear. The paper is an <object> - a document inside the document
+   - and a pointer that crosses into one leaves our disc at the edge and
+   picks the operating system's arrow back up. Covering the frame with a
+   button on OUR page means the pointer never gets there: cursor:none
+   applies, the disc stays lit, and data-cursor prints the word.
+
+   The word is Expand, then Collapse, and it is rewritten in place while
+   the pointer is standing still on the frame - initCursor's
+   MutationObserver watches data-cursor for exactly this.
+   -------------------------------------------------------------------- */
+.bl-paper__toggle{
+  position:absolute; inset:0; z-index:1;
+  display:block; padding:0; border:0; background:none;
+  cursor:none;
+  border-radius:14px;
 }
-.bl-paper__frameWrap:hover .bl-paper__expand,
-.bl-paper__expand:focus-visible{ opacity:1; transform:translateY(0); }
-.bl-paper__expand:hover{ background:var(--bg); }
-.bl-paper__frameWrap:fullscreen .bl-paper__expand{ opacity:1; transform:none; }
+.bl-paper__toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:-6px; }
+
+/* ---- the mark -----------------------------------------------------
+
+   The chip in the top-right corner, in both states and at all times.
+
+   It used to be a hover reveal at 34px in a translucent wash, on the
+   reasoning that the cursor is the affordance and the chip is only a
+   second voice. That is true on the paper in the card, where the disc
+   is lit and reading "Expand" - and it is false the moment the thing
+   goes full screen, which is exactly where the control matters most and
+   where the disc cannot be drawn at all (see the note under `expanded`
+   below). A control you have to go looking for is not a control.
+
+   So: solid ground rather than a wash, a hairline so it holds its edge
+   over a white page as well as over a dark one, and no fade - it is
+   there when the paper is. Hover fills it with the accent.
+   -------------------------------------------------------------------- */
+.bl-paper__mark{
+  position:absolute; top:14px; right:14px;
+  display:flex; align-items:center; justify-content:center;
+  width:44px; height:44px; border-radius:11px;
+  background:color-mix(in srgb, var(--bg) 92%, transparent);
+  border:1px solid color-mix(in srgb, var(--cream) 34%, transparent);
+  color:var(--cream);
+  backdrop-filter:blur(6px);
+  box-shadow:0 10px 26px rgba(0,0,0,.4);
+  transition:background .3s var(--ease), color .3s var(--ease),
+             border-color .3s var(--ease), transform .3s var(--ease);
+}
+.bl-paper__toggle:hover .bl-paper__mark,
+.bl-paper__toggle:focus-visible .bl-paper__mark{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:var(--accent-ink);
+  transform:scale(1.06);
+}
+
+/* the word, spelled out. The disc says it to a mouse; this says it to a
+   keyboard, which cannot see the disc. Same pair as .reel__hint. */
+.bl-paper__hint{
+  position:absolute; left:50%; bottom:18px; transform:translate(-50%,8px);
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
+  color:var(--accent-ink); background:var(--accent); border-radius:999px; padding:8px 18px;
+  opacity:0; transition:opacity .25s, transform .25s var(--ease);
+  pointer-events:none;
+}
+.bl-paper__toggle:focus-visible .bl-paper__hint{ opacity:1; transform:translate(-50%,0); }
+
+/* ---- expanded ----
+   The button comes off the paper and sits in the corner - top right,
+   where it was in the card, so the thing does not move out from under
+   the hand that just pressed it. Full screen is where the reader
+   actually reads, fourteen pages of scrolling, and a button over all of
+   them is a wheel that goes nowhere. The corner is generous rather than
+   icon-sized so the pointer picks the control up well before the chip.
+   Escape still works, as it always does. */
+.bl-paper__frameWrap:fullscreen .bl-paper__toggle{
+  inset:0 0 auto auto;
+  width:clamp(150px,16vw,260px); height:clamp(96px,12vh,160px);
+  border-radius:0;
+}
+
+/* and the disc gives way to the arrow, only here. A fullscreen element
+   is promoted to the browser's top layer, above every other thing on
+   the page - including .cursor and .cursor-ring, which are children of
+   <body> and therefore now painted underneath it. cursor:none in that
+   state is not "our cursor instead of theirs", it is no cursor at all.
+   So the native pointer comes back for the length of the expansion, and
+   the word the disc would have said is set beside the chip and left
+   standing there, rather than waiting for a hover the reader has no
+   reason to try. */
+.bl-paper__frameWrap:fullscreen .bl-paper__toggle{ cursor:pointer; }
+.bl-paper__frameWrap:fullscreen .bl-paper__mark{
+  top:18px; right:18px;
+  width:52px; height:52px;
+}
+.bl-paper__frameWrap:fullscreen .bl-paper__hint{
+  left:auto; right:80px; bottom:auto; top:31px;
+  transform:translateY(-50%);
+  opacity:1;
+}
+
+/* ---- touch ----
+   No hover, no disc, and the tap that would expand the paper is the
+   same tap that would scroll it. So the button is the chip and nothing
+   more, and the rest of the frame belongs to the viewer - including the
+   fallback link, which is what a phone shows here more often than not. */
+@media (hover:none){
+  .bl-paper__toggle{
+    inset:0 0 auto auto;
+    width:72px; height:72px;
+    cursor:pointer;
+  }
+}
+
 .bl-paper__fallback{
   height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
   padding:32px; text-align:center;

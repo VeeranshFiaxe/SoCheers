@@ -56,8 +56,6 @@ export default function AiWork() {
                 {AI_HERO.lines[0]}{" "}<br />
                 <em>{AI_HERO.lines[1]}</em>
               </h1>
-
-              <p className="ai-hero__lede" data-reveal>{AI_HERO.lede}</p>
             </div>
           </div>
         </section>

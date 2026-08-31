@@ -769,7 +769,7 @@
    fraction of the dissolve at every size. */
 /* Moved up hard, and that is a legibility fix before it is a
    compositional one. It was sitting at the foot of the panel, which is
-   where the bridge starts - so an accent green line was being read off a
+   where the bridge starts - so an accent-coloured line was being read off a
    warm mid-brown ramp, which is the single worst background it could
    have had. Pulled back up into the dissolve at the foot of the figure it
    is on black again, and the whole of the bridge's run is below it
@@ -820,9 +820,9 @@
   /* no text-wrap:balance here - it sets text-wrap-mode:wrap, which would
      override the nowrap above on this span and re-break the sentence */
   font-weight:400; font-style:italic;
-  /* the accent is the darker green of the light panels now (.is-light
+  /* the accent is the deeper cut the light panels use now (.is-light
      remaps it), and its shadow is still the panel colour rather than a
-     tint of the green - a tinted shadow under a saturated colour reads
+     tint of the accent - a tinted shadow under a saturated colour reads
      as a printing misregistration */
   text-shadow:0 1px 4px rgba(244,242,236,.75);
 }
@@ -890,19 +890,23 @@
   margin-top:calc(var(--fig) * -0.775);
   will-change:transform;
   /* Re-mixed for paper. The old set was built to glow out of black - a
-     near-black core with bright green thrown off it - and on cream that
-     same ramp reads as a dark blot, because everything in it is darker
-     than the ground it is now sitting on. Inverted in weight rather than
-     in hue: the mass is the mid green and the values run *up* from it,
-     so the burst is pigment sprayed onto paper rather than light coming
-     out of a hole. It is the same green family the accent is in.
+     near-black core with the bright value thrown off it - and on cream
+     that same ramp reads as a dark blot, because everything in it is
+     darker than the ground it is now sitting on. Inverted in weight
+     rather than in hue: the mass is the mid tone and the values run *up*
+     from it, so the burst is pigment sprayed onto paper rather than
+     light coming out of a hole.
+
+     It is the same family the accent is in, which on this page is the
+     brand's pink - the burst is the page's own colour at five values,
+     not a second one.
 
      Held down in strength as well - see the opacity below. */
-  --sp-deep:   #1d5233;
-  --sp-dark:   #2f8a52;
-  --sp-mid:    oklch(0.72 0.155 152);
-  --sp-bright: oklch(0.83 0.145 152);
-  --sp-pale:   #eef9e4;
+  --sp-deep:   #5a0f2e;
+  --sp-dark:   #9c1d4c;
+  --sp-mid:    #d63a6b;
+  --sp-bright: #f07ba0;
+  --sp-pale:   #fde9f0;
   /* On black the burst was the only thing lighting the panel and could
      be spent at full strength. On cream it is competing with dark type
      over it, so it drops back to being a tint behind the figure. */
@@ -1512,7 +1516,7 @@
    The colour stays in the type. It washed the whole card for a version -
    tinted background, coloured border, a hard shadow in the same solid,
    confetti over the section - and three saturated blocks in the middle
-   of a page that otherwise runs on cream, near-black and one green read
+   of a page that otherwise runs on cream, near-black and one accent read
    as a different site. One written word per card is the whole of it, and
    the card only picks the colour up anywhere else on hover, where it
    takes the border for as long as you are pointing at it.
@@ -1549,7 +1553,7 @@
 }
 /* The index, set as .ab-people__idx sets it, in the page's own ink
    rather than the accent: beside a name that is already carrying the
-   card's colour, a green numeral made two coloured things on one line
+   card's colour, an accent numeral made two coloured things on one line
    and neither of them led. */
 .driver__idx{
   font-family:var(--f-mono); font-weight:500; font-style:normal;
@@ -1817,7 +1821,12 @@
   position:absolute; z-index:0; pointer-events:none; display:block;
   left:0; top:0;
   width:100%; height:calc(100% + var(--crowd-h));
-  opacity:.92;
+  /* Was .92. The field is shaped by the vignette below and by the
+     stencil itself, both of which are still doing their work - this
+     was a flat eight percent taken off the whole thing on top of them,
+     and the one place it was actually felt was the pale half of the
+     picture, which had the least to give. */
+  opacity:1;
 
   /* Where the ellipse sits: half the section's own height from the top,
      which is the frame, and not the middle of the canvas - the canvas has
@@ -1858,7 +1867,7 @@
      switched on */
   animation:asciiIn 1.4s var(--ease) both;
 }
-@keyframes asciiIn{ from{ opacity:0 } to{ opacity:.92 } }
+@keyframes asciiIn{ from{ opacity:0 } to{ opacity:1 } }
 
 /* everything real sits above the field */
 .stage__frame,

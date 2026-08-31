@@ -7,7 +7,7 @@
    introducing new treatments is a page that keeps asking to be studied.
 
    Site palette throughout, and one ground the whole way down: the dark
-   base, cream type, the green accent. The story and the wall used to be
+   base, cream type, the page's orange accent. The story and the wall used to be
    .is-light panels on the About page's off-white, which turned the
    bottom two thirds of an AI page into a sheet of paper - the films and
    the stills are the only light on this page now.
@@ -41,14 +41,13 @@
 .ai-hero__in{ position:relative; z-index:2; width:100%; }
 .ai-hero__copy{
   position:relative; z-index:2;
-  /* No measure on the column itself - the two things in it want
-     different widths and the narrower of them was deciding for both. The
-     headline is one line per sentence and needs the room to be; the lede
-     is running copy and keeps its own measure below.
+  /* No measure on the column itself. It held a lede under the headline
+     for a revision and the narrower of the two was deciding for both;
+     the lede is gone now and the headline, one line per sentence, wants
+     all the room it can have.
 
-     The copy sits in front of a figure and eighteen bubbles, and now that
-     the headline is wider it will cross the figure at most widths rather
-     than at a few. The type carries its own shadow (below) rather than
+     The copy sits in front of a figure and eighteen bubbles, and at that
+     width it will cross the figure at most widths rather than at a few. The type carries its own shadow (below) rather than
      the column carrying a scrim: a panel behind the headline would put a
      hard rectangle in the middle of the composition. */
   padding:0 clamp(14px,2vw,26px) clamp(10px,1.6vw,22px) 0;
@@ -89,12 +88,6 @@
    a long line and a remainder. The measure is what decides the count:
    the sentence runs about 128 characters, so a 64ch column is two of
    them. */
-.ai-hero__lede{
-  margin-top:clamp(20px,3vh,32px); max-width:64ch; text-wrap:balance;
-  font-size:clamp(15px,1.2vw,19px); line-height:1.6; color:var(--muted);
-  text-shadow:0 2px 24px rgba(11,11,12,.8);
-}
-
 /* ---------- the stage: one figure, and the noise over him ---------- */
 .ai-stage{ position:absolute; inset:0; z-index:1; pointer-events:none; }
 
@@ -106,7 +99,7 @@
 
    Nothing composites it. The old drawn silhouette needed a glow behind
    it to sit in the section; this arrives with its own, on real alpha,
-   and a blend mode over it would only dull the green. */
+   and a blend mode over it would only dull the accent. */
 /* Centred on 80% rather than 58%, and a little shorter with it.
 
    He moved because the headline grew: it is one line per sentence now
@@ -188,7 +181,7 @@
 .ai-bubble[data-tail="r"]::before{ right:1.1em; }
 .ai-bubble[data-tail="r"]::after{ right:.6em; }
 
-.ai-bubble[data-tone="hot"]{ background:var(--accent); color:#04140b; font-weight:700; }
+.ai-bubble[data-tone="hot"]{ background:var(--accent); color:var(--accent-ink); font-weight:700; }
 .ai-bubble[data-tone="cream"]{ background:var(--cream); color:#0b0b0c; }
 .ai-bubble[data-tone="ghost"]{
   background:transparent; border:1px solid rgba(241,236,225,.22); color:rgba(241,236,225,.62);
@@ -212,7 +205,6 @@
   .ai-thoughts{ inset:0 0 46% 0; }
   .ai-bubble[data-small]{ display:none; }
   .ai-hero__title{ font-size:clamp(28px,7vw,42px); }
-  .ai-hero__lede{ max-width:38ch; }
 }
 @media (max-width:560px){
   .ai-hero__title{ font-size:clamp(24px,7.4vw,34px); }
@@ -299,7 +291,7 @@
   font:inherit; text-align:left; cursor:none;
   border:0; border-radius:inherit;
   background:
-    radial-gradient(120% 90% at 22% 8%, rgba(47,229,137,.13), transparent 58%),
+    radial-gradient(120% 90% at 22% 8%, color-mix(in srgb, var(--accent) 13%, transparent), transparent 58%),
     linear-gradient(165deg, #16161a, #0a0a0b 72%);
   color:var(--cream);
   transition:opacity .45s var(--ease), background .45s var(--ease);
@@ -349,7 +341,7 @@
   border-radius:50%; border:1px solid var(--faint); color:var(--cream);
   transition:background .35s var(--ease), color .35s var(--ease), border-color .35s var(--ease);
 }
-.ai-tile__card:hover .ai-tile__play{ background:var(--accent); border-color:var(--accent); color:#04140b; }
+.ai-tile__card:hover .ai-tile__play{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
 
 /* ---------- stills ---------- */
 .ai-tile__cap{

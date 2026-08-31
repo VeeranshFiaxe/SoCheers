@@ -26,7 +26,7 @@
    ---- the performance shape of it ----
 
    This has to run on a weak machine, and a symbol grid is easy to get
-   wrong: at this cell size a wide screen is around twenty-five thousand
+   wrong: at this cell size a wide screen is around nineteen thousand
    cells, and typing all of them every frame is not a thing any machine
    does at 60fps. Four things keep it cheap:
 
@@ -49,6 +49,7 @@
       starts, so the steady state - which is what the machine is doing
       almost all of the time - is nothing.
    ============================================================ */
+import { acquirePointerField, isCoarsePointer } from "./pointer-field";
 
 /* Ordered by how much of the cell each one fills, lightest first. The
    glyph is a stencil now, so this ramp is doing exactly what a pixel's
@@ -63,10 +64,76 @@ const RAMP = " .:·-=+co*%#8@M";
    disturbed patch looks like interference in the grid. */
 const WAVE = "/\\|—~×+≡";
 
-const CELL = 10;          // css px, the side of one cell
-const RADIUS = 200;       // css px, how far the cursor reaches
-const WAVELEN = 0.05;     // radians per px - the spacing of the rings
-const SPEED = 0.0055;     // radians per ms - how fast they travel outward
+/* The side of one cell, and the size of one character with it - the
+   glyph is drawn at 92% of this (see buildSheet).
+
+   It was 10, and at 10 the field was a halftone: the characters were the
+   size of a dot, so what the eye got was a grid of varying density and
+   the fact that the density was being made out of punctuation was
+   something you had to lean in to notice. The point of a symbol field is
+   that you can see the symbols.
+
+   16 was the other end of that argument and it overshot; 13 was still
+   more than the picture wanted to give up. 11.5 is where it settled: the
+   glyph is drawn at about 10.5px, which is enough that a "%" reads as a
+   "%" rather than as a dark speck, and the grid stays fine enough to hold
+   a face together behind it.
+
+   A fraction is fine here and is not rounded away by accident. This is a
+   CSS-pixel figure and the only places it is turned into a whole number
+   are the two that have to be whole: the device-pixel side of a cell in
+   buildSheet, and the column and row counts in layout. Nothing else
+   divides by it. */
+const CELL = 11.5;        // css px, the side of one cell
+/* Up with the cell, and by the same ratio: this is a distance in pixels
+   but what it has to hold steady is a count of characters. Twenty cells
+   of reach was what the field was tuned at, and 20 x 11.5 is what keeps
+   it there - left at 200 the wave would disturb seventeen and read as a
+   smaller patch than the one the effect was built around. */
+const RADIUS = 230;       // css px, how far the cursor reaches
+/* And the rings get longer for the same reason. This is radians per pixel,
+   so leaving it alone would have kept the rings the same width in pixels
+   while the things resolving them got fewer - and a ring drawn with too
+   few cells stair-steps instead of curving. At .043 a ring is ~146px,
+   which is the same twelve-and-a-half cells across it had at the old cell
+   size. */
+const WAVELEN = 0.043;    // radians per px - the spacing of the rings
+/* How fast the rings travel outward, and there are two of them now: the
+   speed the effect runs at while the cursor is being moved, and the one
+   it settles to when it is put down and left.
+
+   Moving, nothing has changed - .0055 is what the wave was always tuned
+   at and the whole point of a cursor effect is that it answers the cursor
+   at the cursor's own pace. Held still, that same rate is a machine
+   running flat out with nobody asking it to: the rings pour out of a
+   stationary point several times a second and the patch reads as busy.
+   At .0021 the same rings take about two and a half times as long to
+   cross the reach, which is slow enough to watch and not so slow that it
+   looks stopped.
+
+   The two are blended by how fast the cursor is actually travelling (see
+   `mo` in the loop), so there is no threshold to cross and no moment
+   where the effect changes gear - it winds up as you move and unwinds as
+   you stop. */
+const SPEED = 0.0055;     // radians per ms, moving
+const SPEED_IDLE = 0.0021;// radians per ms, at rest
+/* And it softens as it slows. This scales the whole amplitude, so it
+   pulls back both halves of the effect at once: the shade is pushed less
+   far along the ramp, and fewer cells reach the threshold where they are
+   retyped out of the wave alphabet. A held cursor is a quiet disturbance
+   in the grid rather than a hole punched in it. */
+const GAIN_IDLE = 0.52;
+/* How fast a cell that has been retyped churns through the wave alphabet,
+   again as a moving and a resting rate. This is the flicker in the middle
+   of the patch and it is the single busiest thing on the section when the
+   cursor is parked, so it comes down hardest. */
+const CHURN = 0.012;      // wave-alphabet steps per ms, moving
+const CHURN_IDLE = 0.0034;// ditto, at rest
+/* The travelling speed at which the effect is considered fully "moving",
+   in css px per ms. An unhurried drag across the frame is around half of
+   this, so ordinary movement sits near the top of the range and only a
+   cursor genuinely at rest gets the slow reading. */
+const MOVE_FULL = 0.55;
 const EASE = 0.14;        // pointer lerp; the wave centre trails the mouse
 const WIPE_MS = 900;
 /* The grade, and the brightness in it is not a taste call.
@@ -82,15 +149,33 @@ const WIPE_MS = 900;
 
    The saturation goes up to pay for it: darkening a photograph drains the
    colour out of it, and the colour is the reason the characters are cut
-   from the picture instead of typed in ink. */
-const GRADE = "brightness(.66) saturate(1.55) contrast(1.04)";
+   from the picture instead of typed in ink.
 
-/* No cell is ever blank. The ramp starts at a space, which is right for
-   an ASCII rendering on its own terms and wrong here: a blank cell is a
-   hole in the grid, and a bright region made of holes is the same
-   invisibility the brightness is fixing. Everything from here up types
-   something, however light. */
-const GMIN = 1;
+   Down again, and the contrast up with it. .66 was still leaving the top
+   third of a bright shot within a few levels of the paper it is printed
+   on - visible if you went looking for it, which is not the same as
+   visible. At .58 the picture's own whites land clearly below the cream,
+   so a lit wall reads as a lit wall rather than as a gap in the grid, and
+   the extra contrast keeps the darks from closing up into one mass now
+   that everything above them has come down to meet them. */
+const GRADE = "brightness(.58) saturate(1.62) contrast(1.14)";
+
+/* No cell is ever blank, and the floor is well up off the blank now.
+
+   The ramp starts at a space, which is right for an ASCII rendering on
+   its own terms and wrong here: a blank cell is a hole in the grid, and a
+   bright region made of holes is the same invisibility the brightness is
+   fixing. But a floor of 1 is a full stop - a character that covers a few
+   percent of its cell - so the brightest regions were technically typing
+   something and letting almost none of the photograph through. That is
+   the whole complaint about the whites: they were not eaten by the mask,
+   they were eaten by the stencil being nearly closed there.
+
+   At 4 the lightest cell types a hyphen, which is a real aperture. The
+   ramp gives up three of its fourteen steps to buy it and loses nothing
+   that was doing any work: those steps were all inside the range that was
+   invisible anyway. */
+const GMIN = 4;
 
 export type AsciiField = {
   /* Re-measure the type the field has to stay off. Call it after the type
@@ -187,6 +272,22 @@ export function createAsciiField(
   // the pointer, in device px on the canvas, trailing the real one
   let px = 0, py = 0, tx = 0, ty = 0;
   let radius = 0, wantRadius = 0, seeded = false;
+  /* Where the eased pointer was last frame, and how fast it is going -
+     smoothed, in css px per ms. This is the only input to how hard and
+     how fast the wave runs; see the loop. */
+  let lastPx = 0, lastPy = 0, mv = 0;
+  /* The wave's phase and the retype churn, both integrated rather than
+     computed from the clock.
+
+     They used to be `t * SPEED` and `t * 0.012` off performance.now(),
+     which is exact only while the rate never changes. The rate changes
+     every frame now, and multiplying a rate that has just moved by a
+     timestamp in the millions restarts the rings somewhere else entirely -
+     every change of speed would show as the whole pattern jumping. Adding
+     `dt * rate` to a running total cannot do that: the phase is
+     continuous through any change of rate, which is what lets the effect
+     wind up and down without a seam. */
+  let phase = 0, churn = 0, gain = 1, last = 0;
 
   let rect: DOMRect | null = null;
   let wipeAt = 0, wiping = false, shown = 0;
@@ -467,13 +568,20 @@ export function createAsciiField(
        was drawn at almost nothing on top of being almost the colour of
        the paper - two ways of disappearing stacked on each other. At 0.42
        a pale cell is faint but unarguably there, and the ramp from here
-       to nearly solid still carries the tone. The ceiling stays under 1:
-       a fully opaque grid reads as a second photograph competing with the
-       framed one rather than as its shadow on the wall.
+       to nearly solid still carries the tone.
+
+       Both ends are up. The floor moves 0.42 -> 0.56, which is where the
+       pale half of the picture lives and so is most of what "the image
+       should be more visible" means; the ceiling goes to a full 1 at the
+       dark end. The old ceiling of .96 was held under one on the argument
+       that a fully opaque grid competes with the framed photograph - but
+       the thing keeping this field subordinate is the vignette it is
+       masked with and the fact that it is characters rather than pixels,
+       not four percent of alpha on its darkest cells.
 
        Scaled by the clearing, which is 255 everywhere that matters and a
        curve down to 0 around the type. */
-    mctx!.globalAlpha = (0.42 + a * 0.036) * (keep[i] / 255);
+    mctx!.globalAlpha = (0.56 + a * 0.0293) * (keep[i] / 255);
     mctx!.drawImage(sheet, g * cw, 0, cw, ch, x, y, cw, ch);
   }
 
@@ -501,7 +609,6 @@ export function createAsciiField(
      cells it covered last frame - the second half is what lets a patch
      the cursor has left settle back without a full-grid sweep. */
   function wave() {
-    const t = performance.now();
     const R = radius * dpr;
     let l = cols, tp = rows, r = -1, b = -1;
     if (R > 1) {
@@ -515,6 +622,33 @@ export function createAsciiField(
     const Rt = Math.max(r, pr), B = Math.max(b, pb);
     pl = l; pt = tp; pr = r; pb = b;
     if (Rt < L || B < T) return;
+
+    /* The wave runs straight through a change of picture, and this is the
+       one line that makes that safe.
+
+       cut() blits whichever photograph is loaded, and during a wipe that
+       is already the new one - the wipe is a transition in the *stencil*,
+       not in the source. So a rectangle cut by the wave out ahead of the
+       wipe's diagonal would show the new picture through characters still
+       shaped by the old one, and the mismatch reads as a rectangular
+       glitch chasing the cursor. That is what the effect used to be
+       stopped for.
+
+       Promoting the cells under the wave to the new picture answers it
+       properly rather than by waiting: the patch the cursor is holding
+       simply arrives at the new frame first, and the diagonal fills in
+       around it. It reads as the ripple bringing the picture in, which is
+       a better ninth of a second than a frozen one. The wipe walks over
+       these cells again later and finds them already settled - stencil()
+       compares before it draws, so that costs nothing. */
+    if (wiping) {
+      for (let y = T; y <= B; y++) {
+        for (let x = L; x <= Rt; x++) {
+          const i = y * cols + x;
+          baseG[i] = nextG[i]; baseA[i] = nextA[i];
+        }
+      }
+    }
 
     const R2 = R * R;
     for (let y = T; y <= B; y++) {
@@ -531,7 +665,10 @@ export function createAsciiField(
         // squared falloff, so the edge of the reach dies out rather than
         // ending on a visible circle
         const f = 1 - d / R;
-        const amp = Math.sin(d * WAVELEN - t * SPEED) * f * f;
+        /* `gain` is the softening: at rest it pulls the whole swell back
+           by about half, which takes the shade push and the retype
+           threshold down together. */
+        const amp = Math.sin(d * WAVELEN - phase) * f * f * gain;
 
         /* Two things at once, and together they are the effect. The shade
            is pushed along the ramp, which is the swell; and past a
@@ -541,7 +678,7 @@ export function createAsciiField(
            churning rather than freezing into a pattern. */
         const a = clamp(baseA[i] + amp * 7, 0, 15) | 0;
         const g = amp > 0.4
-          ? WAVE0 + ((i * 7 + ((t * 0.012) | 0)) % WAVE.length)
+          ? WAVE0 + ((i * 7 + (churn | 0)) % WAVE.length)
           : clamp(baseG[i] + amp * 4, GMIN, RAMP.length - 1) | 0;
         stencil(i, g, a);
       }
@@ -574,28 +711,62 @@ export function createAsciiField(
       }
       shown = upto;
       if (r >= l) cut(l * cw, t * ch, (r - l + 1) * cw, (b - t + 1) * ch);
-      if (p >= 1) {
-        wiping = false;
-        // the wave resumes onto a grid it no longer knows anything about
-        pl = cols; pt = rows; pr = -1; pb = -1;
-      }
+      /* No reset of the wave's box here any more. It existed because the
+         wave had been stopped for the whole wipe and came back to a grid
+         it had lost track of; it runs throughout now, so its record of
+         where it was last frame was never interrupted. */
+      if (p >= 1) wiping = false;
     }
 
-    /* The wave holds while a picture is wiping in. The two would
-       otherwise be cutting the same cells out of two different
-       photographs in the same frame - the wipe's side of the band being
-       the new one and the wave's the old - and the seam between them
-       shows. Nine hundred milliseconds without a cursor ripple, on the
-       beat where the eye is on the frame changing anyway. */
-    if (!still && !wiping) {
+    if (pointer && active && !still) {
+      flip = !flip;
+      if (flip) { const q = pointer.read(); if (q.live) at(q.x, q.y); }
+    }
+
+    /* The wave runs through everything - including a change of picture.
+       See the promotion at the top of wave() for how the two are kept
+       from disagreeing about which photograph is on the canvas. */
+    if (!still) {
+      const now = performance.now();
+      /* Capped: a tab that has been in the background, or a long frame,
+         must not advance the phase by a second's worth in one step and
+         teleport the rings. */
+      const dt = last ? Math.min(64, now - last) : 16;
+      last = now;
+
       px += (tx - px) * EASE;
       py += (ty - py) * EASE;
       radius += (wantRadius - radius) * 0.1;
       if (wantRadius === 0 && radius < 1) radius = 0;
+
+      /* How fast the cursor is travelling, measured off the eased pointer
+         rather than off the raw one: the eased pointer is what the wave
+         is actually centred on, and it is already smooth, so the reading
+         does not jitter with the mouse's own sampling.
+
+         Asymmetric, and deliberately. Rising it takes almost at once, so
+         the effect is at full speed by the time the eye has followed the
+         cursor into motion; falling it takes about a second, so putting
+         the mouse down winds the wave gently down instead of dropping it
+         into the slow state the moment the hand stops. */
+      const mdx = (px - lastPx) / dpr, mdy = (py - lastPy) / dpr;
+      lastPx = px; lastPy = py;
+      const inst = Math.sqrt(mdx * mdx + mdy * mdy) / dt;
+      mv += (inst - mv) * (inst > mv ? 0.4 : 0.05);
+      const mo = clamp(mv / MOVE_FULL, 0, 1);
+
+      phase += dt * (SPEED_IDLE + (SPEED - SPEED_IDLE) * mo);
+      churn += dt * (CHURN_IDLE + (CHURN - CHURN_IDLE) * mo);
+      gain = GAIN_IDLE + (1 - GAIN_IDLE) * mo;
+
       wave();
     }
 
-    if (wiping || radius > 0) raf = requestAnimationFrame(frame);
+    /* On touch the loop is held open for as long as the section is on
+       screen: there is no pointermove to restart it once the wave has
+       decayed to nothing, so letting it stop would mean it stops for
+       good. setActive(false) closes it when the section leaves. */
+    if (wiping || radius > 0 || (pointer && active && !still)) raf = requestAnimationFrame(frame);
     else running = false;
   }
 
@@ -614,11 +785,11 @@ export function createAsciiField(
      the handler - getBoundingClientRect on every move forces a layout,
      and this section shares a page with pinned GSAP timelines that are
      already reading geometry. */
-  function onMove(e: PointerEvent) {
+  function at(clientX: number, clientY: number) {
     if (!active || still) return;
     if (!rect) rect = canvas.getBoundingClientRect();
     if (!rect.width) return;
-    const cx = e.clientX - rect.left, cy = e.clientY - rect.top;
+    const cx = clientX - rect.left, cy = clientY - rect.top;
     // a margin of one reach: the wave should already be running when the
     // cursor arrives at the edge, not start from flat at the boundary
     if (cx < -RADIUS || cy < -RADIUS ||
@@ -629,15 +800,33 @@ export function createAsciiField(
     const x = cx * (canvas.width / rect.width);
     const y = cy * (canvas.height / rect.height);
     tx = x; ty = y;
-    if (!seeded) { px = x; py = y; seeded = true; }   // no swipe in from 0,0
+    // no swipe in from 0,0 - and the velocity reference starts there too,
+    // or the first frame reads as one jump the width of the section
+    if (!seeded) { px = x; py = y; lastPx = x; lastPy = y; seeded = true; }
     wantRadius = RADIUS;
     kick();
   }
+  function onMove(e: PointerEvent) { at(e.clientX, e.clientY); }
   function onLeave() { wantRadius = 0; kick(); }
   function invalidate() { rect = null; }
 
   window.addEventListener("pointermove", onMove, { passive: true });
   document.addEventListener("pointerleave", onLeave, { passive: true });
+
+  /* On a phone a pointermove is cancelled the instant the browser decides
+     the gesture is a scroll, so the wave arrived, died mid-stroke and
+     never came back - which is worse than not having it. The shared field
+     (lib/pointer-field.ts) is read per frame instead: it rests near the
+     middle of the screen, so the section scrolling past drags the wave
+     across the picture on its own, and a finger laid on it takes over.
+
+     Sampled every other frame there. The wave is a full-canvas cell
+     redraw and this is the one effect on the site with a real per-frame
+     cost; at the speeds the resting point moves, thirty of them a second
+     is indistinguishable from sixty and costs half as much. */
+  const coarse = isCoarsePointer();
+  const pointer = coarse ? acquirePointerField() : null;
+  let flip = false;
   window.addEventListener("scroll", invalidate, { passive: true });
   window.addEventListener("resize", invalidate, { passive: true });
 
@@ -705,7 +894,7 @@ export function createAsciiField(
     setImage(src) { if (src && img.src !== src) load(src); },
     setActive(on) {
       active = on;
-      if (!on) { wantRadius = 0; radius = 0; seeded = false; invalidate(); }
+      if (!on) { wantRadius = 0; radius = 0; seeded = false; mv = 0; last = 0; invalidate(); }
       else kick();
     },
     setStill(on) {
@@ -716,6 +905,7 @@ export function createAsciiField(
       alive = false;
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
+      pointer?.release();
       window.removeEventListener("pointermove", onMove);
       document.removeEventListener("pointerleave", onLeave);
       window.removeEventListener("scroll", invalidate);

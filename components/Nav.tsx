@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NAV_LINKS } from "@/lib/content";
 import { OVERTURE_REPLAY } from "@/lib/overture";
 import RollText from "./Roll";
@@ -13,7 +13,7 @@ import SoCheersLockup from "./SoCheersLockup";
 
    Rendered once, in app/layout.tsx, and never again: it is outside the
    route now, so moving between pages does not tear it down and rebuild it.
-   That is what lets the green indicator below actually travel - it is the
+   That is what lets the indicator below actually travel - it is the
    same element before and after the navigation, so the browser has an
    old position and a new one to interpolate between rather than two
    unrelated first paints.
@@ -36,6 +36,39 @@ function activeHref(pathname: string): string | null {
 export default function Nav() {
   const pathname = usePathname();
   const active = activeHref(pathname);
+
+  /* ---- the phone's way around ----
+
+     The capsule of links is hidden under 860px and always was: eight tabs
+     of letter-spaced uppercase do not fit across a phone, and squeezing
+     them until they do is how you get a row nobody can hit. What was
+     missing is what took its place, which was nothing - so on a phone the
+     header offered the logo (which replays the overture) and one CTA, and
+     every other page on the site was unreachable.
+
+     This is that missing half: the same links, out of the capsule and
+     into a sheet, at a size a thumb can actually land on. */
+  const [open, setOpen] = useState(false);
+
+  /* Closed by arriving somewhere. The header is outside the route
+     (app/layout.tsx) so it survives the navigation - without this the
+     sheet would still be sitting over the page the reader just asked
+     for. */
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", onKey);
+    /* Same lock the contact dialog uses (components/ContactModal.tsx).
+       Lenis drives the window scroll, and a window that cannot scroll is
+       a Lenis that cannot either, so one line covers both. */
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
 
   const links = useRef<HTMLElement>(null);
   const pill = useRef<HTMLSpanElement>(null);
@@ -120,7 +153,7 @@ export default function Nav() {
           padding below the first. Hover is read off the link so the whole
           padded target rolls, not just the text. */}
       <nav className="nav__links" ref={links}>
-        {/* the green, as one object that moves rather than a fill that
+        {/* the accent, as one object that moves rather than a fill that
             switches tabs. Behind the labels, and measured in JS because
             the width it has to take is the width of a word. */}
         <span className="nav__pill" ref={pill} aria-hidden="true" />
@@ -155,6 +188,65 @@ export default function Nav() {
           <path d="M5 12h14M13 6l6 6-6 6" />
         </svg>
       </Link>
+
+      {/* The switch. It wears the same island the capsule and the CTA do,
+          so the header reads as one set of controls at every width, and
+          the two bars become the cross by rotating rather than by
+          swapping icons - the button is the same object open or shut,
+          which is the whole reason it can be one control. */}
+      <button
+        type="button"
+        className="nav__menu"
+        aria-expanded={open}
+        aria-controls="nav-sheet"
+        aria-label={open ? "Close menu" : "Menu"}
+        onClick={() => setOpen((v) => !v)}
+      >
+        <span className="nav__menu-bars" aria-hidden="true"><i /><i /></span>
+      </button>
+
+      {/* Rendered always rather than mounted on open, and hidden with
+          visibility rather than display: the sheet slides, and there is
+          nothing to slide from if it did not exist a frame ago. inert
+          keeps it off the tab order and out of the accessibility tree
+          while it is shut, which display:none was doing for free. */}
+      <div className="nav__sheet" id="nav-sheet" data-open={open ? "" : undefined} inert={!open}>
+        <nav className="nav__sheet-links" aria-label="Pages">
+          {NAV_LINKS.map((l) =>
+            l.soon ? (
+              <span key={l.href} className="nav__sheet-soon">
+                {l.label}
+                <em>Soon</em>
+              </span>
+            ) : (
+              <Link
+                key={l.href}
+                href={l.href}
+                prefetch
+                aria-current={l.href === active ? "page" : undefined}
+                onClick={() => setOpen(false)}
+              >
+                {l.label}
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <path d="M5 12h14M13 6l6 6-6 6" />
+                </svg>
+              </Link>
+            ),
+          )}
+        </nav>
+
+        {/* The one thing the header keeps at every width is also the last
+            thing in here, spelled out rather than abbreviated to a pill:
+            in a sheet there is room to say what it is. */}
+        <Link href="/contact" prefetch className="nav__sheet-cta" onClick={() => setOpen(false)}>
+          <span>Let&rsquo;s chat</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </Link>
+
+        <a className="nav__sheet-mail" href="mailto:hello@socheers.net">hello@socheers.net</a>
+      </div>
     </header>
   );
 }

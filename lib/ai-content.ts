@@ -86,15 +86,13 @@ export const AI_HERO = {
      Split in two because the second sentence takes the accent italic,
      and the break between them is a decision rather than a wrap. */
   lines: ["The ideas still come from us.", "The speed just comes from somewhere else."],
-  lede:
-    "Everything below was made with AI. None of it was decided by one. That distinction is the whole page - it takes about a minute.",
   /* The figure the bubbles come out of. It was a drawn SVG silhouette
      for one revision - a head-and-shoulders shape standing in for the
      client's reference - and this is the client's own artwork replacing
      it: a person under a stack of CRTs, every screen showing a piece of
      what the machine is being asked for. It says the page's argument
      better than a silhouette did, and it arrives already carrying the
-     green.
+     page's own colour.
 
      Delivered as a clean cut-out on transparency, so it is placed rather
      than composited - no blend mode, no edge to hide. See the note over

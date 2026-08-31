@@ -45,6 +45,7 @@ import {
   WebGLRenderer,
 } from "three";
 import { buildCloud, EXTENT } from "./particle-cloud";
+import { acquirePointerField } from "./pointer-field";
 
 /* ============================================================
    TUNING
@@ -77,12 +78,14 @@ const TUNE = {
      is all of it. Which is what a lit bulb looks like - the colour is in
      the glass and the fitting underneath it is not.
 
-     Cool, not saturated: at full strength this lands on the core, which
-     is a fifth of the population seen through a shell, so a true blue
-     here reads as neon by the time it is on screen. */
+     The light in the glass is the mark's own yellow - the same --logo
+     the lockup is drawn in, so the bulb on this page and the bulb in the
+     logo are lit by the same colour. Warm and saturated on purpose: the
+     glass is the only thing on the page carrying it, and the fitting
+     underneath stays the cream everything else is drawn in. */
   tone: "#efe9dd",
-  toneCore: "#a6c8ff",   // the inner light - soft, cold, barely off white
-  toneHot: "#eff4ff",    // where the hand has just been
+  toneCore: "#ffcb0c",   // the inner light - the brand's own yellow
+  toneHot: "#fff3c0",    // where the hand has just been
   light: [-0.38, 0.52, 0.76] as const,
   keyFloor: 0.66,        // brightness of a grain facing fully away from the key
   depthDim: 0.6,         // brightness of the rearmost grains
@@ -151,8 +154,7 @@ const TUNE = {
      grows the bulb by about a tenth without touching the layout - the
      element, the halo and the grid around it are all exactly where they
      were, the lens is just closer. The side margin stays the looser of
-     the two on purpose: the canvas only bleeds top and bottom, so a
-     grain pushed sideways has no overhang to run into. */
+     the two on purpose - it is the axis the mark is widest against. */
   fov: 30,
   frame: 1.15,
   frameSide: 1.10,
@@ -298,7 +300,7 @@ function budget(): number {
 
 export function initParticleLogo(host: HTMLElement): Stop {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const pointer = reduced ? null : acquirePointerField();
 
   let renderer: WebGLRenderer;
   try {
@@ -377,12 +379,13 @@ export function initParticleLogo(host: HTMLElement): Stop {
   function resize() {
     /* Two boxes, and the difference between them is the whole trick.
        The *frame* is the element - the footprint the composition is
-       centred and sized to. The *canvas* hangs past it, top and bottom,
-       by however much the CSS says. Everything is framed to the frame;
-       the canvas simply sees more of the world than the frame does, so
-       a grain thrown upward carries on into open air instead of
-       shearing off against the edge of the drawing surface. */
+       centred and sized to. The *canvas* hangs past it on all four
+       sides by however much the CSS says. Everything is framed to the
+       frame; the canvas simply sees more of the world than the frame
+       does, so a grain thrown outward carries on into open air instead
+       of shearing off against the edge of the drawing surface. */
     const frameH = Math.max(1, host.clientHeight);
+    const frameW = Math.max(1, host.clientWidth);
     const w = Math.max(1, canvas.clientWidth);
     const h = Math.max(1, canvas.clientHeight);
     renderer.setSize(w, h, false);
@@ -393,7 +396,10 @@ export function initParticleLogo(host: HTMLElement): Stop {
     const tan = Math.tan((TUNE.fov / 2) * (Math.PI / 180));
     const dist = Math.max(
       (EXTENT.y * TUNE.frame) / tan,
-      (EXTENT.x * TUNE.frameSide) / (tan * (w / frameH)),
+      /* the *frame's* aspect, not the canvas's: how much of the world
+         the frame covers horizontally is a property of the frame alone,
+         so a wider canvas must not push the camera back. */
+      (EXTENT.x * TUNE.frameSide) / (tan * (frameW / frameH)),
     );
     camera.position.set(0, 0, dist);
     camera.near = Math.max(1, dist - 400);
@@ -434,14 +440,20 @@ export function initParticleLogo(host: HTMLElement): Stop {
   let primed = false;          // the hand has a position to move *from*
   let stir = 0;                // 0..1 how hard the field is being worked
 
-  const onMove = (e: PointerEvent) => { px = e.clientX; py = e.clientY; hasPointer = true; };
-  const onLeave = () => { hasPointer = false; primed = false; };
+  /* What disturbs the logo is the hand's *velocity*, not where it is - so
+     unlike the leans and tilts elsewhere on the site, this one has
+     nothing to answer on a phone that is being held still, and the shared
+     field's idle drift is far too slow to register as a push anyway.
 
-  if (canHover && !reduced) {
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerdown", onMove, { passive: true });
-    document.addEventListener("pointerleave", onLeave);
-  }
+     So it takes the field only while the reader is engaged with it: drag
+     a finger across the mark and it scatters and reforms exactly as a
+     cursor swept through it does, and the moment the finger is gone the
+     hand lifts off and the grains settle. Which also keeps the phone out
+     of the physics loop the rest of the time, and this is a page that has
+     already spent its budget on a WebGL context. */
+  let gone = false;            // the pointer has left the document entirely
+  const onLeave = () => { hasPointer = false; primed = false; gone = true; };
+  document.addEventListener("pointerleave", onLeave);
 
   /* ---------------------------------------------------- the loop */
   let raf = 0;
@@ -452,6 +464,18 @@ export function initParticleLogo(host: HTMLElement): Stop {
   let draw = true;             // something changed; the frame is worth drawing
 
   function hand(dt: number) {
+    /* The field keeps reporting the last position after the cursor has
+       left the window, so re-arming off `engaged` alone would undo the
+       pointerleave above on the very next frame. A position that has
+       actually changed is the only proof the pointer is back. */
+    const p = pointer?.read();
+    if (p && p.live && p.engaged) {
+      if (p.x !== px || p.y !== py) gone = false;
+      if (!gone) { px = p.x; py = p.y; hasPointer = true; }
+    } else if (p) {
+      hasPointer = false; primed = false;
+    }
+
     if (!hasPointer) { handVel.multiplyScalar(Math.exp(-TUNE.velEase * dt)); return; }
 
     /* Re-read every frame rather than caching on scroll: Lenis moves the
@@ -675,8 +699,7 @@ export function initParticleLogo(host: HTMLElement): Stop {
     cancelAnimationFrame(raf);
     io.disconnect();
     ro.disconnect();
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerdown", onMove);
+    pointer?.release();
     document.removeEventListener("pointerleave", onLeave);
     canvas.removeEventListener("webglcontextlost", onLost);
     host.classList.remove("is-live");

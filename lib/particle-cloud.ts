@@ -52,11 +52,13 @@ export const FORM = {
      bars are absent from this list because they sit at zero, which is the
      cream every other piece of the site is drawn in.
 
-     The shell is deliberately nowhere near the top of the range. Grains
-     pile up several deep through the limb, so a shell tinted as hard as
-     the core would draw a saturated ring round the silhouette and the
-     colour would stop reading as light held inside glass. */
-  tint: { shell: 0.4, core: 1, stray: 0.28 },
+     The shell sits high but short of the core. With a cold core the
+     shell had to stay low or the limb drew a hard ring; a warm one has
+     no such problem - it is the colour the whole ball is meant to be, so
+     the shell carries most of it and the glass reads yellow across its
+     face rather than only through the middle. The gap that is left is
+     what still separates the envelope from the light inside it. */
+  tint: { shell: 0.7, core: 1, stray: 0.5 },
   grain: 1.9,          // world-space diameter of a middling grain
   spring: 7.6,         // 1/s^2 - pull toward home per unit of displacement
   springSpread: 0.5,   // +/- share of that, per grain, so nobody arrives in step

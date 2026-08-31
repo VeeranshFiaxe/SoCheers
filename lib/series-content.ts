@@ -64,6 +64,35 @@ export const CONCEPT = {
 } as const;
 
 /* ------------------------------------------------------------------
+   THE TITLE CARD.
+
+   The first screen of the tab. It used to be a masthead - a tag, the
+   name, and a line about the layout experiment ("one treatment for
+   every section, no scroll work"), which is a note to whoever built the
+   page and not a thing to say to a reader who has just landed on it.
+
+   So it is staged as the cold open's own composition now (see
+   app/series/series.css), and the sentence under the name is the one
+   that already existed for this concept - it is the description on
+   app/series-1/page.tsx, verbatim. No new copy is written here; the
+   line simply moved from a <meta> tag onto the screen, where it does
+   the job the client asked of the opening: you know what the story is
+   about before you have scrolled once.
+
+   The frames are the cold open's, on purpose - the same three that
+   BEATS[0] is composed from, so the title card and the first beat read
+   as one reel rather than as a cover glued onto a page.
+   ------------------------------------------------------------------ */
+export const HERO = {
+  tag: "Series",
+  standfirst:
+    "Post-lockdown the audience stopped hunting for discovery and started hunting for lore. The micro series is what that behaviour is asking for - and SoCheers builds them.",
+  cue: "Scroll",
+  frames: ["open-wide.jpg", "micro-series.jpg", "night-scroll.jpg"],
+  inset: "open-tall.jpg",
+} as const;
+
+/* ------------------------------------------------------------------
    THE TEXTURE PLATES.
 
    Two files in public/assets/series/ are not photographs and were never

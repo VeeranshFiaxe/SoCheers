@@ -6,6 +6,7 @@ import { Overlays } from "@/components/Chrome";
 import Loader from "@/components/Loader";
 import Nav from "@/components/Nav";
 import Overture from "@/components/Overture";
+import RouteTheme from "@/components/RouteTheme";
 
 /* One face for the whole site. The weight does the talking:
    700 for headings, 500 for accents (the uppercase, letter-spaced
@@ -101,9 +102,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* The shell, and it is outside the route on purpose.
 
             Everything below survives a navigation: the header keeps its
-            identity so the green indicator can travel between tabs rather
-            than repaint on each page (components/Nav.tsx), the cursor and
-            the grain do not blink, and the bulb is mounted everywhere -
+            identity so the indicator can travel between tabs rather
+            than repaint on each page (components/Nav.tsx), the cursor does
+            not blink, and the bulb is mounted everywhere -
             which is what makes it the switch on every page and not just
             on the front one.
 
@@ -112,6 +113,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             sequence is playing through a plain sibling combinator, and
             dockTarget() in lib/overture-motion.ts measures that mark to
             know where to fly the lamp. */}
+        {/* which of the brand's six solids this page leads with - it has to
+            come first, because everything under it is drawn in it */}
+        <RouteTheme />
         <Overlays />
         <Loader />
         <Overture />

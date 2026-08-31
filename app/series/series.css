@@ -31,62 +31,282 @@
 
   /* ---- the highlighter ----
 
-     The live tab blocks its accent words in the site green. This page
-     blocks them in red instead - the streaming red, on a page whose
-     whole argument is about what the streaming platforms taught people
-     to do. That is the entire change, and it is one token: point --hi
-     back at var(--accent) and the page is green again.
+     This page's accent IS the streaming red - #c50812, set as the
+     --page-series-* group in app/globals.css and pointed at by
+     components/RouteTheme.tsx. So --hi is not a second colour standing
+     against the accent any more, it is the accent, and the block, the
+     mono eyebrows, the slate numerals and the hover state are all one
+     thing. The token stays rather than collapsing into var(--accent) at
+     every use, because the highlighter is a device with its own pair
+     (block and ink) and the page reads better for saying so.
 
-     Taken down off the broadcast red it started at (#e50914). At full
-     value it is the brightest thing on a page that is otherwise a dark
-     graded interior, and it was reading as a lit sign rather than as a
-     mark somebody made on the frame. This is the same hue a shade
-     deeper and a little less lit - close enough to still read as the
-     streaming red, dark enough to sit in the grade with everything
-     else.
+     On the red itself: taken down off the broadcast red it started at
+     (#e50914). At full value it was the brightest thing on a page that
+     is otherwise a dark graded interior, and it read as a lit sign
+     rather than as a mark somebody made on the frame. This is the same
+     hue a shade deeper and a little less lit - close enough to still
+     read as the streaming red, dark enough to sit in the grade.
 
-     The ink on top is cream rather than the green treatment's near-
-     black. Red at this value is dark - it lands around 5.5:1 against
-     cream and nowhere near that against #04140b, so the letters have to
-     be the light half of the pair here, not the dark one. Deepening the
-     block only helped that: the ratio went up as the glare came down.
-
-     Only the block moves. The mono eyebrows, the slate numerals and the
-     hover state are still the site's green: this is a test of one
-     device, not a repaint, and two accents on one screen is the thing
-     being looked at. */
-  --hi:#c50812;
-  --hi-ink:#f6f2ea;
+     The ink on top is cream rather than a near-black, and that is why
+     --accent-ink is cream for this page too: red at this value is dark,
+     it lands around 5.5:1 against cream and nowhere near that against a
+     near-black, so the letters are the light half of the pair here.
+     Deepening the block only helped that - the ratio went up as the
+     glare came down. */
+  --hi:var(--accent);
+  --hi-ink:var(--accent-ink);
 }
 .st-foot{ --dim:rgba(241,236,225,.68); }
 
-/* ---- the head ------------------------------------------------------
-   A masthead rather than a title card. The page exists to be read
-   against /series, so it says which one it is in a screen-third and
-   gets out of the way.
+/* ---- the title card ------------------------------------------------
+
+   What was here before was a masthead: a tag, the name, a line, a rule
+   under it. It said which page you were on and nothing about what the
+   page is - and it is the first screen of a tab whose whole job is to
+   sell a story, so it was the one screen on the route doing no selling
+   at all.
+
+   This is the cold open, staged as a title card. The layer order is the
+   poster's from app/series-1/series.css, and it is the mechanic rather
+   than decoration:
+
+       0  .st-hero__ground   the room, blown up and pushed back
+       1  .st-hero__frames   three frames overlapping on a 12-col field
+       2  .st-hero__scrim    ground for the type, weighted left
+       3  .st-hero__type     tag, the name, the standfirst
+       4  .st-hero__inset    one frame lifted IN FRONT of the words
+       5  .st-grain          the grade
+       6  .st-gate           the letterbox
+
+   Layer 4 is the whole trick, same as on the earlier pass: a picture
+   plane in front of the sentence is what stops three photographs
+   reading as three photographs. It is a sibling of .st-hero__type in
+   the markup rather than a child of the stage, because a stage that
+   sits behind the words cannot also hold something in front of them.
+
+   ---- the motion, on a route that has none ----
+
+   /series runs no scroll mechanics - that is the point of the route,
+   and nothing below this block moves. The title card takes one
+   exception: an entrance, in CSS only, that runs once on load. The gate
+   opens, the frames settle out of a slow push, the type rises. A
+   cinematic open that arrives already finished is a screenshot, and
+   this is the screen where the reader decides whether the rest is worth
+   scrolling. All of it is off under prefers-reduced-motion, where the
+   card renders at its finished state.
    -------------------------------------------------------------------- */
-.st-head{
-  position:relative;
-  padding:clamp(120px,18vh,200px) 0 clamp(52px,8vh,96px);
-  border-bottom:1px solid var(--faint);
+.st-hero{
+  position:relative; isolation:isolate;
+  min-height:100svh;
+  display:flex; align-items:center;
+  padding:clamp(96px,15vh,170px) 0 clamp(90px,14vh,150px);
+  background:var(--film);
+  overflow:hidden;
 }
-.st-head__tag{
+
+.st-hero__stage{ position:absolute; inset:0; z-index:0; }
+
+/* 0 - the room. Same treatment as .st-bg on the beats, a shade further
+   back: the frames in front of it here are smaller and there are three
+   of them, so the plate has to stop being legible as a photograph
+   sooner or the screen reads as five pictures at once. */
+.st-hero__ground{
+  z-index:0;
+  opacity:.3;
+  transform:scale(1.16);
+  filter:blur(13px) saturate(.6) brightness(.7);
+}
+
+/* 1 - the frames. A twelve-column field they overlap on rather than
+   tile in, held to the right two thirds so the type keeps a half of the
+   screen that is only ever type and grade. The ring is the page's own
+   black - the gutter drawn on the frame instead of between them, so it
+   survives the overlap. */
+.st-hero__frames{
+  position:absolute; inset:0; z-index:1;
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+  grid-template-rows:repeat(12,1fr);
+  padding:clamp(7vh,11vh,15vh) var(--pad) clamp(9vh,13vh,17vh);
+}
+.st-hero__frame{
+  position:relative; display:block; overflow:hidden;
+  border-radius:2px;
+  background:var(--panel);
+  box-shadow:
+    0 0 0 clamp(4px,.55vw,9px) var(--film),
+    0 38px 80px rgba(0,0,0,.6);
+}
+.st-hero__frame > img{
+  position:absolute; top:0; left:-7%;
+  width:114%; height:100%;
+  /* biased up for the same reason the poster bands are: every still in
+     this folder is a person in a room and the face sits above the
+     middle of the plate, so a centred cover crop cuts the eyes off */
+  object-fit:cover; object-position:50% 38%;
+  display:block;
+}
+.st-hero__frame:nth-child(1){ grid-area:1 / 5 / 7 / 12;  z-index:1; }
+.st-hero__frame:nth-child(2){ grid-area:5 / 8 / 11 / 13; z-index:3; }
+.st-hero__frame:nth-child(3){ grid-area:8 / 3 / 13 / 10; z-index:2; }
+
+/* 2 - the scrim. Weighted hard to the left, where the name sets, and
+   closed off at the bottom so the cue and the seam into the first beat
+   sit on black rather than on somebody's shoulder. */
+.st-hero__scrim{
+  position:absolute; inset:0; z-index:2; pointer-events:none;
+  background:
+    linear-gradient(to right, rgba(11,11,12,.94), rgba(11,11,12,.62) 42%, rgba(11,11,12,.12) 80%),
+    linear-gradient(to bottom, rgba(11,11,12,.62), transparent 24%, transparent 58%, rgba(11,11,12,.88));
+}
+
+/* 3 - the type, inside the picture */
+.st-hero__type{
+  position:relative; z-index:4;
+  width:100%;
+}
+.st-hero__tag{
   display:inline-block;
   font-family:var(--f-mono); font-weight:500;
   font-size:11px; letter-spacing:.24em; text-transform:uppercase;
   color:var(--accent);
-  margin-bottom:clamp(16px,2.4vh,28px);
 }
-.st-head__title{
+/* The name, set as a title card rather than as a heading: three words
+   at poster scale, held to a narrow column so the last word - the one
+   carrying the highlighter block - lands on its own line. */
+.st-hero__title{
+  margin-top:clamp(18px,2.6vh,30px);
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(38px,6.4vw,86px); line-height:1.02; letter-spacing:-.03em;
+  font-size:clamp(44px,7.6vw,116px); line-height:.98; letter-spacing:-.035em;
   color:var(--cream);
-  max-width:16ch;
+  max-width:9ch;
+  text-shadow:0 24px 60px rgba(0,0,0,.55);
 }
-.st-head__note{
-  margin-top:clamp(16px,2.4vh,26px);
-  max-width:56ch; font-size:clamp(15px,1.15vw,17px); line-height:1.6;
+.st-hero__note{
+  margin-top:clamp(20px,3vh,34px);
+  max-width:44ch;
+  font-size:clamp(15px,1.15vw,18px); line-height:1.62;
   color:var(--muted);
+}
+
+/* 4 - the frame in front of the words. A vertical, overhanging the type
+   column's right edge and running off the bottom of the gate, so it
+   reads as a plane the sentence is behind rather than as a fourth
+   picture parked next to it. */
+.st-hero__inset{
+  position:absolute; z-index:5;
+  left:clamp(200px,38vw,560px);
+  bottom:clamp(-40px,-4vh,-20px);
+  width:clamp(112px,13vw,208px);
+  aspect-ratio:9/16;
+  overflow:hidden;
+  border-radius:2px;
+  background:var(--panel);
+  box-shadow:
+    0 0 0 clamp(3px,.4vw,7px) var(--film),
+    0 40px 80px rgba(0,0,0,.66);
+  pointer-events:none;
+}
+.st-hero__inset > img{
+  width:100%; height:100%; object-fit:cover; object-position:50% 42%;
+  display:block;
+}
+
+/* the cue. The one thing on the card that asks for something, and it
+   asks quietly - a hairline that draws itself, and the word. */
+.st-hero__cue{
+  position:absolute; z-index:6;
+  left:var(--pad); bottom:clamp(22px,4vh,44px);
+  display:flex; align-items:center; gap:.9em;
+  font-family:var(--f-mono); font-weight:500;
+  font-size:10px; letter-spacing:.26em; text-transform:uppercase;
+  color:var(--dim);
+}
+.st-hero__cue i{
+  display:block; width:clamp(28px,4vw,56px); height:1px;
+  background:var(--accent);
+  transform-origin:left;
+}
+
+/* ---- the entrance --------------------------------------------------
+   Once, on load, and nowhere else on this route. Three things arrive:
+   the gate opens from shut to its parked hairline, the frames settle
+   out of a push, the type rises behind them. The delays are the edit -
+   gate, then picture, then words - because all three landing together
+   reads as a page painting rather than as a card opening.
+   -------------------------------------------------------------------- */
+@keyframes st-hero-gate{
+  from{ transform:scaleY(1); }
+  to{ transform:scaleY(.12); }
+}
+@keyframes st-hero-push{
+  from{ opacity:0; transform:scale(1.09); }
+  to{ opacity:1; transform:scale(1); }
+}
+@keyframes st-hero-rise{
+  from{ opacity:0; transform:translateY(16px); }
+  to{ opacity:1; transform:none; }
+}
+@keyframes st-hero-cue{
+  from{ opacity:0; transform:scaleX(0); }
+  to{ opacity:1; transform:none; }
+}
+
+.st-hero .st-gate{
+  animation:st-hero-gate 1.15s cubic-bezier(.16,.84,.3,1) both;
+}
+.st-hero__frame{
+  opacity:0;
+  animation:st-hero-push 1.25s cubic-bezier(.16,.84,.3,1) both;
+  animation-delay:calc(.32s + var(--i, 0) * .13s);
+}
+.st-hero__inset{
+  opacity:0;
+  animation:st-hero-push 1.25s cubic-bezier(.16,.84,.3,1) .72s both;
+}
+.st-hero__tag{ opacity:0; animation:st-hero-rise .8s ease-out .5s both; }
+.st-hero__title{ opacity:0; animation:st-hero-rise .9s cubic-bezier(.16,.84,.3,1) .62s both; }
+.st-hero__note{ opacity:0; animation:st-hero-rise .9s cubic-bezier(.16,.84,.3,1) .78s both; }
+.st-hero__cue i{ animation:st-hero-cue .7s ease-out 1.1s both; }
+
+/* ---- narrow --------------------------------------------------------
+   The composition is a wide one: three overlapping frames beside a
+   column of type needs a screen with two halves in it. At phone width
+   there is one, so the frames go full bleed behind the words and the
+   lifted frame comes off entirely - a 110px vertical over a narrow
+   column of type is not depth, it is an obstruction.
+   -------------------------------------------------------------------- */
+@media (max-width:900px){
+  .st-hero{ align-items:flex-end; padding-bottom:clamp(110px,18vh,170px); }
+  .st-hero__frames{ padding:clamp(9vh,14vh,18vh) clamp(10px,3vw,24px) 26vh; }
+  .st-hero__frame:nth-child(1){ grid-area:1 / 1 / 7 / 11; }
+  .st-hero__frame:nth-child(2){ grid-area:5 / 5 / 10 / 13; }
+  .st-hero__frame:nth-child(3){ grid-area:8 / 2 / 13 / 12; }
+  .st-hero__scrim{
+    background:
+      linear-gradient(to bottom, rgba(11,11,12,.7), rgba(11,11,12,.24) 28%, rgba(11,11,12,.86) 62%, rgba(11,11,12,.96));
+  }
+  .st-hero__title{ max-width:none; }
+  .st-hero__note{ max-width:none; }
+  .st-hero__inset{ display:none; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .st-hero .st-gate,
+  .st-hero__frame,
+  .st-hero__inset,
+  .st-hero__tag,
+  .st-hero__title,
+  .st-hero__note,
+  .st-hero__cue i{
+    animation:none;
+    opacity:1;
+    transform:none;
+  }
+  /* the gate's parked position is not "no transform" - it is the
+     hairline the rest of the page rests at, so it is restated here
+     rather than left at full height, which would be a black screen. */
+  .st-hero .st-gate{ transform:scaleY(.12); }
 }
 
 /* ============================================================

@@ -13,8 +13,15 @@
   --muted:     rgba(241,236,225,.5);
   --faint:     rgba(241,236,225,.12);
   --line:      rgba(241,236,225,.1);
-  --accent:    #2fe589;
-  --accent:    oklch(0.86 0.22 152);
+  /* ---- the brand's own solids, off SoCheers Colors.jpg in the design
+     book. These are the palette; nothing on the site invents a colour
+     outside it. ---- */
+  --sky:       #38c6f0;
+  --yellow:    #ffcb0c;
+  --pink:      #ee346e;
+  --tangerine: #f06827;
+  --purple:    #97509f;
+  --leaf:      #8cc752;
 
   /* The logo's own colour, and the one thing on this page that is never
      re-pointed: .is-light (the About page's panels) remaps --cream,
@@ -22,18 +29,75 @@
      drawn in any of those changes with the section it happens to be over.
      The lockup gets its own token instead, and every place the mark is
      drawn reads it - loader, docked home-page mark, sub-page nav. */
-  --logo:      #ffcb0c;
+  --logo:      var(--yellow);
 
-  /* The rest of the brand's own solids, off SoCheers Colors.jpg in the
-     design book. The site runs on cream and one green, so these are not
-     a palette to spend - they are here for the places that need a colour
-     that is *ours* and is not the accent. --purple is the awards ticker's
-     marker swipe; the others are unclaimed. */
-  --purple:    #97509f;
-  --pink:      #ee346e;
-  --sky:       #38c6f0;
-  --leaf:      #8cc752;
-  --tangerine: #f06827;
+  /* ---- ONE ACCENT PER PAGE ----
+
+     The site used to run on cream and a single green that was nowhere in
+     the brand. It runs on the brand's six solids instead, one to a route,
+     so each page has a leading colour of its own and the whole set still
+     reads as one identity.
+
+     Three tokens travel together, and every rule reads one of them rather
+     than naming a colour:
+
+       --accent      the leading colour on dark ground - the page's own
+       --accent-deep the same colour re-cut for a light panel, where the
+                     bright value would burn out (.is-light, /contact,
+                     /insights - all of which re-point --accent to this)
+       --accent-ink  what sits ON a fill of --accent. Dark for five of
+                     the six; the purple is mid-value enough that cream
+                     is the legible one, which is exactly why this is a
+                     token and not a repeated var(--accent-ink).
+
+     The route sets which triple is live - components/RouteTheme.tsx maps
+     the pathname to a --page-* group and points --accent at it before
+     first paint, so there is no frame of the wrong colour on entry. The
+     values live here, in CSS, and the component only ever names a group. */
+  --page-home-accent:  var(--sky);
+  --page-home-deep:    #0e7ea8;
+  --page-home-ink:     #04161d;
+
+  --page-work-accent:  var(--yellow);
+  --page-work-deep:    #8a6c00;
+  --page-work-ink:     #1c1500;
+
+  --page-about-accent: var(--pink);
+  --page-about-deep:   #bf1450;
+  --page-about-ink:    #1e0410;
+
+  --page-ai-accent:    var(--tangerine);
+  --page-ai-deep:      #b8440f;
+  --page-ai-ink:       #1d0800;
+
+  --page-read-accent:  var(--purple);
+  --page-read-deep:    #7a3a82;
+  --page-read-ink:     #f6f1e8;
+
+  --page-chat-accent:  var(--leaf);
+  --page-chat-deep:    #55892a;
+  --page-chat-ink:     #0c1704;
+
+  /* The one page that leads with a colour that is not in the design
+     book, and it is deliberate: /series argues about what the streaming
+     platforms taught people to watch, and it is blocked throughout in
+     the streaming red. That red was already on the page as its own
+     --hi token; this is that token promoted to being the page's accent
+     rather than a second colour sitting next to a borrowed one.
+
+     Cream ink, not a near-black. Red at this value is dark - it lands
+     around 5.5:1 against cream and nowhere near that against a
+     near-black - so the letters are the light half of the pair here. */
+  --page-series-accent: #c50812;
+  --page-series-deep:   #a3060f;
+  --page-series-ink:    #f6f2ea;
+
+  /* the default is the home page's, so anything rendered before the
+     route is known - and any route that forgets to claim one - is blue
+     rather than unstyled */
+  --accent:      var(--page-home-accent);
+  --accent-deep: var(--page-home-deep);
+  --accent-ink:  var(--page-home-ink);
 
   /* the --font-* variables come from next/font in app/layout.tsx.
      The site runs on one face - Satoshi - and separates the roles
@@ -48,12 +112,27 @@
   --f-playful: var(--font-playful), "Caveat", cursive;
 
   --ease: cubic-bezier(.22,1,.36,1);
+  /* One screen, as the hero and the section under it both have to measure
+     it. Three places depend on this being the same number: the hero's own
+     box, the pin's box inside it, and the negative margin that slides WHO
+     WE ARE up underneath the pin (html.is-pinned .who). They were three
+     separate 100vh literals, which is a thing that stays right only while
+     nobody edits it. */
+  --screen: 100vh;
+
   --pad: clamp(20px, 5vw, 84px);
   --maxw: 1500px;
 }
 
 *{ margin:0; padding:0; box-sizing:border-box; }
 html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; overflow-x:hidden; }
+/* iOS inflates the type on any block it decides is too narrow for its
+   column - which on a site built out of clamped, deliberately-measured
+   headings means an h1 sized to fit a phone comes back a size and a half
+   bigger and overflows the screen it was sized for. 100% turns the guess
+   off without turning off the reader's own text-size setting, which is a
+   different mechanism and stays. */
+html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
 .lenis.lenis-smooth{ scroll-behavior:auto !important; }
 
 /* ---- no native scrollbar ----
@@ -81,6 +160,59 @@ body{
 }
 @media (hover:none){ body{ cursor:auto; } }
 
+/* ------------------------------------------------------------
+   TOUCH BASELINE
+
+   The three things a phone needs from a site built for a cursor, and
+   none of them belong to any one section - so they are here rather than
+   repeated ten times down the stylesheets.
+   ------------------------------------------------------------ */
+@media (pointer:coarse){
+  /* 1. The press.
+
+     WebKit paints a grey block over whatever you tapped, sized to the
+     element's box - which on a card, a tile or a full-width sheet link
+     is a grey flash the size of the thing, and it lands over the site's
+     own answer to the tap (the magnetic lean, the tilt going to full,
+     the reel stopping on a frame - all in lib/motion.ts). Replaced with
+     the site's own colour at a weight you feel rather than see, so a tap
+     is still acknowledged instantly, before any of the slower responses
+     have started. */
+  a, button, summary, label,
+  [role="button"], [role="tab"], [data-cursor], [data-magnetic]{
+    -webkit-tap-highlight-color:rgba(241,236,225,.09);
+  }
+
+  /* 2. The target.
+
+     The site's small print is mono at 9-12px, which is right on a
+     desktop where it is read at arm's length and clicked with a pointer
+     three pixels wide. A finger is closer to forty. These are the links
+     that live at that size - the footer's legal row, the social circles,
+     the meta under a card - and the padding is vertical only, so nothing
+     re-flows: the row keeps its line, the target grows into the leading
+     that was already there. */
+  .foot__legal a,
+  .foot__where a,
+  .foot__ends a{ padding:9px 0; }
+  /* Both of these are defined further down the file, so the class is
+     doubled to win on specificity rather than on order - the rule has to
+     sit here, with the rest of the touch baseline, to be findable. */
+  .contact__social.contact__social a,
+  .foot__social.foot__social a{ width:44px; height:44px; }
+
+  /* 3. The double-tap.
+
+     Safari waits ~300ms on every tap to see whether a second one is
+     coming, and it only stops waiting when the page has told it that
+     pinching to zoom is not on the table for that element. Every control
+     on this site is a control, not something to zoom into, so they all
+     say so - and every one of them gets its 300ms back. Deliberately not
+     on the page as a whole: a reader who wants to zoom into a photograph
+     on a case study is entitled to. */
+  a, button, summary, [role="button"], [role="tab"]{ touch-action:manipulation; }
+}
+
 /* ---- the hand, taken back off ----
    body{cursor:none} above is inherited, and inheritance loses to a rule
    set on the element itself - including the browser's own. Every UA
@@ -102,7 +234,7 @@ body{
 a{ color:inherit; text-decoration:none; }
 img{ display:block; width:100%; height:100%; object-fit:cover; }
 em{ font-style:italic; }
-::selection{ background:var(--accent); color:#04140b; }
+::selection{ background:var(--accent); color:var(--accent-ink); }
 
 /* ============================================================
    THE LIGHT PANEL
@@ -129,7 +261,7 @@ em{ font-style:italic; }
   --line:rgba(11,11,12,.16);
   --faint:rgba(11,11,12,.09);
   --panel:rgba(11,11,12,.06);
-  --accent:oklch(0.55 0.17 152);
+  --accent:var(--accent-deep);
   color:var(--cream);
 }
 
@@ -205,15 +337,8 @@ em{ font-style:italic; }
 .pixgrid > i{ display:block; background:var(--bg); opacity:0; will-change:opacity; }
 
 /* ============================================================
-   GRAIN · SPOTLIGHT · CURSOR · PROGRESS · LOADER
+   SPOTLIGHT · CURSOR · PROGRESS · LOADER
    ============================================================ */
-.grain{
-  position:fixed; inset:-60%; z-index:9998; pointer-events:none; opacity:.045;
-  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation:grain 6s steps(6) infinite;
-}
-@keyframes grain{ 0%{transform:translate(0,0)} 20%{transform:translate(-4%,3%)} 40%{transform:translate(3%,-3%)} 60%{transform:translate(-2%,2%)} 80%{transform:translate(2%,-1%)} 100%{transform:translate(0,0)} }
-
 /* cursor-following glow */
 /* z-index:2, not 1: <main> has had to become a layer of its own so it can
    sit on top of the fixed footer room (see the FOOTER block at the end of
@@ -225,7 +350,27 @@ em{ font-style:italic; }
     color-mix(in srgb, var(--accent) 13%, transparent), transparent 70%);
   opacity:.55; mix-blend-mode:screen;
 }
-@media (hover:none){ .spotlight{ display:none; } }
+/* It is not hidden on touch any more - lib/motion.ts drives it off the
+   shared pointer field, so it rests near the middle of the screen and
+   comes to a finger laid on the page. It is dimmed and tightened there:
+   a 420px pool of light is a fifth of a desktop window and half a phone,
+   which stops reading as a highlight and starts reading as a wash. */
+/* Touch: dark until a finger lands, and it follows that finger. See
+   initSpotlight in lib/motion.ts for why it is not simply left on - the
+   short version is that a full-screen blended layer is not free, and a
+   light that never moves is not worth paying for. Tighter and dimmer
+   than the desktop pool as well: 420px is a fifth of a laptop window and
+   half a phone, at which size it stops reading as a highlight and starts
+   reading as a wash over the page. */
+@media (hover:none){
+  .spotlight{
+    background:radial-gradient(200px circle at var(--mx,50%) var(--my,50%),
+      color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
+    opacity:0;
+    transition:opacity .5s var(--ease);
+  }
+  .spotlight.is-lit{ opacity:.5; }
+}
 
 .cursor{
   position:fixed; top:0; left:0; z-index:9999; pointer-events:none;
@@ -239,7 +384,7 @@ em{ font-style:italic; }
    mousemove proves the pointer is actually there - otherwise it just
    sits pinned over whatever renders in the page's top-left corner */
 .cursor.is-visible{ opacity:1; }
-.cursor__label{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:#04140b; opacity:0; transform:scale(.6); transition:opacity .25s, transform .25s; white-space:nowrap; }
+.cursor__label{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); opacity:0; transform:scale(.6); transition:opacity .25s, transform .25s; white-space:nowrap; }
 .cursor.is-active{ width:82px; height:82px; background:var(--accent); mix-blend-mode:normal; }
 .cursor.is-active .cursor__label{ opacity:1; transform:scale(1); }
 .cursor-ring{
@@ -388,12 +533,12 @@ html.sc-seen .loader{ display:none; }
              background .35s var(--ease);
 }
 /* the accent still fills it on hover, so the border goes back to being
-   the edge of the green rather than the island's hairline */
+   the edge of the fill rather than the island's hairline */
 .nav .nav__cta:hover{ border-color:var(--accent); }
-/* and the green each link rolls up to. The site's accent is tuned to sit
-   on black; on a cream ground it is the light palette's darker green, the
-   same value .is-light re-points --accent to. */
-.nav.is-on-light .roll__in > span:last-child{ color:oklch(0.55 0.17 152); }
+/* and the colour each link rolls up to. The page's accent is cut to sit
+   on black; on a cream ground it is that colour's deeper value, the same
+   one .is-light re-points --accent to. */
+.nav.is-on-light .roll__in > span:last-child{ color:var(--accent-deep); }
 .nav.is-hidden{ transform:translateY(-120%); }
 .nav__logo{ font-family:var(--f-display); font-weight:700; font-size:21px; letter-spacing:-.01em; transition:opacity .45s var(--ease); }
 /* The logo, and there is only one of it: the flat lockup
@@ -445,7 +590,7 @@ html.sc-seen .loader{ display:none; }
    the Series page's treatment switcher is (.s-switch in
    app/series/series.css), promoted from a review tool to the site's own
    navigation: a tinted, blurred pill with the current page filled in
-   green inside it. It still centres on the artwork's window rather than
+   the accent inside it. It still centres on the artwork's window rather than
    the viewport - --hero-cx is that offset, set in lib/motion.ts.
 
    The tint follows the ground the header is over, same as the ink does:
@@ -485,7 +630,7 @@ html.sc-seen .loader{ display:none; }
 .nav__links a:hover{ background:var(--nav-island-hover); }
 .nav__links a:hover .roll__in{ transform:translateY(-100%); }
 /* ---- the indicator ----
-   The page you are on is filled in green, and it is one object doing it
+   The page you are on is filled in the accent, and it is one object doing it
    rather than a background switching from one link to another: the header
    is rendered once outside the route (app/layout.tsx), so this element
    survives the navigation and can travel from the tab you left to the tab
@@ -506,11 +651,11 @@ html.sc-seen .loader{ display:none; }
 }
 .nav__links a,
 .nav__links .nav__soon{ position:relative; z-index:1; }
-/* The ink flips on the same beat the green arrives under it. Slower and
+/* The ink flips on the same beat the fill arrives under it. Slower and
    the tab you left reads as dark text on nothing for a moment; faster and
    the one you are going to goes dark before anything is behind it. */
-.nav__links a[aria-current="page"]{ color:#04140b; }
-.nav__links a[aria-current="page"] .roll__in > span:last-child{ color:#04140b; }
+.nav__links a[aria-current="page"]{ color:var(--accent-ink); }
+.nav__links a[aria-current="page"] .roll__in > span:last-child{ color:var(--accent-ink); }
 /* nothing to hover onto - the tab is already filled */
 .nav__links a[aria-current="page"]:hover{ background:transparent; }
 /* A tab with nowhere to go yet (AI Work). It reads as one of the row, one
@@ -528,7 +673,7 @@ html.sc-seen .loader{ display:none; }
 .nav__cta span,.nav__cta svg{ position:relative; z-index:2; transition:transform .4s var(--ease); }
 .nav__cta::before{ content:""; position:absolute; inset:0; background:var(--accent); transform:translateY(101%); transition:transform .45s var(--ease); z-index:1; }
 .nav__cta:hover::before{ transform:translateY(0); }
-.nav__cta:hover{ color:#04140b; border-color:var(--accent); }
+.nav__cta:hover{ color:var(--accent-ink); border-color:var(--accent); }
 .nav__cta:hover svg{ transform:translateX(4px); }
 /* TEMPORARY, same reason as the width:max-content above: with eight tabs
    the wider capsule starts reaching for the lockup and the CTA before the
@@ -537,7 +682,149 @@ html.sc-seen .loader{ display:none; }
   .nav__links a,
   .nav__links .nav__soon{ padding:8px 11px; letter-spacing:.08em; font-size:11px; }
 }
-@media (max-width:860px){ .nav__links{ display:none; } }
+
+/* ------------------------------------------------------------
+   THE PHONE'S HEADER
+
+   Under 860px the capsule goes and the sheet arrives. Everything below
+   is written for that width and hidden above it - the desktop header is
+   untouched, and there is no arrangement in which both are on screen.
+   ------------------------------------------------------------ */
+
+/* The switch. Same island as the capsule and the CTA: one blurred tinted
+   pill with a hairline, so the three controls in the header are visibly
+   the same family of object at both widths. 44px square, which is the
+   floor for a target a thumb has to find without looking. */
+.nav__menu{
+  display:none;
+  width:44px; height:44px; flex:0 0 auto;
+  align-items:center; justify-content:center;
+  appearance:none; -webkit-appearance:none; margin:0; padding:0;
+  border-radius:999px;
+  background:var(--nav-island);
+  border:1px solid var(--nav-island-line);
+  backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+  box-shadow:0 8px 30px rgba(0,0,0,.14);
+  color:var(--nav-ink); cursor:pointer;
+  transition:background .35s var(--ease), border-color .35s var(--ease), color .35s var(--ease);
+}
+.nav__menu:focus-visible{ outline:2px solid var(--accent); outline-offset:4px; }
+/* Two bars that become a cross by turning, not two icons that swap. The
+   span is the hinge both bars pivot about, so they meet in its middle
+   however far apart they started. */
+.nav__menu-bars{ position:relative; display:block; width:18px; height:12px; }
+.nav__menu-bars i{
+  position:absolute; left:0; width:100%; height:1.5px; border-radius:2px;
+  background:currentColor;
+  transition:transform .38s var(--ease), top .28s var(--ease);
+}
+.nav__menu-bars i:first-child{ top:1px; }
+.nav__menu-bars i:last-child{ top:9px; }
+.nav__menu[aria-expanded="true"] .nav__menu-bars i{ top:5px; }
+.nav__menu[aria-expanded="true"] .nav__menu-bars i:first-child{ transform:rotate(45deg); }
+.nav__menu[aria-expanded="true"] .nav__menu-bars i:last-child{ transform:rotate(-45deg); }
+
+/* The sheet. Opaque rather than a blur over the page: it covers a whole
+   phone screen, and a full-screen backdrop-filter is the one effect that
+   will drop a mid-range device to single-figure frame rates. The site's
+   own black, so this is the page's ground rather than a scrim over it.
+
+   Height is 100dvh, not vh: on a phone the address bar is part of the
+   viewport until it isn't, and a vh sheet is one address bar taller than
+   the screen - which puts the last link and the mail address under the
+   fold of something that is not supposed to scroll at all. */
+.nav__sheet{
+  display:none;
+  /* z-index:-1 puts it at the bottom of the HEADER's stacking context,
+     not the page's - .nav is fixed at z-index:900, so the sheet still
+     covers everything below while sitting under the mark, the CTA and
+     the switch that opened it. Which is what keeps that switch reachable
+     to close it again, and the logo on screen throughout. */
+  position:fixed; inset:0; z-index:-1;
+  height:100dvh;
+  padding:82px var(--pad) max(28px, env(safe-area-inset-bottom));
+  flex-direction:column; justify-content:center;
+  gap:clamp(18px,4vh,34px);
+  background:var(--bg);
+  overflow-y:auto; overscroll-behavior:contain;
+  opacity:0; visibility:hidden;
+  transform:translateY(-1.5%);
+  transition:opacity .4s var(--ease), transform .55s var(--ease), visibility .4s;
+}
+.nav__sheet[data-open]{ opacity:1; visibility:visible; transform:none; }
+/* The header hides itself on a downward scroll (.nav.is-hidden), and the
+   sheet is position:fixed *inside* it - a transformed ancestor is what
+   fixed positioning resolves against, so a header that had slid away
+   would take the open sheet off the top of the screen with it. Scrolling
+   is locked while it is open so the class cannot arrive during, but it
+   can perfectly well already be on from the scroll that preceded the
+   tap. */
+.nav:has(.nav__sheet[data-open]){ transform:none; }
+
+.nav__sheet-links{ display:flex; flex-direction:column; }
+.nav__sheet-links a,
+.nav__sheet-soon{
+  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  /* Big. This is the one place on the site where the links ARE the
+     screen, so they get a display size rather than the capsule's 11px
+     mono - and the height that comes with it is what makes them
+     comfortable to hit. */
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(30px,9vw,46px); line-height:1.06; letter-spacing:-.02em;
+  padding:clamp(10px,1.6vh,15px) 0;
+  border-bottom:1px solid rgba(241,236,225,.1);
+  color:var(--cream);
+}
+.nav__sheet-links a svg{ opacity:.34; flex:0 0 auto; }
+.nav__sheet-links a[aria-current="page"]{ color:var(--accent); }
+.nav__sheet-links a[aria-current="page"] svg{ opacity:1; }
+/* A page that does not exist yet reads as one of the list, one step
+   back, with the reason spelled out - the same treatment .nav__soon gets
+   in the capsule, where the row has no room to say it. */
+.nav__sheet-soon{ color:color-mix(in srgb, var(--cream) 42%, transparent); }
+.nav__sheet-soon em{
+  font-family:var(--f-mono); font-style:normal; font-weight:500;
+  font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+  padding:5px 9px; border-radius:999px; border:1px solid rgba(241,236,225,.18);
+}
+
+.nav__sheet-cta{
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+  min-height:52px; padding:0 24px; border-radius:999px;
+  background:var(--accent); color:var(--accent-ink);
+}
+.nav__sheet-mail{
+  font-family:var(--f-mono); font-size:12px; letter-spacing:.06em;
+  text-align:center; color:color-mix(in srgb, var(--cream) 55%, transparent);
+}
+
+@media (max-width:860px){
+  .nav__links{ display:none; }
+  .nav__menu{ display:inline-flex; }
+  .nav__sheet{ display:flex; }
+  /* The header shrinks to fit three objects across a phone: the mark, the
+     CTA and the switch. The mark takes the biggest cut because it is the
+     one that scales without losing anything - it is a shape, not a word. */
+  .nav{ padding:14px var(--pad); gap:10px; }
+  .nav__logo-mark{ height:34px; }
+  .nav .nav__cta{ padding:0 15px; min-height:44px; font-size:11px; letter-spacing:.07em; gap:7px; }
+}
+
+/* Under about 380px "Let's chat" and a 44px switch and the mark stop
+   fitting on one line however tight the padding is, and the first thing
+   to break is the CTA's label wrapping inside its own pill. The sheet has
+   a full-width version of that button in it and the switch is right
+   there, so the header drops the duplicate rather than mangling it. */
+@media (max-width:380px){
+  .nav .nav__cta{ display:none; }
+}
+
+/* Nothing moves for a reader who has asked for that; it appears. */
+@media (prefers-reduced-motion:reduce){
+  .nav__sheet{ transition:opacity .01s, visibility .01s; transform:none; }
+  .nav__menu-bars i{ transition:none; }
+}
 
 /* ============================================================
    1 · HERO - artwork window expands, then the deck stacks
@@ -545,8 +832,28 @@ html.sc-seen .loader{ display:none; }
 /* Stacked above WHO WE ARE: the last stretch of the pin has that section
    already scrolled up underneath this one, waiting to be uncovered by the
    crumble (see .who's negative margin). */
-.hero{ position:relative; height:100vh; z-index:5; }
-.hero__pin{ position:relative; height:100vh; width:100%; overflow:hidden; background:#000; }
+/* On a phone, the small viewport rather than the large one.
+
+   100vh on mobile is the height the page gets with the address bar
+   RETRACTED - the browser reports the tallest the viewport will ever be,
+   so that the number does not change under a page as the bar comes and
+   goes. Which is the right call for ordinary layout and the wrong one
+   here: the hero is a fixed, pinned composition, centred, and for the
+   whole of the first scroll the bar is still showing - so the bottom of
+   the picture was one address bar below the bottom of the screen and the
+   whole composition sat that much low.
+
+   100svh is that height with the bar SHOWING, and it is stable in the way
+   100dvh is not: dvh changes as the bar retracts, which would resize a
+   pinned element mid-animation and hand ScrollTrigger a spacer of a
+   different height than the one it measured. So the composition fits on
+   arrival, and the room the retracting bar gives back is black added
+   below a black backdrop, which is nothing to look at. */
+@media (pointer:coarse){
+  :root{ --screen:100svh; }
+}
+.hero{ position:relative; height:var(--screen); z-index:5; }
+.hero__pin{ position:relative; height:var(--screen); width:100%; overflow:hidden; background:#000; }
 
 /* the SOC▢HEERS artwork, full bleed */
 .hero__frame{ position:absolute; inset:0; z-index:1; will-change:transform,opacity; }
@@ -714,14 +1021,14 @@ html.no-js .meaning{ visibility:visible; }
   width:38px; height:38px; border-radius:50%;
   display:grid; place-items:center;
   background:transparent; color:var(--accent);
-  border:1px solid rgba(47,229,137,.32);
+  border:1px solid color-mix(in srgb, var(--accent) 32%, transparent);
   cursor:none; transition:background .35s var(--ease), border-color .35s var(--ease), scale .35s var(--ease);
 }
 @media (hover:none){ .meaning__say{ cursor:pointer; } }
 /* `scale`, not `transform`: GSAP owns this element's transform for the
    pop-in, so the hover has to ride the standalone property to compose. */
 .meaning__say:hover, .meaning__say.is-saying{
-  background:rgba(47,229,137,.13); border-color:rgba(47,229,137,.75); scale:1.08;
+  background:color-mix(in srgb, var(--accent) 13%, transparent); border-color:color-mix(in srgb, var(--accent) 75%, transparent); scale:1.08;
 }
 .meaning__say:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 /* the two arcs sit dim until the word is actually spoken */
@@ -794,7 +1101,7 @@ html.no-js .meaning{ visibility:visible; }
    a screen up and parked underneath .hero, which is opaque black at a
    higher z-index. WHO WE ARE was still in the DOM, still laid out, simply
    covered - which is exactly what "it doesn't load for some people" was. */
-html.is-pinned .who{ margin-top:-100vh; }
+html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 /* Tighter than the shared .sec rhythm, and deliberately so: this is the
    section the hero's own frame crumbles onto, so it is read as one screen
    rather than scrolled into. Everything down to the counts has to sit
@@ -804,8 +1111,12 @@ html.is-pinned .who{ margin-top:-100vh; }
    tall, and this section's first line has to clear it. */
 .who{ position:relative; z-index:0; padding:clamp(100px,12vh,140px) 0 clamp(64px,9vh,110px); }
 
-.who__grid{ margin-top:clamp(18px,2.4vh,30px); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.02fr); gap:clamp(24px,3vw,56px); align-items:center; }
-.who__copy{ display:flex; flex-direction:column; }
+.who__grid{ margin-top:clamp(18px,2.4vh,30px); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr); gap:clamp(20px,2.4vw,44px); align-items:center; }
+/* Both side columns are held at the middle of the row so the claim and
+   the pitch read as two things the mark is hanging between, rather than
+   as two columns that happen to start at the same top edge. */
+.who__copy{ display:flex; flex-direction:column; align-items:flex-start; gap:clamp(16px,2.2vh,26px); align-self:center; }
+.who__say{ align-self:center; }
 
 /* Lede + pitch share one type size so they read as one statement that
    flips register mid-sentence: roman cream, then italic accent. */
@@ -816,7 +1127,6 @@ html.is-pinned .who{ margin-top:-100vh; }
 }
 .who__lede{
   font-weight:700; color:var(--cream);
-  border-top:1px solid var(--line); padding-top:16px;
 }
 /* The name, set exactly as the pitch below it is: same face, same italic,
    same 400. Dropping to 400 against the lede's 700 lets the name sit
@@ -827,10 +1137,9 @@ html.is-pinned .who{ margin-top:-100vh; }
 }
 .who__pitch{
   font-weight:400; font-style:italic; color:var(--accent);
-  /* still a clear break between the white claim and the green pitch, but
-     short of a full blank line - at this type size 1.2em was ~58px of air
-     in a column that has to end above the fold */
-  margin-top:.7em;
+  /* No lead-in gap any more: it is not sitting under the claim, it is
+     sitting beside the mark in its own column. */
+  margin-top:0;
 }
 .who__share{
   text-decoration:none;
@@ -838,26 +1147,34 @@ html.is-pinned .who{ margin-top:-100vh; }
 
 /* Stats as a ruled strip under the claim - one top rule across the column,
    vertical rules between counts, left-aligned so they sit under the copy. */
+/* Its own centred row under all three columns, the way the mock has it -
+   the counts belong to the section, not to the copy column. */
 .who__stats{
-  display:flex; justify-content:flex-start; align-items:stretch;
+  display:flex; justify-content:center; align-items:stretch;
   gap:0;
-  margin-top:clamp(24px,3.2vh,38px);
-  border-top:1px solid var(--line);
-  padding-top:16px;
+  margin-top:clamp(18px,2.6vh,32px);
 }
 .stat{
-  flex:0 0 auto; text-align:left;
+  flex:0 0 auto; text-align:center;
   padding:0 clamp(28px,3vw,48px);
   transition:transform .5s var(--ease);
 }
-.stat:first-child{ padding-left:0; }
 .stat:not(:first-child){ border-left:1px solid var(--line); }
 .stat:nth-child(1){ --stat-accent:var(--accent); }
-.stat:nth-child(2){ --stat-accent:#b9a6ef; }
-.stat:nth-child(3){ --stat-accent:#fea320; }
+/* the two behind it come off the design book's solids rather than being
+   mixed for this row - a lavender and an amber that were near-brand but
+   not the brand read as a fourth and fifth colour on a page that has six */
+.stat:nth-child(2){ --stat-accent:var(--purple); }
+.stat:nth-child(3){ --stat-accent:var(--tangerine); }
 .stat:hover{ transform:translateY(-4px); }
 .stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(38px,4vw,62px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--stat-accent, var(--accent)); }
+/* The digits carry their own transition as well as the figure's: the
+   count-up drives an inline colour on the span (initCounters), and
+   without this the palette would cut between solids instead of moving
+   through them. Shorter than the hold, so each colour still arrives and
+   sits rather than being permanently on its way somewhere. */
+.stat__num [data-count]{ transition:color .22s linear; }
 .stat__num i{ color:var(--cream); font-style:normal; }
 .stat__label{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
 
@@ -876,8 +1193,8 @@ html.is-pinned .who{ margin-top:-100vh; }
    what keeps the cursor pushing the grains where the eye expects. */
 .who__photo{
   position:relative; align-self:center;
-  width:auto; margin-right:calc(var(--pad) * -1);
-  margin-bottom:clamp(16px, 3.5vh, 44px);
+  width:auto; margin-right:0;
+  margin-bottom:0;
   height:clamp(330px, 33vw, 560px);
 }
 
@@ -898,17 +1215,18 @@ html.is-pinned .who{ margin-top:-100vh; }
      TUNE.toneCore in lib/particle-logo.ts - the particles, the still and
      the room they are in are all lit by one bulb, so they cannot be
      allowed to disagree about what colour it is. */
-  --bulb:164, 200, 255;
-  /* How far the canvas is allowed to hang past the frame, top and
-     bottom. The mark takes about four fifths of the frame's height, so
-     without this a grain thrown upward runs out of canvas almost
-     immediately and shears off against a straight edge. The canvas is
-     transparent and inert, so all this costs is a few more pixels to
-     clear - and grains can now be pushed clear of the section entirely
-     and drift back in. lib/particle-logo.ts measures the overhang off
-     the two boxes rather than being told it, so this number is the only
-     place it is set. */
+  --bulb:255, 203, 12;
+  /* How far the canvas is allowed to hang past the frame - vertically
+     against the frame's height, horizontally against its width. The mark
+     takes about four fifths of the frame, so without this a grain thrown
+     outward runs out of canvas almost immediately and shears off against
+     a straight edge. The canvas is transparent and inert, so all this
+     costs is a few more pixels to clear - and grains can now be pushed
+     clear of the section entirely and drift back in, on any side.
+     lib/particle-logo.ts measures the overhang off the two boxes rather
+     than being told it, so these are the only place they are set. */
   --plogo-bleed:34%;
+  --plogo-bleed-x:34%;
 }
 /* ---- the light it throws into the room ----
    The mark is a bulb and a lit bulb does not stop at its own glass, so
@@ -940,8 +1258,8 @@ html.is-pinned .who{ margin-top:-100vh; }
    left/right/top/bottom box with auto dimensions does not stretch it - it
    quietly keeps its intrinsic 300x150 and solves the insets around that. */
 .plogo canvas{
-  position:absolute; left:0; top:calc(var(--plogo-bleed) * -1);
-  width:100%; height:calc(100% + var(--plogo-bleed) * 2);
+  position:absolute; left:calc(var(--plogo-bleed-x) * -1); top:calc(var(--plogo-bleed) * -1);
+  width:calc(100% + var(--plogo-bleed-x) * 2); height:calc(100% + var(--plogo-bleed) * 2);
   display:block;
   opacity:0; transition:opacity 1.2s var(--ease);
 }
@@ -1112,7 +1430,7 @@ html.is-pinned .who{ margin-top:-100vh; }
 }
 .reel__hint{
   font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
-  color:#04140b; background:var(--accent); border-radius:999px; padding:8px 18px;
+  color:var(--accent-ink); background:var(--accent); border-radius:999px; padding:8px 18px;
   margin-bottom:clamp(18px,4vh,40px);
   opacity:0; transform:translateY(8px); transition:opacity .25s, transform .25s var(--ease);
 }
@@ -1206,7 +1524,14 @@ html.is-pinned .who{ margin-top:-100vh; }
   color:var(--brand, var(--accent));
   transform:scale(var(--pop, 1.14)) rotate(var(--tilt, -2deg));
 }
-.cmarquee__track .s{ color:var(--accent); font-size:.5em; }
+/* Each star its own solid, dealt in components/Sections.tsx - the accent
+   is the fallback for a star that somehow arrives without one, which is
+   what every star on this row used to be. Set after the hover rule above
+   on purpose: same specificity, so this is what keeps a star its own
+   colour while the cursor is on it rather than letting it flip to the
+   name's --brand. A size up too - at .5em the mark was reading as a
+   speck of dust between names rather than as a printed separator. */
+.cmarquee__track .s{ color:var(--star, var(--accent)); font-size:.62em; }
 .cmarquee__track .s:hover{ transform:none; }
 
 /* ============================================================
@@ -1229,6 +1554,15 @@ html.is-pinned .who{ margin-top:-100vh; }
 .tile:hover .tile__img img{ transform:scale(1.16); filter:grayscale(0); }
 .tile:hover .tile__go{ opacity:1; transform:translateX(0); }
 .tile:hover{ border-color:color-mix(in srgb, var(--accent) 55%, transparent); box-shadow:0 40px 80px rgba(0,0,0,.55); }
+/* The word that says the tile is a link. It rides in on hover, and on a
+   phone that means it never arrives - so the tiles were nine pictures
+   with a name on them and nothing saying any of them went anywhere. The
+   Work page's own tiles have had this treatment for a while
+   (.wk-tile__go in app/work/work.css); this is the home page's grid
+   catching up with it. */
+@media (hover:none){
+  .tile__go{ opacity:1; transform:none; }
+}
 @media (max-width:960px){ .tiles{ grid-template-columns:repeat(2,1fr); } }
 @media (max-width:560px){ .tiles{ grid-template-columns:1fr; } }
 
@@ -1245,7 +1579,7 @@ html.is-pinned .who{ margin-top:-100vh; }
 /* ---- the shows, going past ----
    One row, and typed so it cannot be mistaken for the client wall three
    sections above it. There the names are grey, mid-weight and set small
-   with a green star between them; here they are cream caps at twice the
+   with a coloured star between them; here they are cream caps at twice the
    weight, each one struck through with a marker swipe.
 
    The swipe is not one colour. The design book prints six solids (SoCheers
@@ -1254,8 +1588,8 @@ html.is-pinned .who{ margin-top:-100vh; }
    the palette once and hands each name its own. The colour arrives per
    item as --swipe from components/Sections.tsx; the rules below only say
    where it goes. This is the one place on the page the full palette is
-   spent, which is what keeps it reading as this section rather than as a
-   second accent competing with the green everywhere else.
+   spent, which is what keeps it reading as this section rather than as
+   six accents competing with the page's own one everywhere else.
 
    The swipe is a background, not a border or a pseudo-element: it can then
    be animated from a line to a full-height highlight on one property,
@@ -1279,9 +1613,15 @@ html.is-pinned .who{ margin-top:-100vh; }
      rendered without it should still be struck through rather than bare */
   --swipe:var(--purple);
 }
-/* the name */
+/* The name, and it is deliberately the largest type on the page - past
+   the section title above it (.sec__title, clamp(30px,4.8vw,66px)) at
+   every width, not just at the top of the scale. It used to sit under
+   that title on paper and level with it on screen, because these are set
+   in caps and caps read a size up: same numbers, and the row and the
+   heading looked like the same type. The heading asks the question and
+   the row is the answer, so the row wins. */
 .amarquee__show b{
-  font-family:var(--f-display); font-weight:700; font-size:clamp(24px,3.4vw,54px);
+  font-family:var(--f-display); font-weight:700; font-size:clamp(34px,5.6vw,78px);
   line-height:1; letter-spacing:-.02em; text-transform:uppercase; color:var(--cream);
   /* the swipe: a band of this show's colour sat across the lower third of
      the line, grown to the full height of it on hover. Two stops of the
@@ -1303,7 +1643,7 @@ html.is-pinned .who{ margin-top:-100vh; }
    the name it is pointing at, so the palette changes on the beat before
    the eye reaches the next show. */
 .amarquee__dot{
-  width:clamp(6px,.6vw,9px); height:clamp(6px,.6vw,9px); border-radius:50%;
+  width:clamp(8px,.85vw,13px); height:clamp(8px,.85vw,13px); border-radius:50%;
   --swipe:var(--purple);
   background:var(--swipe); flex:none; align-self:center;
 }
@@ -1328,7 +1668,7 @@ html.is-pinned .who{ margin-top:-100vh; }
 .contact__cta{
   display:inline-flex; align-items:center; gap:16px;
   font-family:var(--f-display); font-weight:700; font-size:clamp(20px,2.4vw,34px);
-  background:var(--accent); color:#04140b; border:none; border-radius:60px; padding:20px 44px; position:relative; overflow:hidden;
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:60px; padding:20px 44px; position:relative; overflow:hidden;
 }
 .contact__cta span,.contact__cta svg{ position:relative; z-index:2; transition:transform .4s var(--ease); }
 .contact__cta::before{ content:""; position:absolute; inset:0; background:var(--cream); transform:translateY(101%); transition:transform .45s var(--ease); }
@@ -1348,7 +1688,7 @@ html.is-pinned .who{ margin-top:-100vh; }
   border:1px solid var(--line); color:var(--muted);
   transition:color .3s var(--ease), border-color .3s var(--ease), transform .3s var(--ease);
 }
-.contact__social a:hover{ color:var(--accent); border-color:rgba(47,229,137,.5); transform:translateY(-3px); }
+.contact__social a:hover{ color:var(--accent); border-color:color-mix(in srgb, var(--accent) 50%, transparent); transform:translateY(-3px); }
 
 .cmodal__close,
 .cmodal__submit{ font-family:inherit; border:none; cursor:none; }
@@ -1390,7 +1730,7 @@ html.is-pinned .who{ margin-top:-100vh; }
   border:1px solid var(--line);
   transition:background .25s, border-color .25s, transform .25s;
 }
-.cmodal__close:hover{ background:rgba(47,229,137,.15); border-color:rgba(47,229,137,.5); transform:rotate(90deg); }
+.cmodal__close:hover{ background:color-mix(in srgb, var(--accent) 15%, transparent); border-color:color-mix(in srgb, var(--accent) 50%, transparent); transform:rotate(90deg); }
 
 .cmodal__visual{ position:relative; overflow:hidden; }
 .cmodal__visual img{ width:100%; height:100%; object-fit:cover; filter:saturate(.7) brightness(.75); }
@@ -1441,7 +1781,7 @@ html.is-pinned .who{ margin-top:-100vh; }
   margin-top:6px; align-self:flex-start;
   display:inline-flex; align-items:center; gap:12px;
   font-family:var(--f-display); font-weight:700; font-size:16px;
-  background:var(--accent); color:#04140b; border-radius:50px;
+  background:var(--accent); color:var(--accent-ink); border-radius:50px;
   padding:13px 26px;
   transition:transform .3s var(--ease), gap .3s var(--ease);
 }
@@ -1536,8 +1876,8 @@ html.is-pinned .who{ margin-top:-100vh; }
      · the bulb is three nested wrappers with one transform each (dock,
        swing, turn) so none of the three ever fights the other two.
 
-   Sits above the site's own loader and below the grain and the cursor, so
-   the film texture and the pointer stay continuous across the hand-off.
+   Sits above the site's own loader and below the cursor, so the pointer
+   stays continuous across the hand-off.
    ============================================================ */
 .overture{
   position:fixed; inset:0; z-index:9991; overflow:hidden;
@@ -1716,6 +2056,12 @@ html.is-pinned .who{ margin-top:-100vh; }
    --lit directly, which is what makes the ignition stutter a single
    property being set eight times rather than eight things kept in step. */
 .ovt__lit{ opacity:var(--lit); }
+/* and its opposite - the parts that are only there while the bulb is
+   dark. The catchlights on the disc are the whole of it: glass needs
+   them when there is nothing behind it, and must not have them once
+   there is. Same one-property switch, read the other way round; the
+   `opacity` attributes in the markup are the strengths they fade from. */
+.ovt__cold{ opacity:calc(var(--cold-a, 1) * (1 - var(--lit))); }
 
 /* The halo tight around the light. The lamp box is centred on the ring,
    and the light is not: the disc sits where the printed mark puts it,
@@ -1778,9 +2124,11 @@ html.is-pinned .who{ margin-top:-100vh; }
   stroke-width:3; stroke-linecap:round;
   stroke-dasharray:2.5 5.5;
 }
+/* No cast shadow behind the cord - only the warm pick-up once the bulb
+   is on. A drop-shadow under a rope is the realist reading of it; the
+   mark is flat, so the cord is flat with it. */
 .ovt__rope-bed, .ovt__rope, .ovt__rope-twist, .ovt__bead{
-  filter:drop-shadow(0 1px 3px rgba(0,0,0,.75))
-         drop-shadow(0 0 calc(var(--lit) * 8px) rgba(255,198,110,.5));
+  filter:drop-shadow(0 0 calc(var(--lit) * 8px) rgba(255,198,110,.5));
 }
 
 /* below this the mark is small enough that the cord would be crowding
@@ -2120,7 +2468,7 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   transition:color .3s var(--ease), border-color .3s var(--ease), background-color .3s var(--ease);
 }
 .foot__social a:hover{
-  color:#04140b; background:var(--accent);
+  color:var(--accent-ink); background:var(--accent);
   border-color:color-mix(in srgb, var(--accent) 60%, transparent);
 }
 

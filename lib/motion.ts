@@ -18,6 +18,7 @@ import Lenis from "lenis";
 import { OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
 import { keepPlaying } from "./autoplay";
 import { MEANING, WCARD_SFX } from "./content";
+import { acquirePointerField } from "./pointer-field";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -72,6 +73,14 @@ export function smoothTo(target: HTMLElement | number, duration = 1.2): void {
 export function initSite(): () => void {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canHover = window.matchMedia("(hover:hover)").matches;
+  /* Where the reader's attention is, however this machine expresses it -
+     a cursor, a finger, or the middle of the screen while neither is
+     saying. Everything below that used to bail out on `!canHover` reads
+     this instead; see lib/pointer-field.ts for why that is enough to make
+     the whole expressive layer work on a phone without a second
+     implementation of any of it. */
+  const pointer = acquirePointerField();
+  const touch = pointer.coarse;
   /* Asked once, synchronously, and answered identically over in
      components/Overture.tsx - see lib/overture.ts for why it has to be a
      pure function rather than a look at the DOM. When it is true this file
@@ -424,6 +433,10 @@ export function initSite(): () => void {
         { x: () => box().left, y: () => box().top, width: () => box().w, height: () => box().h },
         { x: () => boxEnd().left, y: () => boxEnd().top, width: () => boxEnd().w, height: () => boxEnd().h,
           duration: EXPAND, ease: "power2.out", onUpdate: fitCrop }, 0);
+      /* The one tween whose values are pixels off the current viewport, kept
+         so a viewport change can make it read them again - see remeasure()
+         below. It is the first thing added to tl, so it is child 0. */
+      const grow = tl.getChildren(false, true, false)[0] as gsap.core.Tween;
       // the artwork pushes toward the viewer and dissolves as its window takes over
       tl.to("[data-frame-img]", { scale: 1.45, duration: EXPAND, ease: "power2.out" }, 0);
       tl.to(tint, { autoAlpha: 0, duration: EXPAND * 0.75, ease: "power1.inOut" }, EXPAND * 0.1);
@@ -547,7 +560,7 @@ export function initSite(): () => void {
       const settling = () => performance.now() < handoff;
 
       /* The pin exists purely to hold the layout - a spacer exactly one
-         viewport tall, cancelled out by .who's own -100vh margin (globals.css)
+         viewport tall, cancelled out by .who's own --screen margin (globals.css)
          so it sits right at the hero's natural bottom edge with no gap. It
          does not drive anything: scrub is off, and the section only ever
          moves through this space in one jump (below), never by scrolling
@@ -602,9 +615,12 @@ export function initSite(): () => void {
       /* The margin and the space it cancels, claimed together and only once
          the space is real. ScrollTrigger wraps a pinned trigger in its own
          .pin-spacer, so the presence of that wrapper is the one honest
-         answer to "is there 100vh of spare scroll under the hero" - and it
-         is the answer `html.is-pinned .who { margin-top:-100vh }` in
-         globals.css is betting on. Claimed before the pin was built, that
+         answer to "is there a screen of spare scroll under the hero" - and
+         it is the answer `html.is-pinned .who { margin-top:calc(var(--screen)
+         * -1) }` in globals.css is betting on. (--screen is one viewport,
+         100vh on a desktop and 100svh on a phone; it is a token because the
+         hero's box, the pin's box and that margin all have to agree on the
+         same number.) Claimed before the pin was built, that
          bet was blind: any load where the pin did not come out the other
          side (an older browser, a throw inside ScrollTrigger, a layout it
          refused to spacer) still got the margin, and WHO WE ARE was dragged
@@ -700,6 +716,32 @@ export function initSite(): () => void {
       };
       ScrollTrigger.addEventListener("refresh", reassert);
       cleanups.push(() => ScrollTrigger.removeEventListener("refresh", reassert));
+
+      /* And the geometry is the other half of it. `grow` carries the stage's
+         rectangle as function-based values, which GSAP evaluates once and
+         then caches for the life of the tween; every other timeline in here
+         is scrubbed, so ScrollTrigger's own invalidateOnRefresh re-reads
+         them for free. This one is paused and driven by hand (below), so
+         nothing ever re-renders it on its own - after the viewport changes
+         size (a window drag, F11 in or out of full screen) the photo is
+         still sitting on the old screen's numbers, off its mark and stuck
+         there until a reload. That is what the reload was fixing.
+
+         A refresh is where the pin is remeasured, so re-read here too and
+         repaint the frame the timeline is currently parked on. Only this
+         tween is invalidated, never the whole timeline: the plain to()s
+         around it record their start values from the DOM, so invalidating
+         them at rest-after-expand would record the *end* state as the start
+         and the artwork would have nothing to come back to on the way up.
+         Events suppressed - this is a remeasure, not a playthrough, and the
+         crumble's handover .set()s must not fire a second time. */
+      const remeasure = () => {
+        grow.invalidate();
+        grow.render(grow.totalTime(), true, true);
+        fitCrop();
+      };
+      ScrollTrigger.addEventListener("refresh", remeasure);
+      cleanups.push(() => ScrollTrigger.removeEventListener("refresh", remeasure));
 
       const play = (time: number, duration: number, onDone?: () => void) => {
         // one clock on this timeline, ever. Two overlapping tweens on
@@ -1303,19 +1345,77 @@ export function initSite(): () => void {
        The other half of "it only ran on a hard refresh" is in
        initOvertureBridge: a restored scroll built these triggers already
        past their own start. */
+    /* The brand's own solids, read off the tokens rather than restated
+       here: :root in globals.css is where the design book's palette
+       lives, so this cannot drift from it. */
+    const HUE_TOKENS = ["--pink", "--sky", "--purple", "--tangerine", "--leaf", "--yellow"];
+    let hues: string[] | null = null;
+    function brandHues() {
+      if (!hues) {
+        const cs = getComputedStyle(document.documentElement);
+        hues = HUE_TOKENS.map((t) => cs.getPropertyValue(t).trim()).filter(Boolean);
+      }
+      return hues;
+    }
+
     function initCounters() {
-      document.querySelectorAll<HTMLElement>("[data-count]").forEach((el) => {
+      const DUR = 1.7;
+      /* How long one colour is held. The cycle runs on the clock, never
+         on the digits: 200 ticks through two hundred values in the same
+         1.7s that 12 ticks through twelve, so anything keyed to the
+         number itself would strobe on the big count and barely move on
+         the small one. A fixed hold gives all three counts the same
+         rhythm, and at 0.3s that is six colours over the run - a change
+         you read as a change rather than as a flicker. */
+      const HOLD = 0.3;
+      document.querySelectorAll<HTMLElement>("[data-count]").forEach((el, i) => {
         const end = parseFloat(el.getAttribute("data-count") || "0");
         const obj = { v: 0 };
+        /* Opt-in, and only where it is wanted: [data-count] is claimed
+           site-wide (see the note in lib/series-motion.ts), and the
+           colour belongs to the WHO WE ARE strip, not to every figure
+           that happens to count. */
+        const cycle = el.hasAttribute("data-count-hue") && !prefersReduced ? brandHues() : [];
         ScrollTrigger.create({
           trigger: el, start: "top 82%", once: true,
-          onEnter: () => gsap.to(obj, { v: end, duration: 1.7, ease: "power2.out",
-            onUpdate: () => { el.textContent = String(Math.round(obj.v)); } }),
+          onEnter: () => {
+            gsap.to(obj, { v: end, duration: DUR, ease: "power2.out",
+              onUpdate: () => { el.textContent = String(Math.round(obj.v)); } });
+            if (!cycle.length) return;
+            /* Each count starts a different distance into the palette, so
+               the three of them are never on the same colour at the same
+               time - a row that changes in unison reads as the page
+               flashing, not as three numbers arriving. */
+            const seed = i * 2;
+            const step = { n: 0 };
+            gsap.to(step, {
+              n: DUR / HOLD, duration: DUR, ease: "none",
+              onUpdate: () => {
+                el.style.color = cycle[(seed + Math.floor(step.n)) % cycle.length];
+              },
+              /* Handed back to the stylesheet rather than parked on the
+                 last colour: the figure's resting state is cream, and
+                 .stat__num's own colour transition carries it there. */
+              onComplete: () => { el.style.color = ""; },
+            });
+          },
         });
       });
     }
 
-    /* -------------------------------------------------- marquees */
+    /* -------------------------------------------------- marquees
+
+       `base` is seconds per pass of half the track, which is the honest
+       unit for a loop that wraps on half its own width - but it is not a
+       speed. Two rows on the same base do not travel at the same rate:
+       the further a track is, the faster it has to go to cover it in the
+       same time. That is why the awards row reads quicker than the client
+       wall on identical numbers - it is four passes of six names set big,
+       against one pass of twelve set small, so its half is a great deal
+       wider and its pixels-per-second follow.
+
+       So the base is per-row now, off data-marquee-base, defaulting to the
+       30 every row used to share. */
     let reflow = () => {};
     function initMarquees() {
       const items: {
@@ -1324,7 +1424,11 @@ export function initSite(): () => void {
       }[] = [];
       document.querySelectorAll<HTMLElement>("[data-marquee]").forEach((track) => {
         const dir = track.getAttribute("data-marquee") === "right" ? 1 : -1;
-        const state = { track, dir, half: track.scrollWidth / 2, current: 0, boost: 0, base: 30 };
+        const base = Number(track.dataset.marqueeBase);
+        const state = {
+          track, dir, half: track.scrollWidth / 2, current: 0, boost: 0,
+          base: Number.isFinite(base) && base > 0 ? base : 30,
+        };
         items.push(state);
         if (lenis) {
           lenis.on("scroll", (e: { velocity?: number }) => {
@@ -1449,11 +1553,32 @@ export function initSite(): () => void {
     /* -------------------------------------------------- cursor spotlight */
     function initSpotlight() {
       const spot = document.querySelector<HTMLElement>(".spotlight");
-      if (!spot || !canHover || prefersReduced) return;
-      let tx = window.innerWidth / 2, ty = window.innerHeight / 2, cx = tx, cy = ty;
-      on(window, "mousemove", ((e: MouseEvent) => { tx = e.clientX; ty = e.clientY; }) as EventListener);
+      if (!spot || prefersReduced) return;
+      let cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+
+      /* On touch the light is lit by a finger and goes out after it, and
+         that is not a compromise on the desktop behaviour - it is the only
+         version of this effect that means anything without a cursor. A
+         glow parked in the middle of a phone screen is not a highlight;
+         it is a tint on the whole page that never moves, which is to say
+         it is invisible except as a cost.
+
+         And it is a real cost. This is a viewport-sized fixed layer with
+         mix-blend-mode:screen on it, which forces the whole page under it
+         through a blended composite on every frame it changes - the sort
+         of thing a mid-range Android pays for in scroll smoothness. So
+         off is the resting state (is-lit is dropped, the element goes to
+         opacity 0, and nothing composites), the ticker does no work while
+         it is off, and the light exists for exactly as long as there is a
+         finger on the glass to justify it. */
       addTicker(() => {
-        cx += (tx - cx) * 0.09; cy += (ty - cy) * 0.09;
+        const p = pointer.read();
+        if (!p.live) return;
+        if (touch) {
+          spot.classList.toggle("is-lit", p.engaged);
+          if (!p.engaged) return;
+        }
+        cx += (p.x - cx) * 0.09; cy += (p.y - cy) * 0.09;
         spot.style.setProperty("--mx", cx + "px");
         spot.style.setProperty("--my", cy + "px");
       });
@@ -1461,7 +1586,7 @@ export function initSite(): () => void {
 
     /* -------------------------------------------------- 3D tilt + inner parallax */
     function initTilt() {
-      if (!canHover || prefersReduced) return;
+      if (prefersReduced) return;
       const els = gsap.utils.toArray<HTMLElement>("[data-tilt]");
       if (!els.length) return;
 
@@ -1502,8 +1627,21 @@ export function initSite(): () => void {
           iX: img ? gsap.quickTo(img, "xPercent", { duration: 1, ease: "power3" }) : null,
           iY: img ? gsap.quickTo(img, "yPercent", { duration: 1, ease: "power3" }) : null,
         });
-        on(el, "mouseenter", () => { const it = items.get(el); if (it) it.hover = true; });
-        on(el, "mouseleave", () => { const it = items.get(el); if (it) it.hover = false; });
+        if (touch) {
+          /* "hover" on a phone is a finger held on the card. It takes the
+             tilt from the ambient third up to full for as long as the
+             touch lasts, which makes a press the same act of commitment a
+             hover is on a desktop - and it settles back on its own the
+             moment the finger leaves, whether that was a tap or a scroll. */
+          const down = () => { const it = items.get(el); if (it) it.hover = true; };
+          const up = () => { const it = items.get(el); if (it) it.hover = false; };
+          on(el, "touchstart", down);
+          on(el, "touchend", up);
+          on(el, "touchcancel", up);
+        } else {
+          on(el, "mouseenter", () => { const it = items.get(el); if (it) it.hover = true; });
+          on(el, "mouseleave", () => { const it = items.get(el); if (it) it.hover = false; });
+        }
       });
 
       // only what's on screen is worth measuring each frame
@@ -1517,16 +1655,16 @@ export function initSite(): () => void {
       els.forEach((el) => io.observe(el));
       observers.push(io);
 
-      // driven off the ticker, not mousemove: during the hero pin the cards move
-      // under a stationary cursor, and a mousemove-only tilt would go stale
-      let mx = 0, my = 0, live = false;
-      on(window, "mousemove", ((e: MouseEvent) => {
-        mx = e.clientX; my = e.clientY; live = true;
-      }) as EventListener);
-
+      // driven off the ticker, not off a pointer event: during the hero pin
+      // the cards move under a stationary cursor, and an event-only tilt
+      // would go stale. On touch that is not an edge case but the whole
+      // mechanism - the field rests at the middle of the screen and the
+      // cards scroll past it, so the lean is the scroll's doing.
       const clamp = gsap.utils.clamp(-0.5, 0.5);
       addTicker(() => {
-        if (!live) return;
+        const p = pointer.read();
+        if (!p.live) return;
+        const mx = p.x, my = p.y;
         items.forEach((it) => {
           if (!it.onScreen) return;
           const r = it.el.getBoundingClientRect();
@@ -1552,9 +1690,28 @@ export function initSite(): () => void {
        Each WHAT WE DO card stacks its cover plus nine extra frames (see
        BUCKETS in lib/content.ts). On hover, flip through them fast with a
        quick crossfade (see .wcard__img img.is-active in globals.css);
-       on leave, settle back on the cover. */
+       on leave, settle back on the cover.
+
+       A line under the card holds the reel still. Each one carries its own
+       frame out of the same reel (data-frame, dealt in BUCKETS and written
+       out in components/Sections.tsx), so pointing at "Copywriting" stops
+       the cycle on Copywriting's picture and holds it there; coming off the
+       line and back onto the card's own area starts the reel again from
+       wherever it was parked. That is the whole reason the hold is a flag
+       rather than just a clearInterval: leaving a line has to be able to
+       tell "still on the card" from "off the card entirely", and the card's
+       own mouseleave is what settles it back to the cover.
+
+       The whir is NOT on that cycle. It used to fire on every frame swap,
+       which is a hit every 420ms for as long as the pointer is anywhere
+       on the card - the card is most of the tile, so simply crossing the
+       section played it - and a cue that constant stops being a cue. It
+       is on the service lines instead: one hit as the pointer arrives on
+       "Copywriting", one as it arrives on the next line. The reader is
+       picking something out at that point, so the sound is answering a
+       hover rather than narrating an animation. */
     function initWCardCycle() {
-      if (!canHover || prefersReduced) return;
+      if (prefersReduced) return;
 
       // One clip, cloned per play so a fast cycle doesn't cut its own last
       // hit short - same approach as the overture's cues (see sfx() in
@@ -1579,23 +1736,114 @@ export function initSite(): () => void {
 
         let i = 0;
         let timer: number | null = null;
+        // set while the pointer is parked on a service line: the reel is
+        // stopped on that line's frame and must not restart under it
+        let held = false;
         const show = (n: number) => {
           imgs.forEach((img, j) => img.classList.toggle("is-active", j === n));
         };
-
-        on(card, "mouseenter", () => {
-          if (timer) return;
+        const run = () => {
+          if (timer || held) return;
           timer = window.setInterval(() => {
             i = (i + 1) % imgs.length;
             show(i);
-            playWCardSfx();
           }, 420);
           intervals.push(timer);
-        });
-        on(card, "mouseleave", () => {
+        };
+        const halt = () => {
           if (timer) { window.clearInterval(timer); timer = null; }
+        };
+
+        const settle = () => {
+          halt();
+          held = false;
           i = 0;
           show(0);
+        };
+
+        if (touch) {
+          /* There is no "arriving at the card" on a phone, so the thing
+             that stands in for it is the card arriving at the reader: the
+             reel runs while the card is on screen and stops when it is
+             not. Which is not a compromise - it is closer to what the
+             card is for than the hover was, because on a desktop you have
+             to go and find out that these are reels and here you cannot
+             miss it.
+
+             It runs on the same interval and the same service lines park
+             it on the same frames, so nothing about the card's behaviour
+             is a second implementation. The whir does not come along: a
+             sound nobody asked for, fired by scrolling, on a device that
+             is usually in a pocket or a quiet room, is not the same cue
+             it is on a desktop where it answers a deliberate hover. */
+          const io = new IntersectionObserver((entries) => {
+            entries.forEach((e) => { if (e.isIntersecting) run(); else settle(); });
+          }, { threshold: 0.35 });
+          io.observe(card);
+          observers.push(io);
+        } else {
+          on(card, "mouseenter", run);
+          on(card, "mouseleave", settle);
+        }
+
+        card.querySelectorAll<HTMLElement>(".wcard__list li").forEach((li) => {
+          const frame = Number(li.dataset.frame);
+          const own = Number.isInteger(frame) && frame >= 0 && frame < imgs.length;
+
+          if (touch) {
+            /* Touch and hold a line to hold the reel on that line's
+               frame, exactly as pointing at it does. touchstart rather
+               than a tap, so the frame is there while the finger is still
+               down and the reader can slide between lines and watch the
+               reel answer - a tap that only resolved on release would
+               make this a thing you operate rather than a thing you feel.
+
+               The scroll is deliberately NOT swallowed. The service list
+               is most of the height of the card, so a touchstart here is
+               as often the beginning of a scroll as it is a hold, and a
+               preventDefault would turn the card into a dead patch the
+               page will not move under. Letting both happen costs
+               nothing: a scroll ends the touch, which releases the reel. */
+            const grab = () => {
+              if (!own) return;
+              held = true;
+              halt();
+              i = frame;
+              show(i);
+            };
+            const drop = () => {
+              if (!own) return;
+              held = false;
+              run();
+            };
+            on(li, "touchstart", grab);
+            on(li, "touchend", drop);
+            on(li, "touchcancel", drop);
+            return;
+          }
+
+          // one hit per line arrived at. mouseenter, not mouseover: mouseover
+          // re-fires as the pointer crosses inside the same <li>, which is a
+          // stutter of hits on one item rather than one hit per item.
+          on(li, "mouseenter", () => {
+            playWCardSfx();
+            if (!own) return;
+            held = true;
+            halt();
+            // parked *and* remembered: leaving the line carries on from this
+            // frame instead of snapping back to wherever the reel had got to
+            i = frame;
+            show(i);
+          });
+          // Fires before the card's own mouseleave when the pointer leaves
+          // the card from a line, so the reel restarted here is stopped again
+          // a moment later by the handler above - which is why that one does
+          // the settling back to the cover and this one does not.
+          on(li, "mouseleave", () => {
+            if (!own) return;
+            held = false;
+            run();
+          });
         });
       });
     }
@@ -1634,7 +1882,7 @@ export function initSite(): () => void {
           { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: 1.3, ease: "power3.out",
             scrollTrigger: { trigger, start: "top 86%" } });
       });
-      if (!canHover || prefersReduced) return;
+      if (prefersReduced) return;
 
       // Defaults, overridable per element with data-splash-reach / -pull /
       // -bite, because the two splashes on the site want different manners:
@@ -1678,14 +1926,12 @@ export function initSite(): () => void {
       els.forEach((el) => io.observe(el));
       observers.push(io);
 
-      // ticker rather than mousemove: the section scrolls under a still cursor
-      let mx = 0, my = 0, live = false;
-      on(window, "mousemove", ((e: MouseEvent) => {
-        mx = e.clientX; my = e.clientY; live = true;
-      }) as EventListener);
-
+      // ticker rather than a pointer event: the section scrolls under a
+      // still cursor, and on touch that scroll is the entire gesture
       addTicker(() => {
-        if (!live) return;
+        const p = pointer.read();
+        if (!p.live) return;
+        const mx = p.x, my = p.y;
         items.forEach((it) => {
           if (!it.onScreen) return;
           const r = it.el.getBoundingClientRect();
@@ -1705,10 +1951,32 @@ export function initSite(): () => void {
 
     /* -------------------------------------------------- magnetic */
     function initMagnetic() {
-      if (!canHover) return;
       document.querySelectorAll<HTMLElement>("[data-magnetic]").forEach((el) => {
         const xTo = gsap.quickTo(el, "x", { duration: 0.6, ease: "elastic.out(1,0.4)" });
         const yTo = gsap.quickTo(el, "y", { duration: 0.6, ease: "elastic.out(1,0.4)" });
+
+        if (touch) {
+          /* A magnet needs somewhere to pull the button *from*, and a
+             finger arrives already on top of it: there is no approach to
+             answer. So touch gets the other half of what the magnet was
+             for - the button acknowledging that it has been taken hold
+             of. Same elastic settle, so it is recognisably the same
+             control, and it leans off the touch's own offset within the
+             button, which is the magnet's gesture run backwards: press a
+             corner and that corner gives. */
+          on(el, "touchstart", ((e: TouchEvent) => {
+            const t = e.touches[0];
+            if (!t) return;
+            const r = el.getBoundingClientRect();
+            xTo((t.clientX - (r.left + r.width / 2)) * 0.16);
+            yTo((t.clientY - (r.top + r.height / 2)) * 0.16);
+          }) as EventListener);
+          const settle = () => { xTo(0); yTo(0); };
+          on(el, "touchend", settle);
+          on(el, "touchcancel", settle);
+          return;
+        }
+
         on(el, "mousemove", ((e: MouseEvent) => {
           const r = el.getBoundingClientRect();
           xTo((e.clientX - (r.left + r.width / 2)) * 0.4);
@@ -1826,6 +2094,17 @@ export function initSite(): () => void {
        the entry is written over the hero's own photo. All that is left here is
        the speaker: speechSynthesis, so there is no audio asset to ship, and it
        takes itself off the page on engines that lack it. */
+    /* --accent as numbers. getComputedStyle resolves a custom property's
+       own var() chain, so this comes back as the hex the page is leading
+       with (#38c6f0, #ffcb0c, ...) whatever route we are on. The fallback
+       is the site default rather than the old hard-coded green. */
+    function accentRGBA(el: Element, alpha: number): string {
+      const raw = getComputedStyle(el).getPropertyValue("--accent").trim();
+      const hex = /^#([0-9a-f]{6})$/i.exec(raw)?.[1] ?? "38c6f0";
+      const n = parseInt(hex, 16);
+      return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+    }
+
     function initMeaning() {
       const say = document.querySelector<HTMLButtonElement>("[data-meaning-say]");
       if (!say) return;
@@ -1840,10 +2119,15 @@ export function initSite(): () => void {
         const off = () => say.classList.remove("is-saying");
         u.onend = off; u.onerror = off;
         say.classList.add("is-saying");
-        // a ring of accent pushed outward: the visual for the sound
+        /* a ring of accent pushed outward: the visual for the sound.
+           Read off --accent rather than spelled out, because the accent
+           is now the page's own colour. Resolved to rgba() here on
+           purpose: GSAP interpolates the two shadows by parsing their
+           colours, and it does not parse var()/color-mix() - it wants
+           numbers on both ends. */
         gsap.fromTo(say,
-          { boxShadow: "0 0 0 0 rgba(47,229,137,.5)" },
-          { boxShadow: "0 0 0 18px rgba(47,229,137,0)", duration: 0.9, ease: "power2.out" });
+          { boxShadow: `0 0 0 0 ${accentRGBA(say, 0.5)}` },
+          { boxShadow: `0 0 0 18px ${accentRGBA(say, 0)}`, duration: 0.9, ease: "power2.out" });
         synth.speak(u);
       });
     }
@@ -2393,6 +2677,7 @@ export function initSite(): () => void {
   /* -------------------------------------------------- teardown */
   return () => {
     ac.abort();
+    pointer.release();
     cleanups.forEach((fn) => fn());
     tickers.forEach((fn) => gsap.ticker.remove(fn));
     observers.forEach((o) => o.disconnect());

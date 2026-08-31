@@ -10,3 +10,10 @@ next-env.d.ts
 # The Netflix master is a 476MB broadcast delivery - too large for GitHub,
 # and there is nothing in it the web cut does not have.
 assets/netflix-mi.src.mp4
+# The Work tab's case study films, moved out of public/ so a deploy never
+# ships them: 990MB of broadcast masters that only the build reads.
+# The wall takes one frame out of each; nothing serves the file itself.
+assets/bhim-upi.src.mp4
+assets/dhurandhar-2.src.mp4
+assets/made-in-titan.src.mp4
+assets/special-ops-2.src.mp4

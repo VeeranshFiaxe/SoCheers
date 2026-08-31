@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 export default function Contact() {
   return (
     <>
-      {/* Light throughout, the same way /blogs is - see .ct-page in
+      {/* Light throughout, the same way /insights is - see .ct-page in
           contact.css. This page used to be the site's dark theme with a
           dark form panel on it, which made it the one page you arrived at
           from the nav that looked like a different site to the Insights

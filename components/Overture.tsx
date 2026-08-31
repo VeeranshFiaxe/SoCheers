@@ -111,21 +111,22 @@ function Lamp() {
           <stop offset="1" stopColor="#0c0a07" />
         </radialGradient>
 
-        {/* Hot: the brand disc, incandescent. Centred on the disc rather
-            than on the bulb, which is what makes the light read as coming
-            from a specific thing inside the glass and not as a fill. */}
-        <radialGradient id="ovt-blob-on" cx="0.42" cy="0.36" r="0.78">
-          <stop offset="0" stopColor="#fffdf2" />
-          <stop offset="0.28" stopColor="#ffe9a0" />
-          <stop offset="0.62" stopColor="#ffcb0c" />
-          <stop offset="1" stopColor="#ff9b1a" />
+        {/* Hot: the brand disc, alight. Centred, and it never goes near
+            white - an off-centre white core is a rendered incandescent
+            filament, and what should be lighting up is the logo's yellow.
+            The falloff is a shade of that yellow at either end, so the
+            disc stays one flat brand colour with a warm rim. */}
+        <radialGradient id="ovt-blob-on" cx="0.5" cy="0.5" r="0.76">
+          <stop offset="0" stopColor="#ffd94a" />
+          <stop offset="0.6" stopColor="#ffcb0c" />
+          <stop offset="1" stopColor="#ffab14" />
         </radialGradient>
-        {/* and the soft wash of it over its own face, under the hot core */}
-        <radialGradient id="ovt-disc-wash" cx="0.46" cy="0.4" r="0.7">
-          <stop offset="0" stopColor="#fff4d2" stopOpacity="0.9" />
-          <stop offset="0.4" stopColor="#ffce7d" stopOpacity="0.5" />
-          <stop offset="0.78" stopColor="#ff9b36" stopOpacity="0.2" />
-          <stop offset="1" stopColor="#ff7a1a" stopOpacity="0.05" />
+        {/* and the soft wash of it over its own face, under the hot core -
+            a warm veil now rather than a highlight, for the same reason */}
+        <radialGradient id="ovt-disc-wash" cx="0.5" cy="0.5" r="0.72">
+          <stop offset="0" stopColor="#ffd76a" stopOpacity="0.3" />
+          <stop offset="0.6" stopColor="#ffbe3c" stopOpacity="0.16" />
+          <stop offset="1" stopColor="#ff9b1a" stopOpacity="0.04" />
         </radialGradient>
 
         <filter id="ovt-soft" x="-60%" y="-60%" width="220%" height="220%">
@@ -195,12 +196,32 @@ function Lamp() {
           fill="url(#ovt-disc-wash)"
           opacity="0"
         />
-        {/* the two catchlights on its face - the same pair that used to
-            sit on the envelope, carried across at the same fraction of
-            the radius and in the same direction, so the light still
-            comes from the upper left. */}
-        <ellipse cx="129.4" cy="82.9" rx="5" ry="7.5" fill="#fff" opacity="0.4" transform="rotate(-24 129.4 82.9)" />
-        <ellipse cx="215.3" cy="198.9" rx="16" ry="9" fill="#fff" opacity="0.06" transform="rotate(28 215.3 198.9)" />
+        {/* The two catchlights on its face, and they belong to the dark
+            bulb only: on --cold, so they fade out exactly as the light
+            comes up. Off, they are what stops the disc reading as a flat
+            hole - glass with nothing behind it. Lit, they would be a
+            specular pair over a light source, which is the intricate,
+            rendered kind of mark this is not. */}
+        <ellipse
+          className="ovt__cold"
+          style={{ "--cold-a": 0.4 } as React.CSSProperties}
+          cx="129.4"
+          cy="82.9"
+          rx="5"
+          ry="7.5"
+          fill="#fff"
+          transform="rotate(-24 129.4 82.9)"
+        />
+        <ellipse
+          className="ovt__cold"
+          style={{ "--cold-a": 0.06 } as React.CSSProperties}
+          cx="215.3"
+          cy="198.9"
+          rx="16"
+          ry="9"
+          fill="#fff"
+          transform="rotate(28 215.3 198.9)"
+        />
       </g>
 
       {/* 3 · the mark itself - the ring and the three bars of the base, in

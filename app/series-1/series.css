@@ -15,7 +15,7 @@
    the two files never disagree about where anything ends up.
 
    The page runs on the site's own palette - the dark ground, cream type,
-   the green accent - and it is the same ground as Work and the home
+   the page's accent - and it is the same ground as Work and the home
    page, not a colder one of its own. The token stays, because the whole
    page's grading is written from it.
 
@@ -282,8 +282,8 @@
     drop-shadow(0 26px 46px rgba(0,0,0,.72))
     drop-shadow(0 0 24px rgba(11,11,12,.9));
 }
-.s-cross__fig--near.s-cross__fig--right{ filter:drop-shadow(-2px 0 0 rgba(47,229,137,.5)) drop-shadow(0 26px 48px rgba(0,0,0,.75)); }
-.s-cross__fig--near.s-cross__fig--left{ filter:drop-shadow(2px 0 0 rgba(47,229,137,.5)) drop-shadow(0 26px 48px rgba(0,0,0,.75)); }
+.s-cross__fig--near.s-cross__fig--right{ filter:drop-shadow(-2px 0 0 color-mix(in srgb, var(--accent) 50%, transparent)) drop-shadow(0 26px 48px rgba(0,0,0,.75)); }
+.s-cross__fig--near.s-cross__fig--left{ filter:drop-shadow(2px 0 0 color-mix(in srgb, var(--accent) 50%, transparent)) drop-shadow(0 26px 48px rgba(0,0,0,.75)); }
 
 .s-cross__fig--far{
   --w:clamp(86px,9vw,146px);
@@ -535,7 +535,7 @@
    bearings and still sit behind the letterforms. */
 .spost__hi{
   position:relative; font-style:normal;
-  color:#04140b;
+  color:var(--accent-ink);
   text-shadow:none;
 }
 .spost__hi::before{
@@ -1052,7 +1052,7 @@ a.s-ep:hover .s-ep__shot img{ transform:scale(1.06); }
   border-radius:50%; background:rgba(0,0,0,.42);
   transition:background .35s var(--ease), color .35s var(--ease);
 }
-a.s-ep:hover .s-ep__glyph{ background:var(--accent); color:#04140b; }
+a.s-ep:hover .s-ep__glyph{ background:var(--accent); color:var(--accent-ink); }
 
 .s-ep__slate{
   position:absolute; z-index:2; right:12px; bottom:14px;
@@ -1075,7 +1075,7 @@ a.s-ep:hover .s-ep__glyph{ background:var(--accent); color:#04140b; }
 .s-cta__row{ margin-top:clamp(30px,5vh,52px); display:flex; align-items:center; justify-content:center; gap:clamp(18px,3vw,44px); flex-wrap:wrap; }
 .s-cta__go{
   display:inline-flex; align-items:center; padding:16px 34px;
-  border-radius:999px; background:var(--accent); color:#04140b;
+  border-radius:999px; background:var(--accent); color:var(--accent-ink);
   font-weight:500; font-size:15px;
 }
 /* "Shot with" is a label, not body copy, so it takes --dim rather than

@@ -80,7 +80,7 @@ export default function Loader() {
       /* The sheet comes up, the cue goes out under it, and the loader
          fades off the front of a room that is already there. Nothing is
          ever seen mid-build: the overture takes the attribute off and
-         starts its own boot behind this green. */
+         starts its own boot behind this accent. */
       const tl = gsap.timeline();
       tl.to(el.querySelector(".loader__sheet"), {
         scaleY: 1, duration: 0.5, ease: "power4.in", transformOrigin: "bottom",

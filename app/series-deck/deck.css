@@ -50,7 +50,7 @@
      plate in the deck is laid at about 52% over the cinema behind it,
      which is why --plate is used with an opacity rather than as a solid.
 
-     The site's own accent is the green, and it keeps every job it has
+     The page's own accent keeps every job it has
      everywhere else on this page: the rail's fill, the slate numerals,
      the link hovers, the button. The orange is spent on two things and
      two only - the title plate, and the word blocked inside a sentence.
@@ -515,7 +515,7 @@
 }
 .dk-out__go{
   display:inline-flex; align-items:center; padding:16px 34px;
-  border-radius:999px; background:var(--accent); color:#04140b;
+  border-radius:999px; background:var(--accent); color:var(--accent-ink);
   font-weight:500; font-size:15px;
 }
 .dk-out__alt{ display:inline-flex; align-items:center; gap:8px; color:var(--dim); font-size:14px; }

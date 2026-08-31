@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { AI_HERO, AI_THOUGHTS } from "@/lib/ai-content";
+import { acquirePointerField, prefersReducedMotion } from "@/lib/pointer-field";
 
 /* ============================================================
    THE HERO'S NOISE - a figure, and everything being shouted at him.
@@ -41,9 +42,16 @@ import { AI_HERO, AI_THOUGHTS } from "@/lib/ai-content";
    which would re-render the field sixty times a second to move it a
    few pixels.
 
-   It is skipped outright without a pointer or under reduced motion:
-   the bubbles keep their drift animation (CSS, in ai.css) and lose the
-   chase, which is the layer nobody on a phone was getting anyway.
+   The pair comes off the shared pointer field rather than off mousemove
+   (lib/pointer-field.ts), which is what puts this layer on a phone. The
+   field rests at the middle of the screen there, and the sum the bubbles
+   read is the pointer's position *within this section* - so as the hero
+   scrolls up past that resting point, the offset runs from one end of
+   the range to the other and the swarm parts around it. Same chase,
+   driven by the scroll instead of by a hand; put a finger down and it
+   follows that instead.
+
+   Only reduced motion opts out now, and it keeps the CSS drift.
    ============================================================ */
 export default function AiThoughts() {
   const stage = useRef<HTMLDivElement>(null);
@@ -51,36 +59,45 @@ export default function AiThoughts() {
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
-    if (!window.matchMedia("(hover: hover)").matches) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (prefersReducedMotion()) return;
 
-    /* where the cursor is, and where the field has caught up to - the
+    const pointer = acquirePointerField();
+
+    /* where the pointer is, and where the field has caught up to - the
        gap between them is the only easing this needs */
-    let tx = 0;
-    let ty = 0;
     let x = 0;
     let y = 0;
     let raf = 0;
 
-    const onMove = (e: MouseEvent) => {
-      const r = el.getBoundingClientRect();
-      tx = (e.clientX - r.left) / r.width - 0.5;
-      ty = (e.clientY - r.top) / r.height - 0.5;
-      if (!raf) raf = requestAnimationFrame(tick);
-    };
-
+    /* The loop runs only while the hero is actually on screen. It has to
+       be a loop rather than an event now - the target moves when the
+       section scrolls even if nothing has touched the screen - and a
+       permanent rAF for a decoration two pages down is exactly the sort
+       of thing that shows up as a flat battery. */
     const tick = () => {
-      x += (tx - x) * 0.08;
-      y += (ty - y) * 0.08;
-      el.style.setProperty("--mx", x.toFixed(4));
-      el.style.setProperty("--my", y.toFixed(4));
-      /* keep running only while there is still a gap worth closing */
-      raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.001 ? requestAnimationFrame(tick) : 0;
+      const r = el.getBoundingClientRect();
+      const p = pointer.read();
+      if (p.live && r.width && r.height) {
+        const tx = (p.x - r.left) / r.width - 0.5;
+        const ty = (p.y - r.top) / r.height - 0.5;
+        x += (tx - x) * 0.08;
+        y += (ty - y) * 0.08;
+        el.style.setProperty("--mx", x.toFixed(4));
+        el.style.setProperty("--my", y.toFixed(4));
+      }
+      raf = requestAnimationFrame(tick);
     };
 
-    window.addEventListener("mousemove", onMove, { passive: true });
+    const io = new IntersectionObserver((entries) => {
+      const on = entries.some((e) => e.isIntersecting);
+      if (on && !raf) raf = requestAnimationFrame(tick);
+      if (!on && raf) { cancelAnimationFrame(raf); raf = 0; }
+    }, { rootMargin: "10%" });
+    io.observe(el);
+
     return () => {
-      window.removeEventListener("mousemove", onMove);
+      io.disconnect();
+      pointer.release();
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);

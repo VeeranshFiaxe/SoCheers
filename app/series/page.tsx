@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import "./series.css";
 import SeriesTestStory from "@/components/SeriesTestStory";
 import SiteMotion from "@/components/SiteMotion";
-import { CONCEPT, SERIES_CTA } from "@/lib/series-content";
+import { ART, CONCEPT, HERO, SERIES_CTA, TEXTURE } from "@/lib/series-content";
 
 export const metadata: Metadata = {
   title: `${CONCEPT.title} · SoCheers`,
-  description: "A flat pass at the Series tab - one layout for every beat.",
+  /* the standfirst on the card itself - the tab describes itself the
+     same way in a search result as it does on the screen */
+  description: HERO.standfirst,
 };
 
 /* ============================================================
@@ -38,18 +40,80 @@ export const metadata: Metadata = {
    not reused: those are built around [data-split], which is a different
    argument - a heading that only exists once a splitter has run.
    ============================================================ */
+/* The name, with its last word carrying the page's highlighter block -
+   the same device the beats use on one word of a line, spent here on
+   the word the concept is named for. Split rather than hard-coded so
+   CONCEPT stays the only place the title is spelled. */
+const titleParts = (full: string) => {
+  const at = full.lastIndexOf(" ");
+  return at < 0 ? { head: "", last: full } : { head: full.slice(0, at + 1), last: full.slice(at + 1) };
+};
+
 export default function SeriesTest() {
+  const title = titleParts(CONCEPT.title);
+
   return (
     <>
       <main id="top" className="st-page">
-        <header className="st-head">
-          <div className="wrap">
-            <span className="st-head__tag">Series</span>
-            <h1 className="st-head__title">{CONCEPT.title}</h1>
-            <p className="st-head__note">
-              One treatment for every section, no scroll work.
-            </p>
+        {/* ---- the title card -------------------------------------
+            The opening screen is the one place this page is allowed to
+            be a picture before it is an argument. Same seven layers as
+            a poster beat on /series-1 - ground, frames, scrim, type,
+            a frame lifted in FRONT of the words, grade, gate - staged
+            in CSS only, because this route still runs no scroll work.
+            The one bit of motion is an entrance: the gate opens, the
+            frames settle, the type rises. See .st-hero in series.css.
+            ---------------------------------------------------------- */}
+        <header className="st-hero">
+          <div className="st-hero__stage" aria-hidden="true">
+            {/* 0 - the room the composition hangs in */}
+            <img
+              className="st-fill st-hero__ground"
+              src={ART(HERO.frames[0])}
+              alt=""
+              fetchPriority="high"
+            />
+
+            {/* 1 - the frames, overlapping rather than tiling */}
+            <div className="st-hero__frames">
+              {HERO.frames.map((f, i) => (
+                <span className="st-hero__frame" key={f} style={{ ["--i" as string]: i }}>
+                  <img src={ART(f)} alt="" decoding="async" />
+                </span>
+              ))}
+            </div>
+
+            {/* 2 - ground for the type */}
+            <span className="st-hero__scrim" />
+
+            {/* 3 - the grade */}
+            <img className="st-grain" src={ART(TEXTURE.grain)} alt="" decoding="async" />
+
+            {/* 4 - the letterbox */}
+            <span className="st-gate st-gate--t" />
+            <span className="st-gate st-gate--b" />
           </div>
+
+          <div className="wrap st-hero__type">
+            <span className="st-hero__tag">{HERO.tag}</span>
+            <h1 className="st-hero__title">
+              {title.head}
+              <em className="st-hi">{title.last}</em>
+            </h1>
+            <p className="st-hero__note">{HERO.standfirst}</p>
+          </div>
+
+          {/* 5 - the frame in front of the words. Outside the stage so
+              it sits over the type rather than under it, which is the
+              layer that gives the card depth. */}
+          <span className="st-hero__inset" aria-hidden="true">
+            <img src={ART(HERO.inset)} alt="" decoding="async" />
+          </span>
+
+          <span className="st-hero__cue" aria-hidden="true">
+            <i />
+            {HERO.cue}
+          </span>
         </header>
 
         <SeriesTestStory />

@@ -17,11 +17,12 @@
    thumbnails, links, headlines and lines, and Netflix x MI has its
    film. Nothing on that section is a placeholder.
 
-   The browse wall under it is half done: the brand list is the
-   client's, the pictures are not - the drive folders under
-   public/assets/SC Website Revamp/03. Work/ have the pinned work in
-   them and almost nothing else, so every tile below the stage is still
-   a stand-in image with a stand-in campaign name.
+   The browse wall under it is most of the way there. Twelve campaigns
+   are real now - the client's own case boards and case study films out
+   of public/assets/SC Website Revamp/03. Work/, cut for the web by
+   scripts/build-wall.mjs. The rest of the brands on their list are
+   still holding their places behind placeholder pictures, and FMCG is
+   the whole of one tab: every folder under it in the drive is empty.
 
    The case template is written and empty. Its five entries are the
    old placeholder set, they are not reachable from anywhere on the
@@ -42,7 +43,11 @@ export const WORK_CATEGORIES = [
   { id: "all", label: "All" },
   { id: "bfsi", label: "BFSI" },
   { id: "fmcg", label: "FMCG" },
-  { id: "fashion", label: "Fashion & Beauty" },
+  /* The client's own name for this one, and it is three words joined by
+     slashes rather than a tidier "Fashion" because luxury is a
+     different business from beauty and they sell to both. Carlton sits
+     here rather than under Others for the same reason. */
+  { id: "fashion", label: "Fashion / Beauty / Luxury" },
   { id: "entertainment", label: "Entertainment" },
   /* The client's own last filter, and it settles a question this file
      used to carry an open note about: Croma, Carlton, Cordelia Cruises,
@@ -305,13 +310,33 @@ export type WorkAsset = {
   pending?: boolean;
 };
 
-/* PENDING ASSETS - the brands are the client's real list, mapped to the
-   confirmed categories. The images are repo placeholders cycled so that
-   both orientations and a range of aspect ratios are exercised.
+/* ------------------------------------------------------------------
+   THE TILES, AND WHICH OF THEM ARE REAL.
 
-   The five that had no clean category - Croma, Carlton, Cordelia
-   Cruises, TCS and Cipla Innoventia - are under "Others" now, which is
-   the client's own answer to the question this note used to ask. */
+   Two helpers, and the difference between them is the difference
+   between work that has arrived and work that has not.
+
+   `real()` is a campaign the client has actually sent. Its picture is a
+   web copy under /assets/work/wall/ derived from their own master by
+   scripts/build-wall.mjs - a resized case board, or for the case study
+   films one frame pulled out of the cut. The wall never plays anything,
+   so a film needs a still and nothing more; if a film ever has to play
+   it wants the treatment in scripts/build-film.mjs first.
+
+   `pending()` is a brand off the client's list with nothing behind it
+   yet. It draws a repo placeholder and carries the PENDING badge. These
+   are not filler for their own sake - the category tabs are the
+   client's own five and a tab that filters to an empty wall reads as a
+   broken site, so the brands they named hold their places until their
+   work turns up.
+
+   Swapping one over is a one-line change: drop the file in the drive
+   folder, add it to TILES in scripts/build-wall.mjs, run the script,
+   and move the entry from pending() to real().
+   ------------------------------------------------------------------ */
+
+/* The placeholder pictures, cycled so both orientations and a range of
+   aspect ratios are exercised. Only pending() reads these. */
 const P = [
   "/assets/work-bfsi.png",
   "/assets/work-entertainment.png",
@@ -326,7 +351,7 @@ const SHAPES: [number, number][] = [
   [1200, 1500], [1600, 900], [1200, 1200], [1012, 1800], [1600, 1000],
 ];
 
-const brand = (
+const pending = (
   i: number,
   name: string,
   tag: string,
@@ -345,35 +370,92 @@ const brand = (
   };
 };
 
+/* `id` is the tile's own file name under /assets/work/wall/ and the id
+   it will carry on the CDN. `slug` is the separate, optional thing: the
+   case page this campaign opens into. Two campaigns have one; the rest
+   pass nothing and stay as tiles that do not move.
+
+   `title` is off the client's own board or film - the line the work
+   leads with - rather than anything written here. It is not drawn on
+   the tile; it is the alt text, which is the one place a description of
+   the picture is owed to someone who cannot see it.
+
+   Sizes are the derived JPG's, printed by scripts/build-wall.mjs. */
+const real = (
+  id: string,
+  brand: string,
+  title: string,
+  tag: string,
+  kind: "image" | "video",
+  w: number,
+  h: number,
+  /* Set only when a case page for this campaign actually exists in
+     CASES below. Passing a slug for a page nobody has written yet gives
+     the reader a link to lorem ipsum, which is worse than a tile that
+     does not move. */
+  slug?: string,
+): WorkAsset => ({
+  publicId: `work/${tag}/${id}`,
+  brand,
+  title,
+  kind,
+  thumb: `/assets/work/wall/${id}.jpg`,
+  w, h,
+  tags: [tag],
+  ...(slug ? { slug } : {}),
+});
+
 export const WORK_ASSETS: WorkAsset[] = [
-  /* BFSI */
-  brand(0, "Yes Bank", "bfsi"),
-  brand(1, "IndusInd", "bfsi", "video"),
-  brand(2, "BHIM UPI", "bfsi"),
-  brand(3, "Zurich Kotak", "bfsi"),
-  /* FMCG */
-  brand(4, "Belgian Waffle", "fmcg"),
-  brand(5, "Prava", "fmcg"),
-  brand(6, "ITC", "fmcg", "video"),
-  brand(7, "Havmor", "fmcg"),
-  brand(8, "Tata Soulfull", "fmcg"),
-  brand(9, "Yippee", "fmcg"),
-  /* Fashion & Beauty */
-  brand(10, "Superdry", "fashion"),
-  brand(11, "Raymond", "fashion", "video"),
-  brand(12, "Wacoal", "fashion"),
-  brand(13, "Nykaa", "fashion"),
-  /* Entertainment */
-  brand(14, "Netflix · Maa Behen", "entertainment", "video"),
-  brand(15, "Ab Hoga Hissab", "entertainment"),
-  brand(16, "JioHotstar", "entertainment", "video"),
-  brand(17, "Family Man × Alexa", "entertainment"),
-  /* Others */
-  brand(18, "TCS", "others"),
-  brand(19, "Cipla Innoventia", "others"),
-  brand(20, "Croma", "others", "video"),
-  brand(21, "Carlton", "others"),
-  brand(22, "Cordelia Cruises", "others"),
+  /* ---- BFSI ---- */
+  real("yes-bank", "Yes Bank", "Life Ko Banao Rich", "bfsi", "image", 1600, 1131),
+  real("bhim-upi", "BHIM UPI", "Mother's Day", "bfsi", "video", 1600, 900),
+  pending(0, "IndusInd", "bfsi", "video"),
+  pending(3, "Zurich Kotak", "bfsi"),
+
+  /* ---- FMCG ----
+     Nothing here yet. Every folder under FMCG/ in the client's drive is
+     empty, so all six are still holding their places. */
+  pending(4, "Belgian Waffle", "fmcg"),
+  pending(5, "Prava", "fmcg"),
+  pending(6, "ITC", "fmcg", "video"),
+  pending(7, "Havmor", "fmcg"),
+  pending(8, "Tata Soulfull", "fmcg"),
+  pending(9, "Yippee", "fmcg"),
+
+  /* ---- Fashion / Beauty / Luxury ---- */
+  real("superdry", "Superdry Sport", "Chase What Drives You", "fashion", "image", 1376, 768),
+  real("wacoal", "Wacoal", "#WacoalKnowsBreast", "fashion", "image", 1600, 900),
+  pending(11, "Raymond", "fashion", "video"),
+  pending(13, "Nykaa", "fashion"),
+  pending(21, "Carlton", "fashion"),
+
+  /* ---- Entertainment ----
+     The Netflix x MI case study film in this folder is the same file as
+     the pinned stage's, so it is not tiled here as well - the wall
+     would be showing the reader the piece they have just scrolled past.
+     Its own tile is the stage. */
+  real("maa-behen", "Netflix · Maa Behen", "Reserved for Women. Reclaimed for Maa Behen.", "entertainment", "image", 1600, 1600, "maa-behen"),
+  /* The case that covers both pinned Netflix pieces at once. Its own
+     key art, not either of theirs - see the note in build-wall.mjs. */
+  real("netflix-mi-srh", "Netflix × MI × SRH", "Chill Like a Champion", "entertainment", "video", 1600, 900, "netflix-mi-srh"),
+  real("dhurandhar-2", "Netflix · Dhurandhar 2", "Two weeks before its original home", "entertainment", "video", 1600, 900),
+  real("special-ops-2", "JioHotstar · Special Ops 2", "Leaked", "entertainment", "video", 1600, 900),
+  real("made-in-titan", "Titan", "Made in India - A Titan Story", "entertainment", "video", 1600, 900),
+  pending(15, "Ab Hoga Hissab", "entertainment"),
+  pending(17, "Family Man × Alexa", "entertainment"),
+
+  /* ---- Others ----
+     Two Croma pieces, which is correct and looks like a mistake, so:
+     the second arrived named FLIPKART-MOODBOARD-4.jpg and the board is
+     Croma's throughout - Flipkart is the competitor the campaign is
+     answering, not the client. Named for whose work it is. */
+  real("boat", "boAt", "boAt × Marvel - Unleash Your Super", "others", "image", 1600, 1132),
+  real("croma", "Croma", "AC Badhau Ya Ghatau", "others", "image", 1600, 900),
+  real("croma-dreams", "Croma", "Flipping the Carts on the Competitors", "others", "image", 1600, 900),
+  real("bgmi", "BGMI", "Update Podcast", "others", "image", 1600, 1135),
+  pending(18, "TCS", "others"),
+  pending(19, "Cipla Innoventia", "others"),
+  pending(22, "Cordelia Cruises", "others"),
 ];
 
 /* ------------------------------------------------------------------
@@ -548,6 +630,139 @@ const LOREM =
    a line break the client asked for survives exactly as typed.
    ============================================================ */
 export const CASES: CaseStudy[] = [
+  /* ------------------------------------------------------------------
+     THE FIRST REAL CASE.
+
+     Every word below is off the client's own case board - the file at
+     Entertainment/Maa Behen/MAA-BEHEN---Case-Study-(NEW).jpg.jpeg,
+     which is a finished case study that happened to be delivered as a
+     picture. The headings are its headings and the paragraphs are its
+     paragraphs; nothing here was written for the website.
+
+     Two things to know if this is ever compared against the board:
+
+     The board's headline reads RENAMED for Maa Behen and the campaign
+     cover reads RECLAIMED. Both are the client's, so each is kept where
+     they put it - the board's word is the page's title because the page
+     is the board, and the cover keeps its own on the wall tile.
+
+     The board sets the renamings with arrows, and they are kept as
+     arrows rather than turned into a sentence, because that is the
+     idea: the old sign on the left, the new sign on the right.
+     ------------------------------------------------------------------ */
+  {
+    slug: "maa-behen",
+    brand: "Netflix · Maa Behen",
+    title: "Reserved for Women. Renamed for Maa Behen.",
+    meta: ["Entertainment", "Out of Home · Social", "Delhi Metro"],
+    intro:
+      "Delhi Metro has designated compartments exclusively for women. For Netflix's Maa Behen, we turned this everyday piece of public infrastructure into the campaign itself.",
+    /* The poster in the compartment, shot on the day. It is the hero
+       rather than the campaign cover because the cover carries its own
+       headline set large, and a page title laid over a headline is two
+       headlines. This one is a photograph with room in it. */
+    hero: "/assets/work/cases/maa-behen/transit.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The problem",
+        body: "Maa Behen (“Mother Sister” in Hindi) is a film about three women pushing back against society’s rules and judgement. Instead of advertising to women, we wanted to launch the film inside a space already reserved for them.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "Millions of women travel every day in Delhi Metro’s women-only compartments, identified by familiar “Ladies Only” signage. For a film called Maa Behen, the media space was already there.",
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/maa-behen/train.jpg",
+        w: 720, h: 1280,
+        caption: "Western Railway, Mumbai",
+      },
+      {
+        type: "copy",
+        heading: "The creative proposition",
+        body: "If the space belonged to women, its language could belong to Maa Behen. Instead of adding ads, we transformed the Metro’s existing women-only signage into media for the film.",
+      },
+      {
+        type: "copy",
+        heading: "The creative manifestation",
+        body: "We didn’t advertise inside the Ladies’ Compartment. We renamed it. “Ladies Only” → “Entry for Maa Behen Only.” “Reserved for Ladies” → “Reserved for Maa Behen.” From doors to compartment signage, the transit’s everyday language became the campaign.",
+      },
+      {
+        type: "copy",
+        heading: "Impact",
+        body: "Commuters noticed before we told them to. Women began photographing and sharing the renamed signage organically, turning an everyday piece of transit infrastructure into a citywide conversation.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "17M", label: "Organic social media reach" },
+          { figure: "250K", label: "In earned media" },
+          { figure: "1.3M", label: "Total media reach" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/maa-behen/board.jpg",
+        w: 2400, h: 1350,
+        caption: "The case board",
+      },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "Netflix" },
+          { label: "Scope", value: "Out of Home · Social" },
+          { label: "Placement", value: "Inside Delhi Metro" },
+        ],
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     THE NETFLIX x IPL CASE - real picture, real film, no write-up yet.
+
+     This is a third piece, not a duplicate of either pinned one. Netflix
+     x MI and Netflix x SRH are the two announcements on the stage; this
+     is the case that covers the season across both teams, and the
+     client sent it with its own key art - "Chill like a champion" -
+     which is why the wall tile is a picture nobody has seen upstairs.
+
+     ---- about the film ----
+
+     The file in Entertainment/Netflix x MI x SRH/ was byte for byte the
+     same 487MB master as the pinned film - same md5 - so this page
+     plays the web cut that already exists rather than a second copy of
+     the same thing at a different filename. If the case is meant to run
+     a different edit, that edit has not arrived yet.
+
+     The words have not arrived either, so this is `pending`: the badge
+     is drawn, the picture and the film are real, and the copy below is
+     a placeholder in the same shape the rest of this file uses.
+     ------------------------------------------------------------------ */
+  {
+    slug: "netflix-mi-srh",
+    brand: "Netflix × MI × SRH",
+    title: "Chill Like a Champion",
+    meta: ["PENDING", "Entertainment", "Film · Social"],
+    intro:
+      "PENDING - the opening paragraph for the season across both teams. The picture and the film on this page are the client's; these words are not.",
+    hero: "/assets/work/wall/netflix-mi-srh.jpg",
+    film: "/assets/work/pinned/netflix-mi.mp4",
+    pending: true,
+    blocks: [
+      { type: "copy", heading: "The brief", body: LOREM },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "Netflix" },
+          { label: "Scope", value: "Film · Social" },
+          { label: "Year", value: "PENDING" },
+        ],
+      },
+    ],
+  },
+
   {
     slug: "netflix-mi",
     brand: "Netflix × MI",

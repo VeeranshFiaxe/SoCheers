@@ -1,4 +1,4 @@
-/* The green burst behind the About artwork.
+/* The burst behind the About artwork.
 
    Same family as components/Splash.tsx on the home page, deliberately not
    the same gesture. That one is a horizontal pour: a brush dragged sideways,
@@ -146,7 +146,7 @@ export default function AboutSplash({ uid = "ab" }: { uid?: string }) {
         <ellipse cx="322" cy="206" rx="164" ry="118" transform="rotate(-4 322 206)" fill="var(--sp-dark)" />
       </g>
 
-      {/* 3 · the green body */}
+      {/* 3 · the coloured body */}
       <g filter={`url(#${uid}-body)`}>
         <ellipse cx="300" cy="252" rx="162" ry="132" transform="rotate(-12 300 252)" fill="var(--sp-mid)" />
         <ellipse cx="356" cy="262" rx="146" ry="120" transform="rotate(10 356 262)" fill="var(--sp-mid)" />

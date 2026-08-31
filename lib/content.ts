@@ -96,9 +96,11 @@ export const OVERTURE_SFX = {
   expand: "/assets/SC Website Revamp/Sound effects/logo expand.mp3",
 } as const;
 
-/* the whir each WHAT WE DO card gets on hover, once per frame swap - one of
-   the two is picked at random each time so the cycle doesn't repeat the
-   exact same hit on every swap. See initWCardCycle() in lib/motion.ts. */
+/* the whir a WHAT WE DO service line gets as the pointer arrives on it -
+   "Copywriting", "Integrated Campaigns" and the rest, not the card itself.
+   One of the two is picked at random each time so a run down a list doesn't
+   repeat the exact same hit. See initWCardCycle() in lib/motion.ts, and the
+   note there for why it is off the card's frame cycle. */
 export const WCARD_SFX = [
   "/assets/SC Website Revamp/Sound effects/Frames 1.mp3",
   "/assets/SC Website Revamp/Sound effects/Frames 2.mp3",
@@ -144,7 +146,7 @@ export const NAV_LINKS: { href: string; label: string; soon?: boolean }[] = [
 
      Put a line back here to show one again; each page's own header
      comment lists what goes with it if one is ever deleted instead. */
-  { href: "/blogs", label: "Insights" },
+  { href: "/insights", label: "Insights" },
 ];
 
 /* the dictionary entry, written over the photo at the end of the hero pin */
@@ -166,7 +168,21 @@ export const STATS = [
 /* Per-bucket hover reels for the WHAT WE DO cards - the first frame in each
    is the existing cover (untouched), the rest are the "2..10" pass the
    client dropped into the same folder. Cycled on hover, see initWCardCycle()
-   in lib/motion.ts. */
+   in lib/motion.ts.
+
+   Every service line under a card also owns one frame out of its own
+   bucket's reel - `img` on each item below. Pointing at the card runs the
+   reel; pointing at a line stops it on that line's frame, which is what
+   makes the picture answer the word rather than just move behind it.
+
+   The pairings are positional, not pictorial, and it is worth being plain
+   about why: the assets arrive named "Strategy 2..10", so there is nothing
+   in them that says which one is Media Planning and which is Insights. So
+   each list is dealt the reel in order from frame 2 on, leaving frame 1 -
+   the cover - as the resting picture it already was. They are written out
+   one by one rather than computed from the index precisely so that this is
+   a line to edit the day someone who has seen the images wants Copywriting
+   to be a particular one of them. */
 const HOME_DIR = "/assets/SC Website Revamp/01. Home";
 
 export const BUCKETS = [
@@ -186,12 +202,12 @@ export const BUCKETS = [
       `${HOME_DIR}/Strategy 10.jpg`,
     ],
     items: [
-      "Brand Positioning",
-      "Digital Strategy",
-      "Content Planning",
-      "Insights & Journey Mapping",
-      "Communications Planning",
-      "Media Planning",
+      { label: "Brand Positioning", img: `${HOME_DIR}/Strategy 7.png` },
+      { label: "Digital Strategy", img: `${HOME_DIR}/Strategy 2.png` },
+      { label: "Content Planning", img: `${HOME_DIR}/Strategy 3.jpg` },
+      { label: "Insights & Journey Mapping", img: `${HOME_DIR}/Strategy 4.jpg` },
+      { label: "Communications Planning", img: `${HOME_DIR}/Strategy 5.jpg` },
+      { label: "Media Planning", img: `${HOME_DIR}/Strategy 6.jpg` },
     ],
   },
   {
@@ -210,11 +226,11 @@ export const BUCKETS = [
       `${HOME_DIR}/creativity 10.jpg`,
     ],
     items: [
-      "Integrated Campaigns",
-      "Creative & Content Development",
-      "Copywriting",
-      "Branding & Merchandising",
-      "Tactical Execution",
+      { label: "Integrated Campaigns", img: `${HOME_DIR}/Creativity 2.jpg` },
+      { label: "Creative & Content Development", img: `${HOME_DIR}/Creativity 3.png` },
+      { label: "Copywriting", img: `${HOME_DIR}/Creativity 4.jpg` },
+      { label: "Branding & Merchandising", img: `${HOME_DIR}/creativity 5.jpg` },
+      { label: "Tactical Execution", img: `${HOME_DIR}/creativity 6.jpg` },
     ],
   },
   {
@@ -234,12 +250,12 @@ export const BUCKETS = [
       `${HOME_DIR}/Production 10.jpg`,
     ],
     items: [
-      "TVC & DVC",
-      "Digital Production",
-      "Social Content",
-      "Photography",
-      "Audio & Mixing",
-      "Motion + 3D",
+      { label: "TVC & DVC", img: `${HOME_DIR}/Production 2.jpg` },
+      { label: "Digital Production", img: `${HOME_DIR}/Production 3.jpg` },
+      { label: "Social Content", img: `${HOME_DIR}/Production 4.jpg` },
+      { label: "Photography", img: `${HOME_DIR}/Production 5.png` },
+      { label: "Audio & Mixing", img: `${HOME_DIR}/Production 6.jpg` },
+      { label: "Motion + 3D", img: `${HOME_DIR}/Production 7.jpg` },
     ],
   },
 ];

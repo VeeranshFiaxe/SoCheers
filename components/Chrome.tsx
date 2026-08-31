@@ -1,4 +1,4 @@
-/* The fixed overlays that sit over every page: grain, spotlight, cursor,
+/* The fixed overlays that sit over every page: spotlight, cursor,
    scroll progress. Rendered once in app/layout.tsx.
 
    The header moved out to components/Nav.tsx and the door to
@@ -8,7 +8,6 @@
 export function Overlays() {
   return (
     <>
-      <div className="grain" aria-hidden="true" />
       <div className="spotlight" aria-hidden="true" />
       <div className="cursor-ring" aria-hidden="true" />
       <div className="cursor" aria-hidden="true">

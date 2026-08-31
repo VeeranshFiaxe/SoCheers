@@ -10,7 +10,7 @@
 
 /* ---------- the page's theme ----------
    Light, and specifically the Insights page's light: the same off-white,
-   the same re-pointed variables (see .bl-page in app/blogs/blog.css).
+   the same re-pointed variables (see .bl-page in app/insights/blog.css).
    Both are pages you reach straight from the nav, and this one arriving
    in the site's dark theme while the other arrived in paper made them
    read as two different sites.
@@ -30,7 +30,7 @@
   /* the form fields' own ground - paper, not the panel tint, so an input
      reads as somewhere to write rather than as another card */
   --bg-2:#ffffff;
-  --accent:oklch(0.55 0.17 152);
+  --accent:var(--accent-deep);
   background:#f4f2ec; color:var(--cream);
 }
 
@@ -81,7 +81,7 @@
    The page's actual front door: a full inline form
    (components/ContactForm.tsx) rather than the footer's pop-up. */
 /* Paper, not the panel tint - the same translucent white the Insights
-   page gives its whitepaper card (.bl-paper__card in app/blogs/blog.css).
+   page gives its whitepaper card (.bl-paper__card in app/insights/blog.css).
    On an off-white page a card filled with --panel is a grey rectangle;
    filled with white it is a sheet lying on the page, which is the only
    reading that makes a form on it look like something to fill in. */
@@ -133,7 +133,7 @@
 .ctf__submit{
   margin-top:28px; display:inline-flex; align-items:center; gap:14px;
   font-family:var(--f-display); font-weight:700; font-size:16px;
-  background:var(--accent); color:#04140b; border:none; border-radius:50px;
+  background:var(--accent); color:var(--accent-ink); border:none; border-radius:50px;
   padding:15px 30px; cursor:none;
   transition:transform .3s var(--ease), gap .3s var(--ease);
 }
@@ -250,6 +250,51 @@
 @media (max-width:560px){
   .ctf__row{ grid-template-columns:1fr; }
   .ctf__row + .ctf__row{ margin-top:0; }
+}
+
+/* ---------- the phone ----------
+   Two things, and the first one is not a matter of taste.
+
+   iOS zooms the page in when it focuses a field set under 16px, and it
+   does not zoom back out afterwards - so a reader who tapped Name was
+   left on a page one and a half times too wide, scrolling sideways to
+   find the rest of the form they were in the middle of filling in. This
+   is the whole of the fix: 16px on the fields, on coarse pointers only,
+   so the desktop panel keeps the 15px it was drawn at.
+
+   (pointer:coarse) rather than a width: an iPad in landscape is wider
+   than most laptops and does exactly the same thing. */
+@media (pointer:coarse){
+  .ctf__field input,
+  .ctf__field select,
+  .ctf__field textarea{ font-size:16px; }
+  /* and a target a thumb can find. 14px of padding on a 15px line came
+     to about 44px already; this pins it there as the type changes. */
+  .ctf__field input,
+  .ctf__field select{ min-height:48px; }
+}
+
+@media (max-width:560px){
+  /* The panel gives up most of its padding: at 28px a side on a 390px
+     screen the fields are 60% of the width of the page, which is a form
+     in a gutter rather than a form on it. */
+  .ctf__panel{ padding:22px 18px; border-radius:20px; }
+  .ctf__done{ padding:34px 20px; border-radius:20px; }
+  /* Full width, because there is nothing to sit beside it. An inline-flex
+     pill floating at the left of a stacked form reads as the smallest
+     thing on the page at the exact moment it is the only thing to do. */
+  .ctf__submit{ display:flex; width:100%; justify-content:center; min-height:52px; padding:0 24px; }
+  /* The dashed note under the form is a filler for a column that no
+     longer exists once the page is stacked - it was there to make two
+     columns finish level. It keeps its copy but not the 130px of empty
+     room it was reserving for that job. */
+  .ct-tip{ min-height:0; padding:22px 18px; border-radius:20px; }
+  .ct-office{ padding:22px 18px; border-radius:20px; }
+  /* A map two lines tall tells you nothing; on a phone it is worth the
+     height it costs, so it gets a share of the screen rather than a flat
+     190px that a tall phone makes look like a letterbox. */
+  .ct-office__map{ min-height:min(46vw, 240px); }
+  .ct-end{ padding:26px var(--pad); }
 }
 
 /* In the hero's left column now, so one card per row rather than the old

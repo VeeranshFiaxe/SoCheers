@@ -134,10 +134,39 @@ export default function WorkPinned() {
 
   /* Keep the selected poster in view when the selection moves by keyboard
      or by the arrows - the wall scrolls on a narrow screen, and changing
-     the frame to something the reader cannot see reads as a bug. */
+     the frame to something the reader cannot see reads as a bug.
+
+     ---- why this is not scrollIntoView ----
+
+     It used to be, and it dragged the page. scrollIntoView does not
+     scroll an element: it scrolls every scrollable ancestor the element
+     has, the document included. The stage moves itself on every
+     PINNED_DWELL whether or not anyone is looking at it, so a reader who
+     had scrolled down to the wall - or to the footer - got yanked back
+     up to the stage five seconds later, over and over. The horizontal
+     intent was right and the call it was made with also owned the
+     vertical.
+
+     So the rail is scrolled directly and nothing else is touched. The
+     arithmetic is `inline: "nearest"` written out - move by however much
+     the card is over one edge, and do not move at all if it is already
+     inside - which keeps the behaviour that was wanted and drops the one
+     that was not. There is no vertical case: the rail is a row. */
   useEffect(() => {
-    const card = railRef.current?.children[i] as HTMLElement | undefined;
-    card?.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+    const rail = railRef.current;
+    const card = rail?.children[i] as HTMLElement | undefined;
+    if (!rail || !card) return;
+    /* On a wide screen the whole rail is visible and there is nothing to
+       scroll; asking anyway is how you get a one-pixel jitter every five
+       seconds on a page that is supposed to be still. */
+    if (rail.scrollWidth <= rail.clientWidth) return;
+
+    const railBox = rail.getBoundingClientRect();
+    const cardBox = card.getBoundingClientRect();
+    const past = cardBox.right - railBox.right;
+    const before = railBox.left - cardBox.left;
+    const by = past > 0 ? past : before > 0 ? -before : 0;
+    if (by) rail.scrollBy({ left: by, behavior: "smooth" });
   }, [i]);
 
   return (
