@@ -291,6 +291,32 @@ export function initOverture(
        door, so it is capped short: there is no visible progress to hide
        a long wait behind any more. */
     function boot(next: () => void) {
+      /* The walls get their srcs here, and this is the only place they
+         ever get them.
+
+         The room is rendered into every page - it lives in the layout,
+         because the mark it docks is the site's logo and not a one-time
+         flourish - and on all but the first page view of a tab it is
+         never played: `instant` below bails straight to the docked mark
+         without touching any of this. But a src in the markup is a fetch
+         whether or not the element is display:none, so the room was
+         costing every navigation about 1.3MB of pictures for a sequence
+         that had already happened. Held on a data attribute instead, the
+         way the home page's reel holds its film back (see initReel in
+         lib/motion.ts), the bytes are spent exactly on the runs that
+         show them.
+
+         Source before img, which is the order the DOM is in: <picture>
+         resolves against whatever sources are present at the moment the
+         img gets a src, so setting them the other way round would pick
+         the landscape original on a phone and then swap. */
+      qq<HTMLElement>("[data-ovt-src]").forEach((el) => {
+        const url = el.dataset.ovtSrc;
+        if (!url) return;
+        if (el instanceof HTMLSourceElement) el.srcset = url;
+        else if (el instanceof HTMLImageElement) el.src = url;
+      });
+
       const urls = qq<HTMLImageElement>("img.ovt__face")
         .map((img) => img.currentSrc || img.src)
         .filter(Boolean);

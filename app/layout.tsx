@@ -41,11 +41,24 @@ const sans = localFont({
    No running copy takes this, and no heading does either. The moment a
    sentence is written in it, it stops reading as handwriting on the page
    and starts reading as a second typeface. */
+/* Not preloaded, and that follows from the two places above rather than
+   being a separate decision. next/font preloads a face by putting a
+   <link rel="preload"> for it in the head of every document the layout
+   renders, at the highest priority the browser has - which for this one
+   meant 73KB competing with the first paint on Insights, Contact, Work,
+   Series, the AI tab and the case pages, none of which contain a single
+   character set in it. Neither of the two places that do is in the first
+   screen: the headword arrives after the hero's intro has played, and
+   the About numerals are two thirds of the way down that page. So the
+   browser fetches it when it first meets a glyph that needs it, which on
+   those two pages is early enough, and everywhere else it fetches
+   nothing. display:swap already covers the gap. */
 const playful = Caveat({
   subsets: ["latin"],
   weight: ["600", "700"],
   variable: "--font-playful",
   display: "swap",
+  preload: false,
 });
 
 export const metadata: Metadata = {

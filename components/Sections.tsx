@@ -191,9 +191,24 @@ export function What() {
         <div className="wcards">
           {BUCKETS.map((b) => (
             <article className="wcard" key={b.idx} data-clip data-tilt data-cursor={b.name}>
+              {/* Ten frames a card, four cards, and exactly four of the
+                  forty are ever on screen at once - the rest are the reel
+                  the cycle flips through on hover. The one showing is
+                  fetched with the page; the other nine wait until the card
+                  is near enough to be hovered at all, which is what lazy
+                  means here. They were all eager, and the WHAT WE DO
+                  section was most of the home page's first load for
+                  pictures nobody had asked to see yet. */}
               <div className="wcard__img">
                 {b.images.map((src, i) => (
-                  <img key={src} src={src} alt="" className={i === 0 ? "is-active" : undefined} />
+                  <img
+                    key={src}
+                    src={src}
+                    alt=""
+                    className={i === 0 ? "is-active" : undefined}
+                    loading={i === 0 ? undefined : "lazy"}
+                    decoding="async"
+                  />
                 ))}
               </div>
               <div className="wcard__body">

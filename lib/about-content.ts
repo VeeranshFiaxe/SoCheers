@@ -23,7 +23,7 @@ export const ABOUT_IMG = {
      faintly visible plate under it; with the background gone the crowd
      stands directly on the page and the long dissolve in .ab-crowd__art
      has silhouettes to work on rather than a block. */
-  crowd: "/assets/about/crowd.png",
+  crowd: "/assets/art/crowd.webp",
 } as const;
 
 /* The hero copy. The client's own line is back over the film - it was

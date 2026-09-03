@@ -17,3 +17,19 @@ assets/bhim-upi.src.mp4
 assets/dhurandhar-2.src.mp4
 assets/made-in-titan.src.mp4
 assets/special-ops-2.src.mp4
+
+# The client's delivery folder, whole. It used to sit under public/, which
+# meant a deploy shipped 2GB of broadcast masters and print-size exports
+# for a site that serves 160MB - and a file under public/ is served whether
+# or not anything links to it. Nothing does any more: every picture and
+# film the site draws now comes out of a derived folder next to it
+# (/assets/ai, /assets/art, /assets/home, /assets/work/*, /assets/sfx),
+# written by the scripts in scripts/ and committed. This is what those
+# scripts read.
+#
+# It is not in the repo, so a fresh clone cannot re-run them. That is the
+# same arrangement the video masters above are already under, and it is
+# the right one: the derived output is committed, so a clone builds and
+# deploys fine - it just cannot regenerate an asset until somebody puts
+# the delivery folder back beside it.
+assets/SC Website Revamp/

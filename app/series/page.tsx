@@ -1,32 +1,30 @@
 import type { Metadata } from "next";
 import "./series.css";
-import SeriesTestStory from "@/components/SeriesTestStory";
+import SeriesSections from "@/components/SeriesSections";
 import SiteMotion from "@/components/SiteMotion";
-import { ART, CONCEPT, HERO, SERIES_CTA, TEXTURE } from "@/lib/series-content";
+import { ART, CONCEPT, HERO, META_DESCRIPTION, SERIES_CTA, TEXTURE } from "@/lib/series-content";
 
 export const metadata: Metadata = {
   title: `${CONCEPT.title} · SoCheers`,
-  /* the standfirst on the card itself - the tab describes itself the
-     same way in a search result as it does on the screen */
-  description: HERO.standfirst,
+  description: META_DESCRIPTION,
 };
 
 /* ============================================================
-   SERIES - the flat pass, and the live tab.
+   SERIES - the tab.
 
-   This started as /series-test, the scratch route: the same copy as the
-   first pass, in the same order, staged flat - every section is the
-   sentence on the left and four frames on the right, and nothing moves.
-   It was there to see whether the argument survives without the fourteen
-   mechanics carrying it. It does, so it is the tab now.
-
-   The pass it replaced is still in the tree at /series-1 and off the
-   nav - see the note in NAV_LINKS (lib/content.ts).
+   Ten sections, staged. Section 1 is the title card below; 2 through 10
+   are SECTIONS in lib/series-content.ts, rendered by
+   components/SeriesSections.tsx.
 
    ---- what "static" means here, and what it does not ----
 
    initSeries() is not mounted: none of the fourteen scroll mechanics
-   run, and every piece of this page's own staging sits at rest.
+   the earlier pass carried run on this route, and every piece of this
+   page's own staging sits at rest. Two things move and both are CSS -
+   the title card's entrance, once, on load, and the showcase rows on
+   section 9, because the client's brief for that section is the words
+   "rapid visual sequence" and a still grid is not one. Both are off
+   under prefers-reduced-motion.
 
    SiteMotion IS mounted, and has to be. initSite() owns the chrome that
    belongs to the whole site rather than to any one route - the custom
@@ -36,33 +34,34 @@ export const metadata: Metadata = {
    not a still version of the site, it is the site with its cursor
    missing. That was the first thing anyone noticed.
 
-   It is also why the feed and CTA blocks from the live tab are still
-   not reused: those are built around [data-split], which is a different
-   argument - a heading that only exists once a splitter has run.
+   The first pass - fourteen beats, seven stagings, fourteen scroll
+   mechanics, and the deck copy this rewrite replaced - is still in the
+   tree at /series-1 and off the nav. See the note in NAV_LINKS
+   (lib/content.ts) and lib/series-v1.ts.
    ============================================================ */
-/* The name, with its last word carrying the page's highlighter block -
-   the same device the beats use on one word of a line, spent here on
-   the word the concept is named for. Split rather than hard-coded so
-   CONCEPT stays the only place the title is spelled. */
-const titleParts = (full: string) => {
-  const at = full.lastIndexOf(" ");
-  return at < 0 ? { head: "", last: full } : { head: full.slice(0, at + 1), last: full.slice(at + 1) };
+
+/* The highlighter block, on the last words of the title card. Split
+   rather than hard-coded so HERO stays the only place the line and the
+   accented words are spelled; `accent` is matched off the end of the
+   line, because on a title card the block belongs where the sentence
+   lands rather than in the middle of it. */
+const titleParts = (line: string, accent: string) => {
+  const at = line.lastIndexOf(accent);
+  return at < 0 ? { head: line, tail: "" } : { head: line.slice(0, at), tail: accent };
 };
 
-export default function SeriesTest() {
-  const title = titleParts(CONCEPT.title);
+export default function Series() {
+  const title = titleParts(HERO.line, HERO.accent);
 
   return (
     <>
       <main id="top" className="st-page">
-        {/* ---- the title card -------------------------------------
-            The opening screen is the one place this page is allowed to
-            be a picture before it is an argument. Same seven layers as
-            a poster beat on /series-1 - ground, frames, scrim, type,
-            a frame lifted in FRONT of the words, grade, gate - staged
-            in CSS only, because this route still runs no scroll work.
-            The one bit of motion is an entrance: the gate opens, the
-            frames settle, the type rises. See .st-hero in series.css.
+        {/* ---- SECTION 1, the title card ------------------------------
+            The client's first section is one sentence and nothing else,
+            which is what a cold open is - so it is the card rather than
+            the first screen of the story. Six layers, staged in CSS
+            only: ground, frames, scrim, type, grade, gate. The one bit
+            of motion is an entrance. See .st-hero in series.css.
             ---------------------------------------------------------- */}
         <header className="st-hero">
           <div className="st-hero__stage" aria-hidden="true">
@@ -98,17 +97,9 @@ export default function SeriesTest() {
             <span className="st-hero__tag">{HERO.tag}</span>
             <h1 className="st-hero__title">
               {title.head}
-              <em className="st-hi">{title.last}</em>
+              {title.tail && <em className="st-hi">{title.tail}</em>}
             </h1>
-            <p className="st-hero__note">{HERO.standfirst}</p>
           </div>
-
-          {/* 5 - the frame in front of the words. Outside the stage so
-              it sits over the type rather than under it, which is the
-              layer that gives the card depth. */}
-          <span className="st-hero__inset" aria-hidden="true">
-            <img src={ART(HERO.inset)} alt="" decoding="async" />
-          </span>
 
           <span className="st-hero__cue" aria-hidden="true">
             <i />
@@ -116,7 +107,7 @@ export default function SeriesTest() {
           </span>
         </header>
 
-        <SeriesTestStory />
+        <SeriesSections />
       </main>
 
       <footer className="st-foot">

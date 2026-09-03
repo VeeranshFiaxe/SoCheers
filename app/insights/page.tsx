@@ -38,7 +38,7 @@ export default function Blog() {
 
           <div className="bl-hero__visual" data-reveal>
             <img
-              src="/assets/SC Website Revamp/06. Blogs/reading visual.png"
+              src="/assets/art/blog-reading.webp"
               alt=""
               width={1536}
               height={1024}

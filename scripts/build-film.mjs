@@ -77,14 +77,18 @@ console.log(`\n${mb(SRC)}MB master -> ${mb(OUT)}MB web cut  ${OUT}`);
 
 /* ---- the thing this script cannot fix ----
 
-   The 476MB master is committed (ec7d010). GitHub refuses any single
-   file over 100MB, so that commit cannot be pushed as it stands, and
-   deleting the file now would not help - the blob is in the history
-   either way. Fixing it means rewriting that commit, which is a call
-   for whoever owns the remote to make, not for a build script:
+   The 476MB master is committed (ec7d010), and so is the rest of the
+   client's delivery folder. Both have since been moved out of public/
+   and untracked - see the end of .gitignore - so nothing new is being
+   added to the problem and no deploy ships them any more. But untracking
+   a file does not remove it from the history: the blobs are in ec7d010
+   and in the commits around it either way, which is why a clone of this
+   repo is still measured in gigabytes.
 
-     git rm --cached "public/assets/SC Website Revamp/03. Work/Pinned Work/Netflix x MI & SRH/NETFLIX X MI video_.mp4"
-     # then rewrite the commit that introduced it, or start the history
-     # from a commit that never had it
+   Fixing that means rewriting those commits, which is a call for whoever
+   owns the remote to make and not something a build script should do
+   behind anybody's back. It is a `git filter-repo --strip-blobs-bigger-than`
+   over the history and a force push, and everyone with a clone has to
+   re-clone afterwards.
 
    The web cut this script makes is 33MB and is fine to commit. */

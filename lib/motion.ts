@@ -22,6 +22,28 @@ import { acquirePointerField } from "./pointer-field";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
+/* A phone's address bar is not a resize.
+
+   It slides away on the first scroll down and back on the first scroll
+   up, and every time it does the browser fires `resize` and the visual
+   viewport changes height by 60-odd pixels. ScrollTrigger's default
+   answer to a resize is a full refresh - every trigger on the page
+   re-measured, every pin re-laid-out - and on the pages here that is
+   sixty to ninety triggers, twice, in the middle of the reader's first
+   flick. It is the single worst frame on a phone and it happens on
+   every page.
+
+   Nothing on this site is laid out against that 60px: the pins are
+   viewport-height and re-solve themselves, and a genuine orientation
+   change still fires a real resize with a changed width, which this
+   does not suppress. So the bar is allowed to come and go without the
+   page being re-measured under it.
+
+   Set at module scope rather than inside initSite() because it is a
+   property of the plugin, not of a page - and the About and Series
+   engines import ScrollTrigger separately. */
+ScrollTrigger.config({ ignoreMobileResize: true });
+
 type Grid = { tiles: HTMLElement[]; cols: number; rows: number };
 
 /* The live scroller, for the one case an anchor cannot cover.
@@ -73,6 +95,21 @@ export function smoothTo(target: HTMLElement | number, duration = 1.2): void {
 export function initSite(): () => void {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canHover = window.matchMedia("(hover:hover)").matches;
+  /* The phone's column. Kept as a live MediaQueryList rather than a
+     boolean read once: everything that asks it is a measuring function
+     that already re-runs on resize (box(), seat(), ScrollTrigger's
+     refresh), so it has to be able to change its mind - a desktop window
+     dragged narrow, or a tablet turned on its side, crosses this line
+     without a reload.
+
+     700px, and it is the same number three files deep: PHONE in
+     components/Overture.tsx and the phone block at the end of the OVERTURE
+     section in app/globals.css. That block fits the hero artwork whole on
+     a phone instead of cropping it to fill, and box() below mirrors
+     whichever fit is in force to find the artwork's window - so if these
+     two ever disagree, the stage seats itself somewhere the window is
+     not. */
+  const phone = window.matchMedia("(max-width:700px)");
   /* Where the reader's attention is, however this machine expresses it -
      a cursor, a finger, or the middle of the screen while neither is
      saying. Everything below that used to bail out on `!canHover` reads
@@ -274,10 +311,17 @@ export function initSite(): () => void {
       // rides the same push-in
       tl.from("[data-frame-img], [data-stage-img]", { scale: 1.12, autoAlpha: 0, duration: 1.6, ease: "power3.out" }, 0);
       if (g) {
+        /* is-live is what puts will-change:opacity on the tiles, and it
+           is on for the length of this timeline and no longer - see the
+           note over .pixgrid in globals.css. Added at zero rather than
+           with the fade at 0.5 so the browser has half a second's notice,
+           which is the entire point of the property. */
+        tl.add(() => (host as HTMLElement).classList.add("is-live"), 0);
         tl.set(g.tiles, { opacity: 1 }, 0);
         tl.to(g.tiles, {
           opacity: 0, duration: 0.5, ease: "power2.inOut",
           stagger: { amount: 0.8, grid: [g.rows, g.cols], from: "random" },
+          onComplete: () => (host as HTMLElement).classList.remove("is-live"),
         }, 0.5);
       }
       tl.from("[data-hero-cue]", { autoAlpha: 0, duration: 0.6 }, 0.9);
@@ -326,11 +370,19 @@ export function initSite(): () => void {
       if (!hero || !pin || !frame || !stage) return;
       const boxEnd = () => containedBox(pin.offsetWidth, pin.offsetHeight);
 
-      // Where the artwork's window lands on screen. The artwork is object-fit:cover,
-      // so mirror that maths to find the window's real rendered rect.
+      // Where the artwork's window lands on screen. The artwork is
+      // object-fit:cover on a wide screen and object-fit:contain on a phone
+      // (see .hero__frame in globals.css - a column through this artwork
+      // keeps the window and slices the wordmark off either side of it), so
+      // mirror whichever of the two is in force to find the window's real
+      // rendered rect. Both fits are the same line with the max/min swapped:
+      // cover scales until neither axis is short, contain until neither
+      // overflows.
       const box = () => {
         const bw = pin.offsetWidth, bh = pin.offsetHeight;
-        const scale = Math.max(bw / FRAME.w, bh / FRAME.h);
+        const scale = phone.matches
+          ? Math.min(bw / FRAME.w, bh / FRAME.h)
+          : Math.max(bw / FRAME.w, bh / FRAME.h);
         const rw = FRAME.w * scale, rh = FRAME.h * scale;
         const ox = (bw - rw) / 2, oy = (bh - rh) / 2;
         return { left: ox + rw * WIN.l, top: oy + rh * WIN.t, w: rw * WIN.w, h: rh * WIN.h };
@@ -1420,16 +1472,37 @@ export function initSite(): () => void {
     function initMarquees() {
       const items: {
         track: HTMLElement; dir: number; half: number;
-        current: number; boost: number; base: number;
+        current: number; boost: number; base: number; onScreen: boolean;
       }[] = [];
+      /* A strip that is not on screen is still a strip being written to:
+         the same transform every frame, the same layer recomposited, for
+         a row of client names four screens down the page.
+
+         The arithmetic below still runs for every row - it is a multiply
+         and a modulo, and stopping it would mean a row that had been
+         scrolled past came back parked where it was left rather than
+         where its own clock says it should be. What stops is the write.
+         The boost decays off screen too, for the same reason: a hard
+         flick past a hidden row would otherwise bank velocity it spends
+         all at once the moment the row appears. */
+      const seen = new IntersectionObserver(
+        (entries) => entries.forEach((e) => {
+          const it = items.find((s) => s.track === e.target);
+          if (it) it.onScreen = e.isIntersecting;
+        }),
+        { rootMargin: "20%" },
+      );
+      observers.push(seen);
       document.querySelectorAll<HTMLElement>("[data-marquee]").forEach((track) => {
         const dir = track.getAttribute("data-marquee") === "right" ? 1 : -1;
         const base = Number(track.dataset.marqueeBase);
         const state = {
           track, dir, half: track.scrollWidth / 2, current: 0, boost: 0,
           base: Number.isFinite(base) && base > 0 ? base : 30,
+          onScreen: false,
         };
         items.push(state);
+        seen.observe(track);
         if (lenis) {
           lenis.on("scroll", (e: { velocity?: number }) => {
             state.boost += gsap.utils.clamp(-30, 30, (e.velocity || 0) * dir);
@@ -1455,7 +1528,7 @@ export function initSite(): () => void {
              mid-viewport and appeared to stop dead and jump back. */
           const t = ((s.current % s.half) + s.half) % s.half;
           s.current = t - s.half;
-          gsap.set(s.track, { x: s.current });
+          if (s.onScreen) gsap.set(s.track, { x: s.current });
         });
       });
       reflow = () => items.forEach((s) => { s.half = s.track.scrollWidth / 2; });
@@ -1571,6 +1644,15 @@ export function initSite(): () => void {
          opacity 0, and nothing composites), the ticker does no work while
          it is off, and the light exists for exactly as long as there is a
          finger on the glass to justify it. */
+      /* Which is also the argument for the last line here. The chase is a
+         lerp, so it never formally arrives - cx creeps at the mouse for
+         ever in ninths, and every one of those creeps used to be two
+         custom property writes on the layer described above, which is a
+         full-screen blended composite for a light that has not visibly
+         moved in half a second. Below a tenth of a pixel it has stopped,
+         so the write stops with it and the compositor has nothing to do
+         until the reader moves again. */
+      let px = NaN, py = NaN;
       addTicker(() => {
         const p = pointer.read();
         if (!p.live) return;
@@ -1579,6 +1661,8 @@ export function initSite(): () => void {
           if (!p.engaged) return;
         }
         cx += (p.x - cx) * 0.09; cy += (p.y - cy) * 0.09;
+        if (Math.abs(cx - px) < 0.1 && Math.abs(cy - py) < 0.1) return;
+        px = cx; py = cy;
         spot.style.setProperty("--mx", cx + "px");
         spot.style.setProperty("--my", cy + "px");
       });
@@ -1601,6 +1685,11 @@ export function initSite(): () => void {
         el: HTMLElement; hover: boolean; onScreen: boolean; ambient: boolean;
         rX: gsap.QuickToFunc; rY: gsap.QuickToFunc; tZ: gsap.QuickToFunc;
         iX: gsap.QuickToFunc | null; iY: gsap.QuickToFunc | null;
+        /* what this frame's measurement worked out to, parked here between
+           the read pass and the write pass - see the ticker below for why
+           there are two of them. Fields on the item rather than a list of
+           results, so a frame allocates nothing. */
+        px: number; py: number; s: number; wrote: boolean;
       };
 
       const items = new Map<Element, Tilt>();
@@ -1621,6 +1710,7 @@ export function initSite(): () => void {
         const img = flat ? null : el.querySelector("img");
         items.set(el, {
           el, hover: false, onScreen: false, ambient: !flat,
+          px: 0, py: 0, s: 0, wrote: false,
           rX: gsap.quickTo(el, "rotationX", { duration: 0.8, ease: "power3" }),
           rY: gsap.quickTo(el, "rotationY", { duration: 0.8, ease: "power3" }),
           tZ: gsap.quickTo(el, "z", { duration: 0.8, ease: "power3" }),
@@ -1661,23 +1751,52 @@ export function initSite(): () => void {
       // mechanism - the field rests at the middle of the screen and the
       // cards scroll past it, so the lean is the scroll's doing.
       const clamp = gsap.utils.clamp(-0.5, 0.5);
+      /* Two passes, and they are not allowed to interleave.
+
+         This used to measure a card and immediately write to it, then
+         measure the next one. Every one of those writes is an inline
+         transform, which dirties style, and the next getBoundingClientRect
+         cannot be answered until the browser has recalculated - so a
+         section with eight cards on screen paid eight forced reflows a
+         frame, sixty times a second, and the cost went up with the number
+         of cards rather than staying flat. Reading everything first and
+         writing everything after is one reflow, whatever is on screen.
+
+         The other half is not writing at all when there is nothing to say.
+         Most cards on screen are outside REACH most of the time, which
+         means the honest value for them is zero - and quickTo does not
+         treat a repeat of the value it is already on as a no-op, it
+         restarts the tween. So a card that has already been told zero is
+         left alone until it has something else to hear. */
       addTicker(() => {
         const p = pointer.read();
         if (!p.live) return;
         const mx = p.x, my = p.y;
+
+        // ---- read
         items.forEach((it) => {
           if (!it.onScreen) return;
           const r = it.el.getBoundingClientRect();
-          if (!r.width || !r.height) return;
+          if (!r.width || !r.height) { it.s = 0; return; }
           const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-          const px = clamp((mx - cx) / r.width);
-          const py = clamp((my - cy) / r.height);
+          it.px = clamp((mx - cx) / r.width);
+          it.py = clamp((my - cy) / r.height);
           // how far outside the box the cursor is, 0 while it's over it
           const out = Math.hypot(
             Math.max(0, Math.abs(mx - cx) - r.width / 2),
             Math.max(0, Math.abs(my - cy) - r.height / 2),
           );
-          const s = it.hover ? 1 : (it.ambient ? AMBIENT * Math.max(0, 1 - out / REACH) : 0);
+          it.s = it.hover ? 1 : (it.ambient ? AMBIENT * Math.max(0, 1 - out / REACH) : 0);
+        });
+
+        // ---- write
+        items.forEach((it) => {
+          if (!it.onScreen) return;
+          /* nothing to say, and it has already been said - the tween that
+             took it back to level has long since finished */
+          if (it.s === 0 && !it.wrote) return;
+          it.wrote = it.s !== 0;
+          const { px, py, s } = it;
           it.rX(-py * 11 * s);
           it.rY(px * 13 * s);
           it.tZ(34 * s);
@@ -1901,12 +2020,16 @@ export function initSite(): () => void {
         el: HTMLElement; onScreen: boolean;
         reach: number; pull: number; bite: number;
         xTo: gsap.QuickToFunc; yTo: gsap.QuickToFunc; rTo: gsap.QuickToFunc;
+        /* this frame's measurement, parked between the two passes - same
+           arrangement, and for the same reason, as initTilt above */
+        ux: number; uy: number; k: number; pull2: number; wrote: boolean;
       };
 
       const items = new Map<Element, Item>();
       els.forEach((el) => {
         items.set(el, {
           el, onScreen: false,
+          ux: 0, uy: 0, k: 0, pull2: 0, wrote: false,
           reach: num(el, "splashReach", REACH),
           pull: num(el, "splashPull", MAX_PULL),
           bite: num(el, "splashBite", BITE),
@@ -1927,24 +2050,38 @@ export function initSite(): () => void {
       observers.push(io);
 
       // ticker rather than a pointer event: the section scrolls under a
-      // still cursor, and on touch that scroll is the entire gesture
+      // still cursor, and on touch that scroll is the entire gesture.
+      // Read pass then write pass, and nothing written that is already
+      // where it is being sent - see the long note over initTilt's ticker
+      // for what interleaving the two costs.
       addTicker(() => {
         const p = pointer.read();
         if (!p.live) return;
         const mx = p.x, my = p.y;
+
+        // ---- read
         items.forEach((it) => {
           if (!it.onScreen) return;
           const r = it.el.getBoundingClientRect();
-          if (!r.width || !r.height) return;
+          if (!r.width || !r.height) { it.k = 0; it.pull2 = 0; return; }
           const dx = mx - (r.left + r.width / 2);
           const dy = my - (r.top + r.height / 2);
           const dist = Math.hypot(dx, dy) || 1;
           const prox = 1 - Math.min(dist / it.reach, 1);
-          const k = Math.pow(prox, it.bite);            // indifferent until it is close
-          const pull = Math.min(dist, it.pull) * k;     // never overshoots the pointer
-          it.xTo((dx / dist) * pull);
-          it.yTo((dy / dist) * pull);
-          it.rTo((dx / dist) * k * 3);                  // a few degrees of lean, no more
+          it.k = Math.pow(prox, it.bite);               // indifferent until it is close
+          it.pull2 = Math.min(dist, it.pull) * it.k;    // never overshoots the pointer
+          it.ux = dx / dist;
+          it.uy = dy / dist;
+        });
+
+        // ---- write
+        items.forEach((it) => {
+          if (!it.onScreen) return;
+          if (it.k === 0 && !it.wrote) return;
+          it.wrote = it.k !== 0;
+          it.xTo(it.ux * it.pull2);
+          it.yTo(it.uy * it.pull2);
+          it.rTo(it.ux * it.k * 3);                     // a few degrees of lean, no more
         });
       });
     }

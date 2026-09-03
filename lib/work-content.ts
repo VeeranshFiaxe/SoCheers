@@ -338,10 +338,10 @@ export type WorkAsset = {
 /* The placeholder pictures, cycled so both orientations and a range of
    aspect ratios are exercised. Only pending() reads these. */
 const P = [
-  "/assets/work-bfsi.png",
-  "/assets/work-entertainment.png",
+  "/assets/art/work-bfsi.webp",
+  "/assets/art/work-entertainment.webp",
   "/assets/work-lifestyle.jpg",
-  "/assets/work-b2b.png",
+  "/assets/art/work-b2b.webp",
   "/assets/boot-phone-BJcXYlVw.jpg",
   "/assets/photoshop-face-BOtm4GGN.jpg",
   "/assets/brain-DH7sqVir.jpg",
@@ -407,7 +407,7 @@ const real = (
 
 export const WORK_ASSETS: WorkAsset[] = [
   /* ---- BFSI ---- */
-  real("yes-bank", "Yes Bank", "Life Ko Banao Rich", "bfsi", "image", 1600, 1131),
+  real("yes-bank", "Yes Bank", "Life Ko Banao Rich", "bfsi", "image", 1600, 1131, "yes-bank"),
   real("bhim-upi", "BHIM UPI", "Mother's Day", "bfsi", "video", 1600, 900),
   pending(0, "IndusInd", "bfsi", "video"),
   pending(3, "Zurich Kotak", "bfsi"),
@@ -423,8 +423,8 @@ export const WORK_ASSETS: WorkAsset[] = [
   pending(9, "Yippee", "fmcg"),
 
   /* ---- Fashion / Beauty / Luxury ---- */
-  real("superdry", "Superdry Sport", "Chase What Drives You", "fashion", "image", 1376, 768),
-  real("wacoal", "Wacoal", "#WacoalKnowsBreast", "fashion", "image", 1600, 900),
+  real("superdry", "Superdry Sport", "Chase What Drives You", "fashion", "image", 1376, 768, "superdry"),
+  real("wacoal", "Wacoal", "#WacoalKnowsBreast", "fashion", "image", 1600, 900, "wacoal"),
   pending(11, "Raymond", "fashion", "video"),
   pending(13, "Nykaa", "fashion"),
   pending(21, "Carlton", "fashion"),
@@ -449,10 +449,10 @@ export const WORK_ASSETS: WorkAsset[] = [
      the second arrived named FLIPKART-MOODBOARD-4.jpg and the board is
      Croma's throughout - Flipkart is the competitor the campaign is
      answering, not the client. Named for whose work it is. */
-  real("boat", "boAt", "boAt × Marvel - Unleash Your Super", "others", "image", 1600, 1132),
-  real("croma", "Croma", "AC Badhau Ya Ghatau", "others", "image", 1600, 900),
-  real("croma-dreams", "Croma", "Flipping the Carts on the Competitors", "others", "image", 1600, 900),
-  real("bgmi", "BGMI", "Update Podcast", "others", "image", 1600, 1135),
+  real("boat", "boAt", "boAt × Marvel - Unleash Your Super", "others", "image", 1600, 1132, "boat-marvel"),
+  real("croma", "Croma", "AC Badhau Ya Ghatau", "others", "image", 1600, 900, "croma-ac-badhau-ya-ghatau"),
+  real("croma-dreams", "Croma", "Flipping the Carts on the Competitors", "others", "image", 1600, 900, "croma-festival-of-dreams"),
+  real("bgmi", "BGMI", "Update Podcast", "others", "image", 1600, 1135, "bgmi-update-podcast"),
   pending(18, "TCS", "others"),
   pending(19, "Cipla Innoventia", "others"),
   pending(22, "Cordelia Cruises", "others"),
@@ -764,12 +764,360 @@ export const CASES: CaseStudy[] = [
   },
 
   {
+    slug: "superdry",
+    brand: "Superdry Sport",
+    title: "Chase What Drives You",
+    meta: ["PENDING", "Fashion / Beauty / Luxury", "Film"],
+    intro: LOREM,
+    hero: "/assets/work/wall/superdry.jpg",
+    film: "https://www.youtube.com/watch?v=2VYRKzOfJL0",
+    pending: true,
+    blocks: [
+      { type: "copy", heading: "The brief", body: LOREM },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "Superdry Sport" },
+          { label: "Scope", value: "Film" },
+          { label: "Year", value: "PENDING" },
+        ],
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     THE SIX CASE BOARDS - real write-ups, transcribed off the client's
+     own case study images rather than written here. Every heading below
+     is the board's own heading and every line of body copy is the
+     board's own copy; nothing in this batch was drafted for the site.
+     Numbers in `stats` are the board's own figures, kept exactly as
+     printed (including "Out of Stock" as a figure where the board used
+     words instead of a number).
+     ------------------------------------------------------------------ */
+  {
+    slug: "yes-bank",
+    brand: "Yes Bank",
+    title: "Life Ko Banao Rich",
+    meta: ["BFSI", "Social · Influencer"],
+    intro:
+      "On this journey, we reminded India to find richness in every moment.",
+    hero: "/assets/work/cases/yes-bank/hero.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "Background",
+        body: "YES BANK was undergoing a rebranding move, where they wanted to go beyond an identity change and help Indians reimagine what life's richness looks like.",
+      },
+      {
+        type: "copy",
+        heading: "Objective",
+        body: "Establish the new image & tagline 'Life Ko Banao Rich' of YES BANK. Convey a simple message - 'You enjoy your moments, we'll take care of your money'.",
+      },
+      {
+        type: "copy",
+        heading: "Our Creative Approach",
+        body: "We started with a simple question, \"What does richness mean to you?\" followed by a showcase of how richness has various definitions using one of Bank's most trustworthy instruments, a bank statement. We delivered a unique, personalised \"Life Ki Statement from YES BANK\" to popular influencers, demonstrating how richness extends far beyond just financial achievements.",
+      },
+      {
+        type: "copy",
+        heading: "Impact",
+        body: "We instilled one of India's leading private banks in everybody's hearts by garnering,",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "72M", label: "Total Instagram Reach" },
+          { figure: "10X", label: "Engagement across Facebook & Instagram" },
+          { figure: "3.1M", label: "Organic Reach on LinkedIn" },
+          { figure: "10%", label: "Follower growth on LinkedIn" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/wall/yes-bank.jpg",
+        w: 1600, h: 1131,
+        caption: "The case board",
+      },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "YES BANK" },
+          { label: "Scope", value: "Social · Influencer" },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: "boat-marvel",
+    brand: "boAt",
+    title: "Unleash Your Super",
+    meta: ["Others", "Marvel Collaboration", "Social · Content"],
+    intro:
+      "A boAt × Marvel audio collection built for boAtheads and Marvel fans alike, inviting them to #UnleashYourSuper.",
+    hero: "/assets/work/cases/boat-marvel/hero.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "Objective",
+        body: "Ignite brand loyalty by celebrating the fandom and their love for Marvel characters, highlighting product quality & features.",
+      },
+      {
+        type: "copy",
+        heading: "Insight",
+        body: "Fans crave unique merchandise and we wanted to deepen their connection to the Marvel universe.",
+      },
+      {
+        type: "copy",
+        heading: "Concept",
+        body: "Create a unique audio experience for MARVEL fans and boAtheads in India, inspiring them to #UnleashYourSuper.",
+      },
+      {
+        type: "copy",
+        heading: "Execution",
+        body: "To channel powerful vibes in all our communication, we used terms, visuals & audio related to superheroes. boAtheads got a power-packed launch with immersive 3D audio & visuals, superhero-infused animation and text, hyping the product's features.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "Out of Stock", label: "in a record-breaking week!" },
+          { figure: "715K", label: "Total Engagement" },
+          { figure: "9.5M+", label: "Total Views" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/wall/boat.jpg",
+        w: 1600, h: 1132,
+        caption: "The case board",
+      },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "boAt" },
+          { label: "Partner", value: "Marvel" },
+          { label: "Scope", value: "Social · Content" },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: "croma-ac-badhau-ya-ghatau",
+    brand: "Croma",
+    title: "Settling the Debate for Once - AC Badhau Ya Ghatau?",
+    meta: ["Others", "Social · Influencer"],
+    intro:
+      "There has always been confusion whether \"AC badhane ka matlab temperature badhana ya ghatana hota hai?\" - Croma settled it, and made itself the destination for AC purchases along the way.",
+    hero: "/assets/work/cases/croma-ac/hero.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "Insight",
+        body: "There has always been confusion whether \"AC badhane ka matlab temperature badhana ya ghatana hota hai?\"",
+      },
+      {
+        type: "copy",
+        heading: "Opportunity",
+        body: "To clear the confusion and promote Croma as the destination for AC purchases with an enticing exchange offer.",
+      },
+      {
+        type: "copy",
+        heading: "Creative Solution",
+        body: "To ignite a debate on \"AC badhane ka matlab kya hai?\" and tackle the confusion around adjusting AC settings that drives engagement and provides a solution through a creative approach.",
+      },
+      {
+        type: "copy",
+        heading: "Execution",
+        body: "We kickstarted by prompting the audience to define 'AC badhana'. Influencers then conducted nationwide Vox Pop interviews to gather public opinions. Capitalizing on this buzz, we released a viral rap video to give the ultimate answer.\n\nFurther engaging activities included meme contests and voucher giveaways, solidifying Croma's status as the go-to AC destination. This integrated approach helped us boost engagement and seamlessly integrate our exchange offer communication.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "19.07M", label: "Reach" },
+          { figure: "3.26%", label: "Engagement" },
+          { figure: "5.26M", label: "Rap video views" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/wall/croma.jpg",
+        w: 1600, h: 900,
+        caption: "The case board",
+      },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "Croma" },
+          { label: "Scope", value: "Social · Influencer" },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: "croma-festival-of-dreams",
+    brand: "Croma",
+    title: "Flipping the Carts on the Competitors",
+    meta: ["Others", "Festival of Dreams", "Out of Home · Social"],
+    intro:
+      "When a competitor's billboard started a trend, Croma's Festival of Dreams answered overnight - with a bigger billboard and a free iPhone.",
+    hero: "/assets/work/cases/croma-dreams/hero.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "Insight",
+        body: "When brands banter, the audience loves to grab popcorn and enjoy the entertainment unfold.",
+      },
+      {
+        type: "copy",
+        heading: "Opportunity",
+        body: "Our IP Festival of Dreams, an initiative that turns wishes and dreams into reality by offering unbelievable discounts on tech, was fitting seamlessly when we saw the opportunity to harp on an on-going trend started by Flipkart.",
+      },
+      {
+        type: "copy",
+        heading: "Creative Solution",
+        body: "We capitalized on a moment initiated by Flipkart that was on the brink of trending and created something even bigger in real-time.",
+      },
+      {
+        type: "copy",
+        heading: "Execution",
+        body: "Overnight, we positioned our billboard beside Flipkart's, offering an even bigger opportunity to win a free iPhone. Prompting a contest, we asked people to share their dreams in the comments.\n\nThe responses flooded in, even catching the attention of creators and meme pages. In the end, one lucky winner walked away with an iPhone 14 Pro Max!",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "143.7k", label: "Reach" },
+          { figure: "31.38%", label: "Engagement" },
+          { figure: "9K", label: "Follower growth in just 6 days" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/wall/croma-dreams.jpg",
+        w: 1600, h: 900,
+        caption: "The case board",
+      },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "Croma" },
+          { label: "Scope", value: "Out of Home · Social" },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: "bgmi-update-podcast",
+    brand: "BGMI",
+    title: "Update Podcast - BGMI Gives a Spin to the Updates",
+    meta: ["Others", "Influencer · Video"],
+    intro:
+      "Gamers rely on trusted sources for complex game updates. Teaming up with esports celebrities for a fun explainer campaign bypasses unreliable information and delivers clear, engaging content.",
+    hero: "/assets/work/cases/bgmi/hero.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "Insight",
+        body: "Gamers rely on trusted sources for complex game updates. Teaming up with esports celebrities for a fun explainer campaign bypasses unreliable information and delivers clear, engaging content.",
+      },
+      {
+        type: "copy",
+        heading: "Objective",
+        body: "Attract new players and bring back existing ones with fresh content and influencer buzz. Partner with mobile gaming influencers to spread the word and build trust. Grab attention with high-quality visuals and interactive elements.",
+      },
+      {
+        type: "copy",
+        heading: "Challenge & Objective",
+        body: "Young audiences crave short, dynamic content - so the intent was to ditch lengthy podcasts and create snackable updates that are easy to understand.",
+      },
+      {
+        type: "copy",
+        heading: "Creative Execution",
+        body: "No More Boring Updates! Often times, people aren't aware of the gaming updates or how to use them. BGMI started a podcast series in which each update is treated differently, using a creative format, in order to get more people to engage with the game. We made 3 informative videos (high quality, gamer jargon, featuring influencers) to explain these new gaming updates in a fun and rather relatable way, using pop culture references like creating a set that resembled Koffee With Karan's, a commentator box in a cricket stadium, so on and so forth.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "90%", label: "Positive conversations, #trended on YT" },
+          { figure: "900M", label: "Total views on YT & IG" },
+          { figure: "30%", label: "Faster updates observed" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/wall/bgmi.jpg",
+        w: 1600, h: 1135,
+        caption: "The case board",
+      },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "BGMI (Krafton)" },
+          { label: "Scope", value: "Influencer · Video" },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: "wacoal",
+    brand: "Wacoal",
+    title: "#WacoalKnowsBreast",
+    meta: ["Fashion / Beauty / Luxury", "Breast Cancer Awareness", "Influencer · CGI"],
+    intro:
+      "Advancing breast cancer awareness with 3 simple steps - Wacoal, a premium Japanese lingerie brand, ventured into the second year of the campaign #WacoalKnowsBreast, solidifying itself as an intellectual property for breast cancer awareness.",
+    hero: "/assets/work/cases/wacoal/hero.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "Insight",
+        body: "Most women either shy away from or don't know how to examine themselves for the early signs of breast cancer.",
+      },
+      {
+        type: "copy",
+        heading: "Goals",
+        body: "Amplifying awareness about breast cancer. Encouraging our audience to prioritise their breast health proactively. Simplifying the self breast-exam.",
+      },
+      {
+        type: "copy",
+        heading: "Creative Approach",
+        body: "Imagine influencers showcasing how to do a breast cancer self-examination through their content? It will most likely get flagged on Instagram as inappropriate content. So instead of that, we built it into a simple 3 finger pose, that simplifies the narrative of the 3 step approach to self examination.\n\nWe started building this visual narrative with our senior leadership across India and Japan, replicating the same with influencers & our users/customers to create a high recall value & encouraged people to take the test. We followed it up with a series of videos & posts serving as reminders throughout the month of October, along with transforming Wacoal stores into spaces that gently reminded women to detect the signs of breast cancer early on.\n\nWe also brought back our Pink Awareness Bra (launched in 1999) and used CGI to make it soar over Gateway of India thus elevating the messaging of our campaign.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "2M+", label: "Reach" },
+          { figure: "15M+", label: "Views" },
+          { figure: "1M+", label: "Engagement" },
+          { figure: "11M+", label: "People got inspired" },
+          { figure: "15M+", label: "Views on our CGI Initiative" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/wall/wacoal.jpg",
+        w: 1600, h: 900,
+        caption: "The case board",
+      },
+      {
+        type: "credits",
+        items: [
+          { label: "Client", value: "Wacoal" },
+          { label: "Scope", value: "Influencer · CGI" },
+        ],
+      },
+    ],
+  },
+
+  {
     slug: "netflix-mi",
     brand: "Netflix × MI",
     title: "PENDING - campaign title",
     meta: ["PENDING", "Entertainment", "Film · Social"],
     intro: LOREM,
-    hero: "/assets/work-entertainment.png",
+    hero: "/assets/art/work-entertainment.webp",
     film: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
     pending: true,
     /* The reference page's full section vocabulary, in one case, so
@@ -788,7 +1136,7 @@ export const CASES: CaseStudy[] = [
         { title: "PENDING - the stills", body: LOREM },
         { title: "PENDING - the always-on", body: LOREM },
       ] },
-      { type: "image", src: "/assets/work-entertainment.png", w: 1600, h: 900, bleed: true, caption: "PENDING - caption" },
+      { type: "image", src: "/assets/art/work-entertainment.webp", w: 1600, h: 900, bleed: true, caption: "PENDING - caption" },
       { type: "copy", heading: "The execution", body: LOREM },
       { type: "video", src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", caption: "PENDING - the case film" },
       /* PENDING - three of the same file standing in for the cutdowns.

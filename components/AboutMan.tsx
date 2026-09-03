@@ -486,6 +486,15 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
           mat?.dispose();
         });
         renderer.dispose();
+        /* dispose() gives back the renderer's own objects; it does not
+           give back the drawing context, and a browser only allows a
+           handful of live WebGL contexts per page before it starts
+           dropping the oldest one on the floor. Navigating in and out of
+           About is a fresh renderer each time, so without this the
+           figure eventually comes back as a blank canvas on a tab that
+           has been around a while. Same call, for the same reason, at
+           the end of lib/particle-logo.ts. */
+        renderer.forceContextLoss();
         renderer.domElement.remove();
       };
     }

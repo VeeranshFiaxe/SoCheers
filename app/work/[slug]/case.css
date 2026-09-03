@@ -58,7 +58,15 @@
   display:flex; align-items:flex-end; justify-content:space-between;
   gap:clamp(20px,4vw,60px); flex-wrap:wrap;
 }
-.cs-hero__title{ max-width:22ch; }
+/* No measure here. `ch` resolves against the element's *own* font, and
+   this wrapper is at body size, so the 22ch that used to sit here came
+   out at ~240px rather than the ~1270px the display type meant. Every
+   title was being set in a column a sixth of its intended width, and a
+   title with no space in it - #WacoalKnowsBreast - could not wrap out of
+   it, so the split's line mask cut it down to "#WAC". The measure now
+   lives on the heading, next to the font it is counting characters of,
+   which is the same way .sec__title states it in globals.css. */
+.cs-hero__title{ max-width:100%; }
 .cs-hero__brand{
   display:block;
   font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.28em; text-transform:uppercase;
@@ -73,6 +81,13 @@
   font-size:clamp(36px,6.4vw,96px); line-height:.96; letter-spacing:-.04em;
   text-transform:uppercase;
   text-wrap:balance;
+  max-width:22ch;
+  /* The last line of defence for a title that still will not fit. The
+     split wraps every line in an overflow:hidden mask, so anything past
+     the measure is not clipped visibly at an edge - it simply is not
+     drawn, and the page looks finished while missing half a word. A word
+     that cannot fit breaks instead of disappearing. */
+  overflow-wrap:break-word;
 }
 .cs-hero__tags{
   margin-top:18px; list-style:none; display:flex; flex-wrap:wrap; align-items:center;

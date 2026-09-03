@@ -3,7 +3,7 @@
 
    The client's own work folders under
 
-     public/assets/SC Website Revamp/03. Work/
+     assets/SC Website Revamp/03. Work/
 
    are the masters: case boards exported at print size, and case study
    films delivered as 200-500MB broadcast cuts. Neither is a thing to
@@ -42,7 +42,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import ffmpeg from "ffmpeg-static";
 
-const SRC = "public/assets/SC Website Revamp/03. Work";
+const SRC = "assets/SC Website Revamp/03. Work";
 /* The films, and the one still that had to be decoded by hand. Paths
    here are repo-root relative rather than under SRC, because these do
    not live in the client's folder any more - see the note above. */

@@ -25,10 +25,23 @@ import SoCheersLockup from "./SoCheersLockup";
    arrive costs six seconds, not the site.
    ============================================================ */
 
-/* everything the opening sequence paints, in the order it needs them.
+/* Everything the opening sequence paints, in the order it needs them.
    The last entry is the hero the camera ends up inside, which is also the
-   first thing the page underneath draws - so it is worth the wait twice. */
-const ASSETS = [...OVERTURE_WALLS.map((w) => w.img), OVERTURE_FINAL];
+   first thing the page underneath draws - so it is worth the wait twice.
+
+   A function rather than a constant because a phone does not paint the
+   same pictures: some walls have a 9:16 stand-in that the <picture> in
+   components/Overture.tsx will pick instead (see OVERTURE_WALLS in
+   lib/content.ts). Preloading the landscape original in that case is a
+   count that finishes against files the sequence never shows, and the one
+   it does show still arriving mid-fall - which is the exact pop this door
+   exists to prevent. Called from inside the effect, so it is only ever
+   asked on the client. */
+function assets() {
+  const phone =
+    typeof window !== "undefined" && window.matchMedia("(max-width:700px)").matches;
+  return [...OVERTURE_WALLS.map((w) => (phone && w.m) || w.img), OVERTURE_FINAL];
+}
 
 const MIN = 1150;   // ms - the floor, so the count reads as a count
 const MAX = 6000;   // ms - the ceiling, past which the door opens regardless
@@ -51,6 +64,7 @@ export default function Loader() {
       return;
     }
 
+    const ASSETS = assets();
     const countEl = el.querySelector<HTMLElement>("#loaderCount");
     const total = ASSETS.length;
     let loaded = 0;

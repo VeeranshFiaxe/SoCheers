@@ -2084,18 +2084,84 @@
   }
   .ab-intro__slot{ flex-basis:calc(var(--fig) * 0.20); }
   .ab-intro__figure{ order:1; }
+  /* relative, NOT static, and the difference is the whole panel.
+
+     Both of these carry a scrim on a ::before - a cream ellipse that dims
+     the field of type where the small copy crosses it (see
+     .ab-intro__cred::before above) - and it is sized in percentages of
+     its own box: -28% either side, -55% top and bottom. Percentages on an
+     absolutely positioned element resolve against its containing block,
+     and on a wide screen that is the copy block itself, so the scrim
+     comes out a little wider and taller than the two lines it sits
+     behind. Which is the whole design of it.
+
+     Taking these out of absolute positioning to put them in flow under
+     the figure also takes away that containing block. The percentages
+     then resolve against the nearest positioned ancestor, which is
+     .ab-intro__stage - the entire composition - so each scrim became a
+     cream ellipse about 670 by 1050 at 95% alpha, centred on the man,
+     and there are three of them: two credits and the payoff. Stacked,
+     they laid a near-solid sheet of paper over the claim, the figure, the
+     burst and the copy. Everything on the panel went pale at once, which
+     is what it looked like: a white fade that had escaped the join it
+     belongs to and washed the section it was supposed to be handing over
+     to.
+
+     position:relative lays out identically to static - the elements stay
+     in flow, in order, exactly where they were - and hands the ::before
+     its own box back, so each scrim is again the size of the copy it is
+     dimming. top:auto is the other half of it: the desktop rules hang
+     these off the figure's height (0.62 and 0.80 of --fig-h) with `top`,
+     which is inert while they are static and would shove them 230 and
+     300 pixels down the page the moment they are positioned again. */
   .ab-intro__cred{
-    order:2; position:static;
+    order:2; position:relative; top:auto;
     width:min(34ch, 100%); text-align:center;
     font-size:clamp(11px, 2.8vw, 13px);
   }
   .ab-intro__cred--l{ margin-top:clamp(10px, 2svh, 22px); }
+  /* One scrim for the pair, not one each.
+
+     Side by side they never touch, so each half carrying its own is
+     right. Stacked they are two flush line boxes - 19px each, no gap -
+     and the scrim is 55% of its own height proud at the top and the
+     bottom, so each one reaches about ten pixels past its text. The
+     second half's therefore starts ten pixels *inside* the first half's
+     line, and because the two are equal z-index siblings the later one
+     paints last: a 90% cream ellipse laid across the bottom two thirds of
+     the glyphs above it. One line washed, the one under it crisp, which
+     is what it looked like.
+
+     The first half's scrim is the one to keep - it paints before both
+     texts, so it can sit behind the pair without touching either - and it
+     is stretched to cover both. -155% is the second line's own height
+     plus its share of the falloff, expressed against the first line's:
+     the two halves are one sentence at one size, so they are the same
+     height and the ratio holds wherever it wraps. */
+  .ab-intro__cred--r::before{ display:none; }
+  .ab-intro__cred--l::before{ bottom:-155%; }
   /* back into flow: there is no figure to hang it off here, the two
      halves of the list are stacked under him instead */
+  /* same fix, same reason - and this one's scrim is the widest of the
+     three (min(150%, 1100px) across, -40%/-70% down), so it was the
+     heaviest of the sheets lying over the composition */
   .ab-intro__payoff{
-    order:3; position:static; margin-top:clamp(14px, 2.4svh, 30px);
+    order:3; position:relative; top:auto; margin-top:clamp(14px, 2.4svh, 30px);
     /* the sentence is wider than a phone at any readable size */
     white-space:normal;
+    /* And having let it wrap, say where. Left to itself it filled the
+       first line and dropped "next." alone onto the second - the sentence
+       ends on a one-word line, which reads as a mistake rather than as a
+       break, and it is the payoff line, so it is the last place on the
+       panel that can afford to look accidental.
+
+       balance, not a narrower measure or a smaller size: the two halves
+       come out near enough level and "next." goes back up with the clause
+       it belongs to. It is safe here in a way it is not on the desktop
+       rule - balance sets text-wrap-mode:wrap, which is exactly why the
+       note on .ab-intro__payoff em warns it off up there, where the line
+       is deliberately nowrap. Here it is already wrapping. */
+    text-wrap:balance;
   }
   /* the field of words thins out: at this size the rows are only three
      or four tokens wide and start reading as words rather than as tone */
@@ -2109,7 +2175,29 @@
      anything. So the section goes back to its own height and scrolls
      normally; the desktop layout, where the constraint was the whole
      point, is untouched. */
-  .ab-space{ min-height:0; display:block; padding:clamp(72px,11vh,120px) 0; }
+  /* The foot comes in hard, and the head does not.
+
+     Two paddings meet under the rail - this section's own, and the
+     crowd's on top of its picture - and at 11vh and 7vh they were adding
+     up to about a sixth of a phone screen of nothing between the last
+     thumbnail and the figures. On a desktop that gap is read as the space
+     section finishing before another one starts; on a phone, where the
+     two are the only things on screen at once, it just reads as the page
+     having lost its place.
+
+     Only the bottom moves. The top is the join from the drivers card and
+     is doing real work. */
+  .ab-space{
+    min-height:0; display:block;
+    padding:clamp(72px,11vh,120px) 0 clamp(18px,2.4vh,30px);
+    /* And this has to move with it. --crowd-h is how far past its own
+       foot the symbol field reaches, and it is the crowd's picture plus
+       the crowd's top padding - so cutting that padding below without
+       cutting it here would leave the field running on past the bottom of
+       the figures it is supposed to stop with. */
+    --crowd-h:calc(38.03vw + clamp(14px,2vh,26px));
+  }
+  .ab-crowd{ padding-top:clamp(14px,2vh,26px); }
   /* width, not the --stage-h budget: this rule comes later in the file at
      equal specificity, so it simply wins, and the height cap stops
      mattering the moment the frame is allowed the full column. */
@@ -2117,20 +2205,72 @@
   /* The frame itself is untouched by any of this - it is the same 16:9 at
      every width, which is the whole reason this layout replaced a mosaic
      that had to be re-authored for narrow screens. */
-  /* Eleven cells across a phone leaves each a few pixels wide, so the
-     rail wraps rather than shrinks: two rows, the film leading the first
-     one. grid-auto-flow goes back to rows for the template to apply. */
-  .stage__rail{ grid-auto-flow:row; grid-template-columns:repeat(6,1fr); gap:5px; }
+  /* One line, and it scrolls.
+
+     This used to wrap to a fixed six-column grid, which on nine shots
+     came out as six over three - a full row and then a short one, which
+     reads as a layout that ran out rather than as a roll of film. The
+     count is what the rail is for, so the answer is not to make the cells
+     smaller until they all fit; it is to keep them one row and let the
+     row be longer than the screen.
+
+     4.5 columns, and the half is the whole point: a cell cut by the right
+     edge is the only honest way to say there is more to the right. A
+     round four would look like a rail that happens to end there. The
+     arithmetic is the visible width less the four gaps that fall between
+     the five rendered cells, divided by four and a half.
+
+     Lenis only takes the wheel (smoothWheel, no syncTouch - see
+     initLenis in lib/motion.ts), so native touch scrolling inside this
+     box is untouched. Snap is `proximity`, not `mandatory`: it tidies up
+     where a flick lands without ever refusing to leave a cell half shown,
+     which is the state the affordance depends on. */
+  .stage__rail{
+    grid-auto-flow:column;
+    grid-auto-columns:calc((100% - 4 * 5px) / 4.5);
+    gap:5px;
+    overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x proximity;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    /* the cut cell is the affordance; a bar over it is a second, worse
+       one - and on a phone it is an overlay that has faded out by the
+       time anyone looks anyway */
+    scrollbar-width:none;
+    /* the thumbs lift 2px on press and the focus ring sits 3px outside
+       them, and an overflow box would clip both */
+    padding-block:4px; margin-block:-4px;
+  }
+  .stage__rail::-webkit-scrollbar{ display:none; }
+  .stage__thumb{ scroll-snap-align:start; }
   .stage__meta{ font-size:10px; letter-spacing:.14em; }
   /* The frame takes the full column here, so there is no margin left for
      the spill to fill - what is left of it is the halo just past the
      corners. Less bleed and a smaller blur radius, which also keeps the
      filter off the phone's compositor at a size it would actually feel. */
-  /* No cursor to push the wave, no margin for it to show in, and the
-     likeliest machine to be short of frames. display:none is also what
-     stops the field working at all - with no box it has no grid, so it
-     samples nothing and never starts its loop. */
-  .stage__ascii{ display:none; }
+  /* The symbol field stays on here.
+
+     It was display:none, on three grounds: no cursor to push the wave, no
+     margin around the frame for it to show in, and the likeliest machine
+     to be short of frames. The first is out of date - lib/ascii-field.ts
+     takes the pointer field on a coarse device now, so the resting point
+     drifts on its own and a finger laid on the picture takes it over, and
+     it samples every other frame there rather than every one. The third
+     answers itself at this width: the grid is sized in CSS pixels, so a
+     phone is a few thousand cells against nineteen thousand on a wide
+     screen - this is the cheapest place the effect ever runs, not the
+     dearest.
+
+     The second was simply looking in the wrong place. There is little
+     margin around the frame here, true - but the field is not scoped to
+     the frame. It is measured against the section and given the section's
+     height plus the whole of the crowd block (--crowd-h), so it runs on
+     down behind the last picture on the page, and the crowd is a cut-out
+     PNG: what fills the gaps between the figures is grid rather than
+     cream. That is most of what the effect is for, and on a phone it was
+     the part being thrown away - the crowd was left standing on a flat
+     plate with a visible seam above it. */
+  .stage__ascii{ display:block; }
   .stage__frame{ box-shadow:0 18px 44px -14px rgba(0,0,0,.38); }
   .ab-open__cue{ display:none; }
   /* nothing opposite it now, so it comes in off the foot of the screen

@@ -28,7 +28,7 @@ import sharp from "sharp";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 
-const SRC = "public/assets/SC Website Revamp/03. Work/Pinned Work";
+const SRC = "assets/SC Website Revamp/03. Work/Pinned Work";
 const OUT = "public/assets/work/pinned";
 
 /* slug -> the file the client sent. The slug is what the site calls the

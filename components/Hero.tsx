@@ -1,4 +1,4 @@
-import { IMG, MEANING } from "@/lib/content";
+import { IMG, MEANING, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
 import HeroCrumble from "./HeroCrumble";
 import PixGrid from "./PixGrid";
 
@@ -29,9 +29,16 @@ export default function Hero() {
             black-and-white team photo on the way to full screen (contained,
             not full-bleed - see hero__backdrop above for the margin). */}
         <div className="hero__stage" data-hero-stage>
+          {/* The set rather than the master. This grows to fill the
+              screen, so `sizes` is 100vw and the browser picks on its own
+              pixel width - the 4K laptop the 7680 was cut for still gets
+              it, and a phone decodes two megapixels instead of thirty
+              three. See TEAM_SRCSET in lib/content.ts. */}
           <img
             className="hero__stage-img"
             src={IMG.team}
+            srcSet={TEAM_SRCSET}
+            sizes={TEAM_SIZES}
             alt="The SoCheers team"
             data-stage-img
           />

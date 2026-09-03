@@ -1,22 +1,42 @@
 /* Everything the page says, in one place. */
 
+/* Anything under /assets/art/ is written by scripts/build-art.mjs out of
+   the file the client delivered, which stays where they put it. Five of
+   these arrived as PNGs of photographs - three megabytes to say what
+   WebP says in four hundred kilobytes, because PNG codes flat colour and
+   none of these are flat - and the artwork below was a PNG with a .jpg
+   on the end of it. Re-run that script if a master is replaced. */
 export const IMG = {
-  frame: "/assets/socheers-frame-n-T4ylIx.jpg",
+  frame: "/assets/art/socheers-frame.webp",
   /* 7680x4320. The hero blows this up past 1.7x the viewport width, so the
      3840 cut went soft on any hi-dpi screen; same framing, twice the pixels,
-     which is what keeps the sand wall's crop of it lining up. */
+     which is what keeps the sand wall's crop of it lining up.
+
+     Which is a good reason for the file to exist and not a reason to send
+     it to a phone: 33 megapixels is about 130MB of bitmap to decode for a
+     picture that will be drawn at two. So this is the top of a set rather
+     than the only one - see TEAM_SRCSET below and the two <img> that use
+     it (components/Hero.tsx, components/ContactModal.tsx). */
   team: "/assets/team-group-uhd.jpg",
   camera: "/assets/arri-camera-DX29MVBW.jpg",
   brain: "/assets/brain-DH7sqVir.jpg",
-  creativity: "/assets/SC Website Revamp/01. Home/creativity 7.jpg",
+  creativity: "/assets/home/creativity-7.webp",
   photoshop: "/assets/photoshop-face-BOtm4GGN.jpg",
   bootPhone: "/assets/boot-phone-BJcXYlVw.jpg",
-  culture: "/assets/SC Website Revamp/01. Home/WWA 4.0.png",
-  workBfsi: "/assets/work-bfsi.png",
-  workEntertainment: "/assets/work-entertainment.png",
+  culture: "/assets/art/culture.webp",
+  workBfsi: "/assets/art/work-bfsi.webp",
+  workEntertainment: "/assets/art/work-entertainment.webp",
   workLifestyle: "/assets/work-lifestyle.jpg",
-  workB2b: "/assets/work-b2b.png",
+  workB2b: "/assets/art/work-b2b.webp",
 } as const;
+
+/* The team photo's three widths, for the two places it is drawn. Both of
+   them draw it full-bleed, which is what `sizes` says - so the browser
+   picks on the device's own pixel width and a 4K laptop still ends up on
+   the 7680. */
+export const TEAM_SRCSET =
+  "/assets/art/team-1920.jpg 1920w, /assets/art/team-3840.jpg 3840w, /assets/team-group-uhd.jpg 7680w";
+export const TEAM_SIZES = "100vw";
 
 /* ------------------------------------------------------------------
    The overture's walls, front to back - the images the bulb reveals and
@@ -32,10 +52,52 @@ export const IMG = {
 
    Every file here is preloaded, silently, before the flicker is allowed
    to catch (see boot() in lib/overture-motion.ts) - so keep this list
-   small and keep the files light, nothing here is above ~450KB. */
-export const OVERTURE_WALLS = [
-  { img: "/assets/about/crowd.jpg", label: "The room" },
-  { img: IMG.camera, label: "Production" },
+   small and keep the files light, nothing here is above ~450KB.
+
+   THE PHONE'S COLUMN.  A wall is a viewport-sized plane, so on a phone
+   every one of these is being asked to fill a box about 0.46 wide where
+   the desktop asks for 1.6-1.8. object-fit:cover answers that by showing
+   roughly a quarter of a landscape picture's width, which is not a crop,
+   it is a different photograph - the subject leaves the frame and what is
+   left reads as a rendering fault rather than as a wall.
+
+   So each entry gets two optional extras, and neither of them exists
+   above 700px (see the mobile block at the end of the OVERTURE section in
+   app/globals.css) - the desktop run is byte-for-byte the one it always
+   was:
+
+     m     a stand-in for the phone, and it is only ever here because the
+           landscape original has nothing left once it is cut to a column.
+           Every one of them is a 9:16 asset already in the same folder
+           and on the same subject as the wall it replaces, so this is the
+           same running order shot portrait, not a different sequence.
+     mpos  object-position for the phone's crop, for the pictures that do
+           survive the cut but only if it is taken off centre - a subject
+           sitting high in a landscape frame is the usual reason.
+
+   The list, its length, its order and its labels are identical at both
+   widths: FALL/OVERLAP/SOUND_WALLS in lib/overture-motion.ts index this
+   array by position, so the phone gets the same tempo, the same thuds and
+   the same story beats. Only the pictures inside the frames change. */
+type Wall = {
+  img: string;
+  label: string;
+  /** portrait stand-in, phones only */
+  m?: string;
+  /** object-position for the phone's crop */
+  mpos?: string;
+};
+
+export const OVERTURE_WALLS: readonly Wall[] = [
+  /* 1920x680 - the widest thing in the run. It holds up in a column
+     because it is a poster of stacked faces rather than one wide scene:
+     the cut loses the outer faces and keeps three of them, which is a
+     composition. Nudged up off centre so it keeps whole heads rather
+     than a band of shoulders. */
+  { img: "/assets/art/crowd-wall.webp", label: "The room", mpos: "50% 42%" },
+  /* already near-portrait at 0.80, and the camera is high in the frame -
+     the operator's shoulder is what goes, which is what should go */
+  { img: IMG.camera, label: "Production", mpos: "50% 34%" },
   /* Horizontal on purpose: this wall is held long enough to be read as a
      picture, and the tall 9:16 art that used to sit here (creativity 7,
      now down in the fast tail) lost most of itself to the crop on a wide
@@ -51,22 +113,48 @@ export const OVERTURE_WALLS = [
      the picture on it would rotate the plane. They read as landscape from
      here on, so this slot has more than three candidates now if the
      running order is ever re-cut. */
-  { img: "/assets/SC Website Revamp/01. Home/Wall 2.jpg", label: "Attention" },
+  /* the one landscape wall at the front that survives the column intact:
+     the crowd is stacked in depth, so cutting the width just makes it a
+     taller crowd */
+  { img: "/assets/home/wall-2.webp", label: "Attention" },
   /* Wall 6 - the engraved ship - used to hold a fourth slot here, as the
      second of the two walls the sequence was still slow enough to look
      at. It is out, and nothing is promoted up to replace it: cutting a
      beat out of the front of the run is the point, so what follows just
      moves one place forward and arrives one notch faster off the ramp in
      lib/overture-motion.ts. */
-  { img: IMG.brain, label: "Strategy" },
+  /* The puppeteer's hand is above the brain and the strings run the height
+     of the frame, so a column cuts the hand off the top and leaves a brain
+     with strings going nowhere. "Strategy 10" is out of the same set -
+     same rust red, same halftone, same hand on the same strings - drawn
+     for a 9:16 box, so the phone gets the identical beat rather than a
+     substitute for it. It is also 46KB against the 1.4MB of the other
+     brain in the folder, which on the wall that a phone preloads is not a
+     small thing. */
+  {
+    img: IMG.brain,
+    label: "Strategy",
+    m: "/assets/home/strategy-10.webp",
+  },
   { img: IMG.bootPhone, label: "Content" },
-  { img: "/assets/who-culture.jpg", label: "Us" },
+  /* the real team, square, and the group is banked up the middle of it -
+     lifted a little so the cut takes floor rather than faces */
+  { img: "/assets/art/who-culture.webp", label: "Us", mpos: "50% 44%" },
   /* extra beats, tacked on the back where the falls are already fastest and
      the images are only ever read as texture, not pictures - see FALL/
      OVERLAP in lib/overture-motion.ts. Past SOUND_WALLS (same file) these
      stop getting their own impact thud: at this speed a sound per wall
      started reading as more walls than were actually on screen. */
-  { img: "/assets/SC Website Revamp/01. Home/Wall 1.jpg", label: "Planning" },
+  /* A table seen from above with people round all four edges: the column
+     keeps the empty white table and cuts the heads in half at the top and
+     the bottom of it, which is the worst crop in the run. "Strategy 8" -
+     a man over a chessboard - is planning drawn upright, and it is one of
+     the pictures the tail is already made of. */
+  {
+    img: "/assets/home/wall-1.webp",
+    label: "Planning",
+    m: "/assets/home/strategy-8.webp",
+  },
   /* Wall 5, into the slot Wall 2 left on its way up the stack. It is the
      last of the eight walls that wasn't already in here - which is why
      the beat Wall 8 (the op-art) used to hold is simply gone rather than
@@ -74,12 +162,22 @@ export const OVERTURE_WALLS = [
      image inside one sequence is worse than one fewer beat in a tail
      that is texture anyway. FALL/OVERLAP in lib/overture-motion.ts index
      by position and clamp, so a shorter list just ends sooner. */
-  { img: "/assets/SC Website Revamp/01. Home/Wall 5.jpg", label: "Focus" },
+  { img: "/assets/home/wall-5.webp", label: "Focus" },
+  /* 9:16 already - the one wall in the run the phone does not have to be
+     given anything for. It is here because it was too tall for a wide
+     screen, which is the same observation from the other end. */
   { img: IMG.creativity, label: "Creativity" },
-  { img: "/assets/SC Website Revamp/01. Home/Wall 4.jpg", label: "Reverie" },
+  { img: "/assets/home/wall-4.webp", label: "Reverie" },
   { img: IMG.photoshop, label: "Retouch" },
-  { img: "/assets/SC Website Revamp/01. Home/Wall 7.jpg", label: "Horizon" },
-] as const;
+  /* the horizon is a thin band across the bottom of a wide frame, and a
+     column of it is mostly empty sky. "Production 9" keeps the horizon
+     and stands something on it. */
+  {
+    img: "/assets/home/wall-7.webp",
+    label: "Horizon",
+    m: "/assets/home/production-9.webp",
+  },
+];
 
 /* the wall that does not fall */
 export const OVERTURE_FINAL = IMG.frame;
@@ -88,12 +186,12 @@ export const OVERTURE_FINAL = IMG.frame;
    catching, a wall meeting the floor. See sfx() in lib/overture-motion.ts
    for how they're actually played. */
 export const OVERTURE_SFX = {
-  pull: "/assets/SC Website Revamp/Sound effects/String Pull.mp3",
-  on: "/assets/SC Website Revamp/Sound effects/Light On.mp3",
-  fall: "/assets/SC Website Revamp/Sound effects/Wall Fall.mp3",
+  pull: "/assets/sfx/string-pull.mp3",
+  on: "/assets/sfx/light-on.mp3",
+  fall: "/assets/sfx/wall-fall.mp3",
   /* the finale's camera push into the standing hero wall - see finale()
      in lib/overture-motion.ts */
-  expand: "/assets/SC Website Revamp/Sound effects/logo expand.mp3",
+  expand: "/assets/sfx/logo-expand.mp3",
 } as const;
 
 /* the whir a WHAT WE DO service line gets as the pointer arrives on it -
@@ -102,8 +200,8 @@ export const OVERTURE_SFX = {
    repeat the exact same hit. See initWCardCycle() in lib/motion.ts, and the
    note there for why it is off the card's frame cycle. */
 export const WCARD_SFX = [
-  "/assets/SC Website Revamp/Sound effects/Frames 1.mp3",
-  "/assets/SC Website Revamp/Sound effects/Frames 2.mp3",
+  "/assets/sfx/frames-1.mp3",
+  "/assets/sfx/frames-2.mp3",
 ] as const;
 
 /* A bare "#..." is an on-page anchor; anything else is a real route.
@@ -183,54 +281,60 @@ export const STATS = [
    one by one rather than computed from the index precisely so that this is
    a line to edit the day someone who has seen the images wants Copywriting
    to be a particular one of them. */
-const HOME_DIR = "/assets/SC Website Revamp/01. Home";
+/* The home folder's pictures are referenced out of /assets/home now,
+   not out of the client's delivery folder. scripts/build-art.mjs writes
+   them: the eight overture walls at 1800 on the long edge and the card
+   reels at 1100, both as WebP. Two of the card frames were 1.3MB PNGs of
+   photographs for a picture drawn 500px wide at 28% opacity; the whole
+   folder came down from about 8MB to 1.5MB and nothing about it looks
+   different. Re-run that script if a master is replaced. */
 
 export const BUCKETS = [
   {
     idx: "01",
     name: "Strategy",
-    img: `${HOME_DIR}/Strategy 9.jpg`,
+    img: "/assets/home/strategy-9.webp",
     images: [
-      `${HOME_DIR}/Strategy 9.jpg`,
-      `${HOME_DIR}/Strategy 7.png`,
-      `${HOME_DIR}/Strategy 2.png`,
-      `${HOME_DIR}/Strategy 3.jpg`,
-      `${HOME_DIR}/Strategy 4.jpg`,
-      `${HOME_DIR}/Strategy 5.jpg`,
-      `${HOME_DIR}/Strategy 6.jpg`,
-      `${HOME_DIR}/Strategy 8.jpg`,
-      `${HOME_DIR}/Strategy 10.jpg`,
+      "/assets/home/strategy-9.webp",
+      "/assets/home/strategy-7.webp",
+      "/assets/home/strategy-2.webp",
+      "/assets/home/strategy-3.webp",
+      "/assets/home/strategy-4.webp",
+      "/assets/home/strategy-5.webp",
+      "/assets/home/strategy-6.webp",
+      "/assets/home/strategy-8.webp",
+      "/assets/home/strategy-10.webp",
     ],
     items: [
-      { label: "Brand Positioning", img: `${HOME_DIR}/Strategy 7.png` },
-      { label: "Digital Strategy", img: `${HOME_DIR}/Strategy 2.png` },
-      { label: "Content Planning", img: `${HOME_DIR}/Strategy 3.jpg` },
-      { label: "Insights & Journey Mapping", img: `${HOME_DIR}/Strategy 4.jpg` },
-      { label: "Communications Planning", img: `${HOME_DIR}/Strategy 5.jpg` },
-      { label: "Media Planning", img: `${HOME_DIR}/Strategy 6.jpg` },
+      { label: "Brand Positioning", img: "/assets/home/strategy-7.webp" },
+      { label: "Digital Strategy", img: "/assets/home/strategy-2.webp" },
+      { label: "Content Planning", img: "/assets/home/strategy-3.webp" },
+      { label: "Insights & Journey Mapping", img: "/assets/home/strategy-4.webp" },
+      { label: "Communications Planning", img: "/assets/home/strategy-5.webp" },
+      { label: "Media Planning", img: "/assets/home/strategy-6.webp" },
     ],
   },
   {
     idx: "02",
     name: "Creativity",
-    img: `${HOME_DIR}/creativity 7.jpg`,
+    img: "/assets/home/creativity-7.webp",
     images: [
-      `${HOME_DIR}/creativity 7.jpg`,
-      `${HOME_DIR}/Creativity 2.jpg`,
-      `${HOME_DIR}/Creativity 3.png`,
-      `${HOME_DIR}/Creativity 4.jpg`,
-      `${HOME_DIR}/creativity 5.jpg`,
-      `${HOME_DIR}/creativity 6.jpg`,
-      `${HOME_DIR}/creativity 8.jpg`,
-      `${HOME_DIR}/creativity 9.jpg`,
-      `${HOME_DIR}/creativity 10.jpg`,
+      "/assets/home/creativity-7.webp",
+      "/assets/home/creativity-2.webp",
+      "/assets/home/creativity-3.webp",
+      "/assets/home/creativity-4.webp",
+      "/assets/home/creativity-5.webp",
+      "/assets/home/creativity-6.webp",
+      "/assets/home/creativity-8.webp",
+      "/assets/home/creativity-9.webp",
+      "/assets/home/creativity-10.webp",
     ],
     items: [
-      { label: "Integrated Campaigns", img: `${HOME_DIR}/Creativity 2.jpg` },
-      { label: "Creative & Content Development", img: `${HOME_DIR}/Creativity 3.png` },
-      { label: "Copywriting", img: `${HOME_DIR}/Creativity 4.jpg` },
-      { label: "Branding & Merchandising", img: `${HOME_DIR}/creativity 5.jpg` },
-      { label: "Tactical Execution", img: `${HOME_DIR}/creativity 6.jpg` },
+      { label: "Integrated Campaigns", img: "/assets/home/creativity-2.webp" },
+      { label: "Creative & Content Development", img: "/assets/home/creativity-3.webp" },
+      { label: "Copywriting", img: "/assets/home/creativity-4.webp" },
+      { label: "Branding & Merchandising", img: "/assets/home/creativity-5.webp" },
+      { label: "Tactical Execution", img: "/assets/home/creativity-6.webp" },
     ],
   },
   {
@@ -239,23 +343,23 @@ export const BUCKETS = [
     img: IMG.camera,
     images: [
       IMG.camera,
-      `${HOME_DIR}/Production 2.jpg`,
-      `${HOME_DIR}/Production 3.jpg`,
-      `${HOME_DIR}/Production 4.jpg`,
-      `${HOME_DIR}/Production 5.png`,
-      `${HOME_DIR}/Production 6.jpg`,
-      `${HOME_DIR}/Production 7.jpg`,
-      `${HOME_DIR}/Production 8.jpg`,
-      `${HOME_DIR}/Production 9.jpg`,
-      `${HOME_DIR}/Production 10.jpg`,
+      "/assets/home/production-2.webp",
+      "/assets/home/production-3.webp",
+      "/assets/home/production-4.webp",
+      "/assets/home/production-5.webp",
+      "/assets/home/production-6.webp",
+      "/assets/home/production-7.webp",
+      "/assets/home/production-8.webp",
+      "/assets/home/production-9.webp",
+      "/assets/home/production-10.webp",
     ],
     items: [
-      { label: "TVC & DVC", img: `${HOME_DIR}/Production 2.jpg` },
-      { label: "Digital Production", img: `${HOME_DIR}/Production 3.jpg` },
-      { label: "Social Content", img: `${HOME_DIR}/Production 4.jpg` },
-      { label: "Photography", img: `${HOME_DIR}/Production 5.png` },
-      { label: "Audio & Mixing", img: `${HOME_DIR}/Production 6.jpg` },
-      { label: "Motion + 3D", img: `${HOME_DIR}/Production 7.jpg` },
+      { label: "TVC & DVC", img: "/assets/home/production-2.webp" },
+      { label: "Digital Production", img: "/assets/home/production-3.webp" },
+      { label: "Social Content", img: "/assets/home/production-4.webp" },
+      { label: "Photography", img: "/assets/home/production-5.webp" },
+      { label: "Audio & Mixing", img: "/assets/home/production-6.webp" },
+      { label: "Motion + 3D", img: "/assets/home/production-7.webp" },
     ],
   },
 ];
@@ -318,7 +422,7 @@ export const AWARDS: Award[] = [
     name: "THE DRUM GLOBAL",
     year: "2025",
     category: "Social and influencer",
-    img: "/assets/SC Website Revamp/01. Home/Production 4.jpg",
+    img: "/assets/home/production-4.webp",
     alt: "Placeholder still from the winning work",
   },
   {
@@ -332,7 +436,7 @@ export const AWARDS: Award[] = [
     name: "WEBBY AWARDS",
     year: "2024",
     category: "Branded content",
-    img: "/assets/SC Website Revamp/01. Home/creativity 8.jpg",
+    img: "/assets/home/creativity-8.webp",
     alt: "Placeholder still from the winning work",
   },
   {
@@ -353,7 +457,7 @@ export const AWARDS: Award[] = [
     name: "SPIKES ASIA",
     year: "2023",
     category: "Film craft",
-    img: "/assets/SC Website Revamp/01. Home/Production 7.jpg",
+    img: "/assets/home/production-7.webp",
     alt: "Placeholder still from the winning work",
   },
 ];

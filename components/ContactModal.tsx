@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { IMG } from "@/lib/content";
+import { IMG, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
 
 /* Placeholder contact popup - swaps the old mailto CTA for a modal so the
    ask ("brief us") doesn't bounce straight to an email client. No submit
@@ -66,7 +66,14 @@ export default function ContactModal() {
             </button>
 
             <div className="cmodal__visual">
-              <img src={IMG.team} alt="The SoCheers team" />
+              <img
+                src={IMG.team}
+                srcSet={TEAM_SRCSET}
+                sizes={TEAM_SIZES}
+                alt="The SoCheers team"
+                loading="lazy"
+                decoding="async"
+              />
               <div className="cmodal__visual-veil" />
               <span className="cmodal__visual-tag">MAKING MORE HAPPEN</span>
             </div>

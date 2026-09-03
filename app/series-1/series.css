@@ -588,7 +588,10 @@
 }
 .spost--stack .spost__head{ max-width:30ch; }
 .spost--stack .spost__mark{
-  width:100%; max-width:12ch; margin:0 auto;
+  /* wide enough for "continuity kink." to hold together on one line -
+     at 12ch the mark broke after "continuity" and left the accented
+     word stranded on a line of its own. */
+  width:100%; max-width:18ch; margin:0 auto;
   text-align:center;
   font-size:clamp(32px,5.6vw,84px);
 }
@@ -657,7 +660,7 @@
   /* the desktop clamp bottoms out at 32px here, which is a heading
      rather than a title card. On a narrow screen the column is the whole
      page, so the mark can have the whole page's width. */
-  .spost--stack .spost__mark{ max-width:11ch; font-size:clamp(34px,9.4vw,62px); }
+  .spost--stack .spost__mark{ max-width:18ch; font-size:clamp(34px,9.4vw,62px); }
   .spost--stack .spost__inset--back{
     right:auto; left:clamp(8px,3vw,22px); top:11%;
     width:clamp(74px,19vw,116px);

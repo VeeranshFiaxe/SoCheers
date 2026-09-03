@@ -1,10 +1,13 @@
 /* ============================================================
-   SERIES - the flat pass.
+   SERIES - the tab.
 
-   One shot, fourteen times: the STRIP, which is the beat the direction
-   pointed at. Full screen, the sentence in the left half, four letterbox
-   frames cascading down the right against a blurred plate of the beat's
-   own first picture.
+   Ten sections, seven stagings, and one frame around all of them: the
+   graded plate, the scrim, the grain, the letterbox gate, the type at
+   one size in one column, the slate in the corner. What changes from
+   screen to screen is the picture layer inside that frame - see THE
+   STAGES further down, and the note at the head of
+   components/SeriesSections.tsx for why the repetition sits at that
+   layer rather than at the layout.
 
    Deliberately not a variant of app/series-1/series.css. That file is fourteen
    mechanics with a partner each in lib/series-motion.ts; this is one
@@ -73,16 +76,17 @@
        0  .st-hero__ground   the room, blown up and pushed back
        1  .st-hero__frames   three frames overlapping on a 12-col field
        2  .st-hero__scrim    ground for the type, weighted left
-       3  .st-hero__type     tag, the name, the standfirst
-       4  .st-hero__inset    one frame lifted IN FRONT of the words
-       5  .st-grain          the grade
-       6  .st-gate           the letterbox
+       3  .st-hero__type     the tag and the line
+       4  .st-grain          the grade
+       5  .st-gate           the letterbox
 
-   Layer 4 is the whole trick, same as on the earlier pass: a picture
-   plane in front of the sentence is what stops three photographs
-   reading as three photographs. It is a sibling of .st-hero__type in
-   the markup rather than a child of the stage, because a stage that
-   sits behind the words cannot also hold something in front of them.
+   There was a sixth: one frame lifted out of the composition and drawn
+   IN FRONT of the words, which is the device that stops three
+   photographs reading as three photographs. It came off when the title
+   became a sentence - a vertical standing over a three-line line is not
+   a plane in front of the type, it is a picture on top of it, and the
+   end of the sentence was behind it. The depth on this card is carried
+   by the three frames overlapping each other instead.
 
    ---- the motion, on a route that has none ----
 
@@ -172,46 +176,41 @@
   color:var(--accent);
 }
 /* The name, set as a title card rather than as a heading: three words
-   at poster scale, held to a narrow column so the last word - the one
-   carrying the highlighter block - lands on its own line. */
+   at poster scale, kept on ONE line - the highlighter block sits on the
+   last word inside the line rather than under it. The size is the size
+   that lets nineteen characters clear the type column; it is smaller
+   than the two-line setting was, which is the trade for the single line. */
+/* The client's section 1, which is a sentence rather than a name.
+
+   It used to be the concept's title - three words, nineteen characters,
+   set on one hard line with white-space:nowrap. That rule is gone with
+   the words it was written for: "Welcome to the peak content era." is
+   thirty-two characters, and holding it on one line means setting it at
+   a size that stops being a title card and starts being a caption.
+
+   So it wraps, at two lines on a laptop and three on a phone, and the
+   measure does the breaking - which is also what lets the size go UP
+   rather than down. */
 .st-hero__title{
   margin-top:clamp(18px,2.6vh,30px);
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(44px,7.6vw,116px); line-height:.98; letter-spacing:-.035em;
+  font-size:clamp(34px,5.4vw,92px); line-height:.94; letter-spacing:-.04em;
   color:var(--cream);
-  max-width:9ch;
+  /* the measure is the whole layout here. At 15ch the sentence set as
+     two lines that ran the full width of the screen, straight under the
+     lifted frame and behind the three composition frames on the right.
+     At 13ch it sets as three short lines inside its own column, which
+     is what a title card is, and it leaves the right two thirds of the
+     screen to the picture - so the frame in front of it has somewhere
+     to stand that is not on top of a word. */
+  max-width:13ch; text-wrap:balance;
   text-shadow:0 24px 60px rgba(0,0,0,.55);
-}
-.st-hero__note{
-  margin-top:clamp(20px,3vh,34px);
-  max-width:44ch;
-  font-size:clamp(15px,1.15vw,18px); line-height:1.62;
-  color:var(--muted);
 }
 
 /* 4 - the frame in front of the words. A vertical, overhanging the type
    column's right edge and running off the bottom of the gate, so it
    reads as a plane the sentence is behind rather than as a fourth
    picture parked next to it. */
-.st-hero__inset{
-  position:absolute; z-index:5;
-  left:clamp(200px,38vw,560px);
-  bottom:clamp(-40px,-4vh,-20px);
-  width:clamp(112px,13vw,208px);
-  aspect-ratio:9/16;
-  overflow:hidden;
-  border-radius:2px;
-  background:var(--panel);
-  box-shadow:
-    0 0 0 clamp(3px,.4vw,7px) var(--film),
-    0 40px 80px rgba(0,0,0,.66);
-  pointer-events:none;
-}
-.st-hero__inset > img{
-  width:100%; height:100%; object-fit:cover; object-position:50% 42%;
-  display:block;
-}
-
 /* the cue. The one thing on the card that asks for something, and it
    asks quietly - a hairline that draws itself, and the word. */
 .st-hero__cue{
@@ -260,13 +259,8 @@
   animation:st-hero-push 1.25s cubic-bezier(.16,.84,.3,1) both;
   animation-delay:calc(.32s + var(--i, 0) * .13s);
 }
-.st-hero__inset{
-  opacity:0;
-  animation:st-hero-push 1.25s cubic-bezier(.16,.84,.3,1) .72s both;
-}
 .st-hero__tag{ opacity:0; animation:st-hero-rise .8s ease-out .5s both; }
 .st-hero__title{ opacity:0; animation:st-hero-rise .9s cubic-bezier(.16,.84,.3,1) .62s both; }
-.st-hero__note{ opacity:0; animation:st-hero-rise .9s cubic-bezier(.16,.84,.3,1) .78s both; }
 .st-hero__cue i{ animation:st-hero-cue .7s ease-out 1.1s both; }
 
 /* ---- narrow --------------------------------------------------------
@@ -286,18 +280,14 @@
     background:
       linear-gradient(to bottom, rgba(11,11,12,.7), rgba(11,11,12,.24) 28%, rgba(11,11,12,.86) 62%, rgba(11,11,12,.96));
   }
-  .st-hero__title{ max-width:none; }
-  .st-hero__note{ max-width:none; }
-  .st-hero__inset{ display:none; }
+  .st-hero__title{ max-width:none; font-size:clamp(30px,9.4vw,58px); }
 }
 
 @media (prefers-reduced-motion:reduce){
   .st-hero .st-gate,
   .st-hero__frame,
-  .st-hero__inset,
   .st-hero__tag,
   .st-hero__title,
-  .st-hero__note,
   .st-hero__cue i{
     animation:none;
     opacity:1;
@@ -348,11 +338,12 @@
    they are recognisable frames at any viewport rather than an 11:1 band
    of somebody's forearm.
 
-   `--drift` is the vertical nudge and defaults to nothing; the cycle
-   under THE VARIATION below fills it in. */
+   The column is centred on the screen. It used to carry a `--drift`
+   nudge off a three-step cycle, which is gone with the fourteen beats
+   it was keeping apart - see THE STAGES below. */
 .st-strip{
   position:absolute; z-index:3;
-  top:calc(50% + var(--drift, 0px));
+  top:50%;
   right:var(--pad);
   transform:translateY(-50%);
   display:flex; flex-direction:column; align-items:flex-end;
@@ -369,9 +360,9 @@
   box-shadow:
     0 0 0 clamp(3px,.4vw,6px) var(--film),
     0 30px 70px rgba(0,0,0,.62);
-  /* the cascade inset. Which bands take it is the `step` cycle below;
-     a band that is not stepped carries 0 rather than no rule, so the
-     two never fight over the same margin. */
+  /* the cascade inset, set on every second band under THE STAGES. A
+     band that is not stepped carries 0 rather than no rule, so the two
+     never fight over the same margin. */
   --off:0px;
   margin-right:var(--off);
 }
@@ -384,8 +375,10 @@
 
 /* ---- the scrim ----
    Every frame here is a graded night interior and the type over it is
-   cream. Weighted toward the half the sentence is in - which side that
-   is flips with the beat, so the gradient flips with it. */
+   cream. This is the strip's - weighted toward the half the sentence is
+   in, and flipped with it. Four stages override it, because a scrim
+   written for two halves of a screen is wrong on a composition that
+   uses the whole of one. */
 .st-scrim{
   position:absolute; inset:0; z-index:2; pointer-events:none;
   background:linear-gradient(to right, rgba(11,11,12,.82), rgba(11,11,12,.3) 60%, rgba(11,11,12,.55));
@@ -416,9 +409,11 @@
 .st-gate--b{ bottom:0; transform-origin:bottom; }
 
 /* ---- the type ----
-   Over the gate, always. Held in the half of the screen the strip is not
-   in, and set at one scale on every beat - a story that resets its type
-   size every screen reads as a deck of slides. */
+   Over the gate, always, and set at one scale on every section - a story
+   that resets its type size every screen reads as a deck of slides. The
+   two poster stages are the deliberate exception and they invert it
+   rather than escalate it: there the sentence is the small half and the
+   name is the big one. */
 .st-beat__type{ position:relative; z-index:4; width:100%; }
 
 /* The column the sentence actually sets in. It is a child rather than
@@ -491,28 +486,33 @@
 @media (max-width:700px){ .st-beat__slate{ display:none; } }
 
 /* ============================================================
-   THE VARIATION
+   THE STAGES
 
-   Three cycles, written off the beat's index in the component and
-   spelled out here. The frame does not change - same strip, same gate,
-   same type scale, same everything. What changes is which half the
-   sentence is in, how far down the column sits, and which bands take
-   the cascade inset.
+   What replaced the variation cycles.
 
-   Held apart on purpose: fourteen identical screens is a wallpaper, and
-   fourteen differently-designed ones is not the test. The point is a
-   layout you recognise on every beat that still lands somewhere
-   slightly new each time.
+   The old page ran one staging for all fourteen beats and kept
+   consecutive screens apart with three small cycles read off the beat's
+   index - which half the sentence sat in, how far down the column sat,
+   which bands took the cascade. Fourteen identical screens is a
+   wallpaper; the cycles were what stopped it being one.
 
-   Every number in here is small. If a value in this block starts
-   needing a comment about why it is that big, the variation has stopped
-   being variation and the experiment has drifted.
+   Nine sections do not need that, and three of them could not use it:
+   a process, a showreel and a call to action are not sentences beside
+   four frames. So the frame above is what repeats now - plate, scrim,
+   grain, gate, type, slate - and the picture layer inside it is the
+   thing that changes. Two cycles are gone with the beats they were
+   counting; the third, the side flip, is kept, because the strip still
+   runs three times and three strips on the same side of the screen read
+   as a mistake rather than as a rhythm.
    ============================================================ */
 
-/* ---- 1 · SIDE - which half the strip is in, alternating ----
+/* ---- SIDE - which half the strip is in, alternating ----
    The default (data-side="right") is the block above: strip right,
    sentence left. This flips all three things that have a side: the
-   column, the sentence, and the weighted end of the scrim. */
+   column, the sentence, and the weighted end of the scrim.
+
+   Counted over the strips rather than over the sections - see the note
+   in components/SeriesSections.tsx. */
 .st-beat[data-side="left"] .st-strip{
   right:auto; left:var(--pad);
   align-items:flex-start;
@@ -527,27 +527,622 @@
 }
 /* the slate stays under its own strip rather than under the sentence -
    it is a label burned into the corner of the picture, and on a flipped
-   beat the picture is on the other side */
+   section the picture is on the other side */
 .st-beat[data-side="left"] .st-beat__slate{
   right:auto; left:var(--pad);
   flex-direction:row-reverse;
 }
 
-/* ---- 2 · DRIFT - how far down the column sits ----
-   A three-step cycle against side's two, so the same pair does not come
-   round until six beats later. Percentages of the strip's own height,
-   which keeps the nudge proportional on a short viewport where an
-   absolute one would push the last band under the gate. */
-.st-beat[data-drift="0"] .st-strip{ --drift:0px; }
-.st-beat[data-drift="1"] .st-strip{ --drift:-3.5vh; }
-.st-beat[data-drift="2"] .st-strip{ --drift:3vh; }
+/* the cascade. Fixed rather than cycled: with three strips on the page
+   the zigzag only has to keep four frames from reading as one long
+   picture, which is what the inset on every second band does. */
+.st-band:nth-child(even){ --off:clamp(14px,2.6vw,46px); }
 
-/* ---- 3 · STEP - which bands are inset ----
-   Evens or odds. Two consecutive strips zigzag out of phase with each
-   other, which is what stops a scroll down the page reading as one long
-   picture cut into fourteen. */
-.st-beat[data-step="even"] .st-band:nth-child(even){ --off:clamp(14px,2.6vw,46px); }
-.st-beat[data-step="odd"] .st-band:nth-child(odd){ --off:clamp(14px,2.6vw,46px); }
+/* the side flip is the strip's alone - every other stage is centred,
+   full width, or both, and has no half to be in */
+.st-beat:not([data-stage="strip"]) .st-beat__words{ margin-left:0; }
+
+/* ============================================================
+   THE WALL - section 2.
+
+   Twelve windows at once. A four-column field rather than a neat grid
+   of twelve equal squares, and every second column nudged off the line,
+   because a wall that lines up perfectly is a contact sheet and the
+   sentence over it is about a feed.
+
+   Two of the twelve are films. They carry their own autoplay - see the
+   note on Frame() in components/SeriesSections.tsx - and they are here
+   because a screen arguing that everything is moving should not be
+   twelve photographs.
+   ============================================================ */
+.st-wall{
+  position:absolute; inset:0; z-index:1;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  grid-template-rows:repeat(3,1fr);
+  gap:clamp(6px,.85vw,15px);
+  padding:clamp(7vh,11vh,15vh) var(--pad) clamp(8vh,12vh,16vh);
+}
+.st-tile{
+  position:relative; display:block; overflow:hidden;
+  border-radius:2px;
+  background:var(--panel);
+  box-shadow:
+    0 0 0 1px rgba(11,11,12,.85),
+    0 24px 50px rgba(0,0,0,.5);
+}
+.st-tile > img,
+.st-tile > video{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:50% 40%;
+  display:block;
+}
+/* the nudge. Columns 2 and 4 ride high and low of the line by a share
+   of their own height, so the wall has a rhythm without any tile
+   leaving the field. */
+.st-tile:nth-child(4n+2){ transform:translateY(-7%); }
+.st-tile:nth-child(4n+3){ transform:translateY(5%); }
+.st-tile:nth-child(4n+4){ transform:translateY(-3%); }
+
+/* the sentence is over a screen that is entirely picture, so the scrim
+   is weighted harder here than anywhere else on the page */
+.st-beat[data-stage="wall"] .st-scrim{
+  background:linear-gradient(to right, rgba(11,11,12,.95), rgba(11,11,12,.72) 44%, rgba(11,11,12,.4));
+}
+.st-beat[data-stage="wall"] .st-beat__words{ max-width:min(46%, 560px); }
+
+/* ============================================================
+   THE POSTER - sections 4 and 10.
+
+   Bands stacked full width at uneven heights, the sentence set at
+   reading size inside them and the name of the thing set enormous
+   across the middle. The film-poster reference the direction was given
+   as, and the two sections that name something get it: the one that
+   coins the term, and the one that asks for the business.
+
+   Uneven on purpose. Three equal bands is a stack; three at 1.15, .8
+   and 1.3 is a composition, and the short middle band is what the mark
+   sets across.
+   ============================================================ */
+/* ---- the triptych ----
+
+   Three panels ACROSS, not three bands down. The stack was the thing
+   that was actually broken: a band is as wide as the screen and a third
+   as tall, which is a 6:1 slice, and there is no still in the folder
+   that survives being cut to 6:1 - every one of them came back as a
+   strip of somebody's shoulder with no face and no room in it. Three
+   panels side by side on a 1900px screen are about 600 x 900 each,
+   which is a portrait crop, which is the one shape a photograph of a
+   person is always safe in.
+
+   Uneven for the same reason the stack was: three equal panels is a
+   grid, and the wide one is the one the eye lands on first. */
+.st-poster{ position:absolute; inset:0; z-index:1; display:flex; flex-direction:row; }
+.st-poster__band{
+  position:relative; display:block; overflow:hidden;
+  flex:1 1 0;
+  background:var(--panel);
+}
+.st-poster__band:nth-child(1){ flex-grow:1.24; }
+.st-poster__band:nth-child(2){ flex-grow:.86; }
+.st-poster__band:nth-child(3){ flex-grow:1.06; }
+.st-poster__band + .st-poster__band{ border-left:clamp(3px,.4vw,7px) solid var(--film); }
+.st-poster__band > img,
+.st-poster__band > video{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+  /* Three stills from three different shoots, cropped to a third of a
+     screen each and stacked touching. Left alone they read as three
+     photographs that happen to be adjacent; a shade of contrast and a
+     shade off the saturation is what makes them read as three bands of
+     one picture. Small numbers on purpose - this is a grade, not a
+     look. */
+  filter:contrast(1.09) saturate(.88);
+}
+/* the crop is biased differently per panel so three portraits cut out
+   of three landscapes do not all take the same slice. High rather than
+   centred on all three: the bottom third of every one of these frames
+   is under the type block, so what a centred crop puts in the middle of
+   the panel is what the scrim covers. */
+.st-poster__band:nth-child(1) > img,
+.st-poster__band:nth-child(1) > video{ object-position:50% 34%; }
+.st-poster__band:nth-child(2) > img,
+.st-poster__band:nth-child(2) > video{ object-position:42% 40%; }
+.st-poster__band:nth-child(3) > img,
+.st-poster__band:nth-child(3) > video{ object-position:58% 30%; }
+/* ---- where the type sits ------------------------------------------
+
+   Centred, which is what every other stage does, was the thing that was
+   wrong with this one. The type landed across the middle band - the
+   busiest third of the picture - so the scrim had to be heaviest
+   exactly where the photograph was most worth seeing, and the top third
+   was left as an empty wash with nothing in it. A screen with its
+   weight in the middle and air above it does not read as a poster; it
+   reads as a slide.
+
+   So the block is hung off the bottom instead, the way a title actually
+   sits on one. The picture keeps the top two thirds and is graded light
+   enough to be looked at, the ground under the type is dark enough to
+   read on, and the two are a wash rather than a line between them.
+   -------------------------------------------------------------------- */
+.st-beat[data-stage="title"],
+.st-beat[data-stage="end"]{
+  align-items:flex-end;
+  /* room under the block for the slate, which is the one thing that
+     still hangs off the very bottom of the frame */
+  padding-bottom:clamp(92px,13vh,150px);
+}
+.st-beat[data-stage="title"] .st-scrim,
+.st-beat[data-stage="end"] .st-scrim{
+  background:linear-gradient(
+    to bottom,
+    rgba(11,11,12,.58),
+    rgba(11,11,12,.12) 24%,
+    rgba(11,11,12,.2) 46%,
+    rgba(11,11,12,.72) 62%,
+    rgba(11,11,12,.93) 78%
+  );
+}
+
+/* the type on a poster is a different shape to the type on a strip: the
+   sentence is the small half and the name is the big one, which is the
+   inverse of every other section */
+.st-beat[data-stage="title"] .st-beat__words,
+.st-beat[data-stage="end"] .st-beat__words{ max-width:min(94%, 1240px); }
+
+.st-beat[data-stage="title"] .st-beat__line,
+.st-beat[data-stage="end"] .st-beat__line{
+  font-family:var(--f-display); font-weight:500;
+  font-size:clamp(17px,1.75vw,27px); line-height:1.24; letter-spacing:-.015em;
+  max-width:24ch;
+  color:var(--muted);
+}
+.st-beat[data-stage="title"] .st-beat__mark,
+.st-beat[data-stage="end"] .st-beat__mark{
+  margin-top:clamp(10px,1.5vh,20px);
+  font-family:var(--f-display); font-weight:700;
+  /* was 6.2vw. On the title card the name shares its row with the
+     paragraph column, so it is sized off the two thirds of the block it
+     actually has rather than off the whole screen - at the old size
+     "the continuity" ran wider than its own column and the block on
+     "kink." was pushed out under it. */
+  font-size:clamp(34px,4.8vw,86px); line-height:.94; letter-spacing:-.042em;
+  max-width:none; opacity:1;
+  color:var(--cream);
+  text-shadow:0 26px 64px rgba(0,0,0,.55);
+}
+
+/* ---- the title card's block ----------------------------------------
+
+   Three pieces of type - the setup sentence, the name, the paragraphs -
+   and the whole job here is that they hang off ONE line instead of
+   three of their own.
+
+   What was wrong: the sentence and the paragraph column were both set
+   from their BOTTOM edges against a name set from its. Three things
+   bottom-aligned to each other have three different top edges, and the
+   rule drawn over the paragraphs landed on whichever of them the copy
+   happened to reach - halfway up a photograph, level with nothing.
+
+   So the rule is drawn once, under the setup sentence, across the width
+   of the block, and the name and the paragraphs both start from it. The
+   picture above the rule is picture; everything under it is the card.
+   The sentence keeps its full width rather than a measure, because a
+   credit line on a poster runs the width of the poster.
+   -------------------------------------------------------------------- */
+.st-beat[data-stage="title"] .st-beat__words{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);
+  grid-template-areas:
+    "line line"
+    "mark body";
+  column-gap:clamp(28px,4vw,84px);
+  row-gap:clamp(20px,2.8vh,34px);
+  align-items:start;
+}
+.st-beat[data-stage="title"] .st-beat__line{
+  grid-area:line;
+  max-width:none;
+  padding-bottom:clamp(14px,2vh,22px);
+  border-bottom:1px solid var(--faint);
+}
+.st-beat[data-stage="title"] .st-beat__mark{ grid-area:mark; margin-top:0; }
+.st-beat[data-stage="title"] .st-beat__body{
+  grid-area:body;
+  /* the name starts at its cap height and the paragraph at its
+     ascender; the nudge is what puts the two first lines on the same
+     optical line rather than the same box edge */
+  padding-top:clamp(4px,.8vh,10px);
+}
+.st-beat[data-stage="title"] .st-beat__copy{ max-width:44ch; }
+
+/* On the title card the body block draws its own top edge - a rule and
+   the padding under it - so the first paragraph's own margin would be a
+   second gap inside the first. Scoped to that stage and nowhere else:
+   everywhere else the wrapper has no border and no padding, the
+   paragraph's margin collapses straight through it, and that margin IS
+   the gap between the body and the line or the chips above it. Zeroing
+   it globally closed that gap on all five of them. */
+.st-beat[data-stage="title"] .st-beat__body > .st-beat__copy:first-child{ margin-top:0; }
+
+/* ============================================================
+   THE LIFTED PHRASE - two settings, and the copy picks.
+
+   See the note over Copy() in components/SeriesSections.tsx for which
+   phrase gets which. The short version: one takes a line because it can
+   (nothing follows it), the other is marked in place because it cannot
+   (a sentence follows it).
+
+   Both are the same face and the same colour. That is deliberate - they
+   are one device at two volumes, and giving the inline one its own
+   treatment would read as two different kinds of important on a page
+   that only has one.
+   ============================================================ */
+
+/* ---- the whole line ----
+   A phrase that ends its paragraph, on its own line inside it. Not
+   pulled out: the words run on from the half above them exactly as they
+   were written, and this only changes where the line breaks and how
+   heavily it is set. */
+.st-lift{
+  display:block;
+  margin-top:clamp(12px,1.7vh,20px);
+  padding-left:clamp(11px,1vw,16px);
+  border-left:2px solid var(--accent);
+  font-family:var(--f-display); font-weight:600;
+  font-size:clamp(16px,1.45vw,22px); line-height:1.32; letter-spacing:-.012em;
+  color:var(--cream);
+}
+
+/* ---- in place ----
+   A phrase inside a sentence. Same face, same colour, no break - the
+   rule the other one gets beside it is drawn under this one instead,
+   which is the only shape an accent can take without moving the words.
+
+   Underlined rather than blocked: the highlighter block is the display
+   type's device and it is spent once per screen on one word of a
+   heading. Ten point body copy carrying the same block would read as
+   two headings on one screen, and the second one would be the smaller. */
+.st-mark{
+  font-family:var(--f-display); font-weight:600;
+  font-size:1.06em; letter-spacing:-.008em;
+  color:var(--cream);
+  text-decoration:underline;
+  text-decoration-color:var(--accent);
+  text-decoration-thickness:2px;
+  text-underline-offset:.22em;
+  /* the underline is drawn per line fragment, so a phrase that wraps is
+     underlined on both lines rather than trailing off the first */
+  text-decoration-skip-ink:none;
+}
+
+/* the ask, and the only link in the story. The client's last line is a
+   question with a button's job, so the mark IS the button - a second
+   control underneath it would be the same words twice. The rule grows
+   on hover; nothing else about it moves. */
+.st-beat__mark--cta{
+  display:inline-flex; align-items:center; gap:.34em;
+  text-decoration:none; color:var(--cream);
+}
+.st-beat__mark--cta > i{
+  display:block;
+  width:clamp(26px,3.2vw,64px); height:clamp(3px,.32vw,6px);
+  background:var(--accent);
+  transition:width .4s cubic-bezier(.16,.84,.3,1);
+}
+.st-beat__mark--cta:hover > i{ width:clamp(46px,5.4vw,104px); }
+
+/* ============================================================
+   THE REEL - section 7.
+
+   A row of verticals along the foot of the screen. The sentence over
+   them defines an episode by its length and its shape, so the frames
+   are phone shaped: a widescreen crop of a vertical would be throwing
+   away the three quarters the sentence is about.
+
+   Every second one rides high, which is the same device as the strip's
+   cascade at a different scale - eight frames in a dead straight row is
+   a filmstrip, and a filmstrip is the wrong metaphor for eight separate
+   episodes.
+   ============================================================ */
+.st-reelrow{
+  position:absolute; z-index:1;
+  justify-content:space-between;
+  left:var(--pad); right:var(--pad);
+  bottom:clamp(36px,6vh,80px);
+  display:flex; align-items:flex-end;
+  gap:clamp(6px,.9vw,16px);
+}
+.st-vert{
+  position:relative; display:block; overflow:hidden;
+  /* Sized off the VIEWPORT's height, not off the row's width. As
+     `flex:1 1 0` each frame took an eighth of the page and stood 238px
+     tall on a 720px screen - which, once the type above it had reserved
+     the room to clear it, made this the one section taller than the
+     screen it is meant to fill. The row then sat under the fold and you
+     never saw the sentence and the episodes at the same time, which is
+     the entire point of putting them on one screen. Height first, width
+     derived from it, and eight of them still fit the column. */
+  flex:0 1 auto;
+  height:clamp(120px,23vh,220px);
+  aspect-ratio:9/16;
+  border-radius:2px;
+  background:var(--panel);
+  box-shadow:
+    0 0 0 clamp(2px,.28vw,5px) var(--film),
+    0 26px 60px rgba(0,0,0,.6);
+}
+.st-vert:nth-child(odd){ transform:translateY(clamp(-30px,-3vh,-12px)); }
+.st-vert > img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:50% 42%;
+  display:block;
+}
+.st-vert__ep{
+  position:absolute; left:8px; bottom:7px;
+  font-family:var(--f-mono); font-weight:500;
+  font-size:9px; letter-spacing:.2em;
+  color:var(--cream); opacity:.82;
+  text-shadow:0 2px 10px rgba(0,0,0,.9);
+}
+/* the row owns the bottom third of the screen, so the sentence is held
+   clear of it rather than laid over it */
+/* ---- the one section whose height had to be budgeted --------------
+
+   Everything else on this page is a sentence over a picture, and a
+   sentence is short enough that 100svh is never in question. This one
+   carries a heading, a paragraph, five chips AND a row of eight frames
+   that the type has to reserve room to clear - which added up to 834px
+   of content inside a 720px screen, so the episodes sat under the fold
+   and the section stopped being one screen.
+
+   The budget, at 720: 144 of section padding, about 320 of type, 194
+   reserved under it, and a 166 row standing 43 off the bottom. It fits
+   with room, and every number here comes down together if the copy on
+   this section ever grows.
+   -------------------------------------------------------------------- */
+.st-beat[data-stage="reel"]{ padding:clamp(70px,10vh,130px) 0; }
+.st-beat[data-stage="reel"] .st-beat__type{
+  padding-bottom:clamp(150px,27vh,290px);
+}
+.st-beat[data-stage="reel"] .st-beat__words{ max-width:min(64%, 780px); }
+/* The scrim is drawn OVER the picture layer, which is right on every
+   other stage and wrong on this one: here the pictures ARE the point -
+   eight episodes, which is what the sentence above them is defining -
+   and a wash at .42 over frames this small left eight grey ghosts. So
+   it is weighted hard into the top half, where the type is, and lets go
+   over the bottom half, where the row stands. */
+.st-beat[data-stage="reel"] .st-scrim{
+  background:linear-gradient(
+    to bottom,
+    rgba(11,11,12,.94),
+    rgba(11,11,12,.82) 34%,
+    rgba(11,11,12,.34) 58%,
+    rgba(11,11,12,.24)
+  );
+}
+
+/* ============================================================
+   THE SIDEBLOCKS - section 8.
+
+   The client's own word for it, and the one section on the page that is
+   a diagram rather than a picture with a sentence on it. Four blocks,
+   four frames, all the same size: four frames at four sizes is a
+   collage, and a collage does not read as an order of operations.
+
+   No picture layer behind it - the plate is all the stage has, and it
+   is taken further back than anywhere else so four small stills in a
+   row are the brightest thing on the screen.
+   ============================================================ */
+.st-beat[data-stage="steps"] .st-bg{ opacity:.26; filter:blur(11px) saturate(.5) brightness(.7); }
+.st-beat[data-stage="steps"] .st-beat__words{ max-width:none; }
+.st-beat[data-stage="steps"] .st-beat__line{ max-width:20ch; font-size:clamp(26px,3.6vw,54px); }
+.st-beat[data-stage="steps"] .st-scrim{
+  background:linear-gradient(to bottom, rgba(11,11,12,.9), rgba(11,11,12,.72) 40%, rgba(11,11,12,.9));
+}
+
+.st-steps{
+  margin-top:clamp(30px,5vh,64px);
+  display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(14px,2vw,36px);
+  list-style:none; padding:0;
+}
+.st-step{ position:relative; }
+.st-step__art{
+  position:relative; display:block; overflow:hidden;
+  aspect-ratio:4/3;
+  border-radius:2px;
+  background:var(--panel);
+  box-shadow:
+    0 0 0 1px rgba(241,236,225,.08),
+    0 26px 54px rgba(0,0,0,.55);
+}
+.st-step__art > img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:50% 40%;
+  display:block;
+  filter:saturate(.82);
+}
+.st-step__no{
+  display:block; margin-top:clamp(12px,1.6vh,18px);
+  font-family:var(--f-mono); font-weight:500;
+  font-size:11px; letter-spacing:.24em;
+  color:var(--accent);
+}
+.st-step__title{
+  margin-top:5px;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(15px,1.4vw,22px); letter-spacing:.05em;
+  color:var(--cream);
+}
+.st-step__body{
+  margin-top:8px; max-width:30ch;
+  font-size:clamp(13px,.95vw,15px); line-height:1.55;
+  color:var(--muted);
+}
+
+/* ============================================================
+   THE SHOWCASE - section 9.
+
+   Two rows of real campaigns travelling in opposite directions. The
+   brief asks for a "rapid visual sequence of actual SoCheers work", and
+   a still grid of eighteen boards is not one - so this is the only
+   thing on a route with no scroll mechanics that moves on its own.
+
+   ---- how the loop has no seam ----
+
+   Every row's cards are rendered twice in the markup and the track is
+   translated by exactly half its own width, at which point the second
+   copy is standing where the first one started. The trick only holds if
+   half the track is a whole number of cards, which is why the spacing
+   is a margin on each card and NOT a gap on the track: with a gap, the
+   run of 2n cards is 2n widths plus 2n-1 gaps, half of that lands half
+   a gap short of a card edge, and the row visibly jumps once a cycle.
+
+   The rows are read as pictures with brand names on them, so the second
+   copy is hidden from the accessibility tree in the component.
+   ============================================================ */
+.st-beat[data-stage="showcase"]{
+  flex-direction:column;
+  justify-content:center;
+  gap:clamp(26px,4.5vh,60px);
+}
+.st-beat[data-stage="showcase"] .st-beat__words{ max-width:min(74%, 900px); }
+.st-beat[data-stage="showcase"] .st-scrim{
+  background:linear-gradient(to bottom, rgba(11,11,12,.9), rgba(11,11,12,.78));
+}
+
+.st-run{
+  position:relative; z-index:4;
+  width:100%;
+  display:flex; flex-direction:column;
+  gap:clamp(10px,1.4vw,22px);
+  --card-gap:clamp(10px,1.4vw,22px);
+}
+/* the rows run off both edges of the screen; the mask is what stops
+   that reading as two rows that have been cut off */
+.st-run__row{
+  overflow:hidden;
+  -webkit-mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+.st-run__track{
+  display:flex; width:max-content;
+  animation:st-run 52s linear infinite;
+  will-change:transform;
+}
+.st-run__row[data-dir="back"] .st-run__track{
+  animation-direction:reverse;
+  /* a different duration as well as a different direction: two rows at
+     one speed passing each other read as a single object shearing */
+  animation-duration:64s;
+}
+@keyframes st-run{
+  from{ transform:translate3d(0,0,0); }
+  to{ transform:translate3d(-50%,0,0); }
+}
+
+.st-card{
+  position:relative; display:block; flex:0 0 auto; overflow:hidden;
+  width:clamp(190px,20vw,330px);
+  aspect-ratio:16/10;
+  margin-right:var(--card-gap);
+  border-radius:2px;
+  background:var(--panel);
+  box-shadow:
+    0 0 0 1px rgba(241,236,225,.07),
+    0 26px 56px rgba(0,0,0,.55);
+}
+.st-card > img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  display:block;
+}
+.st-card__label{
+  position:absolute; left:10px; bottom:8px;
+  font-family:var(--f-mono); font-style:normal; font-weight:500;
+  font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--cream);
+  text-shadow:0 2px 12px rgba(0,0,0,.95);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .st-run__track{ animation:none; }
+}
+
+/* ============================================================
+   THE TYPE THE NEW COPY NEEDED
+
+   Two things the fourteen-beat cut never had: a paragraph that runs
+   BEFORE the display line, and a list of phrases that is a list rather
+   than a sentence.
+   ============================================================ */
+
+/* ---- the lead - section 3 only ----
+   The client sets their punch up with a long sentence and lands it
+   afterwards. Reordering that so the big type comes first would be
+   rewriting their copy with CSS, so it runs where they wrote it - and
+   the rule down its left edge is what tells the eye this is the run-up
+   and not the section's own body copy. */
+.st-beat__lead{
+  max-width:54ch;
+  padding-left:clamp(13px,1.2vw,22px);
+  border-left:2px solid var(--accent);
+  font-size:clamp(15px,1.16vw,18px); line-height:1.6;
+  color:var(--muted);
+}
+.st-beat__lead + .st-beat__line{ margin-top:clamp(24px,3.6vh,44px); }
+
+/* ---- the cues ----
+   The platform names on section 6, the five things an episode leaves
+   behind on section 7. Both are runs of complete short phrases in the
+   client's copy, so setting them apart as chips changes the layout and
+   not a character of the text. */
+.st-cues{
+  list-style:none; padding:0;
+  margin-top:clamp(16px,2.2vh,28px);
+  display:flex; flex-wrap:wrap; gap:8px 10px;
+}
+.st-cues li{
+  padding:7px 12px;
+  border:1px solid var(--faint);
+  background:rgba(11,11,12,.45);
+  backdrop-filter:blur(3px);
+  font-family:var(--f-mono); font-weight:500;
+  font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--cream);
+}
+/* on the receipts section the chips are the three platforms, and they
+   are the claim - so they take the accent rather than the hairline */
+.st-beat[data-stage="strip"] .st-cues li{ border-color:rgba(197,8,18,.55); }
+
+/* ---- the five clues ----
+   On the format section the chips are not a label on the copy above
+   them, they are what the copy has been building to - the five things
+   that make somebody come back. So they are set to be read rather than
+   scanned: the display face at body size instead of tracked-out mono,
+   and the accent carried as a mark down the leading edge of each one
+   rather than as a box around it. Five boxes in a row is a legend;
+   five marked phrases is a list somebody wrote. */
+.st-beat[data-stage="reel"] .st-cues{ gap:10px 12px; }
+.st-beat[data-stage="reel"] .st-cues li{
+  padding:9px 14px 9px 13px;
+  border:1px solid var(--faint);
+  border-left:2px solid var(--accent);
+  background:rgba(11,11,12,.55);
+  font-family:var(--f-display); font-weight:600;
+  font-size:clamp(13px,1.05vw,16px); letter-spacing:-.005em;
+  text-transform:none;
+  color:var(--cream);
+}
+
+.st-beat__line + .st-cues{ margin-top:clamp(18px,2.6vh,30px); }
 
 /* ---- the foot ---- */
 .st-foot{
@@ -562,26 +1157,34 @@
 .st-foot a{ color:var(--cream); text-decoration:none; }
 .st-foot a:hover{ color:var(--accent); }
 
-/* ---- narrow ----
-   One column, the strip below the type. A 21:9 frame at phone width is
-   about 170px tall - still a frame, and still four of them. */
+/* ============================================================
+   NARROW
+
+   One column, and every stage that was built on two halves of a screen
+   has to give one of them up. The rule is the same for all of them: the
+   type keeps the top of the screen and the pictures take the bottom,
+   because a picture behind a paragraph at phone width is a paragraph
+   that cannot be read.
+   ============================================================ */
 @media (max-width:900px){
   .st-beat{ min-height:132svh; align-items:flex-start; }
   .st-beat__type{ padding-top:clamp(20px,5vh,60px); }
   .st-beat__words{ max-width:none; }
+  .st-beat__lead,
   .st-beat__line,
   .st-beat__mark,
-  .st-beat__copy{ max-width:none; }
+  .st-beat__copy,
+  .st-step__body{ max-width:none; }
 
-  /* the variation comes off here, all three of it. There is only one
-     column at this width, so a side to be on is the one thing the
-     layout no longer has - and a drifted strip in a stacked layout is
-     not a nudge, it is a gap. */
+  /* the side flip comes off. There is only one column at this width, so
+     a side to be on is the one thing the layout no longer has. */
   .st-beat[data-side="left"] .st-beat__words{ margin-left:0; }
   .st-beat[data-side="left"] .st-scrim{
     background:linear-gradient(to right, rgba(11,11,12,.82), rgba(11,11,12,.3) 60%, rgba(11,11,12,.55));
   }
 
+  /* ---- the strip ---- full width, below the type. A 21:9 frame at
+     phone width is about 170px tall - still a frame, and still four. */
   .st-strip,
   .st-beat[data-side="left"] .st-strip{
     top:auto; bottom:clamp(60px,11vh,120px);
@@ -589,11 +1192,87 @@
     transform:none;
     align-items:stretch;
     gap:5px;
-    --drift:0px;
   }
   .st-band,
   .st-beat[data-side="left"] .st-band{
     width:100%; height:auto;
     margin-left:0; margin-right:0;
   }
+
+  /* ---- the wall ---- three columns of four. Twelve tiles four across
+     at 390px is a 90px window, which is a thumbnail and not a frame. */
+  .st-wall{
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(4,1fr);
+    padding-top:38vh;
+  }
+  .st-tile:nth-child(4n+2),
+  .st-tile:nth-child(4n+3),
+  .st-tile:nth-child(4n+4){ transform:none; }
+  .st-tile:nth-child(3n+2){ transform:translateY(-6%); }
+  .st-beat[data-stage="wall"] .st-beat__words{ max-width:none; }
+  .st-beat[data-stage="wall"] .st-scrim{
+    background:linear-gradient(to bottom, rgba(11,11,12,.95), rgba(11,11,12,.74) 34%, rgba(11,11,12,.55));
+  }
+
+  /* ---- the poster ---- the triptych goes back to a stack. Three
+     panels across a 390px screen are 130px wide, which is not a
+     portrait crop, it is a sliver - and at this width the type is at the
+     top of the screen and the picture has the whole bottom of it, so
+     three bands one under the other are three frames again rather than
+     three 6:1 slices.
+
+     The mark is also the one piece of type on this page sized off the
+     viewport rather than off its measure, so it is the one that has to
+     be re-sized here rather than just re-wrapped. */
+  .st-poster{ flex-direction:column; }
+  .st-poster__band + .st-poster__band{
+    border-left:0;
+    border-top:clamp(3px,.4vw,7px) solid var(--film);
+  }
+  .st-beat[data-stage="title"] .st-beat__words{ display:block; }
+  .st-beat[data-stage="title"] .st-beat__line{
+    padding-bottom:clamp(12px,1.8vh,18px);
+  }
+  .st-beat[data-stage="title"] .st-beat__mark{ margin-top:clamp(14px,2.2vh,22px); }
+  .st-beat[data-stage="title"] .st-beat__body{ padding-top:0; }
+  /* the type is at the top of the screen at this width, so the ground
+     under it has to be too - the desktop scrim is weighted to the
+     bottom, where the type no longer is */
+  .st-beat[data-stage="title"] .st-scrim,
+  .st-beat[data-stage="end"] .st-scrim{
+    background:linear-gradient(
+      to bottom,
+      rgba(11,11,12,.94),
+      rgba(11,11,12,.78) 38%,
+      rgba(11,11,12,.42) 62%,
+      rgba(11,11,12,.72)
+    );
+  }
+  .st-beat[data-stage="title"] .st-beat__line,
+  .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(17px,4.4vw,24px); }
+  .st-beat[data-stage="title"] .st-beat__mark,
+  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(34px,11vw,64px); }
+  .st-beat[data-stage="title"] .st-beat__copy{ max-width:none; }
+
+  /* ---- the reel ---- four episodes, not eight. Eight verticals across
+     a phone is eight 40px slivers. */
+  .st-vert:nth-child(n+5){ display:none; }
+  .st-vert:nth-child(odd){ transform:none; }
+  .st-beat[data-stage="reel"] .st-beat__type{ padding-bottom:0; }
+  .st-beat[data-stage="reel"] .st-beat__words{ max-width:none; }
+  .st-reelrow{ bottom:clamp(56px,10vh,110px); }
+
+  /* ---- the sideblocks ---- two by two. Four across a phone is four
+     columns of one word each. */
+  .st-steps{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(16px,4vw,28px); }
+  .st-beat[data-stage="steps"]{ min-height:100svh; }
+  .st-beat[data-stage="steps"] .st-beat__line{ max-width:none; }
+
+  /* ---- the showcase ---- the rows keep running; only the cards come
+     down in size, and the section goes back to being centred because it
+     is two rows and a line rather than a picture behind a paragraph */
+  .st-beat[data-stage="showcase"]{ min-height:100svh; align-items:center; }
+  .st-beat[data-stage="showcase"] .st-beat__words{ max-width:none; }
+  .st-card{ width:clamp(150px,46vw,230px); }
 }

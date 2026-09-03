@@ -29,35 +29,37 @@ import { AI_SEGMENTS, AI_WORK, type AiAsset, type SegmentId } from "@/lib/ai-con
 
    ---- the films, and where their thumbnails come from ----
 
-   Thirty-odd of the eighty-nine assets are video, they average 30MB
-   apiece, and there is no encoder in this repo - no ffmpeg on the
-   machine that builds this - to cut poster frames with. The tiles still
-   have to show the film rather than a card with its name on it, so the
-   frame is taken from the file itself: the src carries a media fragment
-   (`#t=0.1`), which is an instruction to the browser to seek there and
-   paint that frame, and `preload="metadata"` is what lets it do that
-   without pulling the whole thing. A tenth of a second in rather than
-   zero because the first frame of a rendered film is quite often black.
+   Thirty-odd of the eighty-nine assets are video, and as delivered they
+   averaged 30MB apiece. There is an encoder in this repo now
+   (scripts/build-ai-films.mjs, run by scripts/build-ai-work.mjs), so
+   every film arrives here already carrying two things it did not have
+   before: a cut sized for a tile, and a poster frame.
 
-   The cost of that is one range request per film, so it is not paid on
-   load either: the element is not put in the tree until the tile is
-   within a screen of the viewport (see `near` below). A wall that
-   quietly pulled a gigabyte of MP4 on scroll would be a page about AI
-   that cannot be loaded on a train.
+   The poster is what changed this component. A tile is an <img> - lazy,
+   decoded off the main thread, a few tens of kilobytes - and there is no
+   <video> in the tree at all until somebody asks to play one. Which
+   means the wall costs a screen of thumbnails on load and nothing else,
+   however far it is scrolled.
+
+   What it used to do, and why it had to: with no poster on disk the only
+   picture available was one inside the film, so the src carried a media
+   fragment (`#t=0.1`) and `preload="metadata"` let the browser seek
+   there and paint that frame. That is a range request per film into a
+   file with its index at the far end - tens of megabytes to paint one
+   frame - so the element was held back until the tile was within a
+   screen of the viewport. It is still the path for any film that turns
+   up without a poster (see `near` below), and it is no longer the one
+   anything here takes.
 
    Hover then plays the film in place, and leaving stops it and returns
-   it to its frame. Until the frame is actually decoded the tile keeps
-   the old typographic card at full strength; once it is, the card drops
-   back to a scrim over the picture (`data-thumb` in ai.css). Nothing is
-   ever blank.
+   it to its poster. Until there is a picture of any kind the tile keeps
+   the typographic card at full strength; once there is, the card drops
+   back to a scrim over it (`data-thumb` in ai.css). Nothing is ever
+   blank.
 
    That is also why the card is a real <button>: playing a film is an
    action, and hover is not available to everybody. Tap plays on touch,
    Enter plays from the keyboard, and the same press stops it again.
-
-   When the films move to Cloudinary (see lib/ai-content.ts) they arrive
-   with derived posters, and `poster` on the asset - already honoured
-   below - becomes the cheaper way to get the same picture.
 
    ---- the filter ----
 
@@ -116,10 +118,13 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
   const isFilm = a.kind !== "static";
   const box = useRef<HTMLElement>(null);
   const vid = useRef<HTMLVideoElement>(null);
-  /* `near` is the src being attached at all - it goes true a screen
-     before the tile arrives and never goes back, so a film that has been
-     scrolled past once is already sitting on its own frame when the
-     reader comes back to it. `ready` is that frame having been decoded.
+  /* `near` is the <video> being in the tree at all. A film with a poster
+     does not need one until it is asked to play, so this stays false
+     through the whole page for every tile nobody touches - which is what
+     makes the wall cost thumbnails and nothing else. A film *without* a
+     poster has no other way to show a picture, so for those it goes true
+     a screen before the tile arrives, exactly as it used to, and never
+     goes back. `ready` is a picture of some kind having landed.
      `playing` is only what the card is doing. */
   const [near, setNear] = useState(false);
   const [ready, setReady] = useState(false);
@@ -127,9 +132,11 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
 
   /* Deliberately not IntersectionObserver on a hidden tile: a filtered-out
      tile is display:none, so it never intersects and never fetches, and
-     it starts observing for real the moment its segment is picked. */
+     it starts observing for real the moment its segment is picked.
+     Skipped entirely when there is a poster - there is nothing to go and
+     get early, and an observer per tile over ninety tiles is not free. */
   useEffect(() => {
-    if (!isFilm || near || !shown) return;
+    if (!isFilm || a.poster || near || !shown) return;
     const el = box.current;
     if (!el) return;
     if (typeof IntersectionObserver === "undefined") {
@@ -147,7 +154,7 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [isFilm, near, shown]);
+  }, [isFilm, a.poster, near, shown]);
 
   const play = () => {
     setNear(true);
@@ -156,6 +163,16 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
   const stop = () => {
     const v = vid.current;
     setPlaying(false);
+    /* Where there is a poster, the film is taken back out of the tree.
+       Ninety tiles on one page and a pointer that crosses a dozen of
+       them on the way anywhere means a dozen decoders, a dozen buffers
+       and a dozen GPU surfaces held for the rest of the visit, for
+       pictures that are already on screen as <img>. The poster is
+       underneath and does not move, so there is nothing to see in the
+       swap - and the cuts carry +faststart, so coming back is a chunk,
+       not a load. Without a poster the element *is* the thumbnail and
+       has to stay. */
+    if (a.poster) setNear(false);
     if (!v) return;
     v.pause();
     /* back to the frame the tile is meant to be showing, rather than
@@ -191,19 +208,40 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
     >
       {isFilm ? (
         <>
+          {/* The picture, and on its own it is the whole tile. It stays
+              under the film rather than being swapped out for it: the
+              <video> takes a moment to have a frame to show even off a
+              warm cache, and a tile that blanks on hover is worse than
+              one that never moved. */}
+          {a.poster && (
+            <img
+              className="ai-tile__film"
+              src={a.poster}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              onLoad={() => setReady(true)}
+            />
+          )}
+
           {near && (
             <video
               ref={vid}
               className="ai-tile__film"
-              /* the fragment is the thumbnail - see the note at the top.
-                 Dropped once the asset carries a real poster, since then
-                 the browser has a picture without seeking for one. */
+              /* Where there is no poster the fragment is the thumbnail -
+                 see the note at the top. With one, the browser already
+                 has a picture and this is only ever the film. */
               src={a.poster ? a.src : `${a.src}#t=0.1`}
               poster={a.poster}
               muted
               loop
               playsInline
-              preload="metadata"
+              /* "metadata" is for the no-poster path, where the element
+                 exists to be seeked for a frame. With a poster nothing
+                 mounts this until the reader has asked to watch, so at
+                 that point the answer to "how much of it do we want" is
+                 all of it. */
+              preload={a.poster ? "auto" : "metadata"}
               onLoadedData={() => setReady(true)}
               onPause={() => setPlaying(false)}
             />

@@ -334,7 +334,17 @@ em{ font-style:italic; }
 }
 /* default cleared - covering grids are set to 1 in JS, so a script-less
    or reduced-motion load still shows the artwork */
-.pixgrid > i{ display:block; background:var(--bg); opacity:0; will-change:opacity; }
+.pixgrid > i{ display:block; background:var(--bg); opacity:0; }
+/* will-change, and only while there is a change to come.
+
+   The hero's grid is 176 tiles and the dissolve is one second at the top
+   of one page; a promise on the tiles themselves is 176 compositor
+   layers held for the whole visit, which is GPU memory spent on a beat
+   that finished before the reader had scrolled. The class goes on at the
+   head of the intro timeline - half a second before the fade, so the
+   browser still has its warning - and comes off when the tiles are
+   clear (heroIntro in lib/motion.ts). */
+.pixgrid.is-live > i{ will-change:opacity; }
 
 /* ============================================================
    SPOTLIGHT · CURSOR · PROGRESS · LOADER
@@ -858,6 +868,17 @@ html.sc-seen .loader{ display:none; }
 /* the SOC▢HEERS artwork, full bleed */
 .hero__frame{ position:absolute; inset:0; z-index:1; will-change:transform,opacity; }
 .hero__frame img{ width:100%; height:100%; object-fit:cover; }
+/* On a phone, whole rather than full bleed - the same call the overture's
+   standing wall makes, at the same width, for the same reason: there is no
+   column through this artwork that is still the logo. See the phone block
+   at the end of the OVERTURE section, and box() in lib/motion.ts, which
+   mirrors whichever of the two fits is in force so the window the stage
+   grows out of is measured where it actually is. The black is the ground
+   the artwork is drawn on, so the letterbox is the artwork continuing. */
+@media (max-width:700px){
+  .hero__frame{ background:#000; }
+  .hero__frame img{ object-fit:contain; }
+}
 
 .hero__greet{
   position:absolute; top:20%; left:50%; transform:translate(-50%,-50%) rotate(-3deg);
@@ -1282,6 +1303,21 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 
 @media (max-width:860px){
   .who__grid{ grid-template-columns:1fr; gap:36px; }
+  /* The three columns are a stack now, and that changes what the mark is.
+     Across, it is the thing the claim and the pitch hang either side of,
+     and both of them are ragged toward it. Down, it is simply the middle
+     of the column - the line above it and the line below it - and copy
+     ragged left against a mark that is dead centre reads as three things
+     that failed to line up rather than as one arrangement.
+
+     So the whole column centres, the tag with it: the tag is the claim's
+     own label and sits in the same flex column, and leaving it hard left
+     over centred type is the same mismatch one line further up. The split
+     lines are display:block full-bleed inside the paragraph
+     (.split-line / .line-mask above), so this inherits straight down onto
+     each of them and the wipe is untouched. */
+  .who__copy{ align-items:center; text-align:center; }
+  .who__say{ text-align:center; }
   .who__stats{ flex-wrap:wrap; }
   .stat{ flex:1; min-width:100px; padding:0 20px 12px; }
   .stat:not(:first-child){ border-left:1px solid var(--line); }
@@ -2173,6 +2209,80 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 @media (hover:none){ .ovt__skip{ cursor:pointer; } }
 .ovt__skip:hover{ color:var(--cream); }
 .ovt__skip:focus-visible{ outline:2px solid var(--accent); outline-offset:4px; }
+
+/* ------------------------------------------------------------
+   THE PHONE'S COLUMN
+
+   Everything above is written for a wide screen and stays exactly as it
+   is there - this block is the only place the sequence knows a phone
+   exists, and 700px is the same cut the mark's own size uses at the top
+   of this section and the same one PHONE keys off in components/
+   Overture.tsx and lib/motion.ts. Move one, move all three: the room and
+   the hero it hands to have to change their minds about the screen on
+   the same frame.
+
+   A wall is a viewport-sized plane, so on a phone every picture in the
+   run is being asked to fill a box about 0.46 wide where the desktop
+   asks for 1.6-1.8. Two answers, one per kind of wall.
+   ------------------------------------------------------------ */
+@media (max-width:700px){
+  /* 1 · the twelve falling walls.
+
+     These stay cover-fitted - a wall is a surface in a room and a
+     letterboxed one would read as a poster hung on nothing. What changes
+     is which part of the picture the cut keeps: --mpos is set per wall in
+     lib/content.ts, on the handful whose subject sits off centre in a
+     landscape frame, and the ones with nothing to say fall through to the
+     plain middle. The pictures the column could not be talked into
+     keeping at all are swapped for 9:16 originals in that same file, by
+     the <picture> in components/Overture.tsx - so by the time it gets
+     here, every wall is a picture that was composed upright. */
+  .ovt__face{ object-position:var(--mpos, 50% 50%); }
+
+  /* 2 · the wall that does not fall.
+
+     The hero artwork is one wide picture with the wordmark drawn across
+     the full width of it and the crowd window in the middle, and there is
+     no crop of it that is still the logo: a column through the centre
+     keeps the window and two blue slivers, which is the mark with its
+     name cut off. So this one is not re-shot and it is not cropped - it
+     is shown whole, sitting in the middle of the black it was always on.
+     A widescreen artwork letterboxed on a phone is a thing people have
+     seen; a wordmark with the letters sliced off is not.
+
+     Two consequences, and both are wanted. The room behind it stays black
+     where the picture is not, which is what the room already was. And the
+     window inside the artwork is now a genuinely small window rather than
+     most of the screen - so the hero's own expand, which grows that
+     window into the crowd photo, has somewhere to travel on a phone for
+     the first time. .hero__frame below is fitted the same way and
+     lib/motion.ts measures the window against the same fit, which is what
+     keeps the hand-off pixel-for-pixel. */
+  .ovt__slab[data-final]{ background:#000; }
+  .ovt__slab[data-final] .ovt__face{
+    object-fit:contain;
+    /* And it is contained inside the hero's box, not the room's.
+
+       Those are the same box on a wide screen and not always the same box
+       on a phone: .overture is fixed at inset:0, so it is as tall as the
+       viewport currently is, while .hero__pin is a flat 100svh - the
+       height with the address bar showing (see --screen above). Scrolled
+       to the top with the bar out they agree, which is every first run.
+       A replay fired from a page whose bar has retracted is the case they
+       do not, and cover never had to care: a picture cropped to fill is
+       in the same place whatever the box is. A picture centred in it is
+       not, and the difference is the band jumping half an address bar on
+       the cross-fade at the exact moment the two layers are both visible.
+
+       So the standing wall is fitted against the same number the hero
+       underneath it is, and the hand-off stays geometry rather than luck.
+       The strip below is the black slab, over the pin's own black, which
+       is nothing to look at. top:0 rather than centred because the page is
+       parked at the top for the whole sequence, so the pin starts at the
+       top of the screen. */
+    height:var(--screen); bottom:auto;
+  }
+}
 
 /* ---- while it runs, the site holds still ---- */
 html.is-overture{ overflow:hidden; }

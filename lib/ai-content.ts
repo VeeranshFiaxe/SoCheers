@@ -99,7 +99,7 @@ export const AI_HERO = {
      .ai-stage__man in app/ai-work/ai.css for how it is stood in the
      hero. */
   figure: {
-    src: "/assets/SC%20Website%20Revamp/05.%20AI%20work/AI%20work%20visual.png",
+    src: "/assets/art/ai-visual.webp",
     w: 1137,
     h: 1383,
   },

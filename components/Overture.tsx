@@ -45,8 +45,20 @@ import SoCheersLockup from "./SoCheersLockup";
    hero underneath (see finale() in lib/overture-motion.ts). */
 const WALLS = [
   ...OVERTURE_WALLS.map((w) => ({ ...w, final: false })),
-  { img: OVERTURE_FINAL, label: "SoCheers", final: true },
+  /* The two phone fields spelled out as absent rather than left off. The
+     final wall does not get a portrait stand-in like the others do: it is
+     the hero, so on a phone it is shown whole instead of re-shot - see
+     .ovt__slab[data-final] in the phone block of globals.css. Writing them
+     out keeps every member of this array the same shape. */
+  { img: OVERTURE_FINAL, label: "SoCheers", m: undefined, mpos: undefined, final: true },
 ];
+
+/* The width the phone's column starts at. Same number as the --lamp-w
+   breakpoint below it in globals.css and as PHONE in lib/motion.ts - the
+   room, the mark and the hero it hands to all have to change their minds
+   about the screen on the same frame, or the hand-off lands on a picture
+   that is fitted one way over a picture that is fitted the other. */
+const PHONE = "(max-width:700px)";
 
 /* ------------------------------------------------------------------
    The lamp.
@@ -459,8 +471,46 @@ export default function Overture() {
         <div className="ovt__dolly" data-ovt-dolly>
           {WALLS.map((w, i) => (
             <div className="ovt__wall" data-ovt-wall key={w.img + i}>
-              <div className="ovt__slab" data-ovt-slab data-final={w.final || undefined}>
-                <img className="ovt__face" src={w.img} alt="" />
+              <div
+                className="ovt__slab"
+                data-ovt-slab
+                data-final={w.final || undefined}
+                /* Only read inside the phone's media query in globals.css,
+                   so a wall with no mpos - and every wall on a wide screen
+                   - falls back to a plain centre crop. */
+                style={w.mpos ? ({ "--mpos": w.mpos } as React.CSSProperties) : undefined}
+              >
+                {/* <picture>, not a src the engine swaps after the fact:
+                    the browser has to choose before it fetches, or a phone
+                    pays for the landscape original and then downloads the
+                    portrait one on top of it. boot() in
+                    lib/overture-motion.ts preloads off `currentSrc`, so it
+                    follows whichever this resolves to without being told. */}
+                {/* No src and no srcset in the markup. The room is in the
+                    layout, so it is on every page, and on every page but
+                    the first of a tab the sequence does not run at all -
+                    but a src is a fetch whether the element is
+                    display:none or not, and this room is 1.3MB of
+                    pictures. boot() in lib/overture-motion.ts attaches
+                    them, which is a place that is only ever reached on a
+                    run that is actually going to be watched. Same
+                    arrangement as the home page's reel and its
+                    data-reel-film. */}
+                <picture>
+                  {/* encodeURI, and it is not optional: srcset is a
+                      comma-separated list whose entries are "url
+                      descriptor", so the first space in a path ends the
+                      URL and what follows is read as a descriptor. Every
+                      asset in this run lives under "SC Website Revamp",
+                      which means an unencoded value here parses as the
+                      candidate "/assets/SC" with a descriptor of
+                      "Website" - unknown, so the whole candidate is
+                      dropped and the phone silently falls back to the
+                      landscape original this exists to replace. The img
+                      has no such rule and is left alone. */}
+                  {w.m && <source media={PHONE} data-ovt-src={encodeURI(w.m)} />}
+                  <img className="ovt__face" data-ovt-src={w.img} alt="" />
+                </picture>
                 {/* the sliver of edge you see as the slab tips toward you -
                     a flat panel with no thickness reads as a projected
                     image, and this is the cheapest way to give it mass */}

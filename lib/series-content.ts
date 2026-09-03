@@ -6,104 +6,131 @@
 
    ---- where this copy comes from ----
 
-   Not written here. The narrative is the client's own deck, "The
-   Continuity Kink" (Downloads/The Continuity Kink.pdf, 20 slides), read
-   in order and cut down to a 1-2 minute scroll. The earlier deck, "The
-   Re-Wiring", is the same idea at an earlier draft - its opening beat
-   ("welcome to the peak content era") is the only thing it has that the
-   newer deck does not, and it is folded into BEATS[1] below.
+   The client's own rewrite, sent as "Final Version - Micro Series": ten
+   numbered sections, replacing the fourteen-beat cut that was read
+   straight off the deck ("The Continuity Kink", 20 slides). It is
+   shorter, it is in their voice, and it is transcribed here WORD FOR
+   WORD - including the three lines they sent in capitals, which are the
+   chapter markers of the new cut and are set as they were written.
 
-   The stills in public/assets/series/ are lifted from that same PDF.
+   Nothing on this page is a line somebody wrote to fill a slot. Where a
+   section needed a label that is not in their copy - the mono slate
+   burned into the corner of the frame - it is a production slate
+   ("TITLE CARD", "END CARD"), the same device the rest of the site
+   uses, and never a sentence.
 
-   ---- the art direction revision ----
+   The old fourteen-beat story is not deleted: it is in lib/series-v1.ts
+   and still renders at /series-1, which is off the nav. This file
+   re-exports it at the foot so those three components did not have to
+   change their imports.
 
-   The direction that came back on this page: the beats were reading as
-   separate blocks - a picture, a sentence next to it, the next picture -
-   and the references sent with it are the opposite of that. They are
-   posters. Several frames working as one composition, the type set
-   inside the picture rather than beside it, and a subject cut out of its
-   background and lifted across the frame edges so the whole thing has
-   depth.
+   ---- what the pictures are ----
 
-   That is the `poster` shot below, and the four beats that used to be
-   flat title cards now carry it. See components/SeriesStory.tsx for the
-   layer order and lib/series-motion.ts for what the scroll does to it.
+   Two folders, and the difference matters.
+
+   public/assets/series/ is lifted from the client's own deck. It is
+   their reference rather than their licence, and it stands in for
+   series footage that does not exist yet - the mood of the argument,
+   not the work.
+
+   public/assets/work/ is the real thing: campaigns SoCheers actually
+   made, the same stills the Work tab runs on. Two sections earn them
+   and only those two use them - the credentials section, where the
+   claim is "we build campaigns for the shows that taught the world how
+   to binge" and the proof is the Netflix and JioHotstar titles, and the
+   showcase, which the brief asks for by name ("rapid visual sequence of
+   actual SoCheers work"). Everywhere else the deck stills stay, because
+   a page arguing for a format should not illustrate every sentence with
+   a campaign that is not in that format.
 
    ---- what is still open with the client ----
 
-   1. THE NAME. The decks disagree: the older one is "The Re-Wiring", the
-      newer and more complete one is "The Continuity Kink". CONCEPT below
-      is the single place it is written down - change that one object and
-      the whole page follows, including the <title>. Defaulted to the
-      newer deck.
-   2. THE EPISODE LINKS. REELS at the foot of this file has no live post
-      URLs yet. Until it does, the tiles are not links and the page does
-      not claim they are - see SeriesFeed.tsx. There is no placeholder
-      badge on them any more: this page goes in front of clients.
-   3. THE CUT-OUT SUBJECTS. CROSSERS below is five slots for figures
-      that stand across the seam between two beats, and every one of them
-      is drawing a silhouette today. They are the placeholders the client
-      asked for while the real subjects are shot. `cutout` on a poster
-      beat is the same story: supported, unused, waiting on a PNG with
-      real alpha in it.
-   4. THE FOOTAGE. Every beat can carry `film`. The one that used to sit
-      on the cold open was the live site's *home page* banner - nothing
-      to do with the series - and it is gone rather than swapped for
-      another stand-in. Drop cuts into public/assets/series/film/ and add
-      one `film:` line per beat.
+   1. RAYMOND. The brief names "prava ip, raymond ip, etc" for the
+      showcase. Prava is in the tree (public/assets/work/pinned) and is
+      the first card. Raymond is not - it is still a pending tile on the
+      Work tab (see WORK_ASSETS in lib/work-content.ts) and there is no
+      frame of it anywhere in the repo. So the showcase runs the work
+      that exists rather than drawing a grey box with a brand name on
+      it; add Raymond to SHOWCASE below the day the still lands and the
+      row re-times itself.
+   2. THE EPISODE LINKS. REELS at the foot of this file still has no
+      live post URLs. Until it does the tiles are not links and the line
+      promising that they open Instagram does not render.
+   3. SERIES FOOTAGE. There is none in the tree. The two clips on the
+      abundance wall are from the About shoot and read as texture at
+      tile size; they are the only moving frames on the page.
    ============================================================ */
 
-/* The concept's name, and the only place it is spelled. */
+/* The name of the thing. The decks disagreed - the older one is "The
+   Re-Wiring", the newer one "The Continuity Kink" - and the rewrite
+   settles it: section 4 names the behaviour "the continuity kink", so
+   that is the name, and this is the single place it is spelled. */
 export const CONCEPT = {
-  /* Open with the client - "The Continuity Kink" vs "The Rewiring". Both
-     decks are in play; this is the newer of the two. Note this is a
-     source comment: nothing renders the word "pending" on the page. */
   title: "The Continuity Kink",
   short: "Continuity Kink",
   alt: "The Rewiring",
 } as const;
 
 /* ------------------------------------------------------------------
-   THE TITLE CARD.
+   SECTION 1 - THE TITLE CARD.
 
-   The first screen of the tab. It used to be a masthead - a tag, the
-   name, and a line about the layout experiment ("one treatment for
-   every section, no scroll work"), which is a note to whoever built the
-   page and not a thing to say to a reader who has just landed on it.
+   The client's first section is one sentence and nothing else, which is
+   exactly what a cold open is, so it is staged as the title card rather
+   than folded into the story below it: the composition, the sentence
+   set at poster scale across it, and the cue.
 
-   So it is staged as the cold open's own composition now (see
-   app/series/series.css), and the sentence under the name is the one
-   that already existed for this concept - it is the description on
-   app/series-1/page.tsx, verbatim. No new copy is written here; the
-   line simply moved from a <meta> tag onto the screen, where it does
-   the job the client asked of the opening: you know what the story is
-   about before you have scrolled once.
+   What came off it: the standfirst. The old card carried a paragraph
+   under the name because the name alone ("The Continuity Kink") does
+   not tell a reader what the page is about. This line does - and the
+   rewrite gives the concept its own section further down, where the
+   reader has already recognised the behaviour in themselves. A second
+   sentence here would be copy nobody wrote.
 
-   The frames are the cold open's, on purpose - the same three that
-   BEATS[0] is composed from, so the title card and the first beat read
+   The frames are the wall's, so the card and the section under it read
    as one reel rather than as a cover glued onto a page.
+
+   There used to be a fourth - open-tall.jpg, the empty screening room,
+   lifted out over the type as a plane in front of the words. It is off
+   the card: a vertical standing in the middle of a one-line title is
+   depth, and a vertical standing in the middle of a three-line sentence
+   is something covering the sentence. The still is not gone, it is on
+   the end card, where it is the last frame of the page.
    ------------------------------------------------------------------ */
 export const HERO = {
-  tag: "Series",
-  standfirst:
-    "Post-lockdown the audience stopped hunting for discovery and started hunting for lore. The micro series is what that behaviour is asking for - and SoCheers builds them.",
+  /* the client's own words for the chip over the title. It is the line
+     the first pass carried as an eyebrow further down the page, moved
+     onto the card where it belongs - a slate on the opening frame,
+     which is what "an original" is. */
+  tag: "A SoCheers Original",
+  line: "Welcome to the peak content era.",
+  /* the highlighter block, on the last word - the same device, and the
+     same size of it, as the sections spend on one word of a line.
+     "content era." took two of the three lines and read as a red bar
+     with a title behind it rather than as a mark made on one. */
+  accent: "era.",
   cue: "Scroll",
   frames: ["open-wide.jpg", "micro-series.jpg", "night-scroll.jpg"],
-  inset: "open-tall.jpg",
 } as const;
+
+/* The <meta> description. Not on the screen anywhere, so it is written
+   for a search result rather than lifted off a section - and it is the
+   page's own claim, in the client's words, out of sections 7 and 6. */
+export const META_DESCRIPTION =
+  "We don't make more content. We design reasons to come back. The micro-series: 20-60 second episodes built around one recurring world, from the agency that builds campaigns for the platforms that taught the world how to binge.";
 
 /* ------------------------------------------------------------------
    THE TEXTURE PLATES.
 
    Two files in public/assets/series/ are not photographs and were never
    meant to be used as frames: kink.jpg is a sheet of film grain and
-   streaming.jpg is a warm light leak. Both were wired up as full-bleed
-   stills, which is why two beats on this page rendered as an empty grey
-   screen and an empty orange screen.
+   streaming.jpg is a warm light leak. Both were once wired up as
+   full-bleed stills, which is why two sections rendered as an empty
+   grey screen and an empty orange screen.
 
-   They are useful - just as grade, over a composition, not as one. Every
-   poster lays the grain over itself, and the leak is spent on the beats
-   that want warmth in an otherwise blue-cold page.
+   They are useful - just as grade, over a composition, not as one.
+   Every section lays the grain over itself, and the leak is spent on
+   the three after the turn, so the answer looks like a warmer room than
+   the problem.
    ------------------------------------------------------------------ */
 export const TEXTURE = {
   grain: "kink.jpg",
@@ -111,151 +138,139 @@ export const TEXTURE = {
 } as const;
 
 /* ------------------------------------------------------------------
-   THE SHOTS.
+   THE STAGES.
 
-   A beat's `shot` is how it is staged, and the staging is picked off the
-   sentence it carries - "many open thoughts" wants many windows, not a
-   photograph of somebody thinking. Each one is a mechanic rather than a
-   layout:
+   A section's `stage` is how it is built. Seven of them for ten
+   sections, which is the change the rewrite forced: the old cut ran one
+   staging fourteen times on the theory that repetition was the test,
+   and at fourteen screens it was. At ten it is not - three of the new
+   sections are not arguments at all (a process, a showreel, a call to
+   action) and cannot be a sentence beside four letterbox frames.
 
-     poster   - the composition. Several frames working as one picture,
-                the type set inside them, and a cut-out subject or a
-                lifted frame breaking across the edges so the layers read
-                as depth rather than as a stack. Two variants, `stack`
-                and `grid`, described under `variant` below. This is what
-                the four title cards became.
-     mosaic   - many windows at once, tiling in on scroll. The abundance
-                beat. `jitter` makes the same wall arrive badly, for the
-                one about noise.
-     aperture - a full-bleed frame squeezed by the letterbox into a phone
-                as you read. Used once, on "everything moved behind the
-                screen", where the squeeze *is* the sentence.
-     strip    - stacked letterbox bands, each travelling at its own rate.
-                `reverse` runs it backwards, for the beat about returning
-                to the familiar.
-     reel     - a row of verticals that compress into one as you scroll.
-                Eight episodes, into the cycle of the scroll.
-     phone    - one vertical frame held beside the type. Phone footage
-                composed as a phone rather than cropped into a widescreen
-                hole, which on the beat that is about the phone would be
-                the wrong three quarters to throw away.
-     held     - one frame, one slow push, type over it. The default, and
-                the quiet one: a page of nothing but compositions is a
-                showreel, and the argument needs somewhere to land.
+   So the FRAME is what repeats now - the graded plate, the scrim, the
+   grain, the letterbox gate, the type at one size in one column, the
+   slate in the corner - and what changes inside it is only the picture
+   layer:
 
-   Adding a shot means a renderer in components/SeriesStory.tsx and a
-   case in lib/series-motion.ts, in that order.
+     wall     - many windows at once. The abundance section: one
+                photograph of abundance is not abundance, twelve windows
+                arriving together is.
+     strip    - the default. Four letterbox frames cascading down the
+                half of the screen the sentence is not in.
+     title    - the poster. Bands stacked full width, the sentence at
+                reading size high in the frame, and the name of the
+                thing set enormous across the middle of them.
+     reel     - a row of verticals, phone-shaped, for the section that
+                describes what a 20-60 second episode is.
+     steps    - the client's "sideblocks display": four numbered blocks,
+                each with its own frame.
+     showcase - two rows of real work travelling in opposite directions.
+                The brief asks for a rapid visual sequence; this is the
+                only thing on the page that moves on its own.
+     end      - the title card's construction again, closing on the CTA.
+                The page opens and closes on the same shape, which is
+                the rhyme the last section is claiming.
+
+   Adding a stage means a renderer in components/SeriesTestStory.tsx and
+   a block in app/series/series.css, in that order.
    ------------------------------------------------------------------ */
-export type Shot =
-  | "poster"
-  | "mosaic"
-  | "aperture"
+export type Stage =
+  | "wall"
   | "strip"
+  | "title"
   | "reel"
-  | "phone"
-  | "held";
+  | "steps"
+  | "showcase"
+  | "end";
 
-export type Beat = {
+export type Step = {
+  no: string;
+  title: string;
+  body: string;
+  art: string;
+};
+
+export type Card = {
+  src: string;
+  /* the brand, spelled the way lib/work-content.ts spells it. A label on
+     a piece of work, not a line of copy. */
+  label: string;
+};
+
+export type Section = {
   id: string;
-  shot: Shot;
-  eyebrow?: string;
-  lines: string[];
-  copy?: string;
+  stage: Stage;
   /* the mono chip burned into the corner of the frame - a slate, the way
      the client's references label theirs. Kept short: it is a label, not
      a caption, and it must not become a second place copy lives. */
   slate?: string;
-  /* one still, for the shots that hold one */
-  art?: string;
-  /* many, for mosaic / strip / reel / poster. Order is the order they
-     arrive in, and on a poster it is the order they are stacked. */
-  frames?: string[];
-  /* an mp4 that plays in place of `art`. Nothing carries one right now -
-     see the note at the head of this file. */
-  film?: string;
-
-  /* ---- poster only ---------------------------------------------------
-
-     variant - `stack` is the film-poster reference: full-width letterbox
-               bands of uneven height, one word set enormous across the
-               middle of them, and the subject rising through the word.
-               `grid` is the editorial reference: frames of different
-               sizes that overlap each other, the type block sitting on
-               the corner of one of them.
-
-     mark    - the word the composition is built around, set at poster
-               scale. Defaults to `lines`. Set it explicitly when the
-               line that should be big is the one further down the beat -
-               on the kink beat the sentence sets it up and the name is
-               the thing on the wall, so the name is the mark and the
-               sentence runs above it at reading size.
-
-     cutout  - a transparent PNG of a subject with its background already
-               removed. It is drawn ON TOP of the type, so the letters
-               pass behind it. This is the layer that makes the whole
-               thing read as three-dimensional, and it is the one thing
-               here that cannot be faked from a rectangular still.
-
-     insets  - rectangular frames lifted out of the stack: stills that
-               overhang the band edges. The first is drawn BEHIND the
-               type and the rest in FRONT of it, so the sentence is
-               sandwiched between two picture planes rather than laid
-               over one. Used where there is no cutout for a beat yet,
-               and useful alongside one either way.
-
-     accent  - a word inside `mark` that takes the highlight block behind
-               it, the way the reference blocks "CAPTURING". Matched
-               case-insensitively, first occurrence only.
-     -------------------------------------------------------------------- */
-  variant?: "stack" | "grid";
+  /* a paragraph that runs BEFORE the display line. One section needs it:
+     the client's section 3 sets its punch up with a long sentence and
+     lands it afterwards, and reordering them so the big type comes first
+     would be rewriting their copy with CSS. */
+  lead?: string;
+  /* the display line, one <h2>, split into the lines it should break on */
+  lines: string[];
+  /* the second line, set at poster scale under the first. The name on the
+     title card, the ask on the end card. */
   mark?: string;
-  cutout?: string;
-  insets?: string[];
+  /* the word inside `lines` or `mark` that takes the highlighter block.
+     Matched case-insensitively, first occurrence only. */
   accent?: string;
+  /* body paragraphs, in the order the client wrote them */
+  copy?: string[];
+  /* Phrases out of `copy` to lift. Matched rather than written, so a
+     paragraph stays one continuous piece of the client's text and the
+     emphasis is a way of setting it - nothing here is moved, cut, or
+     repeated, and a string that does not match renders as ordinary body
+     copy rather than throwing.
 
-  /* mosaic only - the wall arrives badly rather than cleanly */
-  jitter?: boolean;
-  /* strip only - the bands travel against the scroll */
-  reverse?: boolean;
-  /* held only - draws a twelve-month ruler under the line and closes it
-     back on itself. One beat uses it, and that beat is about January
-     connecting to December. */
-  ticks?: boolean;
-  /* held / poster - lays the warm leak over the composition */
+     There are two ways one gets set and the copy decides which, not a
+     flag: a phrase that runs to the END of its paragraph takes its own
+     line, because there is nothing after it to strand. A phrase inside
+     a sentence is marked where it stands, because breaking there would
+     leave the rest of the sentence hanging on the next line. See
+     Copy() in components/SeriesSections.tsx. */
+  emphasis?: string[];
+  /* short phrases set as chips rather than run into a paragraph - the
+     platform names, the list of things an episode leaves behind. Each
+     item is already a complete phrase in the client's copy, so setting
+     them apart changes the layout and not a character of the text.
+
+     `cuesLead` is where they sit, and it is not a design choice: the
+     client wrote the platform names immediately after the line they
+     belong to and the episode's leftovers after the paragraph that sets
+     them up, so the two runs of chips sit in different places for the
+     same reason - that is the order the words were written in. */
+  cues?: string[];
+  cuesLead?: boolean;
+  frames?: string[];
   warm?: boolean;
+  steps?: Step[];
+  showcase?: Card[];
+  cta?: { label: string; href: string };
 };
 
 /* ------------------------------------------------------------------
    THE FILM.
 
-   The brief is video over stills wherever there is video. What this repo
-   has is two clips from the About shoot, and there is no series footage
-   in the tree at all.
-
-   What used to be here as well was the live site's home page banner,
-   playing full-bleed on the cold open. It is not series content, it was
-   loaded off socheers.net at runtime, and it was the first thing on the
-   page - so it is deleted rather than re-pointed. The cold open is a
-   composition now and does not need a moving frame to hold.
+   Two clips from the About shoot, used as two of the twelve windows on
+   the abundance wall. They are there because a wall about endless
+   streams should not be a wall of photographs, and because at 1.4MB and
+   1.8MB they are the only files in the tree small enough to autoplay
+   without costing this page its own argument. They read as texture at
+   tile size; swap for series footage when it exists.
    ------------------------------------------------------------------ */
 const FILM = {
-  /* Stand-ins: two clips from the About shoot, used as two of the twelve
-     windows on the abundance wall. They are there because a wall about
-     endless streams should not be a wall of photographs, and because at
-     1.4MB and 1.8MB they are the only files in the tree small enough to
-     autoplay without costing this page its own argument. They read as
-     texture at tile size; swap for series footage when it exists. */
-  wall1:
-    "/assets/SC%20Website%20Revamp/02.%20About/Office%20Images%20-%20Culture/AQOhYVnOI0VVNqJsVbQi6Yb5-LTcKs4rC92euhXX47NeQuRJ8mREhXBZhCM-7zNl3PRpuryKVwP6npXxchaNqHGknY2FZ7C-.mp4",
-  wall2:
-    "/assets/SC%20Website%20Revamp/02.%20About/Office%20Images%20-%20Culture/AQP2nADns22VqfmHrU1qZv9HeGA2Vl62f1Vc-TRwrugotDcbNx_wZ3pqD133sfmARnY56WkdqZMCEwBHw1vA5iL0iawSLeHa.mp4",
+  wall1: "/assets/series/culture-christmas.mp4",
+  wall2: "/assets/series/culture-traditions.mp4",
 } as const;
 
-/* The wall on the "peak content era" beat. Twelve windows, and the two
-   films sit at 4 and 9 - far enough apart that neither is beside the
-   other, close enough that one of them is always near the eye.
+/* The wall. Twelve windows, and the two films sit at 4 and 9 - far
+   enough apart that neither is beside the other, close enough that one
+   of them is always near the eye.
 
-   The two texture plates used to be in here as tiles. A sheet of grain
+   The two texture plates are deliberately not in here. A sheet of grain
    and an orange gradient among ten photographs read as two windows that
    had failed to load, which on a wall arguing for abundance is the worst
    possible tile to have twice. */
@@ -275,179 +290,196 @@ const WALL = [
 ];
 
 /* ------------------------------------------------------------------
-   The story.
+   THE WORK, for the two sections that earn it.
 
-   One array, read top to bottom. Fourteen beats, and the order is the
-   deck's order - the name of the thing does not land until the reader
-   has already recognised the behaviour in themselves, which is what
-   makes a coined term feel earned rather than sold.
+   Rooted paths, so they sit in the same arrays as the deck stills
+   without the caller having to know which folder a frame came from -
+   see ART at the foot of this file.
+   ------------------------------------------------------------------ */
+const W = (file: string) => `/assets/work/${file}`;
 
-   The four posters sit at 1, 4, 9 and 14. That spacing is deliberate:
-   they are the beats that name something, they are the most worked
-   compositions on the page, and three screens of quieter staging between
-   each pair is what keeps them reading as moments rather than as a
+/* The four titles behind the binge claim. All wide, all from the
+   platforms named in the sentence above them, so the claim and the
+   evidence are on one screen. */
+const RECEIPTS = [
+  W("pinned/netflix-mi.jpg"),
+  W("wall/special-ops-2.jpg"),
+  W("pinned/netflix-srh.jpg"),
+  W("wall/dhurandhar-2.jpg"),
+];
+
+/* The showcase, and the order is a running order rather than a
+   portfolio: Prava first because it is the one piece on the page that is
+   actually a micro-series IP, then the biggest titles, then the range.
+   Eighteen cards across two rows travelling opposite ways - enough that
+   neither row visibly repeats while it is on screen.
+
+   Raymond is missing on purpose. See the head of this file. */
+const SHOWCASE: Card[] = [
+  { src: W("pinned/prava.jpg"), label: "Prava" },
+  { src: W("pinned/netflix-mi.jpg"), label: "Netflix × MI" },
+  { src: W("wall/maa-behen.jpg"), label: "Netflix · Maa Behen" },
+  { src: W("pinned/broadway.jpg"), label: "Broadway" },
+  { src: W("wall/special-ops-2.jpg"), label: "JioHotstar · Special Ops 2" },
+  { src: W("pinned/pantaloons-eoss.jpg"), label: "Pantaloons" },
+  { src: W("wall/made-in-titan.jpg"), label: "Titan" },
+  { src: W("wall/boat.jpg"), label: "boAt × Marvel" },
+  { src: W("wall/croma.jpg"), label: "Croma" },
+  { src: W("pinned/netflix-srh.jpg"), label: "Netflix × SRH" },
+  { src: W("wall/dhurandhar-2.jpg"), label: "Netflix · Dhurandhar 2" },
+  { src: W("wall/superdry.jpg"), label: "Superdry Sport" },
+  { src: W("wall/bgmi.jpg"), label: "BGMI" },
+  { src: W("wall/yes-bank.jpg"), label: "Yes Bank" },
+  { src: W("wall/wacoal.jpg"), label: "Wacoal" },
+  { src: W("wall/croma-dreams.jpg"), label: "Croma" },
+  { src: W("wall/bhim-upi.jpg"), label: "BHIM UPI" },
+  { src: W("wall/netflix-mi-srh.jpg"), label: "Netflix × MI × SRH" },
+];
+
+/* ------------------------------------------------------------------
+   THE STORY - the client's ten sections, in their order.
+
+   Section 1 is the title card above; these are 2 through 10.
+
+   The two most worked compositions sit at 4 and 10 - the section that
+   names the thing and the section that asks for the business. That is
+   the same spacing the old cut used for its title cards and for the same
+   reason: they are the sections that land something, and they need
+   quieter screens between them to read as moments rather than as a
    showreel.
    ------------------------------------------------------------------ */
-export const BEATS: Beat[] = [
+export const SECTIONS: Section[] = [
   {
-    /* THE COLD OPEN. Three frames overlapping rather than one held wide,
-       because the line is about being on both sides of a screen at once
-       and a single frame can only be on one of them. The empty-cinema
-       vertical is lifted out over the join. */
-    id: "open",
-    shot: "poster",
-    variant: "grid",
-    eyebrow: "A SoCheers original",
-    lines: ["Look at the world,", "in and out of the screen."],
-    accent: "screen.",
-    slate: "COLD OPEN",
-    frames: ["open-wide.jpg", "micro-series.jpg", "night-scroll.jpg"],
-    insets: ["open-tall.jpg"],
-  },
-  {
-    /* the older deck's opening, kept because it is the one thing it says
-       that the newer one assumes. Staged as the wall because the line is
-       literally about abundance - one photograph of abundance is not
-       abundance; twelve windows arriving at once is. */
-    id: "peak",
-    shot: "mosaic",
-    lines: ["Welcome to the peak content era."],
-    copy:
-      "A world of visual abundance and endless hours of context, all readily available at our hands. And with a whole industry feeding the streams that pass by our eyes and thumbs, it makes you wonder what anyone can still add to it.",
+    /* SECTION 2. Staged as the wall because the line is literally about
+       abundance, and because the last sentence of it - the one about
+       going back to the same things - is the hinge the whole page turns
+       on. It reads as that standing alone under a screen full of windows
+       and does not when it is buried in the paragraph above it. */
+    id: "more",
+    stage: "wall",
+    lines: ["There is more to watch than ever."],
+    copy: [
+      "More to scroll. More to buy. More to follow. Every screen is full. Every feed keeps going.",
+      "And somehow, we still keep going back to the same things.",
+    ],
     slate: "ALL OF IT, AT ONCE",
     frames: WALL,
   },
   {
-    /* the squeeze: full-bleed at the top of the beat, a phone by the
-       bottom of it. The frame does what the sentence says. */
-    id: "post",
-    shot: "aperture",
-    lines: ["Post-lockdown,", "nothing actually changed."],
-    copy:
-      "Except for everything moving entirely behind the screen. Trapped between a relentless news cycle of global volatility and brain-rot designed to over-stimulate and then abandon.",
-    slate: "BEHIND THE SCREEN",
-    art: "behind-screen.jpg",
+    /* SECTION 3. The one section that runs its paragraph FIRST: the
+       client's copy sets the behaviour up at length and then lands two
+       short sentences on it, and those two sentences are the display
+       line. See `lead` on the Section type.
+
+       The four frames are as close as the deck stills get to the four
+       things the sentence lists: a lit phone in the dark, a screen being
+       watched, a run of episodes, a room behind a screen. */
+    id: "next",
+    stage: "strip",
+    lead:
+      "You'll sit through twelve episodes of a world you barely know, the same blinkit order you'll place in less than 10 seconds, you'll follow someone cleaning their house and giving you an ASMR and watch someone else's baby growing up on the internet, not because you're bored, but because they built something that continues.",
+    lines: ["The brain isn't looking for another surprise.", "It's looking for what comes next."],
+    accent: "what comes next.",
+    slate: "WHAT COMES NEXT",
+    frames: ["night-scroll.jpg", "binge.jpg", "episodes.jpg", "behind-screen.jpg"],
   },
   {
-    /* ------------------------------------------------------------------
-       THE TITLE CARD, and the one the revision was asked for by name.
+    /* SECTION 4 - THE TITLE CARD, and the moment the page is built
+       around. Three bands full width, the setup line at reading size
+       high in the frame, and the name of the thing set enormous across
+       the middle of them with the block on its last word.
 
-       Five bands of uneven height, the sentence set at reading size high
-       in the frame, and the name of the thing set enormous across the
-       middle of the stack.
-
-       ---- what came off this beat ----
-
-       crowd-3d.png. It was wired as the `cutout` - the subject drawn
-       over the type - and it is not a cut-out: it is a rectangular crop
-       of a cinema audience with its own hard edges still on it. Drawn
-       500px wide dead centre of the frame it did the two things a cutout
-       exists to avoid. It sat over the middle of the mark, so the page's
-       own title read "A co ... ink.", and because it is a rectangle with
-       visible sides it read as a picture dropped on top of the poster
-       rather than as a subject standing in it.
-
-       The depth it was there for is carried by CROSSERS now - see the
-       block under this array. `cutout` stays supported for the day a
-       real alpha PNG arrives; nothing carries one today.
-       ------------------------------------------------------------------ */
+       Three bands, not five: a band is as wide as the column and as tall
+       as its share of one screen, so every frame added crops every frame
+       already there - see the note on `frames` below for which three
+       survive that crop and which one did not. */
     id: "kink",
-    shot: "poster",
-    variant: "stack",
-    eyebrow: "So we gave it a name",
-    lines: ["In this chaos, the brain", "has developed a fetish."],
-    mark: "A continuity kink.",
+    stage: "title",
+    lines: ["There's a name we've given to this behaviour."],
+    mark: "the continuity kink.",
     accent: "kink.",
-    slate: "TITLE CARD",
-    /* Three, not five. See the note on the stack in app/series/series.css
-       for the arithmetic; the short version is that a band is as wide as
-       the column and as tall as its share of one screen, so every frame
-       you add crops every frame that was already there. These three are
-       picked to survive a wide crop: an eye, a lit screen in the dark,
-       and an interior that reads across its whole width. */
-    frames: ["peak-content.jpg", "binge.jpg", "micro-series.jpg"],
-    /* one frame behind the sentence and nothing in front of it. The
-       front plane on this beat is the figure crossing the seam above it
-       - a lifted still there as well would be two things fighting for
-       the same corner. */
-    insets: ["night-scroll.jpg"],
-  },
-  {
-    /* the bands run against the scroll. The beat is about the mind going
-       back to what it already knows, and a strip that travels backwards
-       while you go forwards is that, without a word of explanation. */
-    id: "lore",
-    shot: "strip",
-    reverse: true,
-    lines: ["The mind stops hunting for", "Discovery. It hunts for Lore."],
-    copy:
-      "We crave the familiar, and return to the creators we know and the shows that run for seasons. Not because we are lazy, but because they offer a guaranteed return on attention invested - the only safety left; the luxury of context.",
-    slate: "REWIND",
-    frames: ["wardrobe.jpg", "binge.jpg", "episodes.jpg", "night-scroll.jpg"],
-  },
-  {
-    id: "trends",
-    shot: "held",
-    lines: ["While the viewer is hunting for context,", "brands are mistaking it for trends."],
-    slate: "THE MISREAD",
-    art: "chaos.jpg",
-  },
-  {
-    id: "binge",
-    shot: "strip",
-    lines: ["Anyone you think is your audience", "has been rewired by the binge."],
-    copy:
-      "From Netflix to the deepest corners of their Instagram feed, they are chasing one neurological pattern: continuity.",
-    slate: "FOUR FRAMES, ONE PATTERN",
-    frames: ["binge.jpg", "night-scroll.jpg", "behind-screen.jpg", "noise.jpg"],
-  },
-  {
-    /* the same wall as the abundance beat, arriving badly. Nothing about
-       the staging is new - which is the point of it: the noise is not a
-       different world, it is the same one, mistimed. */
-    id: "noise",
-    shot: "mosaic",
-    jitter: true,
-    lines: ["None of them are waiting", "for your festive greeting."],
-    copy:
-      "Not the Happy Diwali from an insurance brand, not the sneaker brand introducing its employees dancing on reels. A spam of statics and abruptly cut reels is not feeding the kink - it is adding to a pile of unwanted noise, emanating from the brands they wear, eat, drive and trust with their money.",
-    slate: "UNWANTED NOISE",
-    frames: [
-      "noise.jpg",
-      "chaos.jpg",
-      "peak-content.jpg",
-      "binge.jpg",
-      "episodes.jpg",
-      "night-scroll.jpg",
-      "behind-screen.jpg",
-      "wardrobe.jpg",
-      "micro-series.jpg",
+    copy: [
+      "It's the itch you get when something knows it will continue. We started liking things that already had a little history.",
+      "A face we knew. A joke we remembered. A show we'd already spent six hours with. You didn't need the introduction. You already knew the world and You keep watching because there is more to know.",
     ],
-  },
-  {
-    /* the turn, and the warm one. Everything before this beat is graded
-       cold; the leak sits over this composition and the two after it, so
-       the cure looks like a different room to the problem. */
-    id: "cure",
-    shot: "poster",
-    variant: "grid",
-    warm: true,
-    eyebrow: "And the cure to that noise",
-    lines: ["The micro series."],
-    accent: "series.",
-    copy: "20 to 60 seconds of bite-sized episodes, designed for continuity.",
+    emphasis: ["You keep watching because there is more to know."],
     slate: "TITLE CARD",
-    frames: ["episodes.jpg", "micro-series.jpg", "binge.jpg"],
-    insets: ["mokai-3.jpg"],
+    /* Was peak-content.jpg on top - the eye, in extreme close-up. It is
+       the strongest still in the folder and the worst possible one for
+       this stage: a band is as wide as the screen and a third as tall,
+       and a face shot that tight cropped to that shape is not a face,
+       it is a red wash with nothing in it. The tallest band is the one
+       the reader looks at first, so it went to a frame that survives a
+       wide crop. All three do now - a lit screen, a phone in the dark,
+       an interior that reads across its whole width. */
+    frames: ["binge.jpg", "night-scroll.jpg", "micro-series.jpg"],
   },
   {
-    /* eight verticals, and they close up into one as you read. The line
-       says compressed into the cycle of the scroll; the row compresses. */
-    id: "episodes",
-    shot: "reel",
-    lines: ["The same pattern that keeps", "someone watching eight episodes."],
-    copy:
-      "Compressed into the cycle of the scroll. Every video is a cliffhanger that feeds the kink. It gives the viewer a reason to come back tomorrow.",
+    /* SECTION 5. The client's first capitalised line, and the turn from
+       what the audience does to what brands do about it. Staged as the
+       plain strip and framed with the noise stills - the pile the
+       paragraph is describing. */
+    id: "job",
+    stage: "strip",
+    lines: ["AND THAT CHANGES THE JOB OF CONTENT."],
+    copy: [
+      "The feed is full of brands trying to win the next three seconds.",
+      "Another trend, another static, another Reel that starts and ends before you've had time to care.",
+      "Nothing wrong with any of that.",
+      "But if every piece starts from zero, the audience has to start from zero too.",
+      "And that's a damn slow way to retain people on the internet.",
+    ],
+    /* runs to the end of its paragraph, so it takes its own line - the
+       sentence sets the condition up and the lifted half is the cost */
+    emphasis: ["the audience has to start from zero too."],
+    slate: "STARTING FROM ZERO",
+    frames: ["noise.jpg", "chaos.jpg", "peak-content.jpg", "micro-series.jpg"],
+  },
+  {
+    /* SECTION 6 - THE RECEIPTS, and the first section that gets real
+       work in its frames. The sentence names the platforms; the four
+       bands are the titles.
+
+       The platform names are set as chips rather than run into the
+       sentence. They are three one-word sentences in the client's copy
+       and they read as a credit list, which is what they are. */
+    id: "receipts",
+    stage: "strip",
+    lines: ["We build campaigns for the shows", "that taught the world how to binge."],
+    cues: ["Netflix.", "Prime.", "Hotstar."],
+    cuesLead: true,
+    copy: [
+      "We know what makes someone press \"Next Episode\" because we've spent years building that exact moment.",
+      "Then we started wondering why brands don't design for the same itch.",
+      "So we tried it. It worked.",
+    ],
+    slate: "THE RECEIPTS",
+    frames: RECEIPTS,
+  },
+  {
+    /* SECTION 7 - the format, and the first warm screen. Everything
+       before this is graded cold; the leak sits over this section and
+       the two after it, so the answer looks like a different room to the
+       problem.
+
+       Staged as the reel because the copy defines an episode by its
+       length and its shape, and a row of phone-shaped verticals is that
+       definition without a word of explanation. The five things an
+       episode leaves behind are chips under the paragraph - five
+       complete phrases in the client's copy, set as five. */
+    id: "format",
+    stage: "reel",
+    warm: true,
+    lines: ["We don't make more content.", "We design reasons to come back."],
+    accent: "come back.",
+    copy: [
+      "The format is called micro-series. A series of 20-60 second episodes, built around one recurring world, format or story. Every episode has something worth watching and every episode leaves something behind.",
+    ],
+    /* both inside the sentence rather than at the end of it, so both are
+       marked where they stand: the format's own definition, and the
+       promise made about every episode of it */
+    emphasis: ["20-60 second episodes", "Every episode has something worth watching"],
+    cues: ["A question.", "A clue.", "A character.", "A running joke.", "A reason to return."],
     slate: "EP 01 - EP 08",
     frames: [
       "mokai-1.jpg",
@@ -461,158 +493,100 @@ export const BEATS: Beat[] = [
     ],
   },
   {
-    id: "mokai",
-    shot: "phone",
-    eyebrow: "The Brooklyn coffee shop",
-    lines: ["You wouldn't watch a cafe", "post its new menu."],
-    copy:
-      "But you would watch the world of Mokai. Because they don't sell food, they sell lore - an itch that can only be scratched by coming back tomorrow. They built a subscription of attention.",
-    slate: "@MOKAI",
-    art: "mokai-3.jpg",
-  },
-  {
-    /* the ruler. Twelve months drawn under the line as you scroll, and
-       December joins back to January - which is the sentence.
-
-       The frame under it was close-band.jpg, which is a torn strip of
-       white paper on black - a graphic element, blown up to fill a
-       screen. Swapped for a photograph. */
-    id: "discipline",
-    shot: "held",
-    ticks: true,
+    /* SECTION 8 - the client's "sideblocks display", verbatim: four
+       numbered blocks, a title and a line each. The only section on the
+       page that is a diagram rather than a picture with a sentence on
+       it, so it is the only one whose frames are small and equal - four
+       stills the same size in a row is a process; four different sizes
+       is a collage, and a collage does not read as steps. */
+    id: "process",
+    stage: "steps",
     warm: true,
-    lines: ["Retention is not a hack.", "It is a structural discipline."],
-    copy:
-      "You cannot buy it with a trend or fix it with a louder cut. It is the discipline of a showrunner: the ability to plant and seed twelve months of content so that January connects to December. Leave the door ajar and the audience walks through it every single day.",
-    slate: "JAN - DEC",
-    art: "wardrobe.jpg",
+    lines: ["THEN WE MAKE THE THING."],
+    slate: "01 - 04",
+    steps: [
+      {
+        no: "01",
+        title: "BRAND",
+        body: "You bring the brief, ambition and territory you want to own.",
+        art: "open-wide.jpg",
+      },
+      {
+        no: "02",
+        title: "STRATEGY",
+        body: "We find the world and build the narrative.",
+        art: "retention.jpg",
+      },
+      {
+        no: "03",
+        title: "FILMS",
+        body: "We turn that spine into episodes, characters, visual language and production.",
+        art: "reel-3.jpg",
+      },
+      {
+        no: "04",
+        title: "TOGETHER",
+        body: "We make, release, learn, build on what lands and keep the story moving.",
+        art: "mokai-2.jpg",
+      },
+    ],
   },
   {
-    /* was streaming.jpg, which is an orange gradient with nothing in it.
-       An empty cinema is the honest frame for a line about building
-       titles for the people who run them. */
-    id: "credentials",
-    shot: "held",
-    lines: ["We didn't find this kink", "by accident."],
-    copy:
-      "We found it building titles with the streaming platforms that taught the world how to binge - Netflix, Prime, JioHotstar.",
-    slate: "THE RECEIPTS",
-    art: "open-tall.jpg",
-  },
-  {
-    /* THE END CARD. The same construction as the kink poster and
-       deliberately so - the page opened on a composition and closes on
-       one, and the reader is meant to feel the rhyme. No cutout for this
-       beat yet, so the depth is carried by two lifted frames instead:
-       one behind the sentence, one in front of it. */
+    /* SECTION 9 - the showreel the brief asks for by name. Two rows of
+       real campaigns travelling in opposite directions, and the only
+       thing on this route that moves without being scrolled.
+
+       No sentence over the pictures and no scrim across the middle: this
+       section IS the work, and type laid over it would be the one place
+       on the page where the work is a background. The line sits above
+       the rows instead. */
     id: "proof",
-    shot: "poster",
-    variant: "stack",
-    lines: ["You made it to the end", "because the narrative held you."],
-    mark: "You just proved the continuity loop.",
-    accent: "loop.",
+    stage: "showcase",
+    warm: true,
+    lines: ["AND THIS IS WHAT IT CAN LOOK LIKE."],
+    slate: "SELECTED WORK",
+    showcase: SHOWCASE,
+  },
+  {
+    /* SECTION 10 - THE END CARD. The same construction as the title
+       card and deliberately so: the page opened on a composition and
+       closes on one, and the reader is meant to feel the rhyme - which
+       is what the sentence is claiming.
+
+       The client's last line is a question with a button's job, so it is
+       the button. It goes to /contact rather than opening a mail client,
+       same as every other ask on the site. */
+    id: "yours",
+    stage: "end",
+    lines: ["You made it to the end and hence the concept seems to be right."],
+    mark: "NOW, LET'S MAKE YOURS ?",
+    accent: "YOURS ?",
     slate: "END CARD",
-    /* the same three-band column as the title card, and the last frame is
-       the empty cinema the page opened in */
     frames: ["open-wide.jpg", "mokai-3.jpg", "open-tall.jpg"],
-    insets: ["reel-3.jpg", "mokai-1.jpg"],
+    cta: { label: "NOW, LET'S MAKE YOURS ?", href: "/contact" },
   },
 ];
 
 /* ------------------------------------------------------------------
-   THE CROSSERS - the figures that stand between two beats.
+   THE FIRST PASS, re-exported.
 
-   Every other picture on this page is trapped inside one section:
-   `.sbeat` clips its own overflow, which is what keeps fourteen
-   full-screen compositions from bleeding into each other. That clip is
-   also why the page reads as fourteen separate screens no matter how
-   carefully the beats are graded to match - nothing is ever in two of
-   them at once.
+   /series-1 is the fourteen-beat cut, off the nav and noindexed, and it
+   reads its story from lib/series-v1.ts now. These names are passed
+   through here so components/SeriesStory.tsx, SeriesCrossers.tsx and
+   lib/series-motion.ts did not have to be touched by a copy rewrite that
+   has nothing to do with them.
 
-   A crosser is. It is drawn in a layer that sits over the whole story
-   rather than inside any beat, and it is placed on the seam between two
-   of them - half of it standing in the section above, half in the
-   section below. That is the only element on the page with a foot in two
-   beats, and it is what ties them together into one space instead of a
-   stack of frames.
-
-   ---- these are placeholders, and deliberately obvious ones ----
-
-   The client is sending cut-out subjects for these slots. Until they
-   land, each one draws a silhouette: a flat figure in the page's own
-   black with a hairline of the accent down its lit edge. It is a shape
-   that says "somebody stands here" without pretending to be a
-   photograph, and it is the shape the real PNG will be dropped into -
-   swap `pose` for a `src` and nothing else in the layer changes.
-
-   Nothing on the page names them as unfinished. Same rule as the feed
-   tiles: this page goes in front of a client, so the placeholder is
-   composed rather than badged.
-
-   ---- the fields ----
-
-     seam / edge - which boundary to stand on. `edge: "bottom"` puts the
-                   figure across the foot of that beat, `"top"` across
-                   its head. Measured at runtime by crossers() in
-                   lib/series-motion.ts, because the beats are sized in
-                   svh and a hard-coded offset is wrong on every second
-                   viewport.
-
-     side        - which edge of the screen it stands at. Never the
-                   middle: the middle is where the type is, and a figure
-                   over the sentence is the bug this whole block replaced.
-
-     depth       - `near` is solid, drawn large and travels furthest on
-                   the scroll; `far` is a wash, drawn small and barely
-                   moves. Two figures at the same distance are a pattern;
-                   two at different distances are a room.
+   Nothing on /series imports any of it.
    ------------------------------------------------------------------ */
-export type Pose = "stand" | "phone" | "sit" | "pair";
-
-export type Crosser = {
-  id: string;
-  seam: string;
-  edge: "top" | "bottom";
-  side: "left" | "right";
-  pose: Pose;
-  depth: "near" | "far";
-};
-
-/* Five, and the spacing matters as much as it does for the posters: a
-   figure on every seam is a border, a figure on every third or fourth
-   seam is a character walking through the story. Two of them bracket the
-   title card and one stands at the foot of the strip that follows the
-   binge line - the three seams the composition needed most. */
-export const CROSSERS: Crosser[] = [
-  /* rises out of the phone beat and into the title card, at the right,
-     clear of the mark set across the middle of it */
-  { id: "c1", seam: "post", edge: "bottom", side: "right", pose: "stand", depth: "near" },
-  /* leaves the title card at the left, looking down - the beat under it
-     is the one about going back to what you already know */
-  { id: "c2", seam: "kink", edge: "bottom", side: "left", pose: "phone", depth: "far" },
-  /* sits across the foot of the four-frame strip, watching it */
-  { id: "c3", seam: "binge", edge: "bottom", side: "right", pose: "sit", depth: "near" },
-  /* two of them, at the turn - the cure beat is the first warm one */
-  { id: "c4", seam: "cure", edge: "bottom", side: "left", pose: "pair", depth: "far" },
-  /* stands into the end card, mirroring the one that stood into the
-     title card. The page opens and closes on the same figure. */
-  { id: "c5", seam: "proof", edge: "top", side: "right", pose: "stand", depth: "near" },
-];
-
-/* The eight verticals that run along the foot of the end plate, handing
-   the reader off to the feed. Same stills as the feed itself - it is the
-   same eight episodes, seen twice at two sizes, which is the join. */
-export const PLATE_STRIP = [
-  "mokai-1.jpg",
-  "reel-1.jpg",
-  "mokai-2.jpg",
-  "reel-2.jpg",
-  "mokai-3.jpg",
-  "reel-3.jpg",
-  "mokai-1.jpg",
-  "reel-2.jpg",
-];
-
+export {
+  BEATS,
+  CROSSERS,
+  PLATE_STRIP,
+  type Beat,
+  type Shot,
+  type Crosser,
+  type Pose,
+} from "@/lib/series-v1";
 /* ------------------------------------------------------------------
    THE FEED - component two.
 
