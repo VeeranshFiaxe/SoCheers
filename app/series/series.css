@@ -1276,3 +1276,47 @@
   .st-beat[data-stage="showcase"] .st-beat__words{ max-width:none; }
   .st-card{ width:clamp(150px,46vw,230px); }
 }
+
+/* ---- the format section's two marked phrases ----
+   Both are marked in place, and a mark that wraps reads as two marks.
+   So the phrases are held on one line each and the paragraph is given
+   the width to take the longer of them. Above 900px only: on one column
+   the widest phrase is wider than the screen, and an unbreakable line
+   there would push the page sideways. */
+@media (min-width:901px){
+  #section-format .st-beat__copy{ max-width:62ch; }
+  #section-format .st-mark{ white-space:nowrap; }
+}
+
+/* a lifted phrase that opens its paragraph already has the paragraph's
+   own space above it */
+.st-beat__copy > .st-lift:first-child{ margin-top:0; }
+
+/* A lifted phrase is set larger than the paragraph it sits in, so the
+   paragraph's 38ch measure - a body-copy measure - hands it a line it
+   cannot finish. A paragraph carrying one gets the width its display
+   type needs, and the phrase balances rather than dropping a last word
+   on its own. Above 900px only; on one column the measure is the
+   screen. */
+@media (min-width:901px){
+  .st-beat__copy:has(.st-lift){ max-width:62ch; }
+}
+.st-lift{ text-wrap:balance; }
+
+/* the title card's lifted sentence is short enough to be one line, and
+   it only reads as one thought when it is. The paragraph is given the
+   width to hold it. Above 900px only - on one column the line is wider
+   than the screen. */
+@media (min-width:901px){
+  .st-beat[data-stage="title"]#section-kink .st-beat__copy{ max-width:56ch; }
+  #section-kink .st-lift{ white-space:nowrap; }
+}
+
+/* ---- the process cards' focal points ----
+   The four stills are portrait or panoramic and the card is 4:3, so the
+   default centre crop takes the head off two of them and the middle out
+   of the fourth. Each is placed on its own subject instead. */
+#section-process .st-step:nth-child(1) .st-step__art > img{ object-position:50% 8%; }
+#section-process .st-step:nth-child(2) .st-step__art > img{ object-position:50% 50%; }
+#section-process .st-step:nth-child(3) .st-step__art > img{ object-position:50% 22%; }
+#section-process .st-step:nth-child(4) .st-step__art > img{ object-position:50% 55%; }

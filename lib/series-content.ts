@@ -429,9 +429,9 @@ export const SECTIONS: Section[] = [
       "But if every piece starts from zero, the audience has to start from zero too.",
       "And that's a damn slow way to retain people on the internet.",
     ],
-    /* runs to the end of its paragraph, so it takes its own line - the
-       sentence sets the condition up and the lifted half is the cost */
-    emphasis: ["the audience has to start from zero too."],
+    /* the condition and its cost are one sentence and one mark - the
+       whole paragraph lifts onto its own line */
+    emphasis: ["But if every piece starts from zero, the audience has to start from zero too."],
     slate: "STARTING FROM ZERO",
     frames: ["noise.jpg", "chaos.jpg", "peak-content.jpg", "micro-series.jpg"],
   },
@@ -498,7 +498,15 @@ export const SECTIONS: Section[] = [
        page that is a diagram rather than a picture with a sentence on
        it, so it is the only one whose frames are small and equal - four
        stills the same size in a row is a process; four different sizes
-       is a collage, and a collage does not read as steps. */
+       is a collage, and a collage does not read as steps.
+
+       Three of the four stills come out of the home page's service
+       buckets - the cow for BRAND, the red hat in the black crowd for
+       STRATEGY, the camera-head for FILMS - and the fourth is the about
+       page's crowd, which is the only picture on the site that is a
+       room full of people rather than one of them. All four are wrong
+       shapes for a 4:3 card, so each carries its own focal point in
+       series.css rather than being cropped down the middle. */
     id: "process",
     stage: "steps",
     warm: true,
@@ -509,25 +517,25 @@ export const SECTIONS: Section[] = [
         no: "01",
         title: "BRAND",
         body: "You bring the brief, ambition and territory you want to own.",
-        art: "open-wide.jpg",
+        art: "/assets/home/creativity-6.webp",
       },
       {
         no: "02",
         title: "STRATEGY",
         body: "We find the world and build the narrative.",
-        art: "retention.jpg",
+        art: "/assets/home/strategy-9.webp",
       },
       {
         no: "03",
         title: "FILMS",
         body: "We turn that spine into episodes, characters, visual language and production.",
-        art: "reel-3.jpg",
+        art: "/assets/home/production-6.webp",
       },
       {
         no: "04",
         title: "TOGETHER",
         body: "We make, release, learn, build on what lands and keep the story moving.",
-        art: "mokai-2.jpg",
+        art: "/assets/art/crowd.webp",
       },
     ],
   },
