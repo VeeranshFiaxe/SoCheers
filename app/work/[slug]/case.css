@@ -221,10 +221,10 @@
   max-width:52ch;
 }
 
-/* The article's own headings carry the mark too, at their scale. The
-   run of them down the page is what makes the slash read as a system
-   rather than as a flourish on the title - one marked heading is
-   decoration, five is a structure the reader can follow.
+/* The article's own headings. They used to carry the slash mark the
+   titles did; it is gone from the whole tab now (see THE SLASH -
+   REMOVED in work.css), and the caps and the scale are what tell a
+   heading from a paragraph.
 
    `scroll-margin-top` is what makes the contents list land correctly:
    without it an anchor jump puts the heading under the fixed header and
@@ -235,10 +235,6 @@
   font-size:clamp(22px,2.6vw,36px); line-height:1.1; letter-spacing:-.025em;
   text-transform:uppercase;
   scroll-margin-top:clamp(96px,14vh,132px);
-}
-.cs-copy__h::before{
-  content:"/"; display:inline-block; margin-right:.18em;
-  color:var(--accent); font-weight:700;
 }
 .cs-copy__p{
   margin-top:16px; font-size:clamp(16px,1.25vw,19px); line-height:1.68; color:var(--muted);
@@ -283,20 +279,114 @@
 }
 
 /* ---- numbers ---- */
+/* ---- the numbers ----
+
+   A real grid, drawn. These used to be figures floating in a row on
+   the page with nothing but space between them, which reads as a
+   sentence that happens to be large - the eye runs along it instead of
+   stopping on each number. Cells with a hairline between them make it a
+   table of results, which is what it is.
+
+   The lattice is one background showing through 1px gaps rather than a
+   border on each cell: borders on cells double up where two meet, and
+   the doubling is visible at hairline weight. Because the gap *is* the
+   rule, the lattice stays correct however many figures a case has and
+   however the row wraps - a case with five stats over two rows gets the
+   same grid as one with three in a line, with no rule left hanging on
+   an empty cell.
+
+   `auto-fit` with a floor rather than a fixed column count for the same
+   reason: the count is content. Three, four and five all have to work,
+   and none of them may leave a cell short enough to break the figure
+   onto two lines. */
 .cs-stats{
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
-  gap:clamp(16px,2.4vw,36px);
-  border-top:1px solid var(--line); padding-top:30px;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  border-radius:12px;
+  overflow:hidden;
+}
+
+/* ---- filling the rows ----
+
+   Six columns and a span per cell rather than `auto-fit`, because the
+   grid is drawn now and a drawn grid has to come out square. `auto-fit`
+   sizes the columns off the container and then lets the items land
+   where they land, which is fine for a row of figures floating on the
+   page and wrong inside a box: five stats in a four-wide track leave
+   one cell and three cells of nothing, and the nothing is inside the
+   border where it reads as missing content.
+
+   Six is the base because it divides by 2 and 3, which covers every
+   arrangement these cases actually need. The count comes in as data-n
+   from the renderer.
+
+   Five is the one that does not divide, and it gets the deliberate
+   answer rather than an accidental one: three across, then two across
+   underneath at half the width each. A wider bottom row is a shape
+   somebody chose; a ragged one is a shape nobody did. */
+.cs-stat{ grid-column:span 6; }                              /* 1 - the full width */
+.cs-stats[data-n="2"] .cs-stat{ grid-column:span 3; }        /* 2 across */
+.cs-stats[data-n="3"] .cs-stat{ grid-column:span 2; }        /* 3 across */
+.cs-stats[data-n="4"] .cs-stat{ grid-column:span 3; }        /* 2 x 2 */
+.cs-stats[data-n="5"] .cs-stat{ grid-column:span 2; }        /* 3 up top... */
+.cs-stats[data-n="5"] .cs-stat:nth-child(n+4){ grid-column:span 3; }  /* ...2 under */
+.cs-stats[data-n="6"] .cs-stat{ grid-column:span 2; }        /* 3 x 2 */
+/* Seven or more has never been written and there is no sensible default
+   for it, so it falls to three across and the last row will be short.
+   Worth knowing rather than worth guessing at: a case that wants seven
+   figures wants a decision about which three lead, and that is the
+   writer's, not this file's. */
+.cs-stats[data-n="7"] .cs-stat,
+.cs-stats[data-n="8"] .cs-stat,
+.cs-stats[data-n="9"] .cs-stat{ grid-column:span 2; }
+/* The cell paints the page's own ground back over the lattice, so the
+   1px that is left showing is the rule. Bottom-aligned: the labels run
+   to different lengths and a row of figures sitting at different
+   heights is the thing that stops it reading as a grid. */
+.cs-stat{
+  display:flex; flex-direction:column; justify-content:flex-end;
+  gap:10px;
+  background:var(--bg);
+  padding:clamp(20px,2.4vw,32px);
+  min-height:clamp(132px,15vw,186px);
 }
 .cs-stat b{
   display:block; font-family:var(--f-display); font-weight:700;
-  font-size:clamp(34px,4.4vw,62px); line-height:1; letter-spacing:-.03em;
+  font-size:clamp(30px,3.6vw,52px); line-height:1; letter-spacing:-.03em;
   color:var(--accent);
+  text-wrap:balance;
 }
 .cs-stat span{
-  display:block; margin-top:8px;
+  display:block;
   font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em; text-transform:uppercase;
-  color:var(--dim);
+  line-height:1.5; color:var(--dim);
+}
+/* Two up on a phone, never one: a single column turns four figures into
+   four screens of scrolling and loses the comparison the grid is for.
+
+   An odd count leaves one over, and it takes the full width rather than
+   sitting next to a blank - same rule as the desktop grid, and the last
+   figure spanning the box reads as the closing line of the set. */
+@media (max-width:560px){
+  .cs-stat,
+  .cs-stats[data-n="2"] .cs-stat,
+  .cs-stats[data-n="3"] .cs-stat,
+  .cs-stats[data-n="4"] .cs-stat,
+  .cs-stats[data-n="5"] .cs-stat,
+  .cs-stats[data-n="5"] .cs-stat:nth-child(n+4),
+  .cs-stats[data-n="6"] .cs-stat,
+  .cs-stats[data-n="7"] .cs-stat,
+  .cs-stats[data-n="8"] .cs-stat,
+  .cs-stats[data-n="9"] .cs-stat{ grid-column:span 3; }
+  .cs-stats[data-n="3"] .cs-stat:last-child,
+  .cs-stats[data-n="5"] .cs-stat:last-child,
+  .cs-stats[data-n="7"] .cs-stat:last-child,
+  .cs-stats[data-n="9"] .cs-stat:last-child{ grid-column:span 6; }
+  .cs-stat{ padding:18px 16px; min-height:118px; }
+  .cs-stat b{ font-size:clamp(24px,7vw,34px); }
 }
 
 .cs-quote{ border-left:2px solid var(--accent); padding-left:clamp(20px,2.4vw,34px); }

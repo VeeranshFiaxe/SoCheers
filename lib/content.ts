@@ -227,7 +227,7 @@ export const NAV_LINKS: { href: string; label: string; soon?: boolean }[] = [
      on the home page itself initTopLinks() (lib/motion.ts) takes the click
      and scrolls instead of reloading. */
   { href: "/", label: "Home" },
-  { href: "/about", label: "About" },
+  { href: "/about", label: "About Us" },
   { href: "/work", label: "Work" },
   { href: "/ai-work", label: "AI Work" },
   { href: "/series", label: "Series" },
@@ -388,6 +388,85 @@ export const CLIENT_ROWS: { dir: "left" | "right"; names: string[] }[] = [
     ],
   },
 ];
+
+/* ---- the names, drawn in their own letterforms ----
+
+   The wall used to be thirty-odd names in the site's bold sans, which is
+   accurate and unrecognisable: these are brands a reader knows by their
+   type before they know them by their spelling, and one typeface throws
+   that away.
+
+   What is NOT the answer is a lookalike font off a font library. Raymond,
+   Nykaa, Bingo!, Schweppes, Haldiram's - those letterforms were drawn
+   once, by hand, for that brand. They were never cut as typefaces, so
+   there is no font to find; anything close enough to fool you does not
+   exist, and anything that exists is not close.
+
+   So the mark itself is the type. Every entry points at a wordmark in
+   public/assets/clients, cut from the supplied 6144x4096 wall - letters
+   only, no devices, which is how that artwork already draws them. The
+   row renders each as a CSS MASK rather than an image, and that is what
+   keeps it a wall of type instead of a logo sheet: a mask carries only
+   the shape, so each mark arrives in the row's own grey and takes its
+   own colour on hover, exactly as the text did.
+
+     slug  the file in public/assets/clients
+     ar    the mark's own width/height, so the row sizes by height and
+           lets the width follow rather than squashing anything
+     k     the mark's height as a fraction of NETFLIX, which is the ruler
+
+   k is the part worth not "tidying". Somebody balanced that artwork -
+   NETFLIX is set heavier than JioHotstar, CHANDON is letterspaced small,
+   Belgian Waffle stacks over two lines - and carrying each mark's own
+   height through as a fraction is what reproduces those proportions on
+   the row. Normalising every k to 1 would flatten a designed wall into a
+   list of equal-sized cut-outs.
+
+   Both numbers are measured, not chosen: scripts/extract-client-marks.py
+   cuts the marks and prints this table. Re-run it rather than editing a
+   number by hand. */
+export const BRAND_MARK: Record<string, { slug: string; ar: number; k: number }> = {
+
+  /* screens and streamers */
+  "Netflix":            { slug: "netflix", ar: 3.64, k: 1.01 },
+  "JioHotstar":         { slug: "jiohotstar", ar: 5.78, k: 0.72 },
+  "Universal Pictures": { slug: "universal", ar: 7.45, k: 0.63 },
+  "Sony LIV":           { slug: "sonyliv", ar: 5.39, k: 0.67 },
+
+  /* the wordmarks that are just the name */
+  "TCS":              { slug: "tcs", ar: 1.56, k: 1.47 },
+  "Pantaloons":       { slug: "pantaloons", ar: 8.1, k: 0.64 },
+  "Superdry":         { slug: "superdry", ar: 4.32, k: 0.88 },
+  "ITC":              { slug: "itc", ar: 2.95, k: 1.06 },
+  "Audi":             { slug: "audi", ar: 3.9, k: 0.88 },
+  "YES Bank":         { slug: "yesbank", ar: 6.47, k: 0.7 },
+  "ASUS":             { slug: "asus", ar: 4.82, k: 0.81 },
+  "IndusInd":         { slug: "indusind", ar: 4.99, k: 0.83 },
+  "BHIM":             { slug: "bhim", ar: 4.8, k: 0.81 },
+  "Lupin":            { slug: "lupin", ar: 4.1, k: 0.72 },
+  "Croma":            { slug: "croma", ar: 4.21, k: 1.03 },
+  "Zurich Kotak":     { slug: "zurichkotak", ar: 8.76, k: 0.87 },
+  "Reliance General": { slug: "reliance", ar: 3.44, k: 1.11 },
+
+  /* the drawn ones - script, slab and deco */
+  "Raymond":      { slug: "raymond", ar: 3.0, k: 1.39 },
+  "Schweppes":    { slug: "schweppes", ar: 2.19, k: 1.68 },
+  "Carlton":      { slug: "carlton", ar: 8.07, k: 0.63 },
+  "Broadway":     { slug: "broadway", ar: 3.85, k: 1.09 },
+  "Dabur":        { slug: "dabur", ar: 3.1, k: 1.08 },
+  "Haldiram's":   { slug: "haldirams", ar: 3.65, k: 1.12 },
+  "Chandon":      { slug: "chandon", ar: 7.82, k: 0.51 },
+  "Glenmorangie": { slug: "glenmorangie", ar: 7.79, k: 0.7 },
+  "boAt":         { slug: "boat", ar: 2.4, k: 1.37 },
+  "Havmor":       { slug: "havmor", ar: 3.83, k: 1.07 },
+  "Nykaa":        { slug: "nykaa", ar: 3.05, k: 1.47 },
+  "Nykaa Pro":    { slug: "nykaapro", ar: 3.87, k: 1.14 },
+
+  /* the tall ones - two lines or a lockup */
+  "Sunfeast Yippee!": { slug: "yippee", ar: 1.84, k: 2.12 },
+  "Bingo!":           { slug: "bingo", ar: 1.71, k: 1.97 },
+  "Belgian Waffle":   { slug: "belgianwaffle", ar: 1.25, k: 2.37 },
+};
 
 export const TILES = [
   { idx: "01", name: "BFSI", img: IMG.workBfsi },

@@ -309,10 +309,6 @@ export function AboutPeople() {
             image reveal (data-clip) instead. */}
         <figure className="ab-people__shot" data-clip>
           <img src={ABOUT_IMG.people} alt="The SoCheers team together" />
-          <figcaption className="ab-people__cap" data-reveal>
-            <span>The team, in one frame</span>
-            <span>Mumbai · Est. 2013</span>
-          </figcaption>
         </figure>
 
         <p className="ab-people__note ab-people__note--r" data-reveal>

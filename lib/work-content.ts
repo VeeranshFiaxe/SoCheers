@@ -1312,9 +1312,11 @@ export const caseHeadings = (blocks: CaseBlock[]) =>
    first thing on the page now and the work introduces itself. What was
    the hero's eyebrow and lede survives as the browse wall's heading,
    which is the one place on the page that still needs a sentence. */
+/* The eyebrow and title that used to head the browse wall are gone at
+   the client's request - the wall now opens on its tabs. Only the count
+   is left, and it is not drawn either: it is the live region a screen
+   reader hears when a filter changes. See WorkGrid.tsx. */
 export const WORK_BROWSE = {
-  eyebrow: "Everything else",
-  title: "By the room it was made for.",
   /* The count under the filter. It is a live number rather than a
      sentence about how much work there is, which is the one thing a
      filtered wall owes the reader: a tab that returns four things

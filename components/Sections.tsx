@@ -1,5 +1,5 @@
 import { CSSProperties, Fragment } from "react";
-import { AWARDS, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
+import { AWARDS, BRAND_MARK, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
 import ParticleLogo from "./ParticleLogo";
 import RollText from "./Roll";
 
@@ -353,7 +353,19 @@ export function Clients() {
      the separator read as a rule the row was printed with; dealt out of
      the same six solids they read as punctuation instead. They get their
      own deal - a third salt - so a star is not the colour of either name
-     it sits between. */
+     it sits between.
+
+     What the row is not is one typeface. Where there is artwork for a
+     brand the name is drawn in its OWN letterforms, masked out of the
+     row's grey so it still colours on hover like the text beside it -
+     see BRAND_MARK in lib/content.ts for why a mask and not an image,
+     and why not a lookalike font.
+
+     All thirty-two are drawn as of the supplied artwork, so nothing on
+     the row is typed today. The text fallback stays anyway, and it is
+     load-bearing: the day somebody adds a client to CLIENT_ROWS before
+     the mark for it has been cut, that name shows up as a word rather
+     than as a gap. */
   return (
     <section className="sec clients" data-section data-sec="3">
       <div className="wrap">
@@ -377,15 +389,37 @@ export function Clients() {
                       {/* All three are only ever read by the hover rule
                           below, so this costs three custom properties and
                           no paint at all until the cursor is on the name */}
-                      <span
-                        style={{
-                          "--brand": SOLIDS[ink[i]],
-                          "--tilt": TILTS[lean[i]].deg,
-                          "--pop": TILTS[lean[i]].pop,
-                        } as CSSProperties}
-                      >
-                        {n}
-                      </span>
+                      {/* The three custom properties are the same either
+                          way - the mark colours and leans on hover
+                          exactly as the word does, so a drawn name and a
+                          typed one behave identically in the row. The
+                          mark carries no text node: it is a masked box,
+                          and the name rides along in data-name so the
+                          markup still says which brand it is. */}
+                      {BRAND_MARK[n] ? (
+                        <span
+                          className="bmark"
+                          data-name={n}
+                          style={{
+                            "--brand": SOLIDS[ink[i]],
+                            "--tilt": TILTS[lean[i]].deg,
+                            "--pop": TILTS[lean[i]].pop,
+                            "--mark": `url(/assets/clients/${BRAND_MARK[n].slug}.webp)`,
+                            "--ar": BRAND_MARK[n].ar,
+                            "--k": BRAND_MARK[n].k ?? 1,
+                          } as CSSProperties}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            "--brand": SOLIDS[ink[i]],
+                            "--tilt": TILTS[lean[i]].deg,
+                            "--pop": TILTS[lean[i]].pop,
+                          } as CSSProperties}
+                        >
+                          {n}
+                        </span>
+                      )}
                       <span className="s" style={{ "--star": SOLIDS[star[i]] } as CSSProperties}>✦</span>
                     </Fragment>
                   )),

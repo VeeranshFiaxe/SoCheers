@@ -1265,7 +1265,7 @@
 /* Tighter at both ends than it was (13vh / 12vh): the photograph inside
    is bigger now and the room the section needs comes from the picture,
    not from paper around it. */
-.ab-people{ padding:clamp(72px,9.5vh,120px) 0 clamp(64px,8.5vh,110px); }
+.ab-people{ padding:clamp(72px,9.5vh,120px) 0 clamp(40px,5vh,64px); }
 
 /* ---- the frame ----
    The claim across the top, and under it one row: statement, photograph,
@@ -1364,16 +1364,6 @@
   object-fit:cover; object-position:center 92%;
   border-radius:14px;
 }
-/* A caption in the same mono the tags and the footer's meta use, split to
-   both edges of the photo - it gives the image a bottom edge to sit on
-   and stops the picture from floating. */
-.ab-people__cap{
-  display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap;
-  margin-top:14px; padding-top:12px; border-top:1px solid var(--line);
-  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.2em;
-  text-transform:uppercase; color:var(--muted);
-}
-
 /* ---- the two statements ----
    One either side of the picture, level with it, each under its own
    hairline and numeral - the drivers' device further down the page, which
@@ -1453,7 +1443,7 @@
    gaps land within a few pixels of each other at any viewport height.
    The crowd used to close this section out, which is why the foot of it
    had no padding at all until recently. */
-.ab-drives{ padding:clamp(70px,8.5vh,104px) 0 clamp(88px,13vh,150px); }
+.ab-drives{ padding:clamp(48px,6vh,76px) 0 clamp(88px,13vh,150px); }
 .ab-drives__inner{ position:relative; z-index:2; }
 
 /* .is-light - the light-panel token remap - used to be declared here and
@@ -1475,7 +1465,7 @@
    the same axis. Every other head on the page stays ranged left. */
 .ab-drives__title{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(32px,5.2vw,76px); line-height:1.02; letter-spacing:-.03em;
+  font-size:clamp(28px,4.4vw,62px); line-height:1.02; letter-spacing:-.03em;
   text-align:center; text-transform:none;
 }
 /* The mask is still padded, just by less than the script needed: every
@@ -1499,7 +1489,7 @@
 .ab-people__title,
 .ab-space__title{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(32px,5.2vw,76px); line-height:1.02; letter-spacing:-.03em;
+  font-size:clamp(28px,4.4vw,62px); line-height:1.02; letter-spacing:-.03em;
   text-transform:none;
 }
 /* ---- the cards ----

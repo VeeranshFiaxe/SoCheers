@@ -73,9 +73,14 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
       <div className="grid-lines grid-lines--mark" aria-hidden="true"><i /><i /><i /><i /></div>
 
       <div className="wrap">
-        <span className="tag" data-reveal>{WORK_BROWSE.eyebrow}</span>
-        <h2 className="wk-browse__title" data-split>{WORK_BROWSE.title}</h2>
-
+        {/* No eyebrow and no heading over the wall. The client asked for
+            the copy block gone, and the page is better for it: the
+            stage above has already said what this page is, and a second
+            title under it introduced the same work twice before the
+            reader could touch a filter. The tabs are now the first
+            thing under the stage, which is what they are for - they are
+            a control, and a control the reader reaches immediately is
+            worth more than a sentence about the control. */}
         <div className="wk-filter">
           <div className="wk-tabs" role="tablist" aria-label="Filter work by category">
             {WORK_CATEGORIES.map((c) => (

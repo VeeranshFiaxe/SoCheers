@@ -15,7 +15,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import Lenis from "lenis";
-import { OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
+import { HERO_CUE, type HeroCue, OVERTURE_DONE, OVERTURE_START, shouldRunOverture } from "./overture";
 import { keepPlaying } from "./autoplay";
 import { MEANING, WCARD_SFX } from "./content";
 import { acquirePointerField } from "./pointer-field";
@@ -807,6 +807,31 @@ export function initSite(): () => void {
           onComplete: () => { busy = false; cooldown = performance.now() + 420; onDone?.(); },
         });
       };
+
+      /* -------------------------------------------------- driven from outside
+         The /test cut's projector reveals the crowd photo and then the
+         definition over it, so the hero it hands back to has to already
+         be at one of those frames rather than at its first. Nothing on
+         the live site sends this - see HERO_CUE in lib/overture.ts - and
+         it deliberately goes through the same play() and the same `phase`
+         the reader's own scroll does, so whatever it leaves behind is a
+         state the rest of this machine already knows how to reverse out
+         of and carry on from. */
+      on(document, HERO_CUE, ((e: CustomEvent<HeroCue>) => {
+        const to = e.detail?.at === "defined" ? HOLD : AT;
+        const next: Stage = e.detail?.at === "defined" ? "hold" : "rest";
+        const run = Number(e.detail?.run) || 0;
+        gsap.killTweensOf(tl);
+        if (run > 0) {
+          phase = next;
+          play(to, run);
+        } else {
+          busy = false;
+          phase = next;
+          tl.time(to);
+          fitCrop();
+        }
+      }) as EventListener);
 
       const advance = () => {
         if (phase === "rest") { phase = "hold"; play(HOLD, 2.6); return; }

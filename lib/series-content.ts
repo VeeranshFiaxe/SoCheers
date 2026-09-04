@@ -13,11 +13,8 @@
    WORD - including the three lines they sent in capitals, which are the
    chapter markers of the new cut and are set as they were written.
 
-   Nothing on this page is a line somebody wrote to fill a slot. Where a
-   section needed a label that is not in their copy - the mono slate
-   burned into the corner of the frame - it is a production slate
-   ("TITLE CARD", "END CARD"), the same device the rest of the site
-   uses, and never a sentence.
+   Nothing on this page is a line somebody wrote to fill a slot: every
+   word here is the client's.
 
    The old fourteen-beat story is not deleted: it is in lib/series-v1.ts
    and still renders at /series-1, which is off the nav. This file
@@ -51,8 +48,8 @@
       Work tab (see WORK_ASSETS in lib/work-content.ts) and there is no
       frame of it anywhere in the repo. So the showcase runs the work
       that exists rather than drawing a grey box with a brand name on
-      it; add Raymond to SHOWCASE below the day the still lands and the
-      row re-times itself.
+      it; add Raymond to PHONES below the day a vertical cut of it
+      lands and it becomes a sixth handset.
    2. THE EPISODE LINKS. REELS at the foot of this file still has no
       live post URLs. Until it does the tiles are not links and the line
       promising that they open Instagram does not render.
@@ -75,41 +72,35 @@ export const CONCEPT = {
    SECTION 1 - THE TITLE CARD.
 
    The client's first section is one sentence and nothing else, which is
-   exactly what a cold open is, so it is staged as the title card rather
-   than folded into the story below it: the composition, the sentence
-   set at poster scale across it, and the cue.
+   exactly what a cold open is - so it is staged the way a streamer
+   stages the first frame of a new series: one plate, held full bleed
+   and pushed back, and the line set small and centred in the middle of
+   it. Nothing else is on the screen.
 
-   What came off it: the standfirst. The old card carried a paragraph
-   under the name because the name alone ("The Continuity Kink") does
-   not tell a reader what the page is about. This line does - and the
-   rewrite gives the concept its own section further down, where the
-   reader has already recognised the behaviour in themselves. A second
-   sentence here would be copy nobody wrote.
+   What came off it, and why. The collage - three frames overlapping on
+   a twelve-column field - was a poster, and a poster is the thing you
+   see BEFORE you press play. The opening frame of an episode is one
+   picture. The slate over the title ("A SoCheers Original") and the
+   scroll cue went with it for the same reason: a title card that
+   labels itself and then asks you to scroll is a web page wearing a
+   title card, and the whole point of the beat is the two seconds where
+   the screen is only the sentence.
 
-   The frames are the wall's, so the card and the section under it read
-   as one reel rather than as a cover glued onto a page.
+   The highlighter block came off the last word too. It is the page's
+   device and it stays on the sections below, where it marks a word
+   inside a paragraph; on the opening frame it was a red bar on the one
+   screen that is supposed to be quiet.
 
-   There used to be a fourth - open-tall.jpg, the empty screening room,
-   lifted out over the type as a plane in front of the words. It is off
-   the card: a vertical standing in the middle of a one-line title is
-   depth, and a vertical standing in the middle of a three-line sentence
-   is something covering the sentence. The still is not gone, it is on
-   the end card, where it is the last frame of the page.
+   The still is the wall's own first frame, so the card and the section
+   under it read as one reel rather than as a cover glued onto a page.
    ------------------------------------------------------------------ */
 export const HERO = {
-  /* the client's own words for the chip over the title. It is the line
-     the first pass carried as an eyebrow further down the page, moved
-     onto the card where it belongs - a slate on the opening frame,
-     which is what "an original" is. */
-  tag: "A SoCheers Original",
   line: "Welcome to the peak content era.",
-  /* the highlighter block, on the last word - the same device, and the
-     same size of it, as the sections spend on one word of a line.
-     "content era." took two of the three lines and read as a red bar
-     with a title behind it rather than as a mark made on one. */
-  accent: "era.",
-  cue: "Scroll",
-  frames: ["open-wide.jpg", "micro-series.jpg", "night-scroll.jpg"],
+  /* one plate, full bleed. open-wide.jpg is the widest still in the
+     folder and the only one that is a room rather than a face, which is
+     what an opening frame has to be - a face at that scale is a
+     portrait and the sentence is then a caption on somebody. */
+  still: "open-wide.jpg",
 } as const;
 
 /* The <meta> description. Not on the screen anywhere, so it is written
@@ -148,9 +139,8 @@ export const TEXTURE = {
    action) and cannot be a sentence beside four letterbox frames.
 
    So the FRAME is what repeats now - the graded plate, the scrim, the
-   grain, the letterbox gate, the type at one size in one column, the
-   slate in the corner - and what changes inside it is only the picture
-   layer:
+   grain, the letterbox gate, the type at one size in one column - and
+   what changes inside it is only the picture layer:
 
      wall     - many windows at once. The abundance section: one
                 photograph of abundance is not abundance, twelve windows
@@ -190,20 +180,27 @@ export type Step = {
   art: string;
 };
 
-export type Card = {
-  src: string;
-  /* the brand, spelled the way lib/work-content.ts spells it. A label on
-     a piece of work, not a line of copy. */
+export type Phone = {
+  id: string;
+  /* the brand, spelled the way lib/work-content.ts spells it */
   label: string;
+  /* one line under the handset - what the episode is, not what it did */
+  note: string;
+  /* what stands in the screen until the cut lands. A still from the
+     piece, held under the placeholder's sweep. */
+  poster: string;
+  /* the vertical cut, when it exists. Drop the file in and the screen
+     stops being a placeholder - nothing else has to change. See
+     components/SeriesPhones.tsx. */
+  film?: string;
+  /* the time on the status bar. Different on each handset because five
+     phones reading 9:41 at once is one phone photographed five times. */
+  clock: string;
 };
 
 export type Section = {
   id: string;
   stage: Stage;
-  /* the mono chip burned into the corner of the frame - a slate, the way
-     the client's references label theirs. Kept short: it is a label, not
-     a caption, and it must not become a second place copy lives. */
-  slate?: string;
   /* a paragraph that runs BEFORE the display line. One section needs it:
      the client's section 3 sets its punch up with a long sentence and
      lands it afterwards, and reordering them so the big type comes first
@@ -247,45 +244,67 @@ export type Section = {
   frames?: string[];
   warm?: boolean;
   steps?: Step[];
-  showcase?: Card[];
+  /* section 9 - the five handsets. The showreel is a phone screen
+     because that is the screen these episodes are watched on, so the
+     evidence is shown in its own frame rather than as a row of boards.
+     See PHONES below. */
+  phones?: Phone[];
   cta?: { label: string; href: string };
 };
 
 /* ------------------------------------------------------------------
-   THE FILM.
+   THE WALL - section 2's twelve windows.
 
-   Two clips from the About shoot, used as two of the twelve windows on
-   the abundance wall. They are there because a wall about endless
-   streams should not be a wall of photographs, and because at 1.4MB and
-   1.8MB they are the only files in the tree small enough to autoplay
-   without costing this page its own argument. They read as texture at
-   tile size; swap for series footage when it exists.
+   Every photograph in the series folder, once each, and that is the
+   point of the section: the line over it is "There is more to watch
+   than ever", so the wall is the whole library rather than a selection
+   out of it. It is also what keeps the rest of the page honest - a
+   still that has already been a window here reads as a frame being
+   pulled BACK out of the pile when a later section spends a whole band
+   on it, which is the opposite of a repeat.
+
+   ---- what came off, and what is still missing ----
+
+   Two of the twelve used to be film: culture-christmas.mp4 at 4 and
+   culture-traditions.mp4 at 9, both lifted from the About shoot. They
+   are the SoCheers team - an office birthday cake and the full-company
+   Diwali photograph - and they cannot be on this wall. The section is
+   an argument about how much there is to watch; a picture of the people
+   making it answers a question nobody asked, and the group shot in
+   particular reads as an About page that has wandered into the middle
+   of a story.
+
+   Taking them off costs the wall the thing the old note was proud of:
+   there is no motion on it any more, and a wall about endless streams
+   is now twelve stills. That is the right trade against putting the
+   team on it, but it is a trade. Two clips of actual series footage
+   dropped back in at 4 and 9 would settle it - far enough apart that
+   neither is beside the other, close enough that one is always near the
+   eye. See isFilm(): a tile takes an .mp4 without any other change.
+
+   The order is worked rather than alphabetical. The two phone-in-the-
+   dark stills sit at 3 and 6 and the three rooms at 4, 8 and 12, so no
+   two windows of the same kind are neighbours - a wall of variety that
+   accidentally pairs its lookalikes reads as a wall with duplicates on
+   it.
+
+   The texture plates are deliberately not in here. A sheet of grain, an
+   orange gradient, a torn paper band and a white collage among twelve
+   photographs read as windows that had failed to load, which on a wall
+   arguing for abundance is the worst possible tile to have at all.
    ------------------------------------------------------------------ */
-const FILM = {
-  wall1: "/assets/series/culture-christmas.mp4",
-  wall2: "/assets/series/culture-traditions.mp4",
-} as const;
-
-/* The wall. Twelve windows, and the two films sit at 4 and 9 - far
-   enough apart that neither is beside the other, close enough that one
-   of them is always near the eye.
-
-   The two texture plates are deliberately not in here. A sheet of grain
-   and an orange gradient among ten photographs read as two windows that
-   had failed to load, which on a wall arguing for abundance is the worst
-   possible tile to have twice. */
 const WALL = [
   "peak-content.jpg",
-  "night-scroll.jpg",
-  "binge.jpg",
-  FILM.wall1,
-  "chaos.jpg",
   "episodes.jpg",
-  "behind-screen.jpg",
-  "micro-series.jpg",
-  FILM.wall2,
+  "night-scroll.jpg",
   "wardrobe.jpg",
+  "chaos.jpg",
+  "retention.jpg",
+  "behind-screen.jpg",
+  "open-tall.jpg",
+  "binge.jpg",
   "noise.jpg",
+  "micro-series.jpg",
   "open-wide.jpg",
 ];
 
@@ -300,40 +319,90 @@ const W = (file: string) => `/assets/work/${file}`;
 
 /* The four titles behind the binge claim. All wide, all from the
    platforms named in the sentence above them, so the claim and the
-   evidence are on one screen. */
+   evidence are on one screen.
+
+   The fourth used to be dhurandhar-2.jpg, and it is off the strip: that
+   file is a case-study board - a phone render on black with the result
+   set beside it in display type - and the other three are frames out of
+   the work. A render among stills reads as a slide someone pasted in,
+   and it is the one band on the section whose subject is a mockup of a
+   screen rather than what was on the screen.
+
+   Its first replacement was netflix-mi-srh.jpg, the key art from the
+   same campaign as bands 1 and 3, and it went the same way: three of
+   four frames on one campaign is not a credit list, and the key art is
+   a red poster among graded stills.
+
+   made-in-titan.jpg is here on its picture rather than its platform. It
+   is a letterboxed film still in the same register as special-ops-2,
+   which is the only other frame on the strip that looks like it came
+   out of something you would watch - and the band is doing that job,
+   not naming a title. It is worth being straight about the trade: it is
+   a Titan brand film, so the fourth piece of evidence under a sentence
+   about "the shows that taught the world how to binge" is not a show.
+   See the note in SECTION 6. */
 const RECEIPTS = [
   W("pinned/netflix-mi.jpg"),
   W("wall/special-ops-2.jpg"),
   W("pinned/netflix-srh.jpg"),
-  W("wall/dhurandhar-2.jpg"),
+  W("wall/made-in-titan.jpg"),
 ];
 
-/* The showcase, and the order is a running order rather than a
-   portfolio: Prava first because it is the one piece on the page that is
-   actually a micro-series IP, then the biggest titles, then the range.
-   Eighteen cards across two rows travelling opposite ways - enough that
-   neither row visibly repeats while it is on screen.
+/* ------------------------------------------------------------------
+   THE FIVE HANDSETS - section 9.
 
-   Raymond is missing on purpose. See the head of this file. */
-const SHOWCASE: Card[] = [
-  { src: W("pinned/prava.jpg"), label: "Prava" },
-  { src: W("pinned/netflix-mi.jpg"), label: "Netflix × MI" },
-  { src: W("wall/maa-behen.jpg"), label: "Netflix · Maa Behen" },
-  { src: W("pinned/broadway.jpg"), label: "Broadway" },
-  { src: W("wall/special-ops-2.jpg"), label: "JioHotstar · Special Ops 2" },
-  { src: W("pinned/pantaloons-eoss.jpg"), label: "Pantaloons" },
-  { src: W("wall/made-in-titan.jpg"), label: "Titan" },
-  { src: W("wall/boat.jpg"), label: "boAt × Marvel" },
-  { src: W("wall/croma.jpg"), label: "Croma" },
-  { src: W("pinned/netflix-srh.jpg"), label: "Netflix × SRH" },
-  { src: W("wall/dhurandhar-2.jpg"), label: "Netflix · Dhurandhar 2" },
-  { src: W("wall/superdry.jpg"), label: "Superdry Sport" },
-  { src: W("wall/bgmi.jpg"), label: "BGMI" },
-  { src: W("wall/yes-bank.jpg"), label: "Yes Bank" },
-  { src: W("wall/wacoal.jpg"), label: "Wacoal" },
-  { src: W("wall/croma-dreams.jpg"), label: "Croma" },
-  { src: W("wall/bhim-upi.jpg"), label: "BHIM UPI" },
-  { src: W("wall/netflix-mi-srh.jpg"), label: "Netflix × MI × SRH" },
+   The brief for this section is "a rapid visual sequence of actual
+   SoCheers work", and the earlier pass answered it with eighteen boards
+   travelling in two directions. The boards were the problem: a landscape
+   card is a frame from a campaign film, and every sentence on this page
+   before it has been about vertical episodes watched on a phone. So the
+   evidence is shown on the screen it is made for - five handsets, each
+   holding one piece, running.
+
+   The cuts are not in the tree yet. Until they are, `film` is left off
+   and the screen holds the still under the placeholder's sweep, which
+   is the truth about the state of it rather than a badge saying so.
+   Adding a cut is one line: put the vertical file's path in `film`.
+
+   Five and not six: an odd count has a middle, and the arc these are
+   laid on needs one.
+   ------------------------------------------------------------------ */
+export const PHONES: Phone[] = [
+  {
+    id: "prava",
+    label: "Prava",
+    note: "Micro-series IP",
+    poster: W("pinned/prava.jpg"),
+    clock: "9:41",
+  },
+  {
+    id: "netflix-mi",
+    label: "Netflix × MI",
+    note: "Episodic, in season",
+    poster: W("pinned/netflix-mi.jpg"),
+    clock: "10:08",
+  },
+  {
+    id: "special-ops",
+    label: "JioHotstar",
+    note: "Special Ops 2",
+    poster: W("wall/special-ops-2.jpg"),
+    clock: "11:23",
+  },
+  {
+    id: "boat",
+    label: "boAt × Marvel",
+    note: "Character-led drop",
+    poster: W("wall/boat.jpg"),
+    clock: "7:56",
+  },
+  {
+    id: "croma",
+    label: "Croma",
+    note: "Long-running format",
+    poster: W("wall/croma-dreams.jpg"),
+    clock: "8:30",
+  },
 ];
 
 /* ------------------------------------------------------------------
@@ -362,7 +431,6 @@ export const SECTIONS: Section[] = [
       "More to scroll. More to buy. More to follow. Every screen is full. Every feed keeps going.",
       "And somehow, we still keep going back to the same things.",
     ],
-    slate: "ALL OF IT, AT ONCE",
     frames: WALL,
   },
   {
@@ -380,7 +448,6 @@ export const SECTIONS: Section[] = [
       "You'll sit through twelve episodes of a world you barely know, the same blinkit order you'll place in less than 10 seconds, you'll follow someone cleaning their house and giving you an ASMR and watch someone else's baby growing up on the internet, not because you're bored, but because they built something that continues.",
     lines: ["The brain isn't looking for another surprise.", "It's looking for what comes next."],
     accent: "what comes next.",
-    slate: "WHAT COMES NEXT",
     frames: ["night-scroll.jpg", "binge.jpg", "episodes.jpg", "behind-screen.jpg"],
   },
   {
@@ -403,16 +470,23 @@ export const SECTIONS: Section[] = [
       "A face we knew. A joke we remembered. A show we'd already spent six hours with. You didn't need the introduction. You already knew the world and You keep watching because there is more to know.",
     ],
     emphasis: ["You keep watching because there is more to know."],
-    slate: "TITLE CARD",
     /* Was peak-content.jpg on top - the eye, in extreme close-up. It is
        the strongest still in the folder and the worst possible one for
        this stage: a band is as wide as the screen and a third as tall,
        and a face shot that tight cropped to that shape is not a face,
        it is a red wash with nothing in it. The tallest band is the one
        the reader looks at first, so it went to a frame that survives a
-       wide crop. All three do now - a lit screen, a phone in the dark,
-       an interior that reads across its whole width. */
-    frames: ["binge.jpg", "night-scroll.jpg", "micro-series.jpg"],
+       wide crop. All three do - an interior that reads across its whole
+       width, a phone in the dark, the format's own still.
+
+       binge.jpg and night-scroll.jpg were two of these three and both
+       were also two of section 3's four, one screen earlier. Two frames
+       repeating across consecutive sections is the thing that made this
+       run feel like it was shot with four photographs; they stay on
+       section 3, where the copy names what is in them, and this stage
+       takes wardrobe and retention instead. Sections 3, 4 and 5 now
+       share no still with each other at all. */
+    frames: ["wardrobe.jpg", "retention.jpg", "micro-series.jpg"],
   },
   {
     /* SECTION 5. The client's first capitalised line, and the turn from
@@ -422,23 +496,39 @@ export const SECTIONS: Section[] = [
     id: "job",
     stage: "strip",
     lines: ["AND THAT CHANGES THE JOB OF CONTENT."],
+    /* Five paragraphs in the client's copy, set as four. "Nothing wrong
+       with any of that." is the concession ON the pile the sentence
+       before it describes, not a beat of its own - standing alone it
+       read as a third short line in a stack of short lines. It is joined
+       to the sentence it answers. No word is changed, cut or reordered;
+       one paragraph break is. */
     copy: [
       "The feed is full of brands trying to win the next three seconds.",
-      "Another trend, another static, another Reel that starts and ends before you've had time to care.",
-      "Nothing wrong with any of that.",
+      "Another trend, another static, another Reel that starts and ends before you've had time to care. Nothing wrong with any of that.",
       "But if every piece starts from zero, the audience has to start from zero too.",
       "And that's a damn slow way to retain people on the internet.",
     ],
     /* the condition and its cost are one sentence and one mark - the
        whole paragraph lifts onto its own line */
     emphasis: ["But if every piece starts from zero, the audience has to start from zero too."],
-    slate: "STARTING FROM ZERO",
-    frames: ["noise.jpg", "chaos.jpg", "peak-content.jpg", "micro-series.jpg"],
+    /* micro-series.jpg was the fourth and it has gone to section 4,
+       which is where the format's own still belongs - this section is
+       the pile, not the answer to it. open-tall.jpg takes the slot: an
+       empty screening room under "a damn slow way to retain people" is
+       the paragraph's last sentence with the lights left on. */
+    frames: ["noise.jpg", "chaos.jpg", "peak-content.jpg", "open-tall.jpg"],
   },
   {
     /* SECTION 6 - THE RECEIPTS, and the first section that gets real
        work in its frames. The sentence names the platforms; the four
        bands are the titles.
+
+       Standing gap: the cues name Netflix, Prime and Hotstar, and the
+       four frames are two Netflix, one JioHotstar and one Titan brand
+       film, because RECEIPTS is fishing in a library that has no Prime
+       title and exactly one Hotstar still in it. A wide frame from a
+       Prime show is the missing asset and it replaces the fourth band
+       outright; a second Hotstar one would earn the third.
 
        The platform names are set as chips rather than run into the
        sentence. They are three one-word sentences in the client's copy
@@ -453,7 +543,6 @@ export const SECTIONS: Section[] = [
       "Then we started wondering why brands don't design for the same itch.",
       "So we tried it. It worked.",
     ],
-    slate: "THE RECEIPTS",
     frames: RECEIPTS,
   },
   {
@@ -480,7 +569,6 @@ export const SECTIONS: Section[] = [
        promise made about every episode of it */
     emphasis: ["20-60 second episodes", "Every episode has something worth watching"],
     cues: ["A question.", "A clue.", "A character.", "A running joke.", "A reason to return."],
-    slate: "EP 01 - EP 08",
     frames: [
       "mokai-1.jpg",
       "reel-1.jpg",
@@ -500,60 +588,68 @@ export const SECTIONS: Section[] = [
        stills the same size in a row is a process; four different sizes
        is a collage, and a collage does not read as steps.
 
-       Three of the four stills come out of the home page's service
-       buckets - the cow for BRAND, the red hat in the black crowd for
-       STRATEGY, the camera-head for FILMS - and the fourth is the about
-       page's crowd, which is the only picture on the site that is a
-       room full of people rather than one of them. All four are wrong
-       shapes for a 4:3 card, so each carries its own focal point in
-       series.css rather than being cropped down the middle. */
+       The four stills are the client's own, dropped into
+       public/assets/series/ named for the step each one belongs to.
+       They replace three borrowed from the home page's service buckets
+       (a cow, a red hat in a black crowd, a camera-head) and the about
+       page's crowd - all four of which were pictures of something else
+       standing in for a step. These are the work itself: the Krafton
+       film for BRAND, the crew reading pages in a car park for
+       STRATEGY, the operator on the camera for FILMS, the floor mid-
+       take for TOGETHER. A process block illustrated with the process
+       is the one section on the page where stock was doing real damage.
+
+       They are also a different shape to what they replaced - three
+       portrait, one landscape, against a card that was 4:3. The card is
+       square now and each still carries its own focal point in
+       series.css; see the note there. */
     id: "process",
     stage: "steps",
     warm: true,
     lines: ["THEN WE MAKE THE THING."],
-    slate: "01 - 04",
     steps: [
       {
         no: "01",
         title: "BRAND",
         body: "You bring the brief, ambition and territory you want to own.",
-        art: "/assets/home/creativity-6.webp",
+        art: "/assets/series/Brand.png",
       },
       {
         no: "02",
         title: "STRATEGY",
         body: "We find the world and build the narrative.",
-        art: "/assets/home/strategy-9.webp",
+        art: "/assets/series/Strategy.png",
       },
       {
         no: "03",
         title: "FILMS",
         body: "We turn that spine into episodes, characters, visual language and production.",
-        art: "/assets/home/production-6.webp",
+        art: "/assets/series/Films.png",
       },
       {
         no: "04",
         title: "TOGETHER",
         body: "We make, release, learn, build on what lands and keep the story moving.",
-        art: "/assets/art/crowd.webp",
+        art: "/assets/series/Together.png",
       },
     ],
   },
   {
-    /* SECTION 9 - the showreel the brief asks for by name. Two rows of
-       real campaigns travelling in opposite directions, and the only
-       thing on this route that moves without being scrolled.
+    /* SECTION 9 - the showreel the brief asks for by name, held on five
+       handsets. Everything the page has argued up to here is about
+       vertical episodes watched on a phone, so the proof is shown on
+       one rather than as a row of landscape boards.
 
        No sentence over the pictures and no scrim across the middle: this
        section IS the work, and type laid over it would be the one place
        on the page where the work is a background. The line sits above
-       the rows instead. */
+       the handsets instead. See PHONES above and
+       components/SeriesPhones.tsx. */
     id: "proof",
     stage: "showcase",
     warm: true,
     lines: ["AND THIS IS WHAT IT CAN LOOK LIKE."],
-    slate: "SELECTED WORK",
-    showcase: SHOWCASE,
+    phones: PHONES,
   },
   {
     /* SECTION 10 - THE END CARD. The same construction as the title
@@ -568,9 +664,10 @@ export const SECTIONS: Section[] = [
     stage: "end",
     lines: ["You made it to the end and hence the concept seems to be right."],
     mark: "NOW, LET'S MAKE YOURS ?",
-    accent: "YOURS ?",
-    slate: "END CARD",
-    frames: ["open-wide.jpg", "mokai-3.jpg", "open-tall.jpg"],
+    /* no accent. The last screen is one frame and one centred block, and
+       a highlighter block on the button is a second thing to look at on
+       a card whose whole job is the one thing to press. */
+    frames: ["open-wide.jpg"],
     cta: { label: "NOW, LET'S MAKE YOURS ?", href: "/contact" },
   },
 ];

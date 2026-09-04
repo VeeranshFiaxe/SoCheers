@@ -24,6 +24,35 @@ export const OVERTURE_DONE = "socheers:overture-done";
 /* the docked bulb was clicked: run the whole thing again */
 export const OVERTURE_REPLAY = "socheers:overture-replay";
 
+/* ------------------------------------------------------------------
+   Driving the hero's own sequence from outside it.
+
+   Nothing on the live site dispatches this. It exists for the /test cut
+   (components/TestOverture.tsx), where the projector reveals the crowd
+   photo rather than the artwork - so by the time that sequence hands
+   back, the hero underneath must already be expanded rather than sitting
+   at its first frame, or the hand-off is a cut from a full-screen photo
+   to a small window inside a painting.
+
+   `detail.at` is which of the hero's two resting frames to go to:
+
+     "expanded"  the window has finished filling the screen and the
+                 definition has not started
+     "defined"   the definition is written - the frame a reader reaches
+                 by scrolling once
+
+   and `detail.run` is how many seconds to take getting there; omit it
+   (or pass 0) to jump. See initHero in lib/motion.ts for the receiving
+   end, which is the only place that knows what those frames actually
+   are. */
+export const HERO_CUE = "socheers:hero-cue";
+
+export type HeroCue = { at: "expanded" | "defined"; run?: number };
+
+export function cueHero(at: HeroCue["at"], run = 0) {
+  document.dispatchEvent(new CustomEvent(HERO_CUE, { detail: { at, run } }));
+}
+
 const SEEN = "sc-overture-seen";
 
 /* Once per tab, not once per page view. Coming back from /about should not

@@ -284,25 +284,19 @@
 }
 
 /* ============================================================
-   THE SLASH
+   THE SLASH - REMOVED
 
-   The mark in front of a heading, after the reference. It is a real
-   glyph in a pseudo-element rather than a character typed into the copy,
-   for two reasons that both matter: the copy is the client's and is not
-   ours to punctuate, and a "/" sitting in the text is a "/" a screen
-   reader announces before every title on the page.
+   The headings on this tab used to carry a "/" in a pseudo-element,
+   after the reference. The client asked for it gone: on a page whose
+   headings are already set large, tight and in caps, the mark was doing
+   nothing the type was not already doing, and it put a piece of
+   punctuation in front of the client's own words on every title.
 
-   `display:inline-block` is what stops it from being the thing that sets
-   the line's leading - a slash is a tall glyph, and at heading size an
-   inline one drags the first line's box down and knocks the heading out
-   of alignment with everything beside it.
+   Left as a note rather than deleted silently because the rule appeared
+   in three places (here for the browse title and the case hero, and on
+   .cs-copy__h in case.css) - a future edit that reintroduces it in one
+   of them and not the others is the failure worth guarding against.
    ============================================================ */
-.wk-browse__title::before,
-.cs-hero__h::before{
-  content:"/"; display:inline-block;
-  margin-right:.16em;
-  color:var(--accent); font-weight:700;
-}
 
 /* ============================================================
    SECTION B - THE BROWSE WALL
@@ -315,7 +309,12 @@
   position:relative; isolation:isolate;
   background:var(--bg);
   border-top:1px solid var(--line);
-  padding:clamp(80px,13vh,150px) 0 clamp(90px,15vh,170px);
+  /* Less air on top than when a heading lived here. The padding is now
+     the gap between the stage and the tabs, and a heading's worth of
+     space over a row of pills reads as a section that lost something
+     rather than as one that is calm. The bottom is unchanged - that is
+     the end of the page's work and still wants the room. */
+  padding:clamp(48px,7vh,86px) 0 clamp(90px,15vh,170px);
 }
 /* The lines sit under everything and the content sits on top. Both need
    saying: .grid-lines is absolute at z-index 0, and without a z-index on
@@ -341,23 +340,16 @@
   transform:rotate(45deg);
 }
 
-/* The title, set the way the section headings on this tab are now set:
-   upper case, tight, and carrying the slash. Sentence case at this size
-   on a black page reads as a paragraph that happens to be large; the
-   caps are what make it a heading you see before you read it. */
-.wk-browse__title{
-  margin-top:24px; max-width:16ch;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(34px,5.6vw,82px); line-height:.96; letter-spacing:-.035em;
-  text-transform:uppercase;
-}
+/* The eyebrow and title that used to sit here are gone - the copy
+   block over the wall was removed at the client's request, and the tabs
+   are the first thing under the stage now. The rule under them still
+   earns its place: it is what separates the control from the wall it
+   controls, and without it the tabs float on the tiles.
 
-/* The tabs and the count share a row and a rule under them: the count
-   is the tabs' answer, and putting it anywhere else makes the reader
-   look for the connection. It drops under on a narrow screen rather
-   than squeezing the tabs, because the tabs are the control. */
+   No top margin of its own any more. The space above the tabs is the
+   section's own padding, which is one number to change rather than two
+   that have to agree. */
 .wk-filter{
-  margin-top:clamp(28px,4vh,44px);
   display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
   flex-wrap:wrap;
   border-bottom:1px solid var(--line); padding-bottom:18px;

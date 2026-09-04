@@ -3,7 +3,7 @@
 
    Ten sections, seven stagings, and one frame around all of them: the
    graded plate, the scrim, the grain, the letterbox gate, the type at
-   one size in one column, the slate in the corner. What changes from
+   one size in one column. What changes from
    screen to screen is the picture layer inside that frame - see THE
    STAGES further down, and the note at the head of
    components/SeriesSections.tsx for why the repetition sits at that
@@ -63,46 +63,38 @@
 
 /* ---- the title card ------------------------------------------------
 
-   What was here before was a masthead: a tag, the name, a line, a rule
-   under it. It said which page you were on and nothing about what the
-   page is - and it is the first screen of a tab whose whole job is to
-   sell a story, so it was the one screen on the route doing no selling
-   at all.
+   The opening frame of an episode, not the poster for one.
 
-   This is the cold open, staged as a title card. The layer order is the
-   poster's from app/series-1/series.css, and it is the mechanic rather
-   than decoration:
+   What was here before was a collage: three stills overlapping on a
+   twelve-column field, a blurred plate behind them, and the sentence at
+   poster scale down the left half with a red highlighter block on its
+   last word, a slate above it and a scroll cue in the corner. Every one
+   of those is a thing you put on a COVER. The screen a streamer gives
+   you when a new series starts has none of them - it is one held frame,
+   graded down almost to black, with a small line of type in the middle
+   of it, and it is quiet because the next thing is supposed to be loud.
 
-       0  .st-hero__ground   the room, blown up and pushed back
-       1  .st-hero__frames   three frames overlapping on a 12-col field
-       2  .st-hero__scrim    ground for the type, weighted left
-       3  .st-hero__type     the tag and the line
-       4  .st-grain          the grade
-       5  .st-gate           the letterbox
+   So: four layers, and the type is the only thing on the screen.
 
-   There was a sixth: one frame lifted out of the composition and drawn
-   IN FRONT of the words, which is the device that stops three
-   photographs reading as three photographs. It came off when the title
-   became a sentence - a vertical standing over a three-line line is not
-   a plane in front of the type, it is a picture on top of it, and the
-   end of the sentence was behind it. The depth on this card is carried
-   by the three frames overlapping each other instead.
+       0  .st-hero__plate   one still, full bleed, pushed back
+       1  .st-hero__scrim   the fade, centre-weighted
+       2  .st-grain         the grade
+       3  .st-gate          the letterbox
 
    ---- the motion, on a route that has none ----
 
-   /series runs no scroll mechanics - that is the point of the route,
-   and nothing below this block moves. The title card takes one
-   exception: an entrance, in CSS only, that runs once on load. The gate
-   opens, the frames settle out of a slow push, the type rises. A
-   cinematic open that arrives already finished is a screenshot, and
-   this is the screen where the reader decides whether the rest is worth
-   scrolling. All of it is off under prefers-reduced-motion, where the
-   card renders at its finished state.
+   /series runs no scroll mechanics - nothing below this block moves.
+   The card keeps one exception, an entrance in CSS that runs once on
+   load, and it is smaller than the old one because there is less to
+   move: the gate opens, the plate settles out of a slow push, the line
+   fades up into the middle of it. The delays are the edit - gate, then
+   picture, then words. All of it is off under prefers-reduced-motion,
+   where the card renders at its finished state.
    -------------------------------------------------------------------- */
 .st-hero{
   position:relative; isolation:isolate;
   min-height:100svh;
-  display:flex; align-items:center;
+  display:flex; align-items:center; justify-content:center;
   padding:clamp(96px,15vh,170px) 0 clamp(90px,14vh,150px);
   background:var(--film);
   overflow:hidden;
@@ -110,193 +102,148 @@
 
 .st-hero__stage{ position:absolute; inset:0; z-index:0; }
 
-/* 0 - the room. Same treatment as .st-bg on the beats, a shade further
-   back: the frames in front of it here are smaller and there are three
-   of them, so the plate has to stop being legible as a photograph
-   sooner or the screen reads as five pictures at once. */
-.st-hero__ground{
+/* the letterbox, deeper here than on the beats. .st-gate parks at
+   scaleY(.12) of its height, so the shared 26vh leaves a ~3vh hairline
+   - right for a section, thin for the frame a series opens on. 36vh
+   parks at ~4.3vh, which is a bar. */
+.st-hero .st-gate{ height:36vh; }
+
+/* 0 - the plate. One picture, edge to edge, and held well back: an
+   opening frame that is legible as a photograph turns the sentence over
+   it into a caption on somebody. Barely blurred rather than blurred -
+   at this size the softness only has to take the detail out, not the
+   picture. */
+.st-hero__plate{
   z-index:0;
-  opacity:.3;
-  transform:scale(1.16);
-  filter:blur(13px) saturate(.6) brightness(.7);
+  opacity:.44;
+  transform:scale(1.06);
+  filter:blur(4px) saturate(.5) brightness(.46);
 }
 
-/* 1 - the frames. A twelve-column field they overlap on rather than
-   tile in, held to the right two thirds so the type keeps a half of the
-   screen that is only ever type and grade. The ring is the page's own
-   black - the gutter drawn on the frame instead of between them, so it
-   survives the overlap. */
-.st-hero__frames{
-  position:absolute; inset:0; z-index:1;
-  display:grid;
-  grid-template-columns:repeat(12,1fr);
-  grid-template-rows:repeat(12,1fr);
-  padding:clamp(7vh,11vh,15vh) var(--pad) clamp(9vh,13vh,17vh);
-}
-.st-hero__frame{
-  position:relative; display:block; overflow:hidden;
-  border-radius:2px;
-  background:var(--panel);
-  box-shadow:
-    0 0 0 clamp(4px,.55vw,9px) var(--film),
-    0 38px 80px rgba(0,0,0,.6);
-}
-.st-hero__frame > img{
-  position:absolute; top:0; left:-7%;
-  width:114%; height:100%;
-  /* biased up for the same reason the poster bands are: every still in
-     this folder is a person in a room and the face sits above the
-     middle of the plate, so a centred cover crop cuts the eyes off */
-  object-fit:cover; object-position:50% 38%;
-  display:block;
-}
-.st-hero__frame:nth-child(1){ grid-area:1 / 5 / 7 / 12;  z-index:1; }
-.st-hero__frame:nth-child(2){ grid-area:5 / 8 / 11 / 13; z-index:3; }
-.st-hero__frame:nth-child(3){ grid-area:8 / 3 / 13 / 10; z-index:2; }
-
-/* 2 - the scrim. Weighted hard to the left, where the name sets, and
-   closed off at the bottom so the cue and the seam into the first beat
-   sit on black rather than on somebody's shoulder. */
+/* 1 - the scrim. Centre-weighted now rather than raked to the left: the
+   type sits in the middle of the screen, so the darkest part of the
+   fade has to be under it, with the corners of the frame left as the
+   lightest thing on the card. The vertical pass closes the top and
+   bottom into the gate and the seam into the first beat. */
 .st-hero__scrim{
   position:absolute; inset:0; z-index:2; pointer-events:none;
   background:
-    linear-gradient(to right, rgba(11,11,12,.94), rgba(11,11,12,.62) 42%, rgba(11,11,12,.12) 80%),
-    linear-gradient(to bottom, rgba(11,11,12,.62), transparent 24%, transparent 58%, rgba(11,11,12,.88));
+    radial-gradient(80% 62% at 50% 50%, rgba(11,11,12,.9), rgba(11,11,12,.5) 58%, rgba(11,11,12,.28) 100%),
+    linear-gradient(to bottom, rgba(11,11,12,.72), transparent 26%, transparent 62%, rgba(11,11,12,.9));
 }
 
-/* 3 - the type, inside the picture */
+/* 2 - the type, in the middle of the picture */
 .st-hero__type{
   position:relative; z-index:4;
   width:100%;
+  text-align:center;
 }
-.st-hero__tag{
-  display:inline-block;
-  font-family:var(--f-mono); font-weight:500;
-  font-size:11px; letter-spacing:.24em; text-transform:uppercase;
-  color:var(--accent);
-}
-/* The name, set as a title card rather than as a heading: three words
-   at poster scale, kept on ONE line - the highlighter block sits on the
-   last word inside the line rather than under it. The size is the size
-   that lets nineteen characters clear the type column; it is smaller
-   than the two-line setting was, which is the trade for the single line. */
-/* The client's section 1, which is a sentence rather than a name.
 
-   It used to be the concept's title - three words, nineteen characters,
-   set on one hard line with white-space:nowrap. That rule is gone with
-   the words it was written for: "Welcome to the peak content era." is
-   thirty-two characters, and holding it on one line means setting it at
-   a size that stops being a title card and starts being a caption.
+/* The line.
 
-   So it wraps, at two lines on a laptop and three on a phone, and the
-   measure does the breaking - which is also what lets the size go UP
-   rather than down. */
+   The first pass at this set it at weight 500 with the tracking opened
+   to .055em, which is the recipe for an eyebrow - Satoshi is a
+   geometric grotesk and letterspacing its medium weight is what every
+   dashboard label on the internet does. It read as a caption sitting on
+   a photograph rather than as a card.
+
+   This is the opposite setting, and each of the four moves is doing the
+   same job:
+
+     - weight 400. The lightest cut the site loads. A title card is thin
+       on a big frame; weight is what makes type feel like a heading,
+       and a heading is the thing we are trying not to be.
+     - tracking NEGATIVE, at -.012em. Cinematic type is set tight and
+       let large, not set small and pulled apart.
+     - size up, to roughly half again. "Small" on a title card means
+       small relative to the frame it is centred in, not small in
+       points - at 34px on a 100svh plate the sentence was a label
+       floating in a lot of black.
+     - line-height 1.16 and a 16ch measure, so the sentence breaks
+       deliberately into two short stacked lines with a tight leading
+       between them. That stack is the shape a title card has.
+
+   The size is still nowhere near the poster scale this card carried
+   before the rewrite (clamp(34px,5.4vw,92px), weight 700, down the left
+   third): at that size the sentence IS the screen, which is a hero. */
 .st-hero__title{
-  margin-top:clamp(18px,2.6vh,30px);
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(34px,5.4vw,92px); line-height:.94; letter-spacing:-.04em;
+  margin:0 auto;
+  font-family:var(--f-display); font-weight:400;
+  font-size:clamp(23px,3.05vw,50px); line-height:1.16;
+  letter-spacing:-.012em;
   color:var(--cream);
-  /* the measure is the whole layout here. At 15ch the sentence set as
-     two lines that ran the full width of the screen, straight under the
-     lifted frame and behind the three composition frames on the right.
-     At 13ch it sets as three short lines inside its own column, which
-     is what a title card is, and it leaves the right two thirds of the
-     screen to the picture - so the frame in front of it has somewhere
-     to stand that is not on top of a word. */
-  max-width:13ch; text-wrap:balance;
-  text-shadow:0 24px 60px rgba(0,0,0,.55);
-}
-
-/* 4 - the frame in front of the words. A vertical, overhanging the type
-   column's right edge and running off the bottom of the gate, so it
-   reads as a plane the sentence is behind rather than as a fourth
-   picture parked next to it. */
-/* the cue. The one thing on the card that asks for something, and it
-   asks quietly - a hairline that draws itself, and the word. */
-.st-hero__cue{
-  position:absolute; z-index:6;
-  left:var(--pad); bottom:clamp(22px,4vh,44px);
-  display:flex; align-items:center; gap:.9em;
-  font-family:var(--f-mono); font-weight:500;
-  font-size:10px; letter-spacing:.26em; text-transform:uppercase;
-  color:var(--dim);
-}
-.st-hero__cue i{
-  display:block; width:clamp(28px,4vw,56px); height:1px;
-  background:var(--accent);
-  transform-origin:left;
+  max-width:16ch; text-wrap:balance;
+  /* a wide, weak shadow rather than a tight one - it is separating the
+     line from the plate, not embossing it */
+  text-shadow:0 26px 70px rgba(0,0,0,.7);
 }
 
 /* ---- the entrance --------------------------------------------------
-   Once, on load, and nowhere else on this route. Three things arrive:
-   the gate opens from shut to its parked hairline, the frames settle
-   out of a push, the type rises behind them. The delays are the edit -
-   gate, then picture, then words - because all three landing together
-   reads as a page painting rather than as a card opening.
+   Once, on load, and nowhere else on this route. The gate opens from
+   shut to its parked hairline, the plate settles out of a push, and the
+   line fades up last and slowest - it is the thing being waited for.
    -------------------------------------------------------------------- */
 @keyframes st-hero-gate{
   from{ transform:scaleY(1); }
   to{ transform:scaleY(.12); }
 }
 @keyframes st-hero-push{
-  from{ opacity:0; transform:scale(1.09); }
-  to{ opacity:1; transform:scale(1); }
+  from{ opacity:0; transform:scale(1.12); }
+  to{ opacity:.44; transform:scale(1.06); }
 }
-@keyframes st-hero-rise{
-  from{ opacity:0; transform:translateY(16px); }
-  to{ opacity:1; transform:none; }
-}
-@keyframes st-hero-cue{
-  from{ opacity:0; transform:scaleX(0); }
-  to{ opacity:1; transform:none; }
+/* The line resolves rather than arrives: it comes up out of focus and
+   very slightly oversized and settles into place. A projector finding
+   its focus is the one piece of motion that reads as cinema and not as
+   a web page; the old version animated the TRACKING closed, which on
+   type this size just looks like the page is still loading a font. */
+@keyframes st-hero-title{
+  from{ opacity:0; filter:blur(9px); transform:scale(1.045); }
+  to{ opacity:1; filter:blur(0); transform:none; }
 }
 
 .st-hero .st-gate{
   animation:st-hero-gate 1.15s cubic-bezier(.16,.84,.3,1) both;
 }
-.st-hero__frame{
+.st-hero__plate{
   opacity:0;
-  animation:st-hero-push 1.25s cubic-bezier(.16,.84,.3,1) both;
-  animation-delay:calc(.32s + var(--i, 0) * .13s);
+  animation:st-hero-push 1.6s cubic-bezier(.16,.84,.3,1) .2s both;
 }
-.st-hero__tag{ opacity:0; animation:st-hero-rise .8s ease-out .5s both; }
-.st-hero__title{ opacity:0; animation:st-hero-rise .9s cubic-bezier(.16,.84,.3,1) .62s both; }
-.st-hero__cue i{ animation:st-hero-cue .7s ease-out 1.1s both; }
+.st-hero__title{
+  opacity:0;
+  animation:st-hero-title 1.9s cubic-bezier(.16,.84,.3,1) .8s both;
+}
 
 /* ---- narrow --------------------------------------------------------
-   The composition is a wide one: three overlapping frames beside a
-   column of type needs a screen with two halves in it. At phone width
-   there is one, so the frames go full bleed behind the words and the
-   lifted frame comes off entirely - a 110px vertical over a narrow
-   column of type is not depth, it is an obstruction.
+   The composition is already one picture and one centred line, so
+   nothing has to be rebuilt here - the sentence only needs a shorter
+   measure and a little more of it on the screen.
    -------------------------------------------------------------------- */
 @media (max-width:900px){
-  .st-hero{ align-items:flex-end; padding-bottom:clamp(110px,18vh,170px); }
-  .st-hero__frames{ padding:clamp(9vh,14vh,18vh) clamp(10px,3vw,24px) 26vh; }
-  .st-hero__frame:nth-child(1){ grid-area:1 / 1 / 7 / 11; }
-  .st-hero__frame:nth-child(2){ grid-area:5 / 5 / 10 / 13; }
-  .st-hero__frame:nth-child(3){ grid-area:8 / 2 / 13 / 12; }
+  .st-hero__title{
+    max-width:13ch;
+    font-size:clamp(24px,6.6vw,38px);
+    letter-spacing:-.01em;
+  }
   .st-hero__scrim{
     background:
-      linear-gradient(to bottom, rgba(11,11,12,.7), rgba(11,11,12,.24) 28%, rgba(11,11,12,.86) 62%, rgba(11,11,12,.96));
+      radial-gradient(90% 50% at 50% 50%, rgba(11,11,12,.9), rgba(11,11,12,.56) 62%, rgba(11,11,12,.34) 100%),
+      linear-gradient(to bottom, rgba(11,11,12,.76), transparent 24%, transparent 64%, rgba(11,11,12,.94));
   }
-  .st-hero__title{ max-width:none; font-size:clamp(30px,9.4vw,58px); }
 }
 
 @media (prefers-reduced-motion:reduce){
   .st-hero .st-gate,
-  .st-hero__frame,
-  .st-hero__tag,
-  .st-hero__title,
-  .st-hero__cue i{
+  .st-hero__plate,
+  .st-hero__title{
     animation:none;
     opacity:1;
-    transform:none;
   }
-  /* the gate's parked position is not "no transform" - it is the
-     hairline the rest of the page rests at, so it is restated here
-     rather than left at full height, which would be a black screen. */
+  /* the two parked positions are not "no transform" - they are what the
+     entrance lands on, so they are restated rather than cleared, which
+     would give a black screen and an unpushed plate. */
   .st-hero .st-gate{ transform:scaleY(.12); }
+  .st-hero__plate{ opacity:.44; transform:scale(1.06); }
+  .st-hero__title{ filter:none; transform:none; }
 }
 
 /* ============================================================
@@ -431,9 +378,13 @@
 }
 .st-beat__line{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px,4.6vw,68px); line-height:1.04; letter-spacing:-.03em;
+  font-size:clamp(22px,2.9vw,42px); line-height:1.1; letter-spacing:-.03em;
   color:var(--cream);
-  max-width:15ch; text-wrap:balance;
+  /* 22ch, not the 15ch this measure was set at when the type was half
+     again bigger. A measure is a count of characters and the type shrank
+     underneath it, so 15ch stopped being a short line and started being
+     a narrow column - same sentence, two lines more. */
+  max-width:22ch; text-wrap:balance;
   margin-top:22px;
 }
 .st-beat__eyebrow + .st-beat__line{ margin-top:26px; }
@@ -471,20 +422,6 @@
   color:var(--muted);
 }
 
-/* ---- the slate ----
-   The chip burned into the corner of the frame. Bottom right, because
-   the nav owns the top of the screen. */
-.st-beat__slate{
-  position:absolute; z-index:5;
-  right:var(--pad); bottom:clamp(24px,4.5vh,50px);
-  display:flex; align-items:center; gap:.8em;
-  font-family:var(--f-mono); font-weight:500;
-  font-size:10px; letter-spacing:.24em; text-transform:uppercase;
-  color:var(--dim);
-}
-.st-beat__slate b{ color:var(--accent); font-weight:500; }
-@media (max-width:700px){ .st-beat__slate{ display:none; } }
-
 /* ============================================================
    THE STAGES
 
@@ -499,7 +436,7 @@
    Nine sections do not need that, and three of them could not use it:
    a process, a showreel and a call to action are not sentences beside
    four frames. So the frame above is what repeats now - plate, scrim,
-   grain, gate, type, slate - and the picture layer inside it is the
+   grain, gate, type - and the picture layer inside it is the
    thing that changes. Two cycles are gone with the beats they were
    counting; the third, the side flip, is kept, because the strip still
    runs three times and three strips on the same side of the screen read
@@ -525,14 +462,6 @@
 .st-beat[data-side="left"] .st-scrim{
   background:linear-gradient(to left, rgba(11,11,12,.82), rgba(11,11,12,.3) 60%, rgba(11,11,12,.55));
 }
-/* the slate stays under its own strip rather than under the sentence -
-   it is a label burned into the corner of the picture, and on a flipped
-   section the picture is on the other side */
-.st-beat[data-side="left"] .st-beat__slate{
-  right:auto; left:var(--pad);
-  flex-direction:row-reverse;
-}
-
 /* the cascade. Fixed rather than cycled: with three strips on the page
    the zigzag only has to keep four frames from reading as one long
    picture, which is what the inset on every second band does. */
@@ -671,10 +600,37 @@
 .st-beat[data-stage="title"],
 .st-beat[data-stage="end"]{
   align-items:flex-end;
-  /* room under the block for the slate, which is the one thing that
-     still hangs off the very bottom of the frame */
-  padding-bottom:clamp(92px,13vh,150px);
+  padding-bottom:clamp(72px,10vh,120px);
 }
+/* ---- the end card, which is not a poster ----------------------------
+
+   The title card hangs its block off the bottom because the picture
+   behind it is three bands and the type has to stay off the busiest
+   one. The last screen is one held frame, so there is no third of it to
+   keep out of - and a card whose only job is one thing to press reads
+   as a card when the thing to press is in the middle of the screen
+   rather than in the corner of it. So this one alone is centred, both
+   the block on the screen and the lines inside the block, and the
+   ground under it is weighted to the middle to match.
+   -------------------------------------------------------------------- */
+.st-beat[data-stage="end"]{
+  align-items:center;
+  padding:clamp(90px,15vh,180px) 0;
+}
+.st-beat[data-stage="end"] .st-beat__words{
+  margin-inline:auto;
+  text-align:center;
+}
+.st-beat[data-stage="end"] .st-beat__line{
+  max-width:32ch;
+  margin-inline:auto;
+}
+.st-beat[data-stage="end"] .st-scrim{
+  background:
+    radial-gradient(118% 74% at 50% 50%, rgba(11,11,12,.9), rgba(11,11,12,.5) 62%, rgba(11,11,12,.24)),
+    linear-gradient(to bottom, rgba(11,11,12,.62), rgba(11,11,12,.34) 40%, rgba(11,11,12,.72));
+}
+
 .st-beat[data-stage="title"] .st-scrim,
 .st-beat[data-stage="end"] .st-scrim{
   background:linear-gradient(
@@ -709,7 +665,7 @@
      actually has rather than off the whole screen - at the old size
      "the continuity" ran wider than its own column and the block on
      "kink." was pushed out under it. */
-  font-size:clamp(34px,4.8vw,86px); line-height:.94; letter-spacing:-.042em;
+  font-size:clamp(26px,3.1vw,54px); line-height:1; letter-spacing:-.042em;
   max-width:none; opacity:1;
   color:var(--cream);
   text-shadow:0 26px 64px rgba(0,0,0,.55);
@@ -792,8 +748,9 @@
   margin-top:clamp(12px,1.7vh,20px);
   padding-left:clamp(11px,1vw,16px);
   border-left:2px solid var(--accent);
-  font-family:var(--f-display); font-weight:600;
-  font-size:clamp(16px,1.45vw,22px); line-height:1.32; letter-spacing:-.012em;
+  /* the paragraph's own size and face - the emphasis is the weight, the
+     rule and the colour, not a second type scale inside body copy */
+  font-weight:700;
   color:var(--cream);
 }
 
@@ -807,8 +764,7 @@
    heading. Ten point body copy carrying the same block would read as
    two headings on one screen, and the second one would be the smaller. */
 .st-mark{
-  font-family:var(--f-display); font-weight:600;
-  font-size:1.06em; letter-spacing:-.008em;
+  font-weight:700;
   color:var(--cream);
   text-decoration:underline;
   text-decoration-color:var(--accent);
@@ -821,19 +777,23 @@
 
 /* the ask, and the only link in the story. The client's last line is a
    question with a button's job, so the mark IS the button - a second
-   control underneath it would be the same words twice. The rule grows
-   on hover; nothing else about it moves. */
+   control underneath it would be the same words twice.
+
+   The rule that used to grow beside it on hover is gone: the words
+   themselves answer the pointer now. [data-magnetic] is the site's own
+   button behaviour - initMagnetic() in lib/motion.ts leans the element
+   toward the cursor and lets it settle back elastically, the same
+   control the footer's two addresses use - and SiteMotion is already
+   mounted on this route, so the words only have to ask for it.
+
+   Nothing is set here but the seat it leans from: GSAP writes the
+   transform, so a transform of this file's own would be a second author
+   for one property. */
 .st-beat__mark--cta{
-  display:inline-flex; align-items:center; gap:.34em;
+  display:inline-flex; align-items:center;
   text-decoration:none; color:var(--cream);
+  will-change:transform;
 }
-.st-beat__mark--cta > i{
-  display:block;
-  width:clamp(26px,3.2vw,64px); height:clamp(3px,.32vw,6px);
-  background:var(--accent);
-  transition:width .4s cubic-bezier(.16,.84,.3,1);
-}
-.st-beat__mark--cta:hover > i{ width:clamp(46px,5.4vw,104px); }
 
 /* ============================================================
    THE REEL - section 7.
@@ -940,7 +900,7 @@
    ============================================================ */
 .st-beat[data-stage="steps"] .st-bg{ opacity:.26; filter:blur(11px) saturate(.5) brightness(.7); }
 .st-beat[data-stage="steps"] .st-beat__words{ max-width:none; }
-.st-beat[data-stage="steps"] .st-beat__line{ max-width:20ch; font-size:clamp(26px,3.6vw,54px); }
+.st-beat[data-stage="steps"] .st-beat__line{ max-width:20ch; font-size:clamp(21px,2.5vw,36px); }
 .st-beat[data-stage="steps"] .st-scrim{
   background:linear-gradient(to bottom, rgba(11,11,12,.9), rgba(11,11,12,.72) 40%, rgba(11,11,12,.9));
 }
@@ -954,7 +914,14 @@
 .st-step{ position:relative; }
 .st-step__art{
   position:relative; display:block; overflow:hidden;
-  aspect-ratio:4/3;
+  /* square, not 4:3. The four stills this card carries are the client's
+     own production frames and three of the four are portrait (0.70,
+     0.81, 0.88); the fourth is landscape at 1.16. A 4:3 card took a
+     horizontal slice out of the middle of the portraits and threw away
+     a third of each. Square is the shape that costs every one of them
+     the least, and it keeps the row from growing as tall as a 4:5 card
+     would - four of those plus the line no longer fit one screen. */
+  aspect-ratio:1/1;
   border-radius:2px;
   background:var(--panel);
   box-shadow:
@@ -987,25 +954,46 @@
 }
 
 /* ============================================================
-   THE SHOWCASE - section 9.
+   THE SHOWCASE - section 9, five handsets on an arc.
 
-   Two rows of real campaigns travelling in opposite directions. The
-   brief asks for a "rapid visual sequence of actual SoCheers work", and
-   a still grid of eighteen boards is not one - so this is the only
-   thing on a route with no scroll mechanics that moves on its own.
+   The brief asks for "a rapid visual sequence of actual SoCheers work".
+   The earlier pass answered it with eighteen landscape boards running
+   in two directions, and the boards were the problem: every sentence on
+   this page before this one is about vertical episodes watched on a
+   phone, and a 16:10 card is a frame from something else. So the
+   evidence is held in the frame it is made for.
 
-   ---- how the loop has no seam ----
+   ---- how the motion works ----
 
-   Every row's cards are rendered twice in the markup and the track is
-   translated by exactly half its own width, at which point the second
-   copy is standing where the first one started. The trick only holds if
-   half the track is a whole number of cards, which is why the spacing
-   is a margin on each card and NOT a gap on the track: with a gap, the
-   run of 2n cards is 2n widths plus 2n-1 gaps, half of that lands half
-   a gap short of a card edge, and the row visibly jumps once a cycle.
+   components/SeriesPhones.tsx writes four custom properties on .st-rig
+   and nothing else:
 
-   The rows are read as pictures with brand names on them, so the second
-   copy is hidden from the accessibility tree in the component.
+       --e   the entrance. 0, then 1 the first time the rig is seen.
+       --p   0 .. 1, the rig's travel through the viewport
+       --c   the same thing centred, -1 .. 1
+       --mx  -1 .. 1, the pointer across the rig. Fine pointers only.
+
+   and each .st-hs carries three of its own, set once in the markup:
+
+       --i   its index
+       --o   its signed distance from the middle handset, -2 .. 2
+       --a   the same, unsigned
+
+   Everything below is arithmetic on those seven numbers. Two rules read
+   the scroll - the arc's own tilt and each handset's drift - and both
+   are transforms on a composited layer, so a scroll over this section
+   costs a transform per phone and no layout.
+
+   The split matters: the ENTRANCE sits on .st-hs and is transitioned,
+   the SCROLL sits on .st-ph and is damped by a short transition rather
+   than a long one. A long transition on a value that changes every
+   frame reads as lag; 200ms reads as weight.
+
+   Every default here is the resting composition - --e:1 is arrival,
+   --c:0 is mid-screen, --mx:0 is straight on - so the section renders
+   as a finished still when the script never runs. That is what
+   prefers-reduced-motion gets: the handler returns before its first
+   line and the arc simply stands there.
    ============================================================ */
 .st-beat[data-stage="showcase"]{
   flex-direction:column;
@@ -1017,63 +1005,307 @@
   background:linear-gradient(to bottom, rgba(11,11,12,.9), rgba(11,11,12,.78));
 }
 
-.st-run{
+.st-rig{
+  /* the resting composition, and the reason the section still reads
+     with no JavaScript at all: --e:1 is arrived. SeriesPhones.tsx puts
+     it back to 0 on mount so the entrance has somewhere to come from. */
+  --e:1; --p:.5; --c:0; --mx:0;
   position:relative; z-index:4;
   width:100%;
-  display:flex; flex-direction:column;
-  gap:clamp(10px,1.4vw,22px);
-  --card-gap:clamp(10px,1.4vw,22px);
-}
-/* the rows run off both edges of the screen; the mask is what stops
-   that reading as two rows that have been cut off */
-.st-run__row{
-  overflow:hidden;
-  -webkit-mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-  mask-image:linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
-}
-.st-run__track{
-  display:flex; width:max-content;
-  animation:st-run 52s linear infinite;
-  will-change:transform;
-}
-.st-run__row[data-dir="back"] .st-run__track{
-  animation-direction:reverse;
-  /* a different duration as well as a different direction: two rows at
-     one speed passing each other read as a single object shearing */
-  animation-duration:64s;
-}
-@keyframes st-run{
-  from{ transform:translate3d(0,0,0); }
-  to{ transform:translate3d(-50%,0,0); }
+  perspective:1600px;
+  perspective-origin:50% 42%;
 }
 
-.st-card{
-  position:relative; display:block; flex:0 0 auto; overflow:hidden;
-  width:clamp(190px,20vw,330px);
-  aspect-ratio:16/10;
-  margin-right:var(--card-gap);
-  border-radius:2px;
-  background:var(--panel);
-  box-shadow:
-    0 0 0 1px rgba(241,236,225,.07),
-    0 26px 56px rgba(0,0,0,.55);
+/* the arc leans toward the cursor and rolls a couple of degrees across
+   the scroll - one transform for all five, which is what keeps them
+   reading as one object seen from one place rather than five objects
+   each doing something */
+.st-rig__arc{
+  list-style:none; margin:0; padding:clamp(30px,5vh,64px) 0 0;
+  display:flex; align-items:flex-start; justify-content:center;
+  gap:clamp(10px,1.5vw,26px);
+  transform-style:preserve-3d;
+  transform:
+    rotateX(calc(var(--c) * -3deg))
+    rotateY(calc(var(--mx) * 5deg))
+    rotateZ(calc(var(--mx) * .6deg));
+  transition:transform .5s cubic-bezier(.2,.7,.2,1);
 }
-.st-card > img{
+
+/* ---- one place on the arc --------------------------------------
+   The entrance only. It runs from below and from the middle outward,
+   which is the order the eye reads an arc in: the phone you are
+   looking at arrives first and the outer two follow it. */
+.st-hs{
+  --lift:0;
+  position:relative; flex:0 0 auto;
+  width:clamp(112px,12.6vw,182px);
+  transform-style:preserve-3d;
+  opacity:var(--e);
+  transform:translate3d(0, calc((1 - var(--e)) * 64px), 0);
+  transition:
+    opacity .9s cubic-bezier(.2,.7,.2,1) calc(var(--a) * 110ms + 60ms),
+    transform .9s cubic-bezier(.2,.7,.2,1) calc(var(--a) * 110ms + 60ms);
+}
+.st-hs:hover{ --lift:1; z-index:3; }
+
+/* ---- the handset ------------------------------------------------
+   Three things at once, and they are deliberately separable:
+
+   1. THE ARC. --a pushes the outer handsets DOWN and --o fans them,
+      so the five sit on a curve with the middle one nearest. At
+      --lift the fan unwinds and the phone squares up to the reader.
+   2. THE DRIFT. --c moves each handset vertically at a rate set by
+      how far out on the arc it is, so the outers travel further than
+      the middle as the section crosses the screen and the curve
+      breathes rather than sliding as a block.
+   3. THE LIFT. Hover brings one forward in Z and straightens it.
+   ---------------------------------------------------------------- */
+.st-ph{
+  position:relative; display:block; width:100%;
+  aspect-ratio:9 / 19.5;
+  border-radius:clamp(15px,1.9vw,26px);
+  padding:clamp(2.5px,.36vw,5px);
+  /* the titanium. Two rails catching light down the long edges and a
+     dark body between them - which is what makes it read as a machined
+     object rather than a rounded rectangle. */
+  background:
+    linear-gradient(96deg,
+      #6f6875 0%, #2a262f 6%, #17151b 22%,
+      #232029 50%,
+      #17151b 78%, #2a262f 93%, #7b7481 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.16) inset,
+    0 0 0 1px rgba(0,0,0,.7),
+    0 calc(26px + var(--lift) * 22px) calc(52px + var(--lift) * 34px) rgba(0,0,0,.62),
+    0 6px 14px rgba(0,0,0,.5);
+  transform:
+    translate3d(
+      0,
+      calc(
+        (var(--a) * clamp(10px,1.5vw,26px))
+        + (var(--c) * (var(--a) * 14px + 5px) * -1)
+        - (var(--lift) * 16px)
+      ),
+      calc(var(--lift) * 46px)
+    )
+    rotateY(calc(var(--o) * 8deg * (1 - var(--lift))))
+    rotateZ(calc(var(--o) * 1.3deg * (1 - var(--lift))));
+  transition:transform .2s linear, box-shadow .45s ease;
+}
+
+/* the hairline where the polished band meets the glass */
+.st-ph__band{
+  position:absolute; inset:1px;
+  border-radius:inherit;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.1) inset,
+    0 0 0 2px rgba(0,0,0,.55);
+  pointer-events:none;
+}
+
+/* the four buttons. Sizes and positions are the real ones - a phone
+   whose volume rocker is in the wrong place looks wrong before anyone
+   can say why. */
+.st-ph__btn{
+  position:absolute;
+  width:2px; border-radius:2px;
+  background:linear-gradient(180deg,#5a5461,#221f27);
+  box-shadow:0 0 0 .5px rgba(0,0,0,.6);
+}
+.st-ph__btn--mute{ left:-1.5px; top:15.5%; height:4%; }
+.st-ph__btn--up  { left:-1.5px; top:23%;   height:7.5%; }
+.st-ph__btn--dn  { left:-1.5px; top:32.5%; height:7.5%; }
+.st-ph__btn--pwr { right:-1.5px; top:26%;  height:11%; }
+
+/* ---- the screen ------------------------------------------------- */
+.st-ph__screen{
+  position:relative; display:block; overflow:hidden;
+  width:100%; height:100%;
+  border-radius:calc(clamp(15px,1.9vw,26px) - clamp(2.5px,.36vw,5px));
+  background:#000;
+  isolation:isolate;
+}
+.st-ph__media{
   position:absolute; inset:0;
   width:100%; height:100%;
-  object-fit:cover;
-  display:block;
+  object-fit:cover; display:block;
+  /* the stills are landscape frames standing in for vertical cuts, so
+     they are held slightly above centre - a 16:9 frame cropped to 9:19.5
+     down the middle loses whatever the frame was about */
+  object-position:50% 38%;
+  filter:saturate(1.05) contrast(1.04);
 }
-.st-card__label{
-  position:absolute; left:10px; bottom:8px;
-  font-family:var(--f-mono); font-style:normal; font-weight:500;
-  font-size:10px; letter-spacing:.16em; text-transform:uppercase;
+
+/* the wait. The one thing on this section that says the cut has not
+   landed, and it says it by behaving like a screen with nothing playing
+   on it rather than by printing a word. Only rendered while `film` is
+   unset - see components/SeriesPhones.tsx. */
+.st-ph__wait{
+  position:absolute; inset:0;
+  background:linear-gradient(180deg,
+    rgba(241,236,225,0) 0%,
+    rgba(241,236,225,.13) 46%,
+    rgba(241,236,225,.02) 62%,
+    rgba(241,236,225,0) 100%);
+  transform:translate3d(0,-100%,0);
+  animation:st-wait 3.8s cubic-bezier(.55,0,.45,1) infinite;
+  animation-delay:calc(var(--i) * -.62s);
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+@keyframes st-wait{
+  0%   { transform:translate3d(0,-100%,0); }
+  70%  { transform:translate3d(0,100%,0); }
+  100% { transform:translate3d(0,100%,0); }
+}
+
+/* the player's own furniture. Two things every vertical player has and
+   nobody's marks: the caption block and the progress hairline. */
+.st-ph__ui{
+  position:absolute; inset:0;
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,.5) 0%, rgba(0,0,0,0) 22%,
+    rgba(0,0,0,0) 62%, rgba(0,0,0,.72) 100%);
+  pointer-events:none;
+}
+.st-ph__cap{
+  position:absolute; left:8%; right:16%; bottom:9%;
+  display:flex; flex-direction:column; gap:2px;
+}
+.st-ph__cap em{
+  font-style:normal; font-weight:600;
+  font-size:clamp(7px,.62vw,10px); letter-spacing:.02em;
+  color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.9);
+}
+.st-ph__cap i{
+  font-style:normal;
+  font-size:clamp(6px,.5vw,8px); letter-spacing:.04em;
+  color:rgba(255,255,255,.72); text-shadow:0 1px 6px rgba(0,0,0,.9);
+}
+.st-ph__bar{
+  position:absolute; left:8%; right:8%; bottom:5.2%;
+  height:1.5px; border-radius:2px;
+  background:rgba(255,255,255,.24);
+  overflow:hidden;
+}
+/* the playhead. It is a real duration on a screen holding a still, so
+   it runs the length a short episode runs and starts at a different
+   point on each handset - five bars in lockstep is one screen shown
+   five times. */
+.st-ph__bar > span{
+  position:absolute; inset:0 auto 0 0;
+  width:100%; transform-origin:0 50%;
+  background:#fff;
+  animation:st-play 9s linear infinite;
+  animation-delay:calc(var(--i) * -1.7s);
+}
+@keyframes st-play{
+  from{ transform:scaleX(.04); }
+  to  { transform:scaleX(1); }
+}
+
+/* the status bar */
+.st-ph__status{
+  position:absolute; top:0; left:0; right:0;
+  height:5.4%;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 8%;
+  color:#fff;
+  font-family:var(--f-mono);
+  font-size:clamp(6px,.55vw,9px); font-weight:600; letter-spacing:.01em;
+  text-shadow:0 1px 4px rgba(0,0,0,.8);
+  pointer-events:none;
+}
+.st-ph__clock{ transform:translateY(.5px); }
+.st-ph__sys{ display:flex; align-items:center; gap:3px; }
+.st-ph__sys svg{ display:block; }
+.st-ph__batt{
+  position:relative; display:block;
+  width:14px; height:7px;
+  border:1px solid rgba(255,255,255,.55); border-radius:2px;
+  padding:1px;
+}
+.st-ph__batt::after{
+  content:""; position:absolute; right:-2.5px; top:50%;
+  width:1.5px; height:2.5px; border-radius:0 1px 1px 0;
+  background:rgba(255,255,255,.55);
+  transform:translateY(-50%);
+}
+.st-ph__batt > i{
+  display:block; height:100%; width:72%;
+  border-radius:1px; background:#fff;
+}
+
+/* the island, over the picture and under the glass */
+.st-ph__island{
+  position:absolute; top:1.5%; left:50%;
+  width:30%; height:3.1%;
+  min-height:9px;
+  border-radius:99px;
+  background:#000;
+  transform:translateX(-50%);
+  display:flex; align-items:center; justify-content:flex-end;
+  padding-right:9%;
+}
+.st-ph__island > i{
+  display:block; width:22%; aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #2b3a4d 0%, #0d1218 62%, #05070a 100%);
+  box-shadow:0 0 0 .5px rgba(120,150,190,.3);
+}
+
+/* one raking highlight across the whole face. This is the thing that
+   makes five identical frames look like five pieces of glass under one
+   light rather than five copies of a drawing. */
+.st-ph__glass{
+  position:absolute; inset:0;
+  background:linear-gradient(112deg,
+    rgba(255,255,255,.17) 0%,
+    rgba(255,255,255,.05) 13%,
+    rgba(255,255,255,0) 32%,
+    rgba(255,255,255,0) 68%,
+    rgba(255,255,255,.055) 88%,
+    rgba(255,255,255,.13) 100%);
+  pointer-events:none;
+}
+.st-ph__home{
+  position:absolute; left:50%; bottom:1.1%;
+  width:33%; height:2px; min-height:2px;
+  border-radius:99px;
+  background:rgba(255,255,255,.85);
+  transform:translateX(-50%);
+}
+
+/* ---- the caption under the handset -----------------------------
+   The brand is named here rather than on the glass, because on the
+   glass it would be part of the picture. It sits quiet and comes up
+   when its handset is lifted. */
+.st-hs__cap{
+  display:flex; flex-direction:column; gap:2px;
+  margin-top:calc((var(--a) * clamp(10px,1.5vw,26px)) + clamp(12px,1.6vh,20px));
+  text-align:center;
+  opacity:calc(.52 + var(--lift) * .48);
+  transform:translate3d(0, calc(var(--lift) * -4px), 0);
+  transition:opacity .4s ease, transform .4s cubic-bezier(.2,.7,.2,1);
+}
+.st-hs__cap b{
+  font-family:var(--f-mono); font-weight:500;
+  font-size:clamp(9px,.72vw,11px); letter-spacing:.16em; text-transform:uppercase;
   color:var(--cream);
-  text-shadow:0 2px 12px rgba(0,0,0,.95);
+}
+.st-hs__cap i{
+  font-style:normal;
+  font-size:clamp(9px,.68vw,11px); letter-spacing:.02em;
+  color:var(--muted);
 }
 
 @media (prefers-reduced-motion:reduce){
-  .st-run__track{ animation:none; }
+  /* the script never starts, so the vars are already at rest; these
+     two are the only things here that move on their own */
+  .st-ph__wait,
+  .st-ph__bar > span{ animation:none; }
+  .st-ph__bar > span{ transform:scaleX(.34); }
+  .st-rig__arc, .st-hs, .st-ph, .st-hs__cap{ transition:none; }
 }
 
 /* ============================================================
@@ -1088,12 +1320,10 @@
    The client sets their punch up with a long sentence and lands it
    afterwards. Reordering that so the big type comes first would be
    rewriting their copy with CSS, so it runs where they wrote it - and
-   the rule down its left edge is what tells the eye this is the run-up
-   and not the section's own body copy. */
+   the space under it, not a rule beside it, is what separates the
+   run-up from the section's own body copy. */
 .st-beat__lead{
   max-width:54ch;
-  padding-left:clamp(13px,1.2vw,22px);
-  border-left:2px solid var(--accent);
   font-size:clamp(15px,1.16vw,18px); line-height:1.6;
   color:var(--muted);
 }
@@ -1153,9 +1383,32 @@
   font-size:11px; letter-spacing:.18em; text-transform:uppercase;
   color:var(--dim);
 }
-.st-foot__in{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.st-foot__in{ display:flex; justify-content:center; gap:20px; flex-wrap:wrap; }
 .st-foot a{ color:var(--cream); text-decoration:none; }
 .st-foot a:hover{ color:var(--accent); }
+
+/* ---- the outbound credit ----
+   Both glyphs are drawn at the type's own size and inherit its colour,
+   so they dim and light with the link rather than sitting on it as two
+   coloured badges. The arrow steps out of its box on hover; the globe
+   stays put, because it is a label and not the action. */
+.st-foot__site{ display:inline-flex; align-items:center; gap:.7em; }
+.st-foot__globe,
+.st-foot__out{
+  width:1.25em; height:1.25em; flex:none;
+  fill:none; stroke:currentColor; stroke-width:1.6;
+  stroke-linecap:round; stroke-linejoin:round;
+}
+.st-foot__globe{ opacity:.72; }
+.st-foot__out{
+  width:1.05em; height:1.05em;
+  transition:transform .34s cubic-bezier(.16,.84,.3,1);
+}
+.st-foot__site:hover .st-foot__out{ transform:translate(2px,-2px); }
+@media (prefers-reduced-motion:reduce){
+  .st-foot__out{ transition:none; }
+  .st-foot__site:hover .st-foot__out{ transform:none; }
+}
 
 /* ============================================================
    NARROW
@@ -1235,6 +1488,13 @@
     padding-bottom:clamp(12px,1.8vh,18px);
   }
   .st-beat[data-stage="title"] .st-beat__mark{ margin-top:clamp(14px,2.2vh,22px); }
+  /* the end card keeps its centring at this width - it is one frame and
+     one block here too, and the reason the other stages give up the
+     middle of the screen (a picture behind a paragraph) does not apply
+     to a screen with a single button on it */
+  .st-beat[data-stage="end"]{ align-items:center; }
+  .st-beat[data-stage="end"] .st-beat__type{ padding-top:0; }
+  .st-beat[data-stage="end"] .st-beat__words{ text-align:center; }
   .st-beat[data-stage="title"] .st-beat__body{ padding-top:0; }
   /* the type is at the top of the screen at this width, so the ground
      under it has to be too - the desktop scrim is weighted to the
@@ -1252,7 +1512,7 @@
   .st-beat[data-stage="title"] .st-beat__line,
   .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(17px,4.4vw,24px); }
   .st-beat[data-stage="title"] .st-beat__mark,
-  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(34px,11vw,64px); }
+  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(26px,7.4vw,44px); }
   .st-beat[data-stage="title"] .st-beat__copy{ max-width:none; }
 
   /* ---- the reel ---- four episodes, not eight. Eight verticals across
@@ -1269,54 +1529,113 @@
   .st-beat[data-stage="steps"]{ min-height:100svh; }
   .st-beat[data-stage="steps"] .st-beat__line{ max-width:none; }
 
-  /* ---- the showcase ---- the rows keep running; only the cards come
-     down in size, and the section goes back to being centred because it
-     is two rows and a line rather than a picture behind a paragraph */
+  /* ---- the showcase ---- five handsets fanned on an arc is a shape
+     that needs width. On a phone the arc is unwound into a rail the
+     reader swipes, one handset to a screen, snapped - which is the
+     same object handled the way a phone is handled. The scroll drift
+     and the fan come off; the entrance, the sweep and the playhead
+     stay, because those are what say the screens are live. */
   .st-beat[data-stage="showcase"]{ min-height:100svh; align-items:center; }
   .st-beat[data-stage="showcase"] .st-beat__words{ max-width:none; }
-  .st-card{ width:clamp(150px,46vw,230px); }
+
+  .st-rig{ perspective:none; }
+  .st-rig__arc{
+    justify-content:flex-start;
+    padding:clamp(18px,4vh,32px) 12vw 18px;
+    gap:clamp(16px,5vw,30px);
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    transform:none;
+  }
+  .st-rig__arc::-webkit-scrollbar{ display:none; }
+  .st-hs{
+    width:clamp(180px,58vw,260px);
+    scroll-snap-align:center;
+  }
+  .st-ph{
+    transform:translate3d(0,0,0);
+    border-radius:clamp(22px,7vw,34px);
+    padding:clamp(4px,1.1vw,6px);
+  }
+  .st-ph__screen{ border-radius:clamp(18px,6vw,28px); }
+  .st-hs__cap{ margin-top:clamp(12px,2.4vw,18px); opacity:1; }
 }
 
-/* ---- the format section's two marked phrases ----
-   Both are marked in place, and a mark that wraps reads as two marks.
-   So the phrases are held on one line each and the paragraph is given
-   the width to take the longer of them. Above 900px only: on one column
-   the widest phrase is wider than the screen, and an unbreakable line
-   there would push the page sideways. */
-@media (min-width:901px){
-  #section-format .st-beat__copy{ max-width:62ch; }
-  #section-format .st-mark{ white-space:nowrap; }
-}
+
+/* ---- section 3's line -----------------------------------------------
+   Two full sentences, and the longest display line on the page - every
+   other one is a clause. At the shared measure it set as six short
+   lines stacked in a column, which reads as a list of fragments rather
+   than as two sentences. So this one alone takes the whole column it
+   already has (the strip beside it is a fixed width at the far edge, so
+   the width was there and unused) and balances across it. */
+#section-next .st-beat__line{ max-width:none; }
 
 /* a lifted phrase that opens its paragraph already has the paragraph's
    own space above it */
 .st-beat__copy > .st-lift:first-child{ margin-top:0; }
 
-/* A lifted phrase is set larger than the paragraph it sits in, so the
-   paragraph's 38ch measure - a body-copy measure - hands it a line it
-   cannot finish. A paragraph carrying one gets the width its display
-   type needs, and the phrase balances rather than dropping a last word
-   on its own. Above 900px only; on one column the measure is the
-   screen. */
-@media (min-width:901px){
-  .st-beat__copy:has(.st-lift){ max-width:62ch; }
-}
+/* the lifted phrase now sets at the paragraph's own size, so it keeps
+   the paragraph's measure too - the widths this used to be given were
+   there to hold a line of display type inside body copy. */
 .st-lift{ text-wrap:balance; }
 
-/* the title card's lifted sentence is short enough to be one line, and
-   it only reads as one thought when it is. The paragraph is given the
-   width to hold it. Above 900px only - on one column the line is wider
-   than the screen. */
+/* ---- the process cards' focal points ----
+   Square card, four stills that are not square. The three portraits
+   lose height off the top and bottom and each is nudged up, because in
+   all three the subject - a face, an operator over a camera, a floor
+   full of crew - sits above the middle of the plate and a centred crop
+   takes the top of it.
+
+   BRAND is the exception and it is left centred on purpose: it is the
+   one landscape frame, so it loses WIDTH rather than height, and the
+   SoCheers Films / Krafton lockup burned across its bottom edge sits
+   centred and survives the square crop. Moving that one off centre
+   would cut the lockup rather than the picture. */
+#section-process .st-step:nth-child(1) .st-step__art > img{ object-position:50% 50%; }
+#section-process .st-step:nth-child(2) .st-step__art > img{ object-position:50% 38%; }
+#section-process .st-step:nth-child(3) .st-step__art > img{ object-position:50% 42%; }
+#section-process .st-step:nth-child(4) .st-step__art > img{ object-position:50% 44%; }
+
+/* ---- section 5's measure ----
+   The default body measure on this page is 38ch, which is right for the
+   sections that run a real paragraph beside a picture. Section 5 does
+   not: four of its five sentences are one line long, and at 38ch two of
+   them broke with a single word alone on the second line - "seconds."
+   under the first, "internet." under the last.
+
+   Taking the measure off entirely was the wrong answer to that. With no
+   measure the paragraph takes the whole column - min(52%,620px), which
+   is around 68 characters - and this section sits in the RIGHT half of
+   the screen, so the two long paragraphs ran from the middle of the
+   page to the gutter and read as a block of text rather than as a
+   column of copy.
+
+   So it is a measure again, at 44ch: wider than the page's 38ch, which
+   is what the short sentences needed, and far short of the column,
+   which is what made them sprawl. text-wrap:pretty is what handles the
+   widow now - a last line is not left holding one word.
+
+   Scoped by id and to the wide layout only. Under 900px the mobile
+   block already releases every measure on the page. */
 @media (min-width:901px){
-  .st-beat[data-stage="title"]#section-kink .st-beat__copy{ max-width:56ch; }
-  #section-kink .st-lift{ white-space:nowrap; }
+  #section-job .st-beat__copy{ max-width:44ch; text-wrap:pretty; }
 }
 
-/* ---- the process cards' focal points ----
-   The four stills are portrait or panoramic and the card is 4:3, so the
-   default centre crop takes the head off two of them and the middle out
-   of the fourth. Each is placed on its own subject instead. */
-#section-process .st-step:nth-child(1) .st-step__art > img{ object-position:50% 8%; }
-#section-process .st-step:nth-child(2) .st-step__art > img{ object-position:50% 50%; }
-#section-process .st-step:nth-child(3) .st-step__art > img{ object-position:50% 22%; }
-#section-process .st-step:nth-child(4) .st-step__art > img{ object-position:50% 55%; }
+/* ---- section 6's focal points ----
+   The bands are 21:9 and every frame in RECEIPTS is 16:9, so a band
+   takes a horizontal slice out of the middle of its still and drops
+   roughly a tenth off the top and the same off the bottom. On two of
+   the four that tenth is where the subject is: the MI portrait's head
+   sits near the top of the plate, and the SRH key art carries the
+   NETFLIX logo above four faces in its own top eighth. Both were
+   arriving decapitated.
+
+   Pulling object-position UP the image (below the 50% default) walks
+   the visible window toward the top of the plate, which moves the
+   subject DOWN inside the band. The other two frames are wide shots and
+   keep the centre crop. */
+#section-receipts .st-band:nth-child(1) img{ object-position:50% 12%; }
+#section-receipts .st-band:nth-child(3) img{ object-position:50% 10%; }

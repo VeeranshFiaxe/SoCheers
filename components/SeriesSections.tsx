@@ -3,10 +3,10 @@ import {
   SECTIONS,
   TEXTURE,
   isFilm,
-  type Card,
   type Section,
   type Step,
 } from "@/lib/series-content";
+import SeriesPhones from "@/components/SeriesPhones";
 
 /* ============================================================
    SERIES - the nine sections, staged.
@@ -43,7 +43,6 @@ import {
        3  .st-grain   the grade, and .st-leak after the turn
        4  .st-gate    the letterbox, parked at its hairline
        5  the type, at one size, in one column
-       6  .st-beat__slate  the mono chip burned into the corner
 
    Seven picture layers across nine sections, and the two that repeat -
    the strip three times, the poster twice - repeat on purpose: the
@@ -55,11 +54,13 @@ import {
 
    No scroll mechanics. initSeries() is not mounted on this route and
    nothing here carries [data-split] or [data-reveal]. Two things do
-   move, both in CSS and both for a reason the copy asks for: the title
-   card's entrance (see app/series/series.css) and the showcase, where
-   the brief's own words are "rapid visual sequence" and a still grid of
-   eighteen campaigns is not one. Both stop under
-   prefers-reduced-motion.
+   move, and both for a reason the copy asks for: the title card's
+   entrance, which is CSS (see app/series/series.css), and section 9,
+   where the brief's own words are "rapid visual sequence" and a still
+   picture of five handsets is not one. That section is the route's only
+   client component - components/SeriesPhones.tsx - and it answers the
+   scroll with three custom properties rather than with an engine. Both
+   stop under prefers-reduced-motion.
 
    SiteMotion is still mounted by the page, and has to be - it owns the
    cursor, the spotlight, the progress bar and the Lenis scroll, which
@@ -287,48 +288,6 @@ function Steps({ items }: { items: Step[] }) {
   );
 }
 
-/* THE SHOWCASE. Two rows of real campaigns travelling in opposite
-   directions - the brief's "rapid visual sequence of actual SoCheers
-   work".
-
-   Each row's cards are rendered TWICE. That is the whole mechanic: the
-   track is translated by exactly half its own width and the second copy
-   has arrived where the first one started, so the loop has no seam and
-   no JavaScript. Duplicating in the markup rather than in CSS is what
-   makes that exact - a track sized off its own content cannot drift out
-   of step with the distance it travels.
-
-   The second copy is hidden from the accessibility tree; the row itself
-   is a list of pictures with brand names on them, and a reader on a
-   screen reader should hear each brand once. */
-function Run({ cards }: { cards: Card[] }) {
-  const half = Math.ceil(cards.length / 2);
-  const rows: [Card[], Card[]] = [cards.slice(0, half), cards.slice(half)];
-
-  return (
-    <div className="st-run">
-      {rows.map((row, r) => (
-        <div className="st-run__row" data-dir={r === 0 ? "fwd" : "back"} key={r}>
-          <div className="st-run__track">
-            {[0, 1].map((copy) =>
-              row.map((c) => (
-                <span
-                  className="st-card"
-                  key={`${copy}-${c.src}-${c.label}`}
-                  aria-hidden={copy === 1 ? true : undefined}
-                >
-                  <img src={c.src} alt="" loading="lazy" decoding="async" />
-                  <i className="st-card__label">{c.label}</i>
-                </span>
-              )),
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* the picture layer for a section, and the plate behind it. Kept in one
    place so a stage is a single line in the section below and adding one
    is a case here rather than an edit inside the loop. */
@@ -344,10 +303,11 @@ function Stage({ section }: { section: Section }) {
       return <Reel frames={frames} />;
     case "steps":
     case "showcase":
-      /* both of these carry their pictures in the reading column rather
-         than behind it - the steps because they are a diagram and the
-         showcase because it is the work, and work laid behind a scrim
-         is a background. The plate is all the stage has. */
+      /* both of these carry their pictures in front of the reading
+         column rather than behind it - the steps because they are a
+         diagram, and the handsets because they are the work, and work
+         laid behind a scrim is a background. The plate is all the stage
+         has. */
       return null;
     default:
       return <Strip frames={frames} />;
@@ -357,7 +317,7 @@ function Stage({ section }: { section: Section }) {
 /* The picture the plate is blown up from. Every section has one, but
    not every section keeps it in `frames`. */
 const groundOf = (s: Section) =>
-  s.frames?.[0] ?? s.steps?.[0]?.art ?? s.showcase?.[0]?.src ?? "peak-content.jpg";
+  s.frames?.[0] ?? s.steps?.[0]?.art ?? s.phones?.[0]?.poster ?? "peak-content.jpg";
 
 /* ---------- the page ----------------------------------------------- */
 
@@ -371,7 +331,7 @@ export default function SeriesSections() {
 
   return (
     <div className="st-story">
-      {SECTIONS.map((s, i) => {
+      {SECTIONS.map((s) => {
         const isStrip = s.stage === "strip";
         const side = isStrip && strips++ % 2 === 1 ? "left" : "right";
 
@@ -454,9 +414,13 @@ export default function SeriesSections() {
                     One set of words, one thing to press. */}
                 {s.mark &&
                   (s.cta ? (
-                    <a className="st-beat__mark st-beat__mark--cta" href={s.cta.href}>
+                    <a
+                      className="st-beat__mark st-beat__mark--cta"
+                      href={s.cta.href}
+                      data-magnetic
+                      data-cursor="Say hi"
+                    >
                       <Hi text={s.mark} accent={inLine ? undefined : s.accent} />
-                      <i aria-hidden="true" />
                     </a>
                   ) : (
                     <p className="st-beat__mark">
@@ -487,19 +451,10 @@ export default function SeriesSections() {
               </div>
             </div>
 
-            {/* full bleed, outside the reading column: the rows are
-                wider than the page and are meant to run off both
-                edges. */}
-            {s.showcase && <Run cards={s.showcase} />}
-
-            {s.slate && (
-              <span className="st-beat__slate" aria-hidden="true">
-                {/* the client's own numbering. Section 1 is the title
-                    card at the head of the route, so these start at 2. */}
-                <b>{String(i + 2).padStart(2, "0")}</b>
-                {s.slate}
-              </span>
-            )}
+            {/* full bleed, outside the reading column: the arc is wider
+                than the page and the outer two handsets are meant to
+                run off both edges. */}
+            {s.phones && <SeriesPhones />}
           </section>
         );
       })}

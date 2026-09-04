@@ -1,16 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import {
   OVERTURE_CUE,
   OVERTURE_DONE,
   OVERTURE_REPLAY,
   overtureCued,
-  shouldRunOverture,
 } from "@/lib/overture";
-import { initOverture } from "@/lib/overture-motion";
-import { OVERTURE_FINAL, OVERTURE_WALLS } from "@/lib/content";
+import { initTestOverture } from "@/lib/test-overture-motion";
+import { IMG, OVERTURE_WALLS, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
 import {
   BARS,
   BAR_STROKE,
@@ -28,31 +26,30 @@ import {
 import SoCheersLockup from "./SoCheersLockup";
 
 /* ============================================================
-   THE OVERTURE - markup only. All of the motion is in
-   lib/overture-motion.ts; all of the look is in the OVERTURE block
-   at the end of app/globals.css.
+   THE OVERTURE, TEST CUT  (/test only - the live one is
+   components/Overture.tsx and nothing here touches it)
+
+   Same room, same bulb, same falls. The ending is the difference: the
+   last wall is blank plaster with a slide projector standing in front of
+   it, the bulb comes back out of the corner and drops into the
+   projector's socket, and the hero arrives as a projection - warm-up,
+   flicker, grain, 3 · 2 · 1 - instead of as a wall that expands.
+
+   Markup only. All of the motion is in lib/test-overture-motion.ts; the
+   look is the OVERTURE block at the end of app/globals.css, plus the
+   projector's own sheet in app/test/test.css.
 
    The whole thing renders on the server exactly as it does on the client,
    carrying `data-idle` - which globals.css reads as "display:none". That
-   attribute is the no-JS and reduced-motion escape hatch *and* it is what
-   stops the sequence flashing on screen for a frame before the effect below
-   has decided whether to run it: nothing is ever mounted mid-flight, the
-   effect just takes the attribute off when the answer is yes.
+   attribute is what stops the sequence flashing on screen for a frame
+   before the effect below has mounted the engine: nothing is ever seen
+   mid-build, the effect just takes the attribute off.
    ============================================================ */
+/* Only the walls that fall. The one that stays standing is not a picture
+   any more - it is blank plaster - so it is written out below rather than
+   being the last entry of a list of photographs. */
+const WALLS = OVERTURE_WALLS;
 
-/* The room, in depth order. The last entry is the hero artwork itself and is
-   marked as such - it is the one wall that stays standing, and the sequence
-   ends by walking the camera into it until it is pixel-for-pixel the real
-   hero underneath (see finale() in lib/overture-motion.ts). */
-const WALLS = [
-  ...OVERTURE_WALLS.map((w) => ({ ...w, final: false })),
-  /* The two phone fields spelled out as absent rather than left off. The
-     final wall does not get a portrait stand-in like the others do: it is
-     the hero, so on a phone it is shown whole instead of re-shot - see
-     .ovt__slab[data-final] in the phone block of globals.css. Writing them
-     out keeps every member of this array the same shape. */
-  { img: OVERTURE_FINAL, label: "SoCheers", m: undefined, mpos: undefined, final: true },
-];
 
 /* The width the phone's column starts at. Same number as the --lamp-w
    breakpoint below it in globals.css and as PHONE in lib/motion.ts - the
@@ -401,37 +398,21 @@ function Rope() {
   );
 }
 
-/* The one route this does not play on. /test is an experiment carrying a
-   different ending (components/TestOverture.tsx), and the room is mounted
-   in the layout - so without this both cuts would build at once, fight
-   over [data-overture], and take the screen twice. Named here rather than
-   guarded in the layout so the exception sits next to the thing it is an
-   exception to. */
-const TEST_ROUTE = "/test";
-
-export default function Overture() {
+export default function TestOverture() {
   /* Re-running initOverture is how the replay works: the docked mark fires
      OVERTURE_REPLAY, this bumps, the effect tears the old run down and
      builds a clean one. */
   const [run, setRun] = useState(0);
-  const path = usePathname();
-  const off = path === TEST_ROUTE;
 
   useEffect(() => {
-    if (off) return;
     const root = document.querySelector<HTMLElement>('[data-overture]');
     if (!root) return;
 
     const replay = () => setRun((n) => n + 1);
     document.addEventListener(OVERTURE_REPLAY, replay);
 
-    /* First mount only: reduced motion, or a tab that has already seen the
-       show. Either way the mark still has to end up docked in the corner -
-       it is the site's logo now, not just a one-time flourish - so this
-       is not a reason to skip the engine entirely, only a reason to ask it
-       to jump straight to the end state with nothing animated. */
-    const instant = run === 0 && !shouldRunOverture();
-
+    /* No "already seen" gate on this route. /test exists to be watched,
+       and it is watched from the top every time it is loaded. */
     /* If the opening sequence cannot be built, the page must not be left
        standing behind it. It takes the screen by dispatching its own start
        event, and lib/motion.ts answers that by stopping the scroll and
@@ -445,7 +426,7 @@ export default function Overture() {
     const build = () => {
       try {
         root.removeAttribute('data-idle');
-        teardown = initOverture(root, { instant });
+        teardown = initTestOverture(root);
       } catch (err) {
         console.error('[socheers] overture failed to build', err);
         root.setAttribute('data-idle', '');
@@ -470,16 +451,14 @@ export default function Overture() {
       document.removeEventListener(OVERTURE_CUE, build);
       teardown();
     };
-  }, [run, off]);
-
-  if (off) return null;
+  }, [run]);
 
   return (
     /* Not aria-hidden as a whole: it covers the page while it runs, so the
        two things you can do to it - pull the rope, skip out - have to be
        real, labelled, focusable controls. Everything else in here is
        scenery and says so individually. */
-    <div className="overture" data-overture data-idle>
+    <div className="overture overture--test" data-overture data-idle>
       {/* --- the room ------------------------------------------------- */}
       <div className="ovt__stage" data-ovt-stage aria-hidden="true">
         <div className="ovt__dolly" data-ovt-dolly>
@@ -488,7 +467,6 @@ export default function Overture() {
               <div
                 className="ovt__slab"
                 data-ovt-slab
-                data-final={w.final || undefined}
                 /* Only read inside the phone's media query in globals.css,
                    so a wall with no mpos - and every wall on a wide screen
                    - falls back to a plain centre crop. */
@@ -534,7 +512,213 @@ export default function Overture() {
               </div>
             </div>
           ))}
+
+          {/* --- the wall that stays up, and what stands in front of it ---
+
+              Blank plaster, and a projector on the floor pointed at it.
+              No picture, no caption, no brand name: the only thing in the
+              frame with any intent in it is a machine that is switched
+              off, and that is meant to be read in the beat the camera
+              holds before the bulb comes back.
+
+              The slab is still a viewport-sized plane at the end of the
+              stack, so the camera arriving still puts it at translateZ(0)
+              with an identity transform - and .ovt__screen inside it is
+              cut to exactly the rectangle the hero's own expanded photo
+              lands on (containedBox in lib/motion.ts: the crowd shot's
+              aspect, at 94% of the viewport). So the thing being
+              projected and the thing underneath are the same rectangle in
+              the same place, and the hand-off is still geometry. */}
+          <div className="ovt__wall" data-ovt-wall>
+            <div className="ovt__slab" data-ovt-slab data-final data-blank>
+              <span className="ovt__plaster" aria-hidden="true" />
+
+              {/* the lit rectangle - where the beam actually lands, and
+                  therefore the only part of the wall that is a screen */}
+              <span className="ovt__screen" data-ovt-screen aria-hidden="true">
+                <span className="ovt__wash" data-ovt-wash />
+
+                {/* The gate: what is *in* the projection, and the one
+                    thing that shakes. It has to settle back to an
+                    identity transform before the hand-off. */}
+                <span className="ovt__gate" data-ovt-gate>
+                  {/* The crowd, not the artwork. This is what the hero
+                      used to travel to on the first scroll; the projector
+                      shows it directly instead, so the wordmark-and-then-
+                      it-expands beat is gone. Same file and same set the
+                      hero itself draws (IMG.team / TEAM_SRCSET in
+                      lib/content.ts), so it is already in cache and the
+                      cross-fade at the end is one picture, not two. */}
+                  <img
+                    className="ovt__face"
+                    data-ovt-src={IMG.team}
+                    data-ovt-srcset={TEAM_SRCSET}
+                    sizes={TEAM_SIZES}
+                    alt=""
+                  />
+                  <span className="ovt__count" data-ovt-count>
+                    <svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+                      <circle cx="50" cy="50" r="46" />
+                      <circle cx="50" cy="50" r="46" data-ovt-count-arc />
+                      <path d="M50 4v92M4 50h92" />
+                    </svg>
+                    <i data-ovt-count-n />
+                  </span>
+                </span>
+
+                <span className="ovt__grain" data-ovt-grain />
+                {/* the soft edge of the gate - a projected rectangle does
+                    not have a printed border, it has a falloff */}
+                <span className="ovt__gate-edge" />
+              </span>
+
+              <span className="ovt__shade" />
+            </div>
+
+            {/* The machine, on the floor in front of the wall and off to
+                one side of it, so it is not standing in the middle of its
+                own picture. Inside the same wall element and pushed
+                forward in Z, so it keeps its distance from the plaster on
+                its own as the camera moves - an object in the room rather
+                than an overlay drawn on top of it.
+
+                Drawn as one SVG rather than as a stack of boxes: a
+                projector is all curves and tapers - a barrel, a hood, two
+                reels, a cast base - and none of those are a div. */}
+            <div className="ovt__proj" data-ovt-proj aria-hidden="true">
+              <svg
+                className="ovt__proj-svg"
+                viewBox="0 0 340 300"
+                xmlns="http://www.w3.org/2000/svg"
+                focusable="false"
+              >
+                <defs>
+                  {/* one light direction for the whole machine, from the
+                      upper left, same as everything else in the room */}
+                  <linearGradient id="tp-shell" x1="0" y1="0" x2="0.4" y2="1">
+                    <stop offset="0" stopColor="#5b5a66" />
+                    <stop offset="0.34" stopColor="#33323c" />
+                    <stop offset="0.78" stopColor="#1a1a20" />
+                    <stop offset="1" stopColor="#101015" />
+                  </linearGradient>
+                  <linearGradient id="tp-deck" x1="0" y1="0" x2="0.2" y2="1">
+                    <stop offset="0" stopColor="#6d6c78" />
+                    <stop offset="1" stopColor="#3a3944" />
+                  </linearGradient>
+                  <linearGradient id="tp-barrel" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stopColor="#4a4954" />
+                    <stop offset="0.45" stopColor="#26252d" />
+                    <stop offset="1" stopColor="#14141a" />
+                  </linearGradient>
+                  <radialGradient id="tp-hot" cx="0.5" cy="0.5" r="0.5">
+                    <stop offset="0" stopColor="#fff6d8" />
+                    <stop offset="0.45" stopColor="#ffcf4e" />
+                    <stop offset="1" stopColor="#ff9d18" stopOpacity="0" />
+                  </radialGradient>
+                  <filter id="tp-soft" x="-70%" y="-70%" width="240%" height="240%">
+                    <feGaussianBlur stdDeviation="9" />
+                  </filter>
+                </defs>
+
+                {/* Depth order, back to front, and it is the only thing
+                    in here saying which end of the machine is nearer the
+                    wall: the spill first, then the lens (which points
+                    away from us), then the reels standing in front of it,
+                    then the housing, which covers the bottom of both. */}
+
+                {/* the lamp getting out. Drawn behind everything so the
+                    housing reads as a silhouette with a fire in it. */}
+                <ellipse
+                  className="ovt__proj-fire"
+                  cx="252" cy="118" rx="76" ry="54"
+                  fill="url(#tp-hot)" filter="url(#tp-soft)"
+                />
+
+                {/* The lens. It points away from us, so all there is of it
+                    is the barrel coming out of the far side of the
+                    housing and, once there is a bulb in the machine, the
+                    ring of light on the front element. */}
+                <g className="ovt__proj-lens">
+                  <ellipse className="ovt__lens-glow" cx="284" cy="140" rx="28" ry="23" />
+                  <path
+                    className="ovt__lens-barrel"
+                    d="M214 176l58-42c6-4 14-3 18 3l6 9c4 6 2 14-4 18l-58 42Z"
+                  />
+                  <ellipse
+                    className="ovt__lens-face" data-ovt-lens
+                    cx="284" cy="140" rx="15" ry="12"
+                    transform="rotate(-36 284 140)"
+                  />
+                </g>
+
+                {/* --- the reels, on their arms above the deck --- */}
+                <g className="ovt__proj-arms">
+                  <path d="M104 172V92M218 172v-68" />
+                </g>
+                <g className="ovt__reel" data-ovt-reel="104 92">
+                  <circle className="ovt__reel-rim" cx="104" cy="92" r="52" />
+                  <circle className="ovt__reel-film" cx="104" cy="92" r="40" />
+                  <g className="ovt__reel-spokes">
+                    <path d="M104 40v104M59 66l90 52M59 118l90-52" />
+                  </g>
+                  <circle className="ovt__reel-hub" cx="104" cy="92" r="9" />
+                </g>
+                <g className="ovt__reel" data-ovt-reel="218 104">
+                  <circle className="ovt__reel-rim" cx="218" cy="104" r="40" />
+                  <circle className="ovt__reel-film" cx="218" cy="104" r="29" />
+                  <g className="ovt__reel-spokes">
+                    <path d="M218 64v80M183.4 84l69.2 40M183.4 124l69.2-40" />
+                  </g>
+                  <circle className="ovt__reel-hub" cx="218" cy="104" r="7" />
+                </g>
+
+                {/* --- the housing: the deck receding away from us, and
+                        the back of it, which is the face we are looking
+                        at --- */}
+                <path className="ovt__proj-deck" d="M70 168h200l22 20H48Z" />
+                <path
+                  className="ovt__proj-shell"
+                  d="M48 188h244v54a14 14 0 0 1-14 14H62a14 14 0 0 1-14-14Z"
+                />
+                {/* the lamp-house cowl, standing on the deck over the
+                    socket - the one part of the machine the bulb's light
+                    has to get out of before it reaches the lens */}
+                <path className="ovt__proj-cowl" d="M128 170l14-24h56l14 24Z" />
+
+                {/* the vents, and the light that gets out of them */}
+                <g className="ovt__proj-vents">
+                  <path d="M74 208h82M74 220h82M74 232h82" />
+                </g>
+                {/* two controls, because a machine has controls */}
+                <circle className="ovt__proj-knob" cx="240" cy="212" r="14" />
+                <circle className="ovt__proj-knob" cx="240" cy="240" r="8" />
+
+                {/* --- the socket, open in the mouth of the cowl, waiting.
+                        Cold it is a hole with a rim, which is the one
+                        detail that has to be legible in the hold before
+                        anything happens: it is the question the bulb is
+                        the answer to. --- */}
+                <g className="ovt__proj-socket" data-ovt-socket>
+                  <ellipse className="ovt__socket-well" cx="170" cy="150" rx="29" ry="11" />
+                  <ellipse className="ovt__socket-fire" cx="170" cy="148" rx="21" ry="8" />
+                  <ellipse className="ovt__socket-rim" cx="170" cy="150" rx="29" ry="11" />
+                </g>
+
+                {/* --- the base it stands on --- */}
+                <path className="ovt__proj-foot" d="M92 256h30l7 22H85ZM218 256h30l7 22h-44Z" />
+                <ellipse className="ovt__proj-base" cx="170" cy="280" rx="114" ry="12" />
+              </svg>
+              {/* the pool of light it throws on the floor around itself */}
+              <span className="ovt__proj-pool" />
+            </div>
+          </div>
         </div>
+
+        {/* the light in the air between the lens and the wall. A flat
+            shape, but the engine measures the lens and the wall and cuts
+            it to fit them, so it starts and ends where the beam does. */}
+        <span className="ovt__beam" data-ovt-beam aria-hidden="true" />
+
         <span className="ovt__dust" data-ovt-dust />
       </div>
 

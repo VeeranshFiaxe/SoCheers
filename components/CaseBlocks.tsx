@@ -199,9 +199,13 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
               </figure>
             );
 
+          /* The count goes to the CSS because the grid has to be full:
+             a drawn lattice with a half-empty last row is a hole rather
+             than a grid, and how many columns divide n evenly is
+             something only n knows. See .cs-stats in case.css. */
           case "stats":
             return (
-              <div className="cs-stats" key={key} data-reveal>
+              <div className="cs-stats" key={key} data-n={b.items.length} data-reveal>
                 {b.items.map((s) => (
                   <div className="cs-stat" key={s.label}>
                     <b>{s.figure}</b>

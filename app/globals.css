@@ -280,7 +280,7 @@ em{ font-style:italic; }
 .sec.no-border{ border-top:none; }
 .sec__title{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px,4.8vw,66px); line-height:1.0; letter-spacing:-.02em;
+  font-size:clamp(28px,4.4vw,62px); line-height:1.0; letter-spacing:-.02em;
   max-width:20ch; margin-top:26px; text-wrap:balance;
 }
 /* What We Do / Clients titles are short enough to hold as one line - the
@@ -1136,7 +1136,15 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 /* Both side columns are held at the middle of the row so the claim and
    the pitch read as two things the mark is hanging between, rather than
    as two columns that happen to start at the same top edge. */
-.who__copy{ display:flex; flex-direction:column; align-items:flex-start; gap:clamp(16px,2.2vh,26px); align-self:center; }
+.who__copy{ position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:clamp(16px,2.2vh,26px); align-self:center; }
+/* The tag rides above the claim but is lifted out of the flow to do it.
+   In flow it is part of what this column centres on, so the column's
+   middle falls between tag and lede, the lede drops by half a tag, and
+   the pitch opposite - which has no tag - centres level with the tag
+   instead of with the sentence it answers. Out of flow, both side
+   columns centre on their type alone and the pitch sits against
+   "We are SoCheers -" onwards, which is what it is talking to. */
+.who__copy > .tag{ position:absolute; left:0; bottom:100%; margin-bottom:clamp(16px,2.2vh,26px); white-space:nowrap; }
 .who__say{ align-self:center; }
 
 /* Lede + pitch share one type size so they read as one statement that
@@ -1317,6 +1325,9 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
      (.split-line / .line-mask above), so this inherits straight down onto
      each of them and the wipe is untouched. */
   .who__copy{ align-items:center; text-align:center; }
+  /* Stacked, there is no opposite column to line up with and the tag is
+     simply the label above the claim, so it goes back into the flow. */
+  .who__copy > .tag{ position:static; margin-bottom:0; }
   .who__say{ text-align:center; }
   .who__stats{ flex-wrap:wrap; }
   .stat{ flex:1; min-width:100px; padding:0 20px 12px; }
@@ -1539,15 +1550,34 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 /* ============================================================
    5 · CLIENT LOGOS
    ============================================================ */
+/* The rows run to the bottom edge of the section, and that is the whole
+   reason for the padding override.
+
+   The section pads itself top and bottom like every other one, and under
+   the last row that padding was up to 150px of nothing between a ruled
+   line and the next section's ruled line - which does not read as air,
+   it reads as a FOURTH empty strip on a wall of three. So the bottom
+   padding comes off and the last row loses its own rule: the next
+   section's border-top is already there and is the line that closes the
+   wall. */
+.clients{ padding-bottom:0; }
 .clients__rows{ margin-top:58px; border-top:1px solid var(--line); }
 .cmarquee{ overflow:hidden; border-bottom:1px solid var(--line); padding:20px 0; }
+.cmarquee:last-child{ border-bottom:none; }
 /* Tighter and a size down from where this started. The row is a wall of
    names, not a list of headlines: at 42px with 44px of air between them
    you read three brands per screen, which is the one thing a client wall
    must not do. */
-.cmarquee__track{ display:flex; align-items:center; gap:24px; width:max-content; white-space:nowrap; }
+/* One size for the row, declared here rather than on the names, because
+   two different kinds of child have to agree on it: a name that is typed
+   reads it as its font-size, and a name that is DRAWN reads it as the
+   cap height to match. */
+.cmarquee__track{
+  --bw-size:clamp(17px,2.05vw,31px);
+  display:flex; align-items:center; gap:24px; width:max-content; white-space:nowrap;
+}
 .cmarquee__track span{
-  font-family:var(--f-display); font-weight:700; font-size:clamp(17px,2.05vw,31px);
+  font-family:var(--f-display); font-weight:700; font-size:var(--bw-size);
   letter-spacing:-.01em; color:var(--muted);
   transition:color .35s, transform .45s var(--ease);
 }
@@ -1569,6 +1599,52 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    speck of dust between names rather than as a printed separator. */
 .cmarquee__track .s{ color:var(--star, var(--accent)); font-size:.62em; }
 .cmarquee__track .s:hover{ transform:none; }
+
+/* ---- a name drawn in its own letterforms ----
+
+   Where there is artwork for a brand, the name is not typed - it is the
+   wordmark, and it is drawn as a MASK rather than dropped in as an
+   image. That one decision is what keeps this a wall of type:
+
+     - a mask carries shape and nothing else, so whatever colours the
+       original wordmark came in are gone. Every mark arrives in the
+       row's own grey, which is what stops thirty brands reading as a
+       logo sheet;
+     - because the colour is a background and not baked into a file, the
+       mark takes its own solid on hover through exactly the same
+       --brand the typed names use. A drawn name and a typed name behave
+       identically under the cursor, which is the point.
+
+   Sized by HEIGHT, with the width following from the mark's own ratio -
+   the row has one cap height and a wordmark is whatever width it is.
+   Sizing the other way round would squash a long mark to fit a box.
+
+   .85 puts the mark's box on the cap height of the sans beside it rather
+   than on its font-size, which is the taller number - a mark set to the
+   full font-size stands a head above every word on the row. The figure
+   was arrived at by setting a wordmark against a word of the sans at the
+   same size and matching the two caps, not derived: .74 was the first
+   guess and left every mark sitting a little low. --k is the per-mark
+   trim on top of it, for artwork that does not fill its own artboard -
+   see BRAND_MARK in lib/content.ts.
+
+   Both prefixed and unprefixed mask are here on purpose: Safari still
+   wants the prefix, and a mask that does not apply is not a subtle bug -
+   the background has nothing clipping it and the name paints as a solid
+   grey rectangle. */
+.cmarquee__track .bmark{
+  --cap:calc(var(--bw-size) * .85 * var(--k, 1));
+  display:block; flex:none;
+  height:var(--cap); width:calc(var(--cap) * var(--ar));
+  background:var(--muted);
+  -webkit-mask:var(--mark) center/contain no-repeat;
+          mask:var(--mark) center/contain no-repeat;
+  transition:background-color .35s, transform .45s var(--ease);
+}
+.cmarquee__track .bmark:hover{
+  background:var(--brand, var(--accent));
+  transform:scale(var(--pop, 1.14)) rotate(var(--tilt, -2deg));
+}
 
 /* ============================================================
    6 · FEATURED WORK
@@ -1650,7 +1726,7 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   --swipe:var(--purple);
 }
 /* The name, and it is deliberately the largest type on the page - past
-   the section title above it (.sec__title, clamp(30px,4.8vw,66px)) at
+   the section title above it (.sec__title, clamp(28px,4.4vw,62px)) at
    every width, not just at the top of the scale. It used to sit under
    that title on paper and level with it on screen, because these are set
    in caps and caps read a size up: same numbers, and the row and the

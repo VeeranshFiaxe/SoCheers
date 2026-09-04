@@ -40,71 +40,44 @@ export const metadata: Metadata = {
    (lib/content.ts) and lib/series-v1.ts.
    ============================================================ */
 
-/* The highlighter block, on the last words of the title card. Split
-   rather than hard-coded so HERO stays the only place the line and the
-   accented words are spelled; `accent` is matched off the end of the
-   line, because on a title card the block belongs where the sentence
-   lands rather than in the middle of it. */
-const titleParts = (line: string, accent: string) => {
-  const at = line.lastIndexOf(accent);
-  return at < 0 ? { head: line, tail: "" } : { head: line.slice(0, at), tail: accent };
-};
-
 export default function Series() {
-  const title = titleParts(HERO.line, HERO.accent);
-
   return (
     <>
       <main id="top" className="st-page">
         {/* ---- SECTION 1, the title card ------------------------------
             The client's first section is one sentence and nothing else,
-            which is what a cold open is - so it is the card rather than
-            the first screen of the story. Six layers, staged in CSS
-            only: ground, frames, scrim, type, grade, gate. The one bit
-            of motion is an entrance. See .st-hero in series.css.
+            which is what a cold open is - so it is staged as the first
+            frame of an episode rather than as a poster for one. One
+            plate held full bleed and pushed back, the letterbox over
+            it, and the line set small and centred in the middle of the
+            screen. No slate, no cue, no highlighter block: the beat is
+            the two seconds where the screen is only the sentence. See
+            .st-hero in series.css.
             ---------------------------------------------------------- */}
         <header className="st-hero">
           <div className="st-hero__stage" aria-hidden="true">
-            {/* 0 - the room the composition hangs in */}
+            {/* 0 - the plate, one picture, edge to edge */}
             <img
-              className="st-fill st-hero__ground"
-              src={ART(HERO.frames[0])}
+              className="st-fill st-hero__plate"
+              src={ART(HERO.still)}
               alt=""
               fetchPriority="high"
             />
 
-            {/* 1 - the frames, overlapping rather than tiling */}
-            <div className="st-hero__frames">
-              {HERO.frames.map((f, i) => (
-                <span className="st-hero__frame" key={f} style={{ ["--i" as string]: i }}>
-                  <img src={ART(f)} alt="" decoding="async" />
-                </span>
-              ))}
-            </div>
-
-            {/* 2 - ground for the type */}
+            {/* 1 - ground for the type */}
             <span className="st-hero__scrim" />
 
-            {/* 3 - the grade */}
+            {/* 2 - the grade */}
             <img className="st-grain" src={ART(TEXTURE.grain)} alt="" decoding="async" />
 
-            {/* 4 - the letterbox */}
+            {/* 3 - the letterbox */}
             <span className="st-gate st-gate--t" />
             <span className="st-gate st-gate--b" />
           </div>
 
           <div className="wrap st-hero__type">
-            <span className="st-hero__tag">{HERO.tag}</span>
-            <h1 className="st-hero__title">
-              {title.head}
-              {title.tail && <em className="st-hi">{title.tail}</em>}
-            </h1>
+            <h1 className="st-hero__title">{HERO.line}</h1>
           </div>
-
-          <span className="st-hero__cue" aria-hidden="true">
-            <i />
-            {HERO.cue}
-          </span>
         </header>
 
         <SeriesSections />
@@ -112,9 +85,27 @@ export default function Series() {
 
       <footer className="st-foot">
         <div className="wrap st-foot__in">
-          <span>{CONCEPT.title}</span>
-          <a href={SERIES_CTA.secondary.href} target="_blank" rel="noopener noreferrer">
-            Produced with {SERIES_CTA.secondary.label}
+          {/* the credit, and the one outbound link on the route. The two
+              glyphs are what tell a reader the name is a place rather
+              than a credit line: a globe for "this is a site", an arrow
+              leaving its box for "and it opens away from here". */}
+          <a
+            className="st-foot__site"
+            href={SERIES_CTA.secondary.href}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg className="st-foot__globe" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M3 12h18" />
+              <path d="M12 3c2.7 2.9 2.7 15.1 0 18-2.7-2.9-2.7-15.1 0-18Z" />
+            </svg>
+            In collaboration with {SERIES_CTA.secondary.label}
+            <svg className="st-foot__out" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 16 16 8" />
+              <path d="M9 8h7v7" />
+            </svg>
+            <span className="sr-only">(opens in a new tab)</span>
           </a>
         </div>
       </footer>
