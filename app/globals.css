@@ -280,9 +280,13 @@ em{ font-style:italic; }
 .sec.no-border{ border-top:none; }
 .sec__title{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(28px,4.4vw,62px); line-height:1.0; letter-spacing:-.02em;
+  font-size:clamp(26px,3.4vw,48px); line-height:1.04; letter-spacing:-.02em;
   max-width:20ch; margin-top:26px; text-wrap:balance;
 }
+/* The tags that used to introduce these are gone (see components/
+   Sections.tsx), so in every section but WHO WE ARE the heading is the
+   first thing in the wrap and the lead-in it was clearing is not there. */
+.sec__title:first-child{ margin-top:0; }
 /* What We Do / Clients titles are short enough to hold as one line - the
    shared 20ch max was forcing a break that those lines don't need. */
 .what .sec__title,
@@ -305,23 +309,6 @@ em{ font-style:italic; }
 .tile:hover [data-roll] .roll__in,
 .wcard:hover [data-roll] .roll__in,
 .who__bandline span[data-roll]:hover .roll__in{ transform:translateY(-100%); }
-
-/* ============================================================
-   HERO CRUMBLE  (built by components/HeroCrumble.tsx, poured by motion.ts)
-   The hero's own last frame, rebuilt grain by grain so it can fall apart.
-   Lives inside the hero pin; motion.ts copies the layers under it into an
-   offscreen frame, then pours that frame off grain by grain from the bottom
-   row upwards while WHO WE ARE rides up behind the pin.
-   ============================================================ */
-/* A single canvas, not a grid of elements. The grains used to be real DOM -
-   one <i> each, every one carrying a slice of a very large photo and an
-   inset shadow, all tweened together - which is ~1300 style writes and a
-   full-screen repaint per frame. Same picture, one compositor layer. */
-.hero__crumble{
-  position:absolute; inset:0; z-index:4; pointer-events:none;
-  visibility:hidden;                   /* motion.ts swaps it in at the crumble */
-  display:block; width:100%; height:100%;
-}
 
 /* ============================================================
    PIXEL GRID  (Paul Kalkbrenner)
@@ -387,16 +374,16 @@ em{ font-style:italic; }
   width:10px; height:10px; border-radius:50%; background:var(--cream);
   mix-blend-mode:difference; transform:translate(-50%,-50%);
   opacity:0;
-  transition:width .35s var(--ease), height .35s var(--ease), background .3s, opacity .3s;
-  display:grid; place-items:center;
+  transition:opacity .3s;
 }
 /* stays invisible at its default (0,0) resting spot until the first
    mousemove proves the pointer is actually there - otherwise it just
    sits pinned over whatever renders in the page's top-left corner */
 .cursor.is-visible{ opacity:1; }
-.cursor__label{ font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); opacity:0; transform:scale(.6); transition:opacity .25s, transform .25s; white-space:nowrap; }
-.cursor.is-active{ width:82px; height:82px; background:var(--accent); mix-blend-mode:normal; }
-.cursor.is-active .cursor__label{ opacity:1; transform:scale(1); }
+/* No second state. The dot stayed a dot everywhere now - it used to
+   swell into an 82px accent disc with a word in it on anything carrying
+   data-cursor, and a label that follows the pointer is a caption on a
+   site that is already labelled. */
 .cursor-ring{
   position:fixed; top:0; left:0; z-index:9998; pointer-events:none;
   width:38px; height:38px; border-radius:50%; border:1px solid rgba(241,236,225,.35);
@@ -408,7 +395,6 @@ em{ font-style:italic; }
   will-change:transform;
 }
 .cursor-ring.is-visible{ opacity:1; }
-.cursor-ring.is-active{ width:0; height:0; opacity:0; }
 @media (hover:none){ .cursor,.cursor-ring{ display:none; } }
 
 .progress{ position:fixed; top:0; left:0; width:100%; height:2px; z-index:9997; }
@@ -498,7 +484,11 @@ html.sc-seen .loader{ display:none; }
   position:fixed; top:0; left:0; width:100%; z-index:900;
   display:flex; align-items:center; justify-content:space-between;
   padding:22px var(--pad);
-  transition:transform .5s var(--ease);
+  /* It fades as it goes. A pure translate is a row that is either there
+     or gone - at speed it reads as the header being cut off rather than
+     tucked away - so the opacity leads and the travel is short enough to
+     be a lift rather than a launch. */
+  transition:transform .62s var(--ease), opacity .38s var(--ease);
   --nav-ink:var(--cream);
   /* the capsule the links sit in - see .nav__links */
   --nav-island:rgba(12,12,14,.72);
@@ -545,11 +535,7 @@ html.sc-seen .loader{ display:none; }
 /* the accent still fills it on hover, so the border goes back to being
    the edge of the fill rather than the island's hairline */
 .nav .nav__cta:hover{ border-color:var(--accent); }
-/* and the colour each link rolls up to. The page's accent is cut to sit
-   on black; on a cream ground it is that colour's deeper value, the same
-   one .is-light re-points --accent to. */
-.nav.is-on-light .roll__in > span:last-child{ color:var(--accent-deep); }
-.nav.is-hidden{ transform:translateY(-120%); }
+.nav.is-hidden{ transform:translateY(-64%); opacity:0; pointer-events:none; }
 .nav__logo{ font-family:var(--f-display); font-weight:700; font-size:21px; letter-spacing:-.01em; transition:opacity .45s var(--ease); }
 /* The logo, and there is only one of it: the flat lockup
    (components/SoCheersLockup.tsx), same mark, same size, same corner, on
@@ -635,10 +621,17 @@ html.sc-seen .loader{ display:none; }
   padding:9px 14px; border-radius:999px;
   transition:background .32s var(--ease), color .35s var(--ease);
 }
-/* the clipped box is the label, one level in from the padded target -
-   see the note in components/Chrome.tsx */
-.nav__links a:hover{ background:var(--nav-island-hover); }
-.nav__links a:hover .roll__in{ transform:translateY(-100%); }
+/* Hover is a colour change and a tint behind it, and that is the whole
+   response. The labels used to roll - two stacked copies of the word in a
+   clipped box, the accent one flipping up - and a row of eight tabs a
+   couple of pixels apart turned a pointer crossing it into eight flips in
+   a second. See the note in components/Nav.tsx.
+
+   --accent on the dark ground and --accent-deep on a light one, the same
+   pair the rest of the site reads: the bright value is cut for black and
+   burns out over the About page's cream panels. */
+.nav__links a:hover{ background:var(--nav-island-hover); color:var(--accent); }
+.nav.is-on-light .nav__links a:hover{ color:var(--accent-deep); }
 /* ---- the indicator ----
    The page you are on is filled in the accent, and it is one object doing it
    rather than a background switching from one link to another: the header
@@ -665,9 +658,12 @@ html.sc-seen .loader{ display:none; }
    the tab you left reads as dark text on nothing for a moment; faster and
    the one you are going to goes dark before anything is behind it. */
 .nav__links a[aria-current="page"]{ color:var(--accent-ink); }
-.nav__links a[aria-current="page"] .roll__in > span:last-child{ color:var(--accent-ink); }
-/* nothing to hover onto - the tab is already filled */
-.nav__links a[aria-current="page"]:hover{ background:transparent; }
+/* nothing to hover onto - the tab is already filled, so neither the tint
+   nor the accent applies over it */
+.nav__links a[aria-current="page"]:hover,
+.nav.is-on-light .nav__links a[aria-current="page"]:hover{
+  background:transparent; color:var(--accent-ink);
+}
 /* A tab with nowhere to go yet (AI Work). It reads as one of the row, one
    step back: the page behind it does not exist, so it should not look like
    something you failed to click. */
@@ -863,7 +859,63 @@ html.sc-seen .loader{ display:none; }
   :root{ --screen:100svh; }
 }
 .hero{ position:relative; height:var(--screen); z-index:5; }
-.hero__pin{ position:relative; height:var(--screen); width:100%; overflow:hidden; background:#000; }
+/* Spent: the crumble has run and the hero is not the screen any more.
+
+   z-index 5 over WHO WE ARE's 0, plus the negative margin that pulls that
+   section a screen up underneath this one (html.is-pinned .who below), is
+   what lets the falling grains uncover the next section rather than black
+   - and it also leaves this pin sitting as a full-screen box on top of
+   WHO WE ARE for as long as that section is on screen. A box on top eats
+   the mouseenter of everything under it, which is why the counts could
+   not be hovered: the pointer landed on .hero__pin, .stat:hover never
+   matched, and the figures never took their colour.
+
+   Written by initHero's release() in lib/motion.ts, and taken off again
+   by reclaim() when the reader comes back up into the pin. The descendant
+   selector is load-bearing: two things in here set pointer-events:auto
+   for themselves (the speaker on the definition, the reel's transport),
+   and a rule on the parent alone does not reach them. */
+.hero.is-spent,
+.hero.is-spent *{ pointer-events:none; }
+/* The pin, and the mask that takes it off the screen.
+
+   This is what replaced the crumble - the grid of grains that used to be
+   poured off the bottom of this box a tile at a time. Tiles read as a
+   slide transition however they are timed; this dissolves instead, from
+   the bottom edge upward on an edge about half a screen deep, and WHO WE
+   ARE (already sitting behind, see html.is-pinned .who below) is
+   uncovered continuously rather than a square at a time.
+
+   The geometry, since it is only arithmetic and it is easier to read
+   here than to infer from the numbers:
+
+     · the mask is twice the pin's height (mask-size 100% 200%)
+     · black across its top half, which is EXACTLY the pin at rest, so
+       parked at 0 0 this rule changes nothing at all
+     · then a fade from 50% to 78% of the mask - about half a pin-height
+       of falloff - and transparent past that
+     · no-repeat, so everything beyond the mask is transparent too
+
+   So sliding the mask up by 1.6 pin-heights carries the pin from fully
+   painted to fully gone, and every position in between is a soft edge
+   somewhere across it. dissolve() in lib/motion.ts writes nothing but
+   mask-position.
+
+   It is declared here rather than switched on when the dissolve starts
+   because a mask that arrives at the moment it begins moving is a pop on
+   its first frame - parked opaque it is invisible, and the only cost is
+   one compositor layer on an element that already had one.
+
+   Both spellings: Safari still wants the prefix, and a mask that does
+   not apply is not subtle here - it is the hero refusing to leave. */
+.hero__pin{
+  position:relative; height:var(--screen); width:100%; overflow:hidden; background:#000;
+  -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 50%, rgba(0,0,0,0) 78%);
+          mask-image:linear-gradient(to bottom, #000 0%, #000 50%, rgba(0,0,0,0) 78%);
+  -webkit-mask-size:100% 200%;   mask-size:100% 200%;
+  -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:0 0;     mask-position:0 0;
+}
 
 /* the SOC▢HEERS artwork, full bleed */
 .hero__frame{ position:absolute; inset:0; z-index:1; will-change:transform,opacity; }
@@ -988,19 +1040,12 @@ html.no-js .meaning{ visibility:visible; }
     linear-gradient(to bottom, rgba(6,6,7,.45) 0%, transparent 30% 78%, rgba(6,6,7,.6) 100%);
 }
 
-/* "MAKING MORE HAPPEN", set reading downwards on the right edge */
-.meaning__side{
-  position:absolute; right:calc(var(--pad) * .55); top:50%; z-index:3;
-  writing-mode:vertical-rl; text-orientation:mixed;
-  translate:0 -50%;                    /* not transform: GSAP owns y here */
-  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.55em;
-  text-transform:uppercase; color:rgba(241,236,225,.42);
-  white-space:nowrap; pointer-events:none;
-}
-.meaning__side::after{
-  content:""; display:block; width:1px; height:64px; margin:18px auto 0;
-  background:linear-gradient(to bottom, rgba(241,236,225,.35), transparent);
-}
+/* "MAKING MORE HAPPEN" used to be set reading downwards on the right edge
+   of the definition. It is gone: the line is the footer's - it is the
+   headline over the ask at the end of the page - and printing it here too
+   made the page say its own sign-off twice, once in 10px mono up an edge
+   and once at 58px under the bulb. The footer keeps it.
+   (components/Hero.tsx, components/Footer.tsx.) */
 
 .meaning__inner{
   position:relative; z-index:4;
@@ -1096,7 +1141,6 @@ html.no-js .meaning{ visibility:visible; }
   letter-spacing:.08em; font-style:italic; color:var(--muted); opacity:.7;
 }
 @media (max-width:860px){
-  .meaning__side{ right:10px; font-size:9px; letter-spacing:.42em; }
   .meaning__pos{ max-width:none; }
   .meaning__veil{ background:linear-gradient(to bottom, rgba(6,6,7,.9), rgba(6,6,7,.82)); }
 }
@@ -1135,16 +1179,23 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 .who__grid{ margin-top:clamp(18px,2.4vh,30px); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr); gap:clamp(20px,2.4vw,44px); align-items:center; }
 /* Both side columns are held at the middle of the row so the claim and
    the pitch read as two things the mark is hanging between, rather than
-   as two columns that happen to start at the same top edge. */
-.who__copy{ position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:clamp(16px,2.2vh,26px); align-self:center; }
-/* The tag rides above the claim but is lifted out of the flow to do it.
-   In flow it is part of what this column centres on, so the column's
-   middle falls between tag and lede, the lede drops by half a tag, and
-   the pitch opposite - which has no tag - centres level with the tag
-   instead of with the sentence it answers. Out of flow, both side
-   columns centre on their type alone and the pitch sits against
-   "We are SoCheers -" onwards, which is what it is talking to. */
-.who__copy > .tag{ position:absolute; left:0; bottom:100%; margin-bottom:clamp(16px,2.2vh,26px); white-space:nowrap; }
+   as two columns that happen to start at the same top edge.
+
+   Which is all this column has to do now. The "WHO WE ARE" tag used to
+   sit above the claim and had to be lifted out of the flow to do it - in
+   flow it was part of what the column centred on, so the middle fell
+   between tag and lede and the pitch opposite, having no tag of its own,
+   centred level with the label instead of with the sentence it answers.
+   The tag is gone (components/Sections.tsx) and so is the workaround:
+   both side columns hold one paragraph each and centre on it. */
+/* Ragged toward the mark, on both sides. The pitch opposite is set left
+   and therefore already stands right beside the bulb; this one was set
+   left as well, which put its ragged edge against the page's own margin
+   and left the whole claim drifting a column's width away from the thing
+   it is supposed to be leaning on. Turned round, the two columns close on
+   the mark at the same distance and the arrangement reads as one object
+   with a sentence either side of it. */
+.who__copy{ position:relative; display:flex; flex-direction:column; align-items:flex-end; text-align:right; gap:clamp(16px,2.2vh,26px); align-self:center; }
 .who__say{ align-self:center; }
 
 /* Lede + pitch share one type size so they read as one statement that
@@ -1152,7 +1203,7 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 .who__lede,
 .who__pitch{
   font-family:var(--f-display);
-  font-size:clamp(24px,2.95vw,44px); line-height:1.14; letter-spacing:-.015em;
+  font-size:clamp(22px,2.45vw,36px); line-height:1.16; letter-spacing:-.015em;
 }
 .who__lede{
   font-weight:700; color:var(--cream);
@@ -1196,7 +1247,7 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 .stat:nth-child(2){ --stat-accent:var(--purple); }
 .stat:nth-child(3){ --stat-accent:var(--tangerine); }
 .stat:hover{ transform:translateY(-4px); }
-.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(38px,4vw,62px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
+.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,3.3vw,50px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--stat-accent, var(--accent)); }
 /* The digits carry their own transition as well as the figure's: the
    count-up drives an inline colour on the span (initCounters), and
@@ -1204,7 +1255,8 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    through them. Shorter than the hold, so each colour still arrives and
    sits rather than being permanently on its way somewhere. */
 .stat__num [data-count]{ transition:color .22s linear; }
-.stat__num i{ color:var(--cream); font-style:normal; }
+.stat__num i{ color:var(--cream); font-style:normal; transition:color .22s linear; }
+.stat:hover .stat__num i{ color:var(--stat-accent, var(--accent)); }
 .stat__label{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
 
 /* The visual stands on its own - no frame, no card, no surface of any
@@ -1276,11 +1328,44 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    one is a lamp in a section that is already lit. */
 .plogo::before{
   content:""; position:absolute; left:50%; top:41%;
-  height:190%; aspect-ratio:1; transform:translate(-50%, -50%);
+  height:205%; aspect-ratio:1; transform:translate(-50%, -50%);
   background:radial-gradient(circle closest-side,
-    rgba(var(--bulb), .17) 0%, rgba(var(--bulb), .095) 26%,
-    rgba(var(--bulb), .035) 48%, rgba(var(--bulb), 0) 78%);
+    rgba(var(--bulb), .23) 0%, rgba(var(--bulb), .135) 24%,
+    rgba(var(--bulb), .06) 44%, rgba(var(--bulb), .018) 62%,
+    rgba(var(--bulb), 0) 80%);
   mix-blend-mode:screen; pointer-events:none;
+  animation:plogo-breathe 8.5s var(--ease) infinite;
+}
+/* ---- and the light at the glass itself ----
+   The wash above is the room; this is the lamp. One radius is a lamp seen
+   from far enough away that it has no source - a lit patch of black with
+   the mark inside it - so the second one is put back where the filament
+   is: tight, brighter, blurred so it has no edge of its own, and centred
+   on the same 41% the wash is rather than on the element, or the hot spot
+   lands on the base instead of on the bulb.
+
+   Two of them on slightly different clocks is what keeps it from reading
+   as a static gradient: neither period is a multiple of the other, so the
+   pair never quite repeats and the light breathes rather than pulses. */
+.plogo::after{
+  content:""; position:absolute; left:50%; top:41%;
+  height:78%; aspect-ratio:1; transform:translate(-50%, -50%);
+  background:radial-gradient(circle closest-side,
+    rgba(var(--bulb), .30) 0%, rgba(var(--bulb), .155) 32%,
+    rgba(var(--bulb), .05) 58%, rgba(var(--bulb), 0) 80%);
+  filter:blur(10px);
+  mix-blend-mode:screen; pointer-events:none;
+  animation:plogo-breathe 5.9s var(--ease) infinite;
+}
+/* Opacity only: it is composited, so the whole thing costs nothing per
+   frame, and the span is narrow on purpose - a lamp that visibly throbs
+   is a warning light. */
+@keyframes plogo-breathe{
+  0%, 100%{ opacity:.82; }
+  50%     { opacity:1; }
+}
+@media (prefers-reduced-motion:reduce){
+  .plogo::before, .plogo::after{ animation:none; }
 }
 /* Deliberately taller than the element it sits in, and sized in width and
    height rather than by insets: a canvas is a replaced element, so a
@@ -1318,16 +1403,11 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
      ragged left against a mark that is dead centre reads as three things
      that failed to line up rather than as one arrangement.
 
-     So the whole column centres, the tag with it: the tag is the claim's
-     own label and sits in the same flex column, and leaving it hard left
-     over centred type is the same mismatch one line further up. The split
-     lines are display:block full-bleed inside the paragraph
-     (.split-line / .line-mask above), so this inherits straight down onto
-     each of them and the wipe is untouched. */
+     So the whole column centres. The split lines are display:block
+     full-bleed inside the paragraph (.split-line / .line-mask above), so
+     this inherits straight down onto each of them and the wipe is
+     untouched. */
   .who__copy{ align-items:center; text-align:center; }
-  /* Stacked, there is no opposite column to line up with and the tag is
-     simply the label above the claim, so it goes back into the flow. */
-  .who__copy > .tag{ position:static; margin-bottom:0; }
   .who__say{ text-align:center; }
   .who__stats{ flex-wrap:wrap; }
   .stat{ flex:1; min-width:100px; padding:0 20px 12px; }
@@ -1524,7 +1604,7 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 .wcard__img img{ position:absolute; inset:0; opacity:0; transform:scale(1.08); transition:opacity .4s ease-in-out, transform .9s var(--ease); }
 .wcard__img img.is-active{ opacity:1; z-index:1; }
 .wcard__body{ position:relative; z-index:2; padding:clamp(24px,2vw,36px); transform:translateZ(40px); }
-.wcard__name{ display:block; font-family:var(--f-display); font-weight:700; font-size:clamp(30px,3vw,50px); line-height:1; letter-spacing:-.02em; margin:0 0 22px; text-align:center; }
+.wcard__name{ display:block; font-family:var(--f-display); font-weight:700; font-size:clamp(26px,2.3vw,38px); line-height:1; letter-spacing:-.02em; margin:0 0 22px; text-align:center; }
 /* Every card reserves room for six rows even when it lists fewer, so the
    bottom-anchored bodies all start at the same height and the titles line
    up across the row. Kept as a calc off the row metrics below so the two
@@ -1721,19 +1801,24 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 .amarquee__show{
   position:relative; display:inline-flex; align-items:center;
   transition:transform .45s var(--ease);
-  /* the fallback matters: --swipe is set per item in the markup, and a row
-     rendered without it should still be struck through rather than bare */
+  /* position:relative above is load-bearing twice over: it is what the
+     swipe sits under, and it is the containing block the citation hangs
+     from - see .amarquee__cat below.
+
+     The --swipe fallback matters: it is set per item in the markup, and a
+     row rendered without it should still be struck through rather than
+     bare. */
   --swipe:var(--purple);
 }
-/* The name, and it is deliberately the largest type on the page - past
-   the section title above it (.sec__title, clamp(28px,4.4vw,62px)) at
-   every width, not just at the top of the scale. It used to sit under
-   that title on paper and level with it on screen, because these are set
-   in caps and caps read a size up: same numbers, and the row and the
-   heading looked like the same type. The heading asks the question and
-   the row is the answer, so the row wins. */
+/* The name, and it is deliberately still the largest type on the page -
+   past the section title above it (.sec__title, clamp(26px,3.4vw,48px))
+   at every width, not just at the top of the scale. The two used to carry
+   the same numbers, and because these are set in caps and caps read a
+   size up, the row and the heading looked like the same type. The heading
+   asks the question and the row is the answer, so the row wins - which is
+   why both came down together rather than the row alone. */
 .amarquee__show b{
-  font-family:var(--f-display); font-weight:700; font-size:clamp(34px,5.6vw,78px);
+  font-family:var(--f-display); font-weight:700; font-size:clamp(28px,4vw,56px);
   line-height:1; letter-spacing:-.02em; text-transform:uppercase; color:var(--cream);
   /* the swipe: a band of this show's colour sat across the lower third of
      the line, grown to the full height of it on hover. Two stops of the
@@ -1749,6 +1834,33 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    all six. Not var(--bg): that token is re-pointed under .is-light, and
    this ink has to stay dark whatever the panel around it does. */
 .amarquee__show:hover b{ background-size:100% 100%; background-position:0 100%; color:#0b0b0c; }
+
+/* The category, under the show that gave it.
+
+   Out of flow entirely: the ticker in lib/motion.ts wraps the track on
+   half of its own scrollWidth, so anything that changed that width when
+   the pointer arrived would shift the wrap point and jump the whole row.
+   Absolute, centred on the name, and the name's own box is untouched.
+
+   It arrives on the same beat the swipe fills - both are .4s off the same
+   hover - so the two read as one response rather than as a label
+   appearing after a highlight. Set in the row's own muted cream rather
+   than in the swipe's colour: it sits below the band, not on it, and six
+   different colours of small type would be six more things to read.
+
+   nowrap and centred is what keeps a two-word citation and a five-word
+   one behaving the same in a moving row - neither wraps, both stay under
+   the middle of their show. */
+.amarquee__cat{
+  position:absolute; top:calc(100% + .1em); left:50%;
+  transform:translateX(-50%) translateY(4px);
+  font-family:var(--f-mono); font-weight:500; font-style:normal;
+  font-size:clamp(9px,.72vw,12px); letter-spacing:.2em; text-transform:uppercase;
+  white-space:nowrap; color:var(--muted);
+  opacity:0; pointer-events:none;
+  transition:opacity .4s var(--ease), transform .4s var(--ease);
+}
+.amarquee__show:hover .amarquee__cat{ opacity:1; transform:translateX(-50%) translateY(0); }
 
 /* what sits between two shows: a dot on the baseline of the names, not a
    star - the client wall already owns the star. It carries the colour of
@@ -2653,9 +2765,15 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   border:1px solid var(--line); color:var(--muted);
   transition:color .3s var(--ease), border-color .3s var(--ease), background-color .3s var(--ease);
 }
+/* The ring lights, the glyph lights, and nothing fills. A solid accent
+   disc puts the mark back in shadow - the glyph goes to ink so that it can
+   be read against it, which is a hover that hides its own icon - and it is
+   the only filled hover in the floor row, where everything else simply
+   takes the accent as colour (.foot__ends a:hover). */
 .foot__social a:hover{
-  color:var(--accent-ink); background:var(--accent);
-  border-color:color-mix(in srgb, var(--accent) 60%, transparent);
+  color:var(--accent);
+  border-color:color-mix(in srgb, var(--accent) 55%, transparent);
+  background:color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 /* ---- the floor of the room ----
@@ -2719,7 +2837,10 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em;
   text-transform:uppercase; color:var(--muted);
 }
-.foot__ends-meta{ display:flex; align-items:center; gap:14px; }
+/* Two separate pieces of small print, not one string: at this size and
+   this letter-spacing 14px was close enough to read as "BACK TO TOP EST.
+   2013". */
+.foot__ends-meta{ display:flex; align-items:center; gap:clamp(20px,2vw,32px); }
 .foot__ends-meta i{ font-style:normal; }
 .foot__ends a{ transition:color .3s var(--ease); }
 .foot__ends a:hover{ color:var(--accent); }
@@ -2844,3 +2965,25 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
 @media (prefers-reduced-motion: reduce){
   .nav__pill{ transition:opacity .3s linear; }
 }
+
+/* ---------- the Zoho sink ----------
+   Both contact forms post into a hidden iframe rather than over fetch:
+   Zoho's plain-HTML endpoint answers no CORS headers, so a scripted
+   request cannot read - or even reliably send - the reply, while a real
+   form POST into a frame just works. The frame has nothing to show, so
+   it is taken out of the layout entirely. display:none is deliberately
+   not used: a display:none iframe does not always fire `load`, which is
+   the one thing this element exists for. */
+.ctf__sink{
+  position:absolute; width:0; height:0; border:0;
+  visibility:hidden; pointer-events:none;
+}
+
+/* The pop-up's thank-you, in place of the fields once Zoho has taken the
+   brief. Same panel, so the box does not resize under the reader. */
+.cmodal__done{ justify-content:center; }
+.cmodal__done-note{
+  margin-top:14px; max-width:34ch;
+  font-size:15px; line-height:1.65; color:var(--muted);
+}
+.cmodal__submit:disabled{ opacity:.6; }

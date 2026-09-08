@@ -293,6 +293,7 @@ export const BUCKETS = [
   {
     idx: "01",
     name: "Strategy",
+    slug: "strategy",
     img: "/assets/home/strategy-9.webp",
     images: [
       "/assets/home/strategy-9.webp",
@@ -316,7 +317,8 @@ export const BUCKETS = [
   },
   {
     idx: "02",
-    name: "Creativity",
+    name: "Creative",
+    slug: "creative",
     img: "/assets/home/creativity-7.webp",
     images: [
       "/assets/home/creativity-7.webp",
@@ -340,6 +342,7 @@ export const BUCKETS = [
   {
     idx: "03",
     name: "Production",
+    slug: "production",
     img: IMG.camera,
     images: [
       IMG.camera,
@@ -417,7 +420,7 @@ export const CLIENT_ROWS: { dir: "left" | "right"; names: string[] }[] = [
 
    k is the part worth not "tidying". Somebody balanced that artwork -
    NETFLIX is set heavier than JioHotstar, CHANDON is letterspaced small,
-   Belgian Waffle stacks over two lines - and carrying each mark's own
+   Sunfeast Yippee! stacks over two lines - and carrying each mark's own
    height through as a fraction is what reproduces those proportions on
    the row. Normalising every k to 1 would flatten a designed wall into a
    list of equal-sized cut-outs.
@@ -430,22 +433,17 @@ export const BRAND_MARK: Record<string, { slug: string; ar: number; k: number }>
   /* screens and streamers */
   "Netflix":            { slug: "netflix", ar: 3.64, k: 1.01 },
   "JioHotstar":         { slug: "jiohotstar", ar: 5.78, k: 0.72 },
-  "Universal Pictures": { slug: "universal", ar: 7.45, k: 0.63 },
   "Sony LIV":           { slug: "sonyliv", ar: 5.39, k: 0.67 },
 
   /* the wordmarks that are just the name */
   "TCS":              { slug: "tcs", ar: 1.56, k: 1.47 },
   "Pantaloons":       { slug: "pantaloons", ar: 8.1, k: 0.64 },
   "Superdry":         { slug: "superdry", ar: 4.32, k: 0.88 },
-  "ITC":              { slug: "itc", ar: 2.95, k: 1.06 },
-  "Audi":             { slug: "audi", ar: 3.9, k: 0.88 },
   "YES Bank":         { slug: "yesbank", ar: 6.47, k: 0.7 },
   "ASUS":             { slug: "asus", ar: 4.82, k: 0.81 },
-  "IndusInd":         { slug: "indusind", ar: 4.99, k: 0.83 },
   "BHIM":             { slug: "bhim", ar: 4.8, k: 0.81 },
   "Lupin":            { slug: "lupin", ar: 4.1, k: 0.72 },
   "Croma":            { slug: "croma", ar: 4.21, k: 1.03 },
-  "Zurich Kotak":     { slug: "zurichkotak", ar: 8.76, k: 0.87 },
   "Reliance General": { slug: "reliance", ar: 3.44, k: 1.11 },
 
   /* the drawn ones - script, slab and deco */
@@ -465,7 +463,6 @@ export const BRAND_MARK: Record<string, { slug: string; ar: number; k: number }>
   /* the tall ones - two lines or a lockup */
   "Sunfeast Yippee!": { slug: "yippee", ar: 1.84, k: 2.12 },
   "Bingo!":           { slug: "bingo", ar: 1.71, k: 1.97 },
-  "Belgian Waffle":   { slug: "belgianwaffle", ar: 1.25, k: 2.37 },
 };
 
 export const TILES = [

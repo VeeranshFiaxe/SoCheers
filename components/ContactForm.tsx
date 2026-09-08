@@ -1,17 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import ContactBulb from "./ContactBulb";
 import { CONTACT_FORM } from "@/lib/contact-content";
+import { INTENTS, ZOHO_ACTION, ZOHO_HIDDEN, ZOHO_TARGET } from "@/lib/zoho-form";
 
-/* The dedicated page's own form - not the footer pop-up reused, a proper
-   inline one with the room a full page gives it. Same three-field core as
-   the pop-up (name, email, message) plus what a real brief intake asks for
-   beyond that. Still no network wiring, same as the pop-up and the
-   whitepaper form - what submitting does is hand the panel over to the
-   thank-you below. */
+/* The dedicated page's own form, and now a live one: it posts to the
+   client's Zoho form (see lib/zoho-form.ts) rather than handing straight
+   over to the thank-you.
+
+   It is the site's own markup, not Zoho's embed - the panel is beige and
+   white and set in the page's type, and an iframe of Zoho's own card
+   could not be made to be either. What it borrows from Zoho is the field
+   names and the branching, which have to match or a submission lands in
+   the wrong column.
+
+   The branching is Zoho's, mirrored here:
+     - Hire an agency   -> Name / Email / Phone / brief
+     - Work as partner  -> the second set of the same fields, plus a deck
+     - Find my next job -> no fields at all. Zoho hides every input on
+       this branch and shows a note pointing at the careers site, so
+       there is nothing to submit and no submit button. */
+type Intent = keyof typeof INTENTS;
+
+const INTENT_COPY: { key: Intent; label: string }[] = [
+  { key: "agency", label: "Hire an agency" },
+  { key: "partner", label: "Work as a partner" },
+  { key: "job", label: "Find my next job" },
+];
+
 export default function ContactForm() {
+  const [intent, setIntent] = useState<Intent>("agency");
+  const [sending, setSending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [fileName, setFileName] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
+  /* The hidden iframe fires `load` once when it is first attached, well
+     before anything is sent. Only a load that follows our own submit is
+     the reply we are waiting for. */
+  const awaiting = useRef(false);
 
   /* The whole point of the send: the mark comes up out of the panel and
      switches on, which is the same gesture the overture opens the site
@@ -33,61 +60,219 @@ export default function ContactForm() {
     );
   }
 
+  const partner = intent === "partner";
+
   return (
-    <form
-      className="ctf"
-      onSubmit={(e) => {
-        e.preventDefault();
-        const name = new FormData(e.currentTarget).get("name");
-        setSentTo(typeof name === "string" ? name.trim().split(/\s+/)[0] : "");
-      }}
-    >
-      <div className="ctf__row">
-        <label className="ctf__field">
-          <span>Name</span>
-          <input type="text" name="name" placeholder="Your name" required />
-        </label>
-        <label className="ctf__field">
-          <span>Email</span>
-          <input type="email" name="email" placeholder="you@company.com" required />
-        </label>
-      </div>
+    <>
+      {/* Where Zoho's reply lands. We cannot read it - the endpoint sends
+          no CORS headers - so the load event is the whole signal: the
+          POST completed. */}
+      <iframe
+        name={ZOHO_TARGET}
+        title="Form submission"
+        aria-hidden="true"
+        tabIndex={-1}
+        className="ctf__sink"
+        onLoad={() => {
+          if (!awaiting.current) return;
+          awaiting.current = false;
+          const first =
+            formRef.current
+              ?.querySelector<HTMLInputElement>('input[name$="_First"]')
+              ?.value.trim()
+              .split(/\s+/)[0] ?? "";
+          setSending(false);
+          setSentTo(first);
+        }}
+      />
 
-      <div className="ctf__row">
-        <label className="ctf__field">
-          <span>Company</span>
-          <input type="text" name="company" placeholder="Where you work" />
-        </label>
-        <label className="ctf__field">
-          <span>Phone</span>
-          <input type="tel" name="phone" placeholder="Optional" />
-        </label>
-      </div>
+      <form
+        ref={formRef}
+        className="ctf"
+        action={ZOHO_ACTION}
+        method="post"
+        encType="multipart/form-data"
+        target={ZOHO_TARGET}
+        /* No preventDefault: the browser does the POST itself, into the
+           iframe above. All this does is mark that a reply is now ours
+           to act on and put the button into its sending state. */
+        onSubmit={() => {
+          awaiting.current = true;
+          setSending(true);
+        }}
+      >
+        {Object.entries(ZOHO_HIDDEN).map(([name, value]) => (
+          <input key={name} type="hidden" name={name} value={value} readOnly />
+        ))}
+        <input type="hidden" name="Radio" value={INTENTS[intent]} readOnly />
 
-      <div className="ctf__row">
-        <label className="ctf__field">
-          <span>What's this about?</span>
-          <select name="reason" defaultValue={CONTACT_FORM.reasons[0]}>
-            {CONTACT_FORM.reasons.map((r) => <option key={r}>{r}</option>)}
-          </select>
-        </label>
-        <label className="ctf__field">
-          <span>Where are you based?</span>
-          <input type="text" name="location" placeholder="City, country" />
-        </label>
-      </div>
+        <fieldset className="ctf__intent">
+          <legend className="ctf__intent-legend">I am here to</legend>
+          <div className="ctf__intent-row">
+            {INTENT_COPY.map((o) => (
+              <label
+                key={o.key}
+                className="ctf__intent-opt"
+                data-on={intent === o.key ? "" : undefined}
+              >
+                <input
+                  type="radio"
+                  name="intent"
+                  value={o.key}
+                  checked={intent === o.key}
+                  onChange={() => setIntent(o.key)}
+                />
+                <span>{o.label}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
-      <label className="ctf__field">
-        <span>Message</span>
-        <textarea name="message" placeholder="Brief us." rows={5} required />
-      </label>
+        {intent === "job" ? (
+          /* Zoho's own note, kept word for word. There is deliberately no
+             submit under it: on this branch the form has no fields, and a
+             send button over an empty form is a dead end dressed up as a
+             door. */
+          <div className="ctf__note">
+            <p>
+              Since you are interested in working at SoCheers, here is how we do
+              most of our hiring.
+            </p>
+            <ul>
+              <li>
+                Via our openings for specific roles:{" "}
+                <a href="https://socheers.net/careers/" target="_blank" rel="noopener noreferrer">
+                  SoCheers.net &gt; Careers
+                </a>
+              </li>
+              <li>
+                Nothing matches or not sure? Apply anyway based on location for{" "}
+                <a
+                  href="https://socheers.net/join-the-cheersquad-mumbai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Mumbai
+                </a>{" "}
+                or{" "}
+                <a
+                  href="https://socheers.net/join-the-cheersquad-bengaluru/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Bengaluru
+                </a>
+              </li>
+              <li>
+                By directly connecting with our recruitment team:{" "}
+                <a href="mailto:careers@socheers.net">careers@socheers.net</a>
+              </li>
+            </ul>
+          </div>
+        ) : (
+          <>
+            {/* Two parallel sets of the same fields, because that is how the
+                Zoho form is built - `Name`/`Email`/`PhoneNumber` belong to
+                the agency branch and `Name1`/`Email1`/`PhoneNumber1` to the
+                partner one, and Zoho drops whichever set does not match the
+                radio. Only the live set is rendered, so the other never
+                posts an empty value over a mandatory field. */}
+            <div className="ctf__row">
+              <label className="ctf__field">
+                <span>My name is</span>
+                <input
+                  type="text"
+                  name={partner ? "Name1_First" : "Name_First"}
+                  placeholder="First Last"
+                  autoComplete="name"
+                  required
+                />
+              </label>
+              <label className="ctf__field">
+                <span>I am from</span>
+                <input
+                  type="text"
+                  name={partner ? "Name1_Last" : "Name_Last"}
+                  placeholder="Brand or Org"
+                  autoComplete="organization"
+                  required
+                />
+              </label>
+            </div>
 
-      <button type="submit" className="ctf__submit">
-        <span>{CONTACT_FORM.submit}</span>
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
-      </button>
-    </form>
+            <div className="ctf__row">
+              <label className="ctf__field">
+                <span>My official email ID is</span>
+                <input
+                  type="email"
+                  name={partner ? "Email1" : "Email"}
+                  placeholder="myname@companyname.com"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+              <label className="ctf__field">
+                <span>I&rsquo;d like a call back on</span>
+                <input
+                  type="tel"
+                  name={partner ? "PhoneNumber1" : "PhoneNumber"}
+                  placeholder="+91 98765 43210"
+                  autoComplete="tel"
+                  required
+                />
+              </label>
+            </div>
+
+            {partner ? (
+              /* The partner branch's one extra ask. Zoho takes a single PDF
+                 up to 5 MB; the accept and the size check are here so a
+                 file that will be rejected is caught before the round trip
+                 rather than after it. */
+              <label className="ctf__field ctf__file">
+                <span>Upload resume or portfolio (up to 5 MB, PDF)</span>
+                <input
+                  type="file"
+                  name="FileUpload"
+                  accept="application/pdf,.pdf"
+                  onChange={(e) => {
+                    const input = e.currentTarget;
+                    const f = input.files?.[0];
+                    if (f && f.size > 5 * 1024 * 1024) {
+                      input.value = "";
+                      setFileName("");
+                      input.setCustomValidity("That file is over 5 MB.");
+                      input.reportValidity();
+                      return;
+                    }
+                    input.setCustomValidity("");
+                    setFileName(f ? f.name : "");
+                  }}
+                />
+                <span className="ctf__file-face" aria-hidden="true">
+                  {fileName || "Choose a PDF"}
+                </span>
+              </label>
+            ) : (
+              <label className="ctf__field">
+                <span>I am looking for</span>
+                <textarea
+                  name="MultiLine"
+                  placeholder="What aspects of advertising would you like to explore with SoCheers? Do share a bit about yourself or your organization."
+                  rows={5}
+                  required
+                />
+              </label>
+            )}
+
+            <button type="submit" className="ctf__submit" disabled={sending}>
+              <span>{sending ? "Sending…" : CONTACT_FORM.submit}</span>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+          </>
+        )}
+      </form>
+    </>
   );
 }

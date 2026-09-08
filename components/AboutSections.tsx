@@ -168,8 +168,6 @@ export function AboutFounders() {
   return (
     <section className="ab-panel ab-founders is-light" id="founders" data-sec="2">
       <div className="wrap">
-        <span className="tag" data-reveal>BUILT BY TWO</span>
-
         <div className="founders" data-founders>
           {/* data-tilt puts it on the same cursor-led lean the WHAT WE DO
               cards have (initTilt in lib/motion.ts): ticker-driven, eased,
@@ -287,7 +285,6 @@ export function AboutPeople() {
             picture, right statement - so the markup and the layout agree
             and nothing has to be re-sequenced for a screen reader. */}
         <p className="ab-people__note ab-people__note--l" data-reveal>
-          <i className="ab-people__idx">01</i>
           {WHY_WE_EXIST}
         </p>
 
@@ -312,7 +309,6 @@ export function AboutPeople() {
         </figure>
 
         <p className="ab-people__note ab-people__note--r" data-reveal>
-          <i className="ab-people__idx">02</i>
           {BELIEF}
         </p>
       </div>

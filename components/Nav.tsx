@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NAV_LINKS } from "@/lib/content";
 import { OVERTURE_REPLAY } from "@/lib/overture";
-import RollText from "./Roll";
 import SoCheersLockup from "./SoCheersLockup";
 
 /* ============================================================
@@ -146,12 +145,17 @@ export default function Nav() {
 
       {/* The row is a pill - one floating capsule of links rather than
           bare labels lying on the page, the same treatment the Series
-          page's Film / Stills / Text switcher wears. The label itself is
-          a nested span, not the link: [data-roll] clips its own box, so
-          the roll has to happen inside the capsule's padding rather than
-          across it, or the second copy of the word sits visible in the
-          padding below the first. Hover is read off the link so the whole
-          padded target rolls, not just the text. */}
+          page's Film / Stills / Text switcher wears.
+
+          The labels used to roll: each one was two stacked copies of the
+          word in a clipped box (components/Roll.tsx) and hovering flipped
+          the top one out and the accent-coloured one up. It is out. Eight
+          tabs sitting a couple of pixels apart means a pointer crossing
+          the row sets off eight of those in a second, and a header that
+          is flapping is a header you cannot read - which is the one thing
+          it has to be. The hover is the colour now, and nothing else
+          moves; the pill under the current tab is still the only travel
+          in here. */}
       <nav className="nav__links" ref={links}>
         {/* the accent, as one object that moves rather than a fill that
             switches tabs. Behind the labels, and measured in JS because
@@ -162,9 +166,7 @@ export default function Nav() {
             /* no href at all rather than href="#": an empty hash is a link
                to the top of the page dressed up as a link to a section */
             <span key={l.href} className="nav__soon">
-              <span className="nav__label" data-roll>
-                <RollText>{l.label}</RollText>
-              </span>
+              <span className="nav__label">{l.label}</span>
             </span>
           ) : (
             <Link
@@ -174,15 +176,13 @@ export default function Nav() {
               aria-current={l.href === active ? "page" : undefined}
               data-nav-current={l.href === active ? "" : undefined}
             >
-              <span className="nav__label" data-roll>
-                <RollText>{l.label}</RollText>
-              </span>
+              <span className="nav__label">{l.label}</span>
             </Link>
           ),
         )}
       </nav>
 
-      <Link href="/contact" prefetch className="nav__cta" data-magnetic data-cursor="Say hi">
+      <Link href="/contact" prefetch className="nav__cta" data-cursor="Say hi">
         <span>Let&rsquo;s chat</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M5 12h14M13 6l6 6-6 6" />

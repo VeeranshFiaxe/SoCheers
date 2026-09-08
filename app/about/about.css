@@ -1972,8 +1972,6 @@
   filter:grayscale(1) brightness(.78);
   transition:filter .45s var(--ease);
 }
-.stage__thumb:hover{ transform:translateY(-2px); }
-.stage__thumb:hover img{ filter:grayscale(.2) brightness(.95); }
 .stage__thumb.is-active{ border-color:var(--accent); }
 .stage__thumb.is-active img{ filter:none; }
 .stage__thumb:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
@@ -1987,7 +1985,6 @@
 @media (prefers-reduced-motion:reduce){
   .stage__frame img,
   .stage__cap span{ transition:none; animation:none; }
-  .stage__thumb:hover{ transform:none; }
   /* the field stays - it is a texture, and a still one is not motion. The
      wave and the dissolve are what go, and those are switched off in
      lib/ascii-field.ts rather than here, since a canvas cannot be stilled

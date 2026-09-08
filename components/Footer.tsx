@@ -463,13 +463,13 @@ export default function Footer() {
             transform, and a rise would be a second author for the same
             property. */}
         <div className="foot__mail foot__mail--l" data-foot-part="fade">
-          <a href="mailto:hello@socheers.net" data-magnetic data-cursor="Email">
+          <a href="mailto:hello@socheers.net">
             <span className="foot__mail-label">Bring us a brief</span>
             <span className="foot__mail-addr">hello@socheers.net</span>
           </a>
         </div>
         <div className="foot__mail foot__mail--r" data-foot-part="fade">
-          <a href="mailto:careers@socheers.net" data-magnetic data-cursor="Email">
+          <a href="mailto:careers@socheers.net">
             <span className="foot__mail-label">Bring us your best work</span>
             <span className="foot__mail-addr">careers@socheers.net</span>
           </a>
@@ -497,7 +497,7 @@ export default function Footer() {
             </span>
             <span className="foot__place">
               <b>Mumbai, India</b>
-              <i>19.0760° N · 72.8777° E</i>
+              <i>19.13654° N · 72.83317° E</i>
             </span>
           </div>
 
@@ -513,7 +513,6 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
-                  data-cursor="Follow"
                 >
                   <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     {s.path}
@@ -525,7 +524,7 @@ export default function Footer() {
               {/* A control, not a destination: it moves the page, it does not
                   name a place, so it is a button and leaves the address bar
                   alone. Handled by initTopLinks() in lib/motion.ts. */}
-              <button type="button" className="foot__top" data-top data-cursor="Top">
+              <button type="button" className="foot__top" data-top>
                 Back to top
               </button>
               <i>Est. 2013</i>

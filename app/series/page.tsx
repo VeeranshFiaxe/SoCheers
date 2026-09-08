@@ -2,7 +2,15 @@ import type { Metadata } from "next";
 import "./series.css";
 import SeriesSections from "@/components/SeriesSections";
 import SiteMotion from "@/components/SiteMotion";
-import { ART, CONCEPT, HERO, META_DESCRIPTION, SERIES_CTA, TEXTURE } from "@/lib/series-content";
+import {
+  ART,
+  CONCEPT,
+  FOOT_CREDIT,
+  HERO,
+  META_DESCRIPTION,
+  SERIES_CTA,
+  TEXTURE,
+} from "@/lib/series-content";
 
 export const metadata: Metadata = {
   title: `${CONCEPT.title} · SoCheers`,
@@ -100,7 +108,27 @@ export default function Series() {
               <path d="M3 12h18" />
               <path d="M12 3c2.7 2.9 2.7 15.1 0 18-2.7-2.9-2.7-15.1 0-18Z" />
             </svg>
-            In collaboration with {SERIES_CTA.secondary.label}
+            {/* one flex item, not four. .st-foot__site is an inline-flex
+                row with a .7em gap on it - that gap is the air around
+                the two glyphs, and a bare run of text beside them
+                becomes an anonymous flex item that takes the gap too,
+                which would open a hole in the middle of the sentence.
+                The whole credit sits in one span, and the name inside
+                it is a normal inline <b> spaced by the space before it.
+
+                That name is the only word in the line that is a place,
+                so it is set in the leaf green rather than the cream the
+                rest of the credit runs in: the two glyphs were telling
+                a reader the line goes somewhere but not WHICH part of
+                it is the destination. Now the coloured word is the
+                target and the arrow beside it says where it opens. */}
+            <span className="st-foot__credit">
+              {FOOT_CREDIT.lead}{" "}
+              <span className="st-foot__sep" aria-hidden="true">
+                {FOOT_CREDIT.joiner}
+              </span>{" "}
+              <b className="st-foot__name">{SERIES_CTA.secondary.label}</b>
+            </span>
             <svg className="st-foot__out" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M8 16 16 8" />
               <path d="M9 8h7v7" />

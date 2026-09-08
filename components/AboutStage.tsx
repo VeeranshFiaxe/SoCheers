@@ -268,7 +268,6 @@ export default function AboutStage({
             ref={(el) => { tabRefs.current[n] = el; }}
             className={n === i ? "stage__thumb is-active" : "stage__thumb"}
             onClick={() => setI(n)}
-            data-cursor={s.cap}
           >
             <img
               src={s.src}

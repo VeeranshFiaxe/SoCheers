@@ -108,16 +108,31 @@
    parks at ~4.3vh, which is a bar. */
 .st-hero .st-gate{ height:36vh; }
 
-/* 0 - the plate. One picture, edge to edge, and held well back: an
-   opening frame that is legible as a photograph turns the sentence over
-   it into a caption on somebody. Barely blurred rather than blurred -
-   at this size the softness only has to take the detail out, not the
-   picture. */
+/* 0 - the plate. One picture, edge to edge.
+
+   It used to be held well back - 4px of blur at .44 opacity and .46
+   brightness - on the theory that a frame legible as a photograph turns
+   the sentence over it into a caption on somebody. That theory was
+   written when the sentence was set at up to 50px across two stacked
+   lines, and it is no longer the sentence on this screen: the line is a
+   third of that size on one line now, so it is not competing with the
+   picture for the screen and the picture does not have to be pushed
+   down to let it through.
+
+   So the grade comes off almost entirely. The file is a sharp 1800px
+   still and it is allowed to look like one - .8px is a whisper of
+   softness that keeps the JPEG's own grain from crawling under the type
+   rather than a defocus, and the opacity and brightness come up to
+   where the red seats and the popcorn are actually a cinema instead of
+   a dark shape. The scrim under the line is doing the legibility work;
+   that is what it is for, and it is centre-weighted directly under the
+   type, so the type stays clean while the corners of the frame carry
+   the picture. */
 .st-hero__plate{
   z-index:0;
-  opacity:.44;
+  opacity:.72;
   transform:scale(1.06);
-  filter:blur(4px) saturate(.5) brightness(.46);
+  filter:blur(.8px) saturate(.86) brightness(.66);
 }
 
 /* 1 - the scrim. Centre-weighted now rather than raked to the left: the
@@ -165,14 +180,25 @@
 
    The size is still nowhere near the poster scale this card carried
    before the rewrite (clamp(34px,5.4vw,92px), weight 700, down the left
-   third): at that size the sentence IS the screen, which is a hero. */
+   third): at that size the sentence IS the screen, which is a hero.
+
+   ---- and then it came down to one line ----
+
+   The 16ch measure above broke the sentence into two stacked lines,
+   which is the shape a title card has and is also the shape of a
+   sentence that has been folded. Held on ONE line it reads as the slate
+   it is - one continuous statement across the middle of the frame - so
+   the measure is gone, `nowrap` guarantees it, and the size comes down
+   far enough that thirty-two characters clear the frame at every width
+   without the line having to be found by the wrap algorithm. Smaller
+   and unbroken is a title card; larger and folded was a headline. */
 .st-hero__title{
   margin:0 auto;
   font-family:var(--f-display); font-weight:400;
-  font-size:clamp(23px,3.05vw,50px); line-height:1.16;
+  font-size:clamp(15px,1.95vw,30px); line-height:1.16;
   letter-spacing:-.012em;
   color:var(--cream);
-  max-width:16ch; text-wrap:balance;
+  max-width:none; white-space:nowrap;
   /* a wide, weak shadow rather than a tight one - it is separating the
      line from the plate, not embossing it */
   text-shadow:0 26px 70px rgba(0,0,0,.7);
@@ -189,7 +215,11 @@
 }
 @keyframes st-hero-push{
   from{ opacity:0; transform:scale(1.12); }
-  to{ opacity:.44; transform:scale(1.06); }
+  /* lands on the plate's resting opacity - see .st-hero__plate. The two
+     have to be kept in step: the animation is `both`, so this `to` is
+     what actually holds after the entrance finishes, and a stale value
+     here silently overrides the rule above. */
+  to{ opacity:.72; transform:scale(1.06); }
 }
 /* The line resolves rather than arrives: it comes up out of focus and
    very slightly oversized and settles into place. A projector finding
@@ -219,9 +249,12 @@
    measure and a little more of it on the screen.
    -------------------------------------------------------------------- */
 @media (max-width:900px){
+  /* still one line at phone width, so the size is cut off the viewport
+     rather than off a measure - 3.6vw × 32 characters is the whole
+     sentence inside a 375px screen with its gutters intact. */
   .st-hero__title{
-    max-width:13ch;
-    font-size:clamp(24px,6.6vw,38px);
+    max-width:none;
+    font-size:clamp(12px,3.6vw,22px);
     letter-spacing:-.01em;
   }
   .st-hero__scrim{
@@ -242,7 +275,7 @@
      entrance lands on, so they are restated rather than cleared, which
      would give a black screen and an unpushed plate. */
   .st-hero .st-gate{ transform:scaleY(.12); }
-  .st-hero__plate{ opacity:.44; transform:scale(1.06); }
+  .st-hero__plate{ opacity:.72; transform:scale(1.06); }
   .st-hero__title{ filter:none; transform:none; }
 }
 
@@ -376,9 +409,35 @@
   font-size:11px; letter-spacing:.2em; text-transform:uppercase;
   color:var(--accent);
 }
+/* ---- the display line, and the one ratio the whole page is set on ----
+
+   Every heading scale on this route came down by the same ~7% in one
+   pass, and the sameness is the point rather than a shortcut. These
+   six clamps are not six independent decisions - the strip's line, the
+   name on the title card, the ask on the end card and their two narrow
+   variants are all sized in relation to each other and to the body
+   copy, so shrinking one by eye is how a page ends up with a section
+   whose heading is mysteriously the wrong weight against its
+   neighbour. One multiplier applied across all six keeps every one of
+   those relationships exactly where it was and just seats the type
+   slightly lower on the screen, which is what was asked for.
+
+   The two that are deliberately NOT in that pass:
+
+     - .st-hero__title. Already cut much harder, on its own terms, when
+       it came down to one line. It is not on the same ladder as these.
+     - the title card's own .st-beat__line, further down. It is pinned
+       to .st-beat__copy's clamp on purpose - the setup sentence is
+       meant to read at exactly paragraph size so the name is the only
+       big thing on that screen - and shrinking it here would break the
+       match it exists to hold.
+
+   .st-step__title is left alone too. At 15-22px inside a card it is a
+   block label rather than display copy, and it is already the smallest
+   heading on the page. */
 .st-beat__line{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(22px,2.9vw,42px); line-height:1.1; letter-spacing:-.03em;
+  font-size:clamp(20px,2.68vw,39px); line-height:1.1; letter-spacing:-.03em;
   color:var(--cream);
   /* 22ch, not the 15ch this measure was set at when the type was half
      again bigger. A measure is a count of characters and the type shrank
@@ -412,7 +471,7 @@
 
 .st-beat__mark{
   margin-top:clamp(14px,1.8vh,20px);
-  font-size:clamp(19px,1.8vw,27px); line-height:1.22; letter-spacing:-.015em;
+  font-size:clamp(18px,1.66vw,25px); line-height:1.22; letter-spacing:-.015em;
   font-weight:500; color:var(--cream); opacity:.88;
   max-width:22ch;
 }
@@ -582,6 +641,337 @@
 .st-poster__band:nth-child(2) > video{ object-position:42% 40%; }
 .st-poster__band:nth-child(3) > img,
 .st-poster__band:nth-child(3) > video{ object-position:58% 30%; }
+.st-poster__band:only-child{ background:transparent; }
+
+/* ---- section 4, the title card: THE PULL ---------------------------
+
+   The title card is one band, not three, and the still in it is a
+   portrait held in a landscape frame. Cover, which every other frame on
+   the page uses, is the tightest crop there is and it was cutting the
+   bottom of the phone off; letting the picture back out leaves the
+   frame short at the sides.
+
+   So the files it points at are widened copies - the photograph with
+   its own outermost column of pixels carried out to the left and right,
+   row for row. There is no seam to see because the colour at the edge
+   of the extension IS the colour at the edge of the photograph, and
+   nothing is invented: the picture is dark at both sides, so what runs
+   out to the edge of the screen is the same fall-off the frame already
+   had.
+
+   ---- two plates, and the scroll between them ----
+
+   The deck's still is the argument of the section already finished: a
+   face drawn out of a head and into the phone it is looking at.
+   Arriving finished, it is spent before the line naming the behaviour
+   has been read. So there is a second file - the same man, the same
+   room, the same phone in the same place, with an ordinary face on it -
+   and THAT is what the section is met with. The scroll takes him apart.
+
+   Five layers, and the order of them is the whole design:
+
+     to     the deck's finished frame, underneath everything
+     from   the ordinary frame, with a STATIC hole where his face is
+     smear  the deck's frame again, blurred once and screen-blended,
+            stretched off the phone - the band of light, over both
+     face   his face, on its own layer, scaled ABOUT THE PHONE so that
+            it collapses into it
+     wisp   the same face again, blurred hard and screen-blended,
+            thrown further and faster - what is left of him
+
+   `from` and `face` carry complementary masks - where one is solid the
+   other is clear - and they are cut from the same photograph, so at
+   rest they are one picture with no seam in it. The hole does not open.
+   His face LEAVES, and what was always behind it is the deck's smear.
+
+   Between them runs the canvas: motes lifting off his face and
+   accelerating into the phone. See components/SeriesPull.tsx.
+
+   ---- nothing here animates a mask or a filter ----
+
+   Every value the scroll drives below is an OPACITY or a TRANSFORM and
+   nothing else. Both are handled on the compositor: a layer is
+   rasterised once and then moved and faded, so a frame of this costs
+   nothing to paint.
+
+   The pass before this one grew a mask radius and a blur radius as the
+   scroll moved. Both are paint rather than composite, and both were
+   being re-run every frame over a picture the size of two screens,
+   which is what made it judder. The masks here are fixed. The blurs
+   here are fixed. What moves is where a layer is and how much of it can
+   be seen.
+
+   ---- the five numbers ----
+
+   Written by that component, and nothing here is animated by anything
+   else:
+
+     --p   the approach, damped - it chases the scroll rather than being
+           set by it, so a wheel's notches arrive as one continuous move
+     --s   his face going into the phone
+     --fa  how much of it can still be seen, which holds high and then
+           drops away: a face that fades as fast as it travels has gone
+           before it has gone anywhere
+     --g   the handover of the rest of the room, last and separately
+     --b   the burst, 0 up to 1 and back to 0 across the middle of all
+           of it - the spray, the smear, the wisp and the glow are on
+           this, because they are things that happen rather than things
+           that end up somewhere
+
+   Nothing moves for the first fifth of --p: the section has to be
+   looked at before the picture in it is allowed to change.
+
+   They rest FINISHED here - --p, --s and --g at 1, --fa and --b at 0 -
+   so no JavaScript and reduced motion both land on the deck's
+   photograph rather than on a man stuck halfway out of his own face.
+
+   ---- why any of it can be aimed ----
+
+   object-fit:cover crops by an amount that depends on the shape of the
+   reader's window, and nothing can be positioned against the content of
+   a frame cropped that way: a mask over the man's face at 16:9 is over
+   his shoulder at 21:9. So the picture is not cropped by object-fit
+   here. .st-pull__frame carries the files' own 2.39:1 and both plates
+   fill it exactly, which makes a percentage inside the frame a
+   percentage of the PHOTOGRAPH, at every window.
+
+   It is sized to TWICE what it takes to cover the section rather than
+   sized to cover it and then scaled by two, which is what this used to
+   do. The box is the size it is shown at, so the layers inside it
+   rasterise at 1:1 and the only scale left on them is the tenth this
+   closes in by across the pull - small enough that nothing has to be
+   re-rastered while it moves. The lift is what keeps the bottom of the
+   phone inside the frame, and it is -2% of a box that is now twice as
+   tall, which is the same lift it always was.
+
+   Two numbers, measured off the files rather than guessed, and every
+   layer below is aimed with them: THE PHONE at 39.8% 55.2%, where both
+   plates go over 235 luma, and THE FACE at 50.5% 46.8%. They are also
+   in components/SeriesPull.tsx, which spawns the motes on the second
+   and pulls them to the first, and the two copies have to agree.
+
+   Radii come in pairs for the same reason throughout: the frame is 2.39
+   times as wide as it is tall, so a circle ON THE SCREEN is r% by
+   2.39r% here.
+   -------------------------------------------------------------------- */
+.st-pull{
+  position:absolute; inset:0; z-index:1;
+  overflow:hidden;
+  /* what makes the cqw/cqh below mean "of this section" */
+  container-type:size;
+  --p:1; --s:1; --fa:0; --g:1; --b:0;
+
+  /* the face, and its complement. Written once here and used by three
+     layers, so a change to the shape of his head is one edit rather
+     than three that have to stay in step.
+
+     The core is solid out to 46% and clear from 100%, and the two are
+     exact complements of each other. In the soft ring between, they do
+     not quite sum to one - the two layers cover a(1-a) less than the
+     whole, and a quarter of the plate underneath shows through at the
+     half-way line.
+
+     So the ring has to be put where the two files AGREE, and that is
+     what sets how wide this is. The place they disagree is the band of
+     light running from his face to the phone, x 0.39 to 0.53, and the
+     ring must not cross it: the core runs from 0.376 to 0.569, which
+     holds the whole of that plus the phone and the lit face, and the
+     ring past it falls on the back of his head, his shoulder and the
+     wall - dark, and the same dark in both files.
+
+     Measured, not guessed. Over the two actual plates this leaves a
+     worst error of 19 luma steps in 255 at a single pixel and 2.5 at
+     the 99.5th percentile, which is nothing. The version before it was
+     a third this size, put the ring straight across the phone, and left
+     650 pixels wrong by up to 58.
+
+     What that width also means: what leaves is not just his face, it is
+     his head, and the phone stays because the phone is the ORIGIN
+     everything is scaled about - a point does not move when you scale
+     around it. What is left behind, uncovered, is the deck's own head
+     with the face already gone out of it. */
+  --cut:radial-gradient(ellipse 21% 50.2% at 47.25% 47%,
+    #000 0%, #000 46%, rgba(0,0,0,.55) 72%, rgba(0,0,0,0) 100%);
+  --uncut:radial-gradient(ellipse 21% 50.2% at 47.25% 47%,
+    rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.45) 72%, #000 100%);
+}
+.st-pull__frame{
+  position:absolute; left:50%; top:50%; z-index:1;
+  /* twice what it takes to cover, at the files' own 2200/920 = 2.3913 */
+  width:max(200cqw, calc(200cqh * 2.3913));
+  height:max(200cqh, calc(200cqw / 2.3913));
+  transform:translate(-50%,-50%) scale(calc(1 + var(--p) * .05)) translateY(-2%);
+}
+.st-pull__frame > img{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  /* fill, not cover: the frame is already the picture's own shape, so
+     nothing is stretched and nothing is cropped a second time */
+  object-fit:fill;
+  display:block;
+}
+/* the same grade the three-band poster runs, so this section still
+   belongs to the page rather than to its own effect. Set once, never
+   animated - see the note above. */
+.st-pull__to,
+.st-pull__from,
+.st-pull__face{ filter:contrast(1.09) saturate(.88); }
+
+/* the deck's frame, underneath everything */
+.st-pull__to{ z-index:1; }
+
+/* the ordinary frame, with the hole where his face is. It does not
+   move; it hands the room over to the plate underneath it, and it does
+   that a long way behind the face. */
+.st-pull__from{
+  z-index:2;
+  opacity:calc(1 - var(--g));
+  -webkit-mask-image:var(--uncut);
+  mask-image:var(--uncut);
+}
+
+/* THE BAND OF LIGHT. The deck's own frame, blurred once, screen-blended
+   and stretched off the phone.
+
+   Screen is what makes it self-masking: the picture is near-black
+   everywhere but the phone and the light coming off it, and screen only
+   contributes where a layer is brighter than what is under it, so a
+   stretched copy of the WHOLE frame adds a streak along the streak and
+   nothing anywhere else.
+
+   Over `from` rather than under it, so the beam reaches the phone
+   whether or not the hole in `from` does. It peaks with the burst and
+   settles to a trace, so what is left on the screen at the end is the
+   photograph and not an effect. */
+.st-pull__smear{
+  z-index:3;
+  mix-blend-mode:screen;
+  transform-origin:39.8% 55.2%;
+  opacity:calc(var(--b) * .85 + var(--g) * .12);
+  transform:translateX(calc(var(--b) * -3%)) scaleX(calc(1 + var(--b) * .55));
+  filter:blur(7px) brightness(1.12);
+  -webkit-mask-image:radial-gradient(24% 34% at 45% 51%, #000 34%, rgba(0,0,0,0) 88%);
+  mask-image:radial-gradient(24% 34% at 45% 51%, #000 34%, rgba(0,0,0,0) 88%);
+  will-change:transform, opacity;
+}
+
+/* HIS FACE, going in.
+
+   The same plate as .st-pull__from and masked to the complement of its
+   hole, so at rest the two are one photograph. Then it is scaled ABOUT
+   THE PHONE, which is what turns a scale into a direction: a shrink
+   toward a point reads as a thing being drawn into that point. The
+   extra scaleX un-squashes it on the way, so what arrives is a flat
+   smear across the screen rather than a small face - which is the shape
+   the deck's frame has already settled into underneath.
+
+   --fa rather than 1 - --s: it has to still be visible while it is
+   travelling. A face that fades in step with its own journey has gone
+   before it has gone anywhere, which is what the pass before this one
+   did. */
+.st-pull__face{
+  z-index:4;
+  transform-origin:39.8% 55.2%;
+  opacity:var(--fa);
+  transform:scale(calc(1 - var(--s) * .88)) scaleX(calc(1 + var(--s) * 1.05));
+  -webkit-mask-image:var(--cut);
+  mask-image:var(--cut);
+  will-change:transform, opacity;
+}
+
+/* AND WHAT IS LEFT OF HIM. The same face again, blurred hard, thrown
+   further and faster, screen-blended so it reads as light rather than
+   as a second head. This is the layer that makes the flight legible:
+   the sharp one tells you what is moving, this one tells you how fast.
+   It lives entirely inside the burst. */
+.st-pull__wisp{
+  z-index:5;
+  mix-blend-mode:screen;
+  transform-origin:39.8% 55.2%;
+  opacity:calc(var(--b) * .8);
+  transform:scale(calc(1 - var(--s) * .94)) scaleX(calc(1 + var(--s) * 2));
+  filter:blur(16px) brightness(1.45) saturate(.8);
+  -webkit-mask-image:var(--cut);
+  mask-image:var(--cut);
+  will-change:transform, opacity;
+}
+
+/* what the screen throws back into the room as it takes him */
+.st-pull__glow{
+  position:absolute; inset:0; z-index:6; pointer-events:none;
+  mix-blend-mode:screen;
+  opacity:calc(var(--b) * .85 + var(--g) * .2);
+  background:
+    radial-gradient(4% 9.6% at 39.8% 55.2%,
+      rgba(255,255,255,.5), rgba(220,236,255,.12) 60%, rgba(180,214,255,0) 100%),
+    radial-gradient(11% 26.3% at 39.8% 55.2%,
+      rgba(206,228,255,.5), rgba(150,190,255,.18) 45%, rgba(120,170,255,0) 84%);
+}
+
+/* the spray, outside the frame and over it: the frame is the size of
+   two screens, and a canvas inside it would be paying for pixels
+   nobody can see. This one is the section's own size, at a pixel ratio
+   capped below the device's, and the component hides it outright while
+   there is nothing in it. */
+.st-pull__spray{
+  position:absolute; inset:0; z-index:2;
+  width:100%; height:100%;
+  pointer-events:none;
+}
+
+/* ---- section 10, the end card --------------------------------------
+
+   ending.jpg is a 1200x1500 portrait in a full-bleed landscape frame,
+   so cover shows a horizontal slice of it: about 45% of its height at
+   16:9, 34% at 21:9, 60% on a squarer screen. No scale, because unlike
+   the title card's still there is no single subject here to push in on
+   - the composition IS the subject, and the two things that make it
+   work sit a long way apart in the frame: the spotlight pool from
+   about 10% to 70% down, and the pair of slippers on the floor at
+   80-87%. A 2x zoom keeps neither.
+
+   78% put the window at roughly 43-88% of the picture on a 16:9
+   screen, which held the slippers - but it also spent the whole frame
+   on the bottom of the photograph, so the type ended up sitting on the
+   dim hem of the curtain rather than in the lit part of it.
+
+   62% walks the picture back DOWN inside the frame. A lower Y shows
+   more of the top of the file, which slides the image downward in a
+   fixed window - the frame itself does not move or change size, only
+   what is behind it. It now runs about 37-75% on a 16:9 screen, which
+   puts the spotlight pool across the middle of the frame where the
+   type is centred, and that is the whole point: the words land in the
+   light that is already in the photograph rather than being lit by a
+   gradient pretending to be one.
+
+   The trade is the slippers, which fall below the bottom edge at this
+   value. Worth it - they were a detail at the hem of a frame nobody
+   reads to the bottom of, and the lit curtain behind the type is what
+   the section actually needed. */
+#section-yours .st-poster__band:only-child > img,
+#section-yours .st-poster__band:only-child > video{
+  object-position:50% 62%;
+}
+
+/* ---- and the type in the middle of it ------------------------------
+
+   The scrim's halo is the ground; this is the edge. Two shadows doing
+   two different jobs: a tight one that separates the letterforms from
+   the curtain's own folds - the picture has hard vertical highlights
+   in it and a cream stroke crossing one disappears - and a wide, weak
+   one that seats the whole block in the pool rather than embossing it.
+
+   The mark already carries a shadow from the shared title/end rule.
+   It is a single deep drop worked out for type on a photograph of a
+   room, so it is restated rather than added to: two shadow stacks on
+   one element is how type ends up looking like it has been printed
+   twice. */
+#section-yours .st-beat__line,
+#section-yours .st-beat__mark{
+  text-shadow:
+    0 1px 10px rgba(0,0,0,.72),
+    0 14px 56px rgba(0,0,0,.6);
+}
 /* ---- where the type sits ------------------------------------------
 
    Centred, which is what every other stage does, was the thing that was
@@ -625,12 +1015,6 @@
   max-width:32ch;
   margin-inline:auto;
 }
-.st-beat[data-stage="end"] .st-scrim{
-  background:
-    radial-gradient(118% 74% at 50% 50%, rgba(11,11,12,.9), rgba(11,11,12,.5) 62%, rgba(11,11,12,.24)),
-    linear-gradient(to bottom, rgba(11,11,12,.62), rgba(11,11,12,.34) 40%, rgba(11,11,12,.72));
-}
-
 .st-beat[data-stage="title"] .st-scrim,
 .st-beat[data-stage="end"] .st-scrim{
   background:linear-gradient(
@@ -643,6 +1027,55 @@
   );
 }
 
+/* ---- the end card's own ground -------------------------------------
+
+   There used to be a centre-weighted scrim written for this section
+   directly above the shared rule, and it never ran a day: same
+   specificity, declared first, so the title card's bottom-weighted
+   gradient overwrote it. The end card has been wearing the title
+   card's ground the whole time - which is why its centred type sat on
+   a flat wash with nothing under it. Scoped by id here so it wins on
+   specificity rather than on running order, and so it cannot be
+   silently overwritten again by a rule added below it.
+
+   Three layers, bottom of the list painted first:
+
+   1. THE SEAM. The section above ends in black and this one used to
+      begin with a hard horizontal edge where the curtain started - a
+      bar across the page. The first 22% of the frame now fades from
+      solid --film to nothing, so the curtain rises out of the black
+      instead of being butted against it. The last 12% closes back down
+      so the foot of the page does the same thing in reverse.
+   2. THE VIGNETTE. Dark at the corners, open in the middle. The
+      photograph has a real spotlight in it and this is what keeps it
+      readable as one: the lit middle of the curtain stays lit and the
+      edges of the frame fall away, so the pool reads as a pool rather
+      than as an evenly bright wall.
+   3. THE HALO. A small, soft pool of dark directly behind the block of
+      type, at the same centre the words are set to. It is what the
+      sentence is legible against - cream at 25px on a lit red curtain
+      needs something under it - and it is kept tight enough that it
+      reads as the type being seated in the light rather than as a grey
+      box laid on the picture.
+
+   All three are centred at 50% 50% because .st-beat[data-stage="end"]
+   centres both the block and the lines inside it. Move the type and
+   these have to move with it. */
+#section-yours .st-scrim{
+  background:
+    radial-gradient(32% 24% at 50% 50%, rgba(11,11,12,.66), rgba(11,11,12,.36) 58%, rgba(11,11,12,0) 100%),
+    radial-gradient(76% 66% at 50% 50%, rgba(11,11,12,0) 38%, rgba(11,11,12,.5) 76%, rgba(11,11,12,.84) 100%),
+    linear-gradient(
+      to bottom,
+      var(--film) 0%,
+      rgba(11,11,12,.82) 7%,
+      rgba(11,11,12,.22) 22%,
+      rgba(11,11,12,.22) 76%,
+      rgba(11,11,12,.58) 88%,
+      rgba(11,11,12,.9) 100%
+    );
+}
+
 /* the type on a poster is a different shape to the type on a strip: the
    sentence is the small half and the name is the big one, which is the
    inverse of every other section */
@@ -652,9 +1085,25 @@
 .st-beat[data-stage="title"] .st-beat__line,
 .st-beat[data-stage="end"] .st-beat__line{
   font-family:var(--f-display); font-weight:500;
-  font-size:clamp(17px,1.75vw,27px); line-height:1.24; letter-spacing:-.015em;
+  font-size:clamp(16px,1.62vw,25px); line-height:1.24; letter-spacing:-.015em;
   max-width:24ch;
   color:var(--muted);
+}
+/* ...except on the title card, where it comes all the way down to the
+   size of the paragraphs it shares its screen with.
+
+   It is a credit line, not a second heading: the whole point of this
+   screen is that the NAME is the big thing on it, and a setup sentence
+   set half again as large as the copy beside it was competing with the
+   name for the eye instead of handing off to it. Matched to
+   .st-beat__copy exactly - same clamp, same leading - so the sentence
+   and the paragraph to its right read as one register with the name set
+   across them. The end card is left alone: there the line IS the
+   statement and the mark under it is a button. */
+.st-beat[data-stage="title"] .st-beat__line{
+  font-size:clamp(15px,1.15vw,18px); line-height:1.62;
+  letter-spacing:-.005em;
+  max-width:44ch;
 }
 .st-beat[data-stage="title"] .st-beat__mark,
 .st-beat[data-stage="end"] .st-beat__mark{
@@ -665,7 +1114,7 @@
      actually has rather than off the whole screen - at the old size
      "the continuity" ran wider than its own column and the block on
      "kink." was pushed out under it. */
-  font-size:clamp(26px,3.1vw,54px); line-height:1; letter-spacing:-.042em;
+  font-size:clamp(24px,2.86vw,50px); line-height:1; letter-spacing:-.042em;
   max-width:none; opacity:1;
   color:var(--cream);
   text-shadow:0 26px 64px rgba(0,0,0,.55);
@@ -683,11 +1132,17 @@
    rule drawn over the paragraphs landed on whichever of them the copy
    happened to reach - halfway up a photograph, level with nothing.
 
-   So the rule is drawn once, under the setup sentence, across the width
-   of the block, and the name and the paragraphs both start from it. The
-   picture above the rule is picture; everything under it is the card.
-   The sentence keeps its full width rather than a measure, because a
-   credit line on a poster runs the width of the poster.
+   So the block became a grid: the sentence takes the full width on its
+   own row and the name and the paragraphs both start from the row under
+   it. The sentence keeps its full width rather than a measure, because
+   a credit line on a poster runs the width of the poster.
+
+   The rule itself is gone. It was a hairline under the sentence, and
+   once the grid was holding the two rows apart on its own the line had
+   nothing left to do - it was drawing a border across the one screen on
+   the page that is meant to read as a poster, directly over the name.
+   Its padding-bottom stays: that space is the gap between the sentence
+   and the name, and it was only ever a border sitting inside it.
    -------------------------------------------------------------------- */
 .st-beat[data-stage="title"] .st-beat__words{
   display:grid;
@@ -703,9 +1158,23 @@
   grid-area:line;
   max-width:none;
   padding-bottom:clamp(14px,2vh,22px);
-  border-bottom:1px solid var(--faint);
 }
-.st-beat[data-stage="title"] .st-beat__mark{ grid-area:mark; margin-top:0; }
+
+/* ---- the name, in italics ----
+   "the continuity kink." is the one phrase on the page that is a coined
+   term rather than a sentence, and the section above it is the sentence
+   that coins it. Italic is what type does to a word it is naming rather
+   than using, so the name reads as the thing being introduced instead
+   of as a second, louder headline.
+
+   .st-hi turns italics OFF wherever it is used - the highlighted word
+   is set upright on every other section - so the block on "kink." has
+   to be told to come along, or the name half-leans. */
+.st-beat[data-stage="title"] .st-beat__mark{
+  grid-area:mark; margin-top:0;
+  font-style:italic;
+}
+.st-beat[data-stage="title"] .st-beat__mark .st-hi{ font-style:italic; }
 .st-beat[data-stage="title"] .st-beat__body{
   grid-area:body;
   /* the name starts at its cap height and the paragraph at its
@@ -900,7 +1369,7 @@
    ============================================================ */
 .st-beat[data-stage="steps"] .st-bg{ opacity:.26; filter:blur(11px) saturate(.5) brightness(.7); }
 .st-beat[data-stage="steps"] .st-beat__words{ max-width:none; }
-.st-beat[data-stage="steps"] .st-beat__line{ max-width:20ch; font-size:clamp(21px,2.5vw,36px); }
+.st-beat[data-stage="steps"] .st-beat__line{ max-width:20ch; }
 .st-beat[data-stage="steps"] .st-scrim{
   background:linear-gradient(to bottom, rgba(11,11,12,.9), rgba(11,11,12,.72) 40%, rgba(11,11,12,.9));
 }
@@ -1323,9 +1792,21 @@
    the space under it, not a rule beside it, is what separates the
    run-up from the section's own body copy. */
 .st-beat__lead{
-  max-width:54ch;
+  max-width:68ch;
   font-size:clamp(15px,1.16vw,18px); line-height:1.6;
   color:var(--muted);
+  /* the run-up is one long sentence, and at the column's old width it
+     broke with its last word alone on a line of its own. The paragraph
+     gets the extra measure rather than a smaller size - see the widened
+     words column below - and pretty keeps the last line from ever
+     falling to a single word again. */
+  text-wrap:pretty;
+}
+
+/* the column widens only for the beat that carries a lead. Every other
+   strip keeps the half-screen measure the display lines were set to. */
+.st-beat[data-stage="strip"] .st-beat__words:has(.st-beat__lead){
+  max-width:min(62%, 780px);
 }
 .st-beat__lead + .st-beat__line{ margin-top:clamp(24px,3.6vh,44px); }
 
@@ -1400,6 +1881,47 @@
   stroke-linecap:round; stroke-linejoin:round;
 }
 .st-foot__globe{ opacity:.72; }
+
+/* ---- the credit, and the one green word in it ----
+   The sentence is one flex item so the row's gap stays around the
+   glyphs instead of opening inside the words - see the note in
+   app/series/page.tsx. Everything in it runs at the foot's own dim
+   cream except the name.
+
+   The name is leaf rather than this page's own accent on purpose. The
+   series accent is the streaming red (#c50812), which is the colour of
+   the highlighter block on every section above - a red word down here
+   would read as one more mark and not as a link. Leaf is the site's
+   green, it is used nowhere else on this route, and green is what a
+   reader already reads as "this goes somewhere". It brightens rather
+   than changes on hover, and it carries an underline that only draws
+   on hover, so the resting line stays a credit and not a row of links.
+
+   The whole anchor still lights on hover (.st-foot a:hover), and the
+   name has to hold its own colour through that or the one word that
+   was distinct goes the same red as everything else. */
+.st-foot__credit{ color:var(--dim); }
+/* the separator holds the client's sentence apart from the name without
+   putting a word between them that they did not write. Dimmed under the
+   credit's own colour so it reads as a gap and not as a character. */
+.st-foot__sep{ opacity:.45; }
+.st-foot__name{
+  font-weight:500;
+  color:var(--leaf);
+  text-decoration:underline;
+  text-decoration-color:transparent;
+  text-underline-offset:.28em;
+  text-decoration-thickness:1px;
+  transition:color .28s ease, text-decoration-color .28s ease;
+}
+.st-foot a:hover .st-foot__name,
+.st-foot a:focus-visible .st-foot__name{
+  color:var(--leaf);
+  text-decoration-color:currentColor;
+}
+@media (prefers-reduced-motion:reduce){
+  .st-foot__name{ transition:none; }
+}
 .st-foot__out{
   width:1.05em; height:1.05em;
   transition:transform .34s cubic-bezier(.16,.84,.3,1);
@@ -1452,6 +1974,21 @@
     margin-left:0; margin-right:0;
   }
 
+  /* section 5 keeps its 2x2 here too. Four 21:9 bands across a 350px
+     screen are 150px tall each - 600px of stacked letterbox showing a
+     fifth of four portraits - where two columns of two are 172px wide
+     at a 4:5 crop, which is both less of the screen and far more of
+     each picture. The strip goes back to the full gutter width because
+     at this size there is no second column of type to leave room for. */
+  #section-job .st-strip{
+    width:auto;
+    gap:6px;
+  }
+  #section-job .st-band{
+    height:auto;
+    aspect-ratio:4/5;
+  }
+
   /* ---- the wall ---- three columns of four. Twelve tiles four across
      at 390px is a 90px window, which is a thumbnail and not a frame. */
   .st-wall{
@@ -1479,6 +2016,34 @@
      viewport rather than off its measure, so it is the one that has to
      be re-sized here rather than just re-wrapped. */
   .st-poster{ flex-direction:column; }
+
+  /* ---- the pull ---- the one stage that cannot just be re-stacked.
+
+     Its whole effect is aimed at two points inside the photograph - the
+     phone at 39.5% across it, the band of light at 47% - and a frame
+     sized to COVER a 390x1050 stage with a 2.39:1 picture shows about a
+     seventh of that picture's width before the 2x blow-up and a
+     fifteenth after it. Both of those points are outside that slice, so
+     what a phone would get is a correctly-built effect happening off
+     the side of the screen.
+
+     So at this width the frame is sized off the WIDTH instead: a little
+     under twice the screen, which puts the middle half of the
+     photograph on it - the phone, the light and the whole head - and
+     the section keeps it as a band across the middle rather than as a
+     full bleed. The type already has the top of the screen here.
+
+     The blurs come down with it. They are full-frame blurs under blend
+     modes over a frame that is now a fifth of the height it was, and
+     this is the hardware least able to pay for them. The spray thins
+     out too, in components/SeriesPull.tsx. */
+  .st-pull__frame{
+    width:calc(100cqw * 1.9);
+    height:calc(100cqw * 1.9 / 2.3913);
+    transform:translate(-50%,-50%) scale(calc(1 + var(--p) * .05));
+  }
+  .st-pull__smear{ filter:blur(3px) brightness(1.12); }
+  .st-pull__wisp{ filter:blur(7px) brightness(1.45) saturate(.8); }
   .st-poster__band + .st-poster__band{
     border-left:0;
     border-top:clamp(3px,.4vw,7px) solid var(--film);
@@ -1510,9 +2075,11 @@
     );
   }
   .st-beat[data-stage="title"] .st-beat__line,
-  .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(17px,4.4vw,24px); }
+  .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(16px,4.08vw,22px); }
+  /* same handoff at this width - the setup line stays at copy size */
+  .st-beat[data-stage="title"] .st-beat__line{ font-size:clamp(15px,3.9vw,18px); }
   .st-beat[data-stage="title"] .st-beat__mark,
-  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(26px,7.4vw,44px); }
+  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(24px,6.85vw,41px); }
   .st-beat[data-stage="title"] .st-beat__copy{ max-width:none; }
 
   /* ---- the reel ---- four episodes, not eight. Eight verticals across
@@ -1639,3 +2206,99 @@
    keep the centre crop. */
 #section-receipts .st-band:nth-child(1) img{ object-position:50% 12%; }
 #section-receipts .st-band:nth-child(3) img{ object-position:50% 10%; }
+
+/* The fourth band is the same problem, found later. made-in-titan.jpg
+   is a 16:9 film still with its own letterbox already burned into it,
+   and three of the four people in it are standing in the top quarter of
+   the frame - so the tenth this band takes off the top was taking the
+   tops of their heads with it. 20% walks the window up to just under
+   the burnt-in bar, which drops the picture inside the frame far enough
+   to clear every head. The band itself does not move. */
+#section-receipts .st-band:nth-child(4) img{ object-position:50% 20%; }
+
+/* ============================================================
+   SECTION 5 - the one strip that is not a strip.
+
+   ---- why this section leaves the shared staging ----
+
+   The cascade of four 21:9 bands is the right frame for sections 3 and
+   6, whose stills are landscape frames out of films. It is the wrong
+   frame here, and the arithmetic says so rather than an opinion.
+
+   A band is 21:9 and .st-band img is laid in at width:118%, so the
+   window is about 2.75:1. All four cjc files are portraits, between
+   750x900 and 736x1307. Cover scales each to the window's width, so
+   the fraction of each picture actually on screen was:
+
+     cjc-4  24%      cjc-2  20%      cjc-3  27%      cjc-1  30%
+
+   A fifth of a photograph is not a crop, it is a sample, and no
+   object-position rescues it - moving the window around inside a
+   picture does not make the window bigger. The previous pass tuned all
+   four to the pixel and they were still four thin slices.
+
+   The other half of the same problem was the empty space. Four bands
+   at their 196px cap are 457px wide inside a column with about 600px
+   in it, so the strip was leaving ~150px of unused width down its
+   whole side while cropping the pictures to nothing to fit a shape
+   that did not want them.
+
+   ---- what replaces it ----
+
+   A 2x2 field, and it fixes both at once. Two columns fill the
+   column's real width, two rows fill its height, and each window comes
+   out roughly square at desktop - which is the shape that shows a
+   portrait. The visible fraction goes from a fifth to two thirds and
+   better:
+
+     cjc-4  66%      cjc-2  57%      cjc-3  76%      cjc-1  85%
+
+   The tiles are sized off vh rather than by aspect-ratio so two rows
+   can never grow taller than the screen they are centred in; the grid
+   gives them their width and cover does the rest.
+
+   The cascade offset is zeroed here. --off steps every second band out
+   of line, which is what stops four stacked frames reading as one long
+   picture - in a two-column grid there is no stack to break up and the
+   offset would just knock the right-hand column out of alignment. */
+#section-job .st-strip{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  width:min(44%, 600px);
+  gap:clamp(8px,1.2vw,18px);
+  align-items:stretch;
+}
+#section-job .st-band{
+  --off:0px;
+  margin:0;
+  width:auto; height:clamp(150px,33vh,360px);
+  aspect-ratio:auto;
+}
+
+/* ---- and the four crops, re-worked for the new window --------------
+
+   Still one per tile, because "roughly square" is not the same window
+   for a 750x900 and a 736x1307, and the subject is not dead centre in
+   any of them. With `v` the visible fraction above, the window's top
+   edge sits at Y*(1-v) and its centre at Y*(1-v) + v/2:
+
+   1. cjc-4 at 50% - shows 17-83% of the file: both walls of the
+      billboard canyon and the street under them. The default happens
+      to be right here now, and it is written out rather than left off
+      so the set reads as four decisions instead of three.
+   2. cjc-1 at 85% - shows 13-98%. At 85% visible there is only 15% of
+      travel in this file, and it is spent going DOWN for one reason:
+      the "5/5" carousel badge burnt into the top-right corner. It sits
+      at 2-8%, it is a screenshot artefact and not part of the picture,
+      and this is the value that clears it. The head and the taped-on
+      phone are at 26-56%, comfortably inside.
+   3. cjc-3 at 25% - shows 6-82%: the face, the camera and the lens,
+      which are all in the top third, plus the street and the planets
+      under them.
+   4. cjc-2 at 32% - shows 14-71%, which is the sign cluster. BELIEVE,
+      DREAM BIG, ONE WAY, NO LIMITS and the CREATE graffiti all land
+      inside it. The slogans are the whole point of the picture. */
+#section-job .st-band:nth-child(1) img{ object-position:50% 50%; }
+#section-job .st-band:nth-child(2) img{ object-position:50% 85%; }
+#section-job .st-band:nth-child(3) img{ object-position:50% 25%; }
+#section-job .st-band:nth-child(4) img{ object-position:50% 32%; }

@@ -62,6 +62,11 @@ const playful = Caveat({
 });
 
 export const metadata: Metadata = {
+  /* Where a relative URL in any page's metadata resolves against. The
+     service pages under /services declare canonicals (app/services/
+     [service]/page.tsx) and a canonical has to be absolute to mean
+     anything - without this Next either drops it or warns and guesses. */
+  metadataBase: new URL("https://socheers.net"),
   title: "SoCheers. Making more happen.",
   description:
     "SoCheers is an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",

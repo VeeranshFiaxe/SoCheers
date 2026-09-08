@@ -125,7 +125,7 @@ export const FOUNDERS = [
     imgPos: "center 5%",
     bio: [
       "Mehul co-founded SoCheers on a bet: that brands would need partners who treat digital as the medium itself, not just as an extension of advertising. His people-first leadership is now the culture the whole team runs on.",
-      "An MBA in Technology Management from NMIMS, he leads creative and business direction, staying close to every major partnership and pitch.",
+      "He leads creative and business direction, staying close to every major partnership and pitch.",
     ],
   },
 ];

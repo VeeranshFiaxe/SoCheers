@@ -7,6 +7,7 @@ import {
   type Step,
 } from "@/lib/series-content";
 import SeriesPhones from "@/components/SeriesPhones";
+import SeriesPull from "@/components/SeriesPull";
 
 /* ============================================================
    SERIES - the nine sections, staged.
@@ -298,7 +299,17 @@ function Stage({ section }: { section: Section }) {
       return <Wall frames={frames} />;
     case "title":
     case "end":
-      return <Poster frames={frames} />;
+      /* the title card holds TWO frames of the same shot and gets from
+         one to the other on the scroll - see components/SeriesPull.tsx.
+         It is still a poster: one band, full bleed, type hung off the
+         bottom of it. What the flag buys is the layers between the two
+         plates. It falls back to the ordinary poster if the second
+         frame is ever taken away. */
+      return section.pull && frames.length > 1 ? (
+        <SeriesPull frames={frames} />
+      ) : (
+        <Poster frames={frames} />
+      );
     case "reel":
       return <Reel frames={frames} />;
     case "steps":

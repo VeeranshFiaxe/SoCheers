@@ -1,6 +1,4 @@
 import { IMG, MEANING, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
-import HeroCrumble from "./HeroCrumble";
-import PixGrid from "./PixGrid";
 
 /* The artwork is the hero. Its own inner window expands to full screen into
    the team photo, and then - still in the same pin - the name gets defined
@@ -47,7 +45,12 @@ export default function Hero() {
               fading in, so growing into the full photo never jumps. Fades
               out as the stage expands (motion.ts). */}
           <div className="hero__stage-tint" data-stage-tint aria-hidden="true" />
-          <PixGrid cols={22} rows={8} />
+          {/* No dissolve grid here any more. The hero used to arrive
+              behind 176 black tiles that cleared in a random stagger,
+              which is a slide-deck block transition however it is timed -
+              the intro is a single settle now, see heroIntro() in
+              lib/motion.ts. components/PixGrid.tsx still exists and is
+              still used by the featured-work tiles. */}
 
           {/* Hidden while the window is still small and growing; motion.ts
               fades it in only once the stage has finished expanding, so the
@@ -56,20 +59,11 @@ export default function Hero() {
           <div className="hero__stage-vignette" data-stage-vignette aria-hidden="true" />
         </div>
 
-        {/* The same frame again, as grains. Hidden until the last phase of the
-            pin, when it takes over from the two layers above and falls away
-            bottom-first to uncover WHO WE ARE. */}
-        <HeroCrumble />
-
         {/* The dictionary entry, set over the photo once it is full screen.
             Same pin, so the crowd shot you just watched arrive is the page
             this gets written onto. */}
         <div className="meaning" data-meaning>
           <div className="meaning__veil" data-meaning-veil aria-hidden="true" />
-
-          <span className="meaning__side" data-meaning-side aria-hidden="true">
-            MAKING MORE HAPPEN
-          </span>
 
           <div className="meaning__inner">
             <div className="meaning__head">

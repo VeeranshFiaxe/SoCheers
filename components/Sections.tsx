@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CSSProperties, Fragment } from "react";
 import { AWARDS, BRAND_MARK, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
 import ParticleLogo from "./ParticleLogo";
@@ -6,18 +7,21 @@ import RollText from "./Roll";
 export function Who() {
   /* No wall of its own any more: this section slides up *behind* the pinned
      hero (see .who's negative margin in globals.css) and the hero's own last
-     frame crumbles off it - components/HeroCrumble.tsx. */
+     frame dissolves off it - see dissolve() in lib/motion.ts. */
   return (
     <section className="sec who no-border" id="who" data-section data-sec="1">
       <div className="wrap">
         {/* Three columns, the way the mock reads it: the claim on the
             left, the mark in the middle, the pitch on the right, and the
-            counts as their own centred row under all three. The tag rides
-            with the claim rather than sitting above the whole grid, so it
-            stays tied to the sentence it introduces. */}
+            counts as their own centred row under all three.
+
+            No label over the claim. "WHO WE ARE" used to ride above it in
+            small accent mono - the last of the four section tags on this
+            page - and it was the heading saying the sentence under it in
+            fewer words. "We are SoCheers - an independent, integrated
+            creative agency" does not need to be introduced. */}
         <div className="who__grid">
           <div className="who__copy">
-            <span className="tag" data-reveal>WHO WE ARE</span>
             <p className="who__lede" data-split>
               {/* A hard break, not a non-breaking space: the line splitter
                   (SplitText, see initSplits in lib/motion.ts) re-wraps this
@@ -48,7 +52,7 @@ export function Who() {
 
         <div className="who__stats">
           {STATS.map((s) => (
-            <div className="stat" key={s.label} data-reveal data-cursor={`${s.count}+`}>
+            <div className="stat" key={s.label} data-reveal>
               <div className="stat__num">
                 {/* data-count-hue: the count runs through the design book's
                         solids on its way up - initCounters in lib/motion.ts. */}
@@ -183,14 +187,26 @@ export function What() {
   return (
     <section className="sec what" id="what" data-section data-sec="2">
       <div className="wrap">
-        <span className="tag" data-reveal>WHAT WE DO</span>
         <h2 className="sec__title" data-split>
           How the work comes together.
         </h2>
 
         <div className="wcards">
           {BUCKETS.map((b) => (
-            <article className="wcard" key={b.idx} data-clip data-tilt data-cursor={b.name}>
+            /* The whole card, not a "read more" tucked in a corner: the
+               name, the picture and the list are all about the same one
+               thing, so the target is the thing. No data-cursor - the
+               card's own name is already set at 38px in the middle of it,
+               and the disc was printing it a second time under the
+               pointer. */
+            <Link
+              className="wcard"
+              key={b.idx}
+              href={`/services/${b.slug}`}
+              prefetch
+              data-clip
+              data-tilt
+            >
               {/* Ten frames a card, four cards, and exactly four of the
                   forty are ever on screen at once - the rest are the reel
                   the cycle flips through on hover. The one showing is
@@ -226,7 +242,7 @@ export function What() {
                   ))}
                 </ul>
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       </div>
@@ -361,16 +377,22 @@ export function Clients() {
      see BRAND_MARK in lib/content.ts for why a mask and not an image,
      and why not a lookalike font.
 
-     All thirty-two are drawn as of the supplied artwork, so nothing on
-     the row is typed today. The text fallback stays anyway, and it is
-     load-bearing: the day somebody adds a client to CLIENT_ROWS before
-     the mark for it has been cut, that name shows up as a word rather
-     than as a gap. */
+     Most of the row is drawn; six names are not, and deliberately.
+     Audi, ITC, IndusInd, Zurich Kotak, Universal Pictures and Belgian
+     Waffle have no entry in BRAND_MARK (lib/content.ts) because their
+     marks do not survive being cut to one cap height - too fine, too
+     wide, or too locked to a device - so they fall through to the text
+     fallback and are set in the row's own bold sans instead. A typed
+     name colours and leans exactly as a drawn one does, so the row does
+     not read as having holes in it.
+
+     Which is also the fallback's other job: the day somebody adds a
+     client to CLIENT_ROWS before the mark for it has been cut, that name
+     shows up as a word rather than as a gap. */
   return (
     <section className="sec clients" data-section data-sec="3">
       <div className="wrap">
-        <span className="tag" data-reveal>WHO DO WE DO IT WITH</span>
-        <h2 className="sec__title" data-split>Brands you like consuming the most.</h2>
+        <h2 className="sec__title" data-split>Who do we do it with.</h2>
       </div>
       <div className="clients__rows">
         {CLIENT_ROWS.map((row, r) => {
@@ -448,17 +470,18 @@ export function Awards() {
      one coloured star; this is the loudest strip on the page, which is the
      right way round for the section about being noticed.
 
-     Names only. The year used to ride above each one as a small mono
-     figure and it is out: the years on file are placeholders, and a
-     ticker is read in passing - a date going by at speed is a thing to
-     squint at rather than a thing to take in.
+     Names at rest, and the citation on hover. The year used to ride
+     above each one as a small mono figure and it is out: a ticker is read
+     in passing, and a date going by at speed is a thing to squint at
+     rather than a thing to take in. The category is the opposite case -
+     it is only ever read standing still, on the one show the pointer has
+     stopped on, so it waits for that.
 
      Server component, no state: the movement is the shared marquee
      ticker in lib/motion.ts, same as the clients' rows. */
   return (
     <section className="sec awards" id="awards" data-section data-sec="4">
       <div className="wrap">
-        <span className="tag" data-reveal>RECOGNITION</span>
         <h2 className="sec__title" data-split>Every win counts.</h2>
       </div>
 
@@ -478,14 +501,14 @@ export function Awards() {
               the two, so the same base buys it more speed. See initMarquees
               in lib/motion.ts.
 
-              Which is also why this is 60 and not the 42 that was settled
-              on at the old type size: the names went up about half again
-              (.amarquee__show b in globals.css), the track went up with
-              them, and holding the base would have handed back the whole
-              slowdown as speed. The number moved to keep the row moving at
-              the rate it was signed off at - re-time this alongside any
-              further change to the size. */}
-          <div className="amarquee__track" data-marquee="left" data-marquee-base="60">
+              Which is why this number moves whenever the type does. It
+              was 42, then 60 when the names went up half again, and it is
+              44 now that they have come back down to clamp(28px,4vw,56px)
+              (.amarquee__show b in globals.css): a narrower track covered
+              in the same seconds is a faster row, so holding the base
+              would have handed the size reduction back as speed. Re-time
+              this alongside any further change to the size. */}
+          <div className="amarquee__track" data-marquee="left" data-marquee-base="44">
             {[0, 1, 2, 3].map((copy) =>
               AWARDS.map((a, i) => (
                 <Fragment key={`${copy}-${i}`}>
@@ -494,6 +517,18 @@ export function Awards() {
                     style={{ "--swipe": SOLIDS[i % SOLIDS.length] } as CSSProperties}
                   >
                     <b>{a.name}</b>
+                    {/* What was actually won there, under the name of the
+                        body that gave it - the show alone says we were in
+                        the room, not what for. It arrives with the swipe
+                        on hover and is absolutely positioned so it costs
+                        the track no width: the ticker wraps on half of
+                        that width (initMarquees, lib/motion.ts) and a line
+                        that changed it on hover would move the whole row.
+
+                        PLACEHOLDER copy - AWARDS[].category in
+                        lib/content.ts. Swap each one for the real
+                        citation. */}
+                    <i className="amarquee__cat">{a.category}</i>
                   </span>
                   {/* the dot takes the *next* name's colour, so it reads as
                       the hinge between two shows rather than as a full stop
@@ -513,7 +548,7 @@ export function Awards() {
           moving row - carrying what the row carries and no more */}
       <ul className="sr-only">
         {AWARDS.map((a) => (
-          <li key={a.name}>{a.name}</li>
+          <li key={a.name}>{a.name} - {a.category}</li>
         ))}
       </ul>
     </section>

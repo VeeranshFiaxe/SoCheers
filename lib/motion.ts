@@ -169,6 +169,16 @@ export function initSite(): () => void {
     let barMax = 0;
     const readBarMax = () => { barMax = ScrollTrigger.maxScroll(window); };
 
+    /* Whoever is currently moving the page for the reader rather than the
+       reader moving it themselves. The header hides on a downward scroll
+       (initNav), and the hero's handover is a downward scroll of a whole
+       screen in a single frame - so the row was being yanked off the top
+       at the exact moment the definition finished, which reads as the
+       header breaking rather than tucking away. While this returns true
+       the header is left alone; the next gesture the reader actually makes
+       is what decides. Null on every page that never sets it. */
+    let navHold: (() => boolean) | null = null;
+
     /* -------------------------------------------------- Lenis */
     function initLenis() {
       if (prefersReduced) return;
@@ -300,31 +310,35 @@ export function initSite(): () => void {
       heroIntro();
     }
 
-    /* -------------------------------------------------- hero intro */
+    /* -------------------------------------------------- hero intro
+
+       What this used to be: the artwork arrived behind a grid of 176
+       black tiles which then cleared one at a time in a random stagger -
+       a block dissolve, which is the transition a slide deck reaches for
+       and reads as one wherever else it turns up. The picture did not
+       arrive, it was uncovered a square at a time.
+
+       What it is now is the picture arriving. One settle - a push-in that
+       eases out rather than lands, held a little longer and starting a
+       little closer, so it reads as the frame coming to rest rather than
+       as an entrance - and the scroll cue afterwards. No tiles, no
+       stagger, nothing on the artwork with a corner in it.
+
+       The grid itself is still in the file (components/PixGrid.tsx) and
+       still used by the featured-work tiles; it is the hero that no
+       longer carries one. */
     function heroIntro() {
       if (prefersReduced) return;
-      const host = document.querySelector("[data-hero-stage] [data-pixgrid]");
-      const g = host && grids.get(host);
 
       const tl = gsap.timeline({ onComplete: () => ScrollTrigger.refresh() });
       // the stage photo sits inside the same window as the artwork, so it
-      // rides the same push-in
-      tl.from("[data-frame-img], [data-stage-img]", { scale: 1.12, autoAlpha: 0, duration: 1.6, ease: "power3.out" }, 0);
-      if (g) {
-        /* is-live is what puts will-change:opacity on the tiles, and it
-           is on for the length of this timeline and no longer - see the
-           note over .pixgrid in globals.css. Added at zero rather than
-           with the fade at 0.5 so the browser has half a second's notice,
-           which is the entire point of the property. */
-        tl.add(() => (host as HTMLElement).classList.add("is-live"), 0);
-        tl.set(g.tiles, { opacity: 1 }, 0);
-        tl.to(g.tiles, {
-          opacity: 0, duration: 0.5, ease: "power2.inOut",
-          stagger: { amount: 0.8, grid: [g.rows, g.cols], from: "random" },
-          onComplete: () => (host as HTMLElement).classList.remove("is-live"),
-        }, 0.5);
-      }
-      tl.from("[data-hero-cue]", { autoAlpha: 0, duration: 0.6 }, 0.9);
+      // rides the same settle
+      tl.from("[data-frame-img], [data-stage-img]",
+        { scale: 1.06, autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
+      // the greeting is written on the frame, so it follows the frame in
+      // rather than arriving with it
+      tl.from(".hero__greet", { autoAlpha: 0, y: 12, duration: 0.9, ease: "power2.out" }, 0.5);
+      tl.from("[data-hero-cue]", { autoAlpha: 0, duration: 0.6 }, 1.0);
     }
 
     /* -------------------------------------------------- hero pinned sequence
@@ -355,7 +369,6 @@ export function initSite(): () => void {
 
     // where phase 2 leaves the stage: scaled about its own centre, dimmed
     const STAGE_REST = 1.05;
-    const STAGE_DIM = 0.55;             // the brightness() phase 2 settles on
 
     function initHero() {
       const hero = document.querySelector<HTMLElement>("[data-hero]");
@@ -520,11 +533,6 @@ export function initSite(): () => void {
         { autoAlpha: 0 },
         { autoAlpha: 1, duration: ENTRY * 0.4, ease: "power1.inOut" }, AT);
 
-      // "MAKING MORE HAPPEN" draws down its edge
-      tl.fromTo("[data-meaning-side]",
-        { autoAlpha: 0, y: -34 },
-        { autoAlpha: 1, y: 0, duration: ENTRY * 0.3, ease: "power2.out" }, E(0.1));
-
       // the headword types itself in, one letter at a time - steps(1) so
       // each character snaps straight to visible instead of fading, which
       // is what actually reads as typing rather than a staggered fade-in.
@@ -574,7 +582,7 @@ export function initSite(): () => void {
          sitting under the hero waiting, and what the grains uncover is the
          real section arriving rather than black. */
       const CRUMBLE = 100 / 260;
-      crumble(tl, 1, CRUMBLE, pin, boxEnd, [backdrop, stage]);
+      dissolve(tl, 1, CRUMBLE, pin, stage);
 
       /* -------------------------------------------------- the sequencing
          Three checkpoints on tl's own clock - REST (nothing has happened
@@ -642,6 +650,16 @@ export function initSite(): () => void {
          and per-visit rather than per-build. The initial state is asserted
          by hand below anyway (locked, held, Lenis stopped), so there is
          nothing for a crossing to tell us at this point. */
+      /* ScrollTrigger's own wrapper round the pinned hero, looked up
+         rather than remembered: it does not exist until the trigger below
+         has been built, and a refresh can rebuild it. Returns null before
+         then and on any load where the pin was never spacered, which is
+         the same condition html.is-pinned is keyed off. */
+      const spacer = () => {
+        const p = hero.parentElement;
+        return p && p.classList.contains("pin-spacer") ? p : null;
+      };
+
       let wired = false;
       const st = ScrollTrigger.create({
         trigger: hero, start: "top top", end: "+=100%", pin: true,
@@ -729,6 +747,12 @@ export function initSite(): () => void {
       barSource = () => (locked ? heroProgress() : null);
       cleanups.push(() => { barSource = null; });
 
+      /* The header sits still for the whole of the sequence and for the
+         grace window after it - the scroll it would be reacting to is ours,
+         not the reader's. */
+      navHold = () => locked || settling();
+      cleanups.push(() => { navHold = null; });
+
       // the hero is on screen at rest as soon as it mounts - lock the page
       // right away rather than waiting for a scroll event to discover it
       lenis?.stop();
@@ -742,6 +766,34 @@ export function initSite(): () => void {
       const release = () => {
         locked = false;
         handoff = performance.now() + 700;
+        /* And the hero stops taking the pointer.
+
+           .hero is z-index 5 and WHO WE ARE is z-index 0 with a negative
+           margin that pulls it a whole screen up underneath it
+           (html.is-pinned .who, globals.css) - which is the mechanic that
+           lets the crumble uncover that section rather than black. The
+           cost of it is that .hero__pin stays a full-screen box on top of
+           WHO WE ARE for the entire time that section is on screen, and a
+           box on top eats every mouseenter aimed at what is under it. So
+           the counts were unhoverable: the pointer never reached .stat,
+           :hover never matched, and the figures never took their colour.
+
+           Once the crumble has run, the hero has nothing left to draw and
+           nothing left to click, so it gets out of the way. Put back by
+           reclaim() below, because coming back up into the pin makes the
+           hero the live screen again.
+
+           The spacer has to be told separately. ScrollTrigger wraps a
+           pinned trigger in a .pin-spacer of its own and copies the
+           trigger's position and z-index onto it, so the box actually
+           sitting over WHO WE ARE is that wrapper - an element no
+           stylesheet here authored and one the `.hero.is-spent *` rule
+           cannot reach, since it is the hero's PARENT rather than a
+           descendant. Hence a property written by hand rather than a
+           second class: it is the one node in this whole arrangement that
+           does not belong to us. */
+        hero.classList.add("is-spent");
+        spacer()?.style.setProperty("pointer-events", "none");
         lenis?.scrollTo(st.end + 2, { immediate: true, force: true });
         lenis?.start();
         ScrollTrigger.update();
@@ -860,8 +912,38 @@ export function initSite(): () => void {
       const reclaim = () => {
         if (locked || settling()) return;
         locked = true;
-        hold(window.scrollY);
+        /* the hero owns the screen again, so it takes the pointer back -
+           see release() for what this is and why */
+        hero.classList.remove("is-spent");
+        spacer()?.style.removeProperty("pointer-events");
+        /* Where the reverse is taken from, and it cannot be "wherever the
+           gesture left the page" once the hero has crumbled.
+
+           Anywhere inside the pin shows the same fixed hero - true, but
+           only while there is a hero left to show. At `done` there is not:
+           the frame has fallen away and what is behind it is WHO WE ARE,
+           sitting a screen up (html.is-pinned .who, globals.css) and
+           therefore lined up with the top of the screen at ONE scroll
+           position - the pin's end. Lock anywhere short of that and the
+           section is left hanging a few hundred pixels down the screen
+           with black above it, and it stays there, because the lock's own
+           clamp is now happily holding it: that is the gap.
+
+           So the reverse starts from the end of the pin, put there rather
+           than waited for. force, because Lenis is about to be stopped and
+           a stopped Lenis ignores a plain scrollTo; and ScrollTrigger is
+           told by hand, since a scroll it did not see is a pin transform
+           it has not caught up with. */
+        const at = phase === "done"
+          ? Math.max(st.start, st.end - 2)
+          : window.scrollY;
+        hold(at);
         lenis?.stop();
+        if (Math.abs(window.scrollY - anchor) > 1) {
+          if (lenis) lenis.scrollTo(anchor, { immediate: true, force: true });
+          else window.scrollTo(0, anchor);
+          ScrollTrigger.update();
+        }
         if (phase === "done" && !busy) retreat();
       };
 
@@ -1003,7 +1085,23 @@ export function initSite(): () => void {
          of a page they are trying to leave is worse than an unplayed
          sequence: give the scroll back instead. */
       const onScroll = () => {
-        if (!locked || refreshing()) return;
+        if (refreshing()) return;
+        /* Drifted back inside the pin with nobody holding it.
+
+           reclaim() refuses during the grace window after the handover
+           (settling(), above) and onEnterBack only fires on the crossing
+           itself - so a flick up taken in that first fraction of a second
+           is carried into the pin by Lenis's own momentum and then never
+           answered, because the one event that would have answered it has
+           already been and gone. What is left on screen is the pin with
+           nothing drawn in it: black, and WHO WE ARE showing through part
+           way down. Scroll events keep coming while that momentum plays
+           out, so the crossing is re-asked here, every frame the reader is
+           somewhere they should not be. */
+        if (!locked) {
+          if (phase === "done" && !settling() && window.scrollY < st.end - 4) reclaim();
+          return;
+        }
         const at = anchor;
         const off = window.scrollY - at;
         if (Math.abs(off) < 2) return;
@@ -1070,236 +1168,114 @@ export function initSite(): () => void {
       window.addEventListener("scroll", onScroll, { signal: ac.signal, passive: true });
     }
 
-    /* -------------------------------------------------- the hero crumbling
-       The hero's last frame, rebuilt as grains so it can fall apart.
+    /* -------------------------------------------------- the hero dissolving
 
-       The whole frame is redrawn once into an offscreen canvas - the sharp
-       photo inside the stage's rectangle, carrying the same vignette and
-       dim the real layer has; flat black outside it, same as the backdrop -
-       so handing over from the real layers to the grid moves nothing on
-       screen. Then that frame is poured off the bottom of the pin a grain
-       at a time, bottom row first, the ones above following into the gap,
-       with a per-grain offset so the eroding edge stays ragged instead of
-       marching row by row.
+       How the page gets from the definition to WHO WE ARE.
 
-       All of it on one canvas. The grains were DOM elements once, tweened
-       by GSAP as a single tween across ~1300 of them, and that is what made
-       the fall stutter: every frame wrote ~1300 inline transforms and the
-       browser repainted the whole grid, since promoting that many tiles to
-       their own layers is worse still. Here GSAP animates one number and
-       the grid is drawn by hand, so a frame costs one drawImage per grain
-       that is actually in flight - the ones that have not started yet go
-       out as a single blit of the untouched rows, and the ones that have
-       already poured off are skipped. Same picture, one layer. */
-    function crumble(
+       WHAT THIS REPLACED, and why. The hero's last frame used to be
+       rebuilt as a grid of 48x27 grains on a canvas and poured off the
+       bottom of the screen, bottom row first, each grain falling under
+       its own gravity. It was a lot of machinery - an offscreen copy of
+       the two layers under it, the vignette and the dim redrawn by hand
+       in canvas so the handover to the copy was invisible, a per-grain
+       start and offset table, and a render loop doing up to ~1300
+       drawImage calls a frame - and what it read as was a slide
+       transition. Bricks. Every deck-building tool has shipped that
+       effect since 1997, which is exactly the association: a picture
+       that breaks into tiles is not a picture leaving, it is a
+       transition being performed on top of one.
+
+       WHAT IT IS NOW. The frame does not break. It evaporates, from the
+       bottom edge upward, on a soft edge about half a screen deep -
+       while the picture eases back and lifts a little, so it reads as
+       receding rather than as sliding away. WHO WE ARE is already there
+       behind it (see .who's negative margin in globals.css), rising, so
+       the two moves are one: the space clears from the bottom exactly
+       where the section coming up needs it.
+
+       There is no copy of anything any more. The real layers stay real
+       and the whole pin - the photo, the letterboxed black around it,
+       the type written on it - is masked away together, so nothing has
+       to be reproduced in a second renderer to keep the handover
+       seamless. There is no handover.
+
+       The mask lives in the stylesheet and is on .hero__pin at all
+       times, parked fully opaque, which is why nothing switches on here:
+       a mask that arrives at the moment it starts moving is a pop on the
+       first frame. See .hero__pin in app/globals.css for the geometry -
+       the gradient is twice the pin's height, black over the top half,
+       fading out across the next quarter.
+
+       All this animates is where that mask sits. One style write a
+       frame, on a property the compositor already owns, against ~1300
+       canvas draws - and because it is one number from 0 to 1 it
+       scrubs and reverses exactly as the old one did. */
+    function dissolve(
       tl: gsap.core.Timeline,
       at: number,
       dur: number,
       pin: HTMLElement,
-      boxEnd: () => { left: number; top: number; w: number; h: number },
-      hide: (HTMLElement | null)[],
+      stage: HTMLElement | null,
     ) {
-      const host = document.querySelector<HTMLCanvasElement>("canvas[data-crumble]");
-      const photo = document.querySelector<HTMLImageElement>("[data-stage-img]");
-      const ctx = host?.getContext("2d");
-      if (!host || !photo || !ctx) return;
+      /* How far the mask travels, as a multiple of the pin's own height.
+         At 0 the pin sits in the mask's solid half and is untouched; by
+         1.6 the whole of it has passed the gradient's transparent end and
+         nothing is left. Read off the live element rather than captured,
+         since a resize mid-sequence has to move the same fraction of a
+         different screen. */
+      const TRAVEL = 1.6;
+      /* And the height it is a multiple of, with a floor under it. A zero
+         here is not a smaller dissolve, it is no dissolve at all - the
+         mask would never leave 0 and the hero would sit on top of WHO WE
+         ARE for good - so a pin that measures nothing (a collapsed or
+         hidden window, a measurement taken before layout) falls back to
+         the viewport, and then to a plausible screen. Over-travelling
+         costs nothing: past ~1.5 the pin is already fully clear. */
+      const height = () => pin.offsetHeight || window.innerHeight || 900;
+      const place = (p: number) => {
+        const y = -(height() * TRAVEL * p);
+        const pos = `0px ${y.toFixed(1)}px`;
+        pin.style.webkitMaskPosition = pos;
+        pin.style.maskPosition = pos;
+      };
 
-      const cols = parseInt(host.dataset.cols || "48", 10);
-      const rows = parseInt(host.dataset.rows || "27", 10);
-      const n = cols * rows;
+      /* The type goes first, and it goes on its own terms: it was written
+         on the picture, so it leaves with the picture - but a headword
+         fading at exactly the rate the ground under it fades reads as one
+         flat crossfade. It lifts out over the first third instead, and
+         the veil clears just behind it so the section arriving is not
+         read through a scrim. */
+      tl.to(".meaning__inner",
+        { yPercent: -18, autoAlpha: 0, duration: dur * 0.38, ease: "power2.in" }, at);
+      tl.to("[data-meaning-veil]",
+        { autoAlpha: 0, duration: dur * 0.44, ease: "power1.in" }, at + dur * 0.08);
 
-      /* The fall, precomputed per grain as plain numbers rather than as
-         GSAP per-target values - the render loop below reads these straight
-         out of typed arrays every frame, so nothing is recomputed and
-         nothing is allocated while it is running.
-
-         The shape is the one the old tween had: each grain falls for 0.5
-         and the stagger spans 0.95, so the two together fill `dur` exactly.
-         Normalised against that total, every grain's start and its own
-         length are fractions of the single 0..1 clock GSAP drives. */
-      const SPAN = 1.45;
-      const FALL = 0.5 / SPAN;
-      const seed = Array.from({ length: n }, () => Math.random());
-      const start = new Float32Array(n);
-      const offY = new Float32Array(n);         // in grain heights, as yPercent was
-      const offX = new Float32Array(n);
-      // the earliest start in each row, so whole untouched rows at the top
-      // can go out in one blit instead of a tile at a time
-      const rowStart = new Float32Array(rows).fill(1);
-      for (let i = 0; i < n; i++) {
-        const r = (i / cols) | 0;
-        const lead = rows > 1 ? (rows - 1 - r) / (rows - 1) : 0;
-        const s = (lead * 0.55 + seed[i] * 0.4) / SPAN;
-        start[i] = s;
-        if (s < rowStart[r]) rowStart[r] = s;
-        // far enough to clear the pin; they have faded out long before then
-        offY[i] = 6.2 + seed[i] * 6.8;
-        offX[i] = (seed[(i * 7 + 3) % n] - 0.5) * 0.7;
+      /* The picture pulls back as it goes. Small numbers on purpose - the
+         stage is already at STAGE_REST from phase 2 and this is the last
+         thing the reader sees of it, so it is a breath rather than a zoom.
+         power1.in, so almost all of the travel is in the second half and
+         the frame is still holding still while the dissolve has already
+         started eating the bottom of it. */
+      if (stage) {
+        tl.to(stage,
+          { scale: STAGE_REST * 1.07, yPercent: -2.5, duration: dur, ease: "power1.in" }, at);
       }
 
-      /* The frame the grains are cut from: everything under this layer,
-         drawn once. Capped at 1.5x device pixels - the grid is only ever on
-         screen while it is coming apart and shrinking, so a full retina
-         backing store is memory and fill rate spent on nothing. */
-      const frame = document.createElement("canvas");
-      const fctx = frame.getContext("2d");
-      let W = 0, H = 0, tw = 0, th = 0;
-      /* Whether the frame in hand is worth falling apart. A paint that ran
-         before the pin had a size, or before the photo had decoded, leaves
-         a canvas of flat black - and a grid of black grains falling on
-         black is indistinguishable from the hero simply blinking out, which
-         is exactly what "sometimes it doesn't crumble" looked like. */
-      let ready = false;
-
-      const paint = () => {
-        const pw = pin.offsetWidth, ph = pin.offsetHeight;
-        if (!pw || !ph || !fctx) return;
-        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-        W = Math.round(pw * dpr); H = Math.round(ph * dpr);
-        tw = W / cols; th = H / rows;
-        frame.width = W; frame.height = H;
-        host.width = W; host.height = H;
-
-        // the flat-black backdrop, everywhere the photo does not reach
-        fctx.setTransform(1, 0, 0, 1, 0, 0);
-        fctx.fillStyle = "#000";
-        fctx.fillRect(0, 0, W, H);
-
-        // the stage's resting rectangle: the contained box, scaled about its
-        // own centre by the settle phase 2 applies
-        const b = boxEnd();
-        const bw = b.w * STAGE_REST * dpr, bh = b.h * STAGE_REST * dpr;
-        const bl = (b.left + b.w / 2) * dpr - bw / 2;
-        const bt = (b.top + b.h / 2) * dpr - bh / 2;
-
-        // initHero's fit(), replayed for that rectangle
-        let iw = bw / PWIN.w, ih = iw * (PHOTO.h / PHOTO.w);
-        if (ih * PWIN.h < bh) { const k = bh / (ih * PWIN.h); iw *= k; ih *= k; }
-        const ix = bl + bw / 2 - (PWIN.l + PWIN.w / 2) * iw;
-        const iy = bt + bh / 2 - (PWIN.t + PWIN.h / 2) * ih;
-
-        fctx.save();
-        fctx.beginPath();
-        fctx.rect(bl, bt, bw, bh);
-        fctx.clip();
-        ready = !!(photo.complete && photo.naturalWidth);
-        if (ready) fctx.drawImage(photo, ix, iy, iw, ih);
-
-        /* .hero__stage-vignette, redrawn here rather than approximated: the
-           two gradients are laid down exactly as CSS stacks them, which is
-           what makes the handover from the real layer invisible. */
-        // linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%)
-        const edge = fctx.createLinearGradient(bl, 0, bl + bw, 0);
-        edge.addColorStop(0, "rgba(0,0,0,1)");
-        edge.addColorStop(0.2, "rgba(0,0,0,0)");
-        edge.addColorStop(0.8, "rgba(0,0,0,0)");
-        edge.addColorStop(1, "rgba(0,0,0,1)");
-        fctx.fillStyle = edge;
-        fctx.fillRect(bl, bt, bw, bh);
-        // radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%)
-        // - drawn in the box's own unit space so the circle comes out as the
-        //   ellipse CSS draws, farthest-corner, i.e. r = 1 at the corners
-        fctx.translate(bl + bw / 2, bt + bh / 2);
-        fctx.scale(bw / 2, bh / 2);
-        const glow = fctx.createRadialGradient(0, 0, 0, 0, 0, Math.SQRT2);
-        glow.addColorStop(0.78, "rgba(0,0,0,0)");
-        glow.addColorStop(1, "rgba(0,0,0,.6)");
-        fctx.fillStyle = glow;
-        fctx.fillRect(-1, -1, 2, 2);
-        fctx.restore();
-
-        // and the brightness() phase 2 settles on, as the black it comes to
-        fctx.fillStyle = `rgba(0,0,0,${1 - STAGE_DIM})`;
-        fctx.fillRect(bl, bt, bw, bh);
-      };
-
-      /* One frame of the fall. Three kinds of grain, cheapest first: the
-         rows that have not started at all go out as a single blit, the
-         grains still sitting still are copied straight across, and only the
-         ones actually in flight pay for a transform. Anything past the end
-         of its own fall is at opacity 0 and simply skipped, so the loop
-         gets cheaper the further in it gets. */
-      const state = { t: 0 };
-      const render = () => {
-        /* Self-healing, because the frame is cut once and everything after
-           depends on it. Repaint if the last attempt produced nothing (the
-           pin had no size yet) or if it went out without the photo and the
-           photo has since arrived. Both conditions clear for good the first
-           time they are met, so this is not a per-frame cost. */
-        if (!W || (!ready && photo.complete && photo.naturalWidth)) paint();
-        if (!W) return;
-        const t = state.t;
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.clearRect(0, 0, W, H);
-        ctx.globalAlpha = 1;
-
-        let top = 0;
-        while (top < rows && rowStart[top] > t) top++;
-        if (top > 0) ctx.drawImage(frame, 0, 0, W, top * th, 0, 0, W, top * th);
-
-        // still-seated grains below that block, in one identity-transform pass
-        for (let i = top * cols; i < n; i++) {
-          if (t >= start[i]) continue;
-          const x = (i % cols) * tw, y = ((i / cols) | 0) * th;
-          ctx.drawImage(frame, x, y, tw, th, x, y, tw, th);
-        }
-
-        // and the ones in the air
-        for (let i = top * cols; i < n; i++) {
-          const p = (t - start[i]) / FALL;
-          if (p <= 0 || p >= 1) continue;
-          const e = p * p * p;                  // power2.in - gravity, not a fade
-          const s = 1 - 0.5 * e;                // scale: 1 -> .5
-          const x = (i % cols) * tw, y = ((i / cols) | 0) * th;
-          ctx.globalAlpha = 1 - e;
-          ctx.setTransform(s, 0, 0, s,
-            x + tw / 2 + offX[i] * tw * e,
-            y + th / 2 + offY[i] * th * e);
-          ctx.drawImage(frame, x, y, tw, th, -tw / 2, -th / 2, tw, th);
-        }
-      };
-
-      paint();
-      render();
-      const remeasure = () => { paint(); render(); };
-      on(window, "resize", remeasure);
-      // the photo may still be in flight on a cold load - the frame is worth
-      // nothing until it is decoded, so redraw it once it lands. Bound
-      // unconditionally: `complete` is also true for an image that failed,
-      // and a retry would land with nothing listening.
-      on(photo, "load", remeasure);
-
-      /* The handover. The grid is a copy of the two layers under it, so
-         swapping them is invisible - and the pin's own black has to go with
-         them, otherwise the grains would fall to reveal the pin rather than
-         the section behind it. gsap.set inside a timeline is reversible, so
-         scrubbing back up puts all of it straight again. */
-      tl.set(host, { autoAlpha: 1 }, at);
-      tl.set(hide.filter(Boolean), { autoAlpha: 0 }, at);
-      tl.set(pin, { backgroundColor: "transparent" }, at);
-
-      /* The type goes with the frame rather than surviving it - it was
-         written on the picture, so it falls when the picture does. The veil
-         has to clear too, or the section coming up behind reads dimmed. */
-      tl.to(".meaning__inner, [data-meaning-side]",
-        { yPercent: 42, autoAlpha: 0, duration: dur * 0.34, ease: "power2.in" }, at);
-      tl.to("[data-meaning-veil]",
-        { autoAlpha: 0, duration: dur * 0.42, ease: "power1.in" }, at + dur * 0.1);
-
-      /* GSAP drives one number and nothing else; the ease lives in the
-         render, per grain, so reversing or scrubbing this is just a
-         different `t` and the whole grid follows from it. */
+      /* And the dissolve itself. Linear on the timeline - the softness is
+         in the gradient's own falloff, not in an ease, so the edge travels
+         at a constant rate and the picture thins out rather than
+         accelerating away from the reader. */
+      const state = { p: 0 };
       tl.to(state, {
-        t: 1, duration: dur, ease: "none",
+        p: 1, duration: dur, ease: "none",
         immediateRender: false,
-        // cut the frame fresh the instant before it is handed the screen,
-        // not at boot. Everything the frame copies - the pin's size, where
-        // the stage came to rest, whether the photo has decoded - is only
-        // reliably settled here, and a frame measured against a layout the
-        // page has since moved on from is what made the handover flash.
-        onStart: () => { paint(); render(); },
-        onUpdate: render,
+        onUpdate: () => place(state.p),
       }, at);
+
+      /* A resize part-way through moves the pin's height under the mask,
+         so the edge has to be put back where the timeline says it is
+         rather than where it was drawn for the old height. */
+      on(window, "resize", () => place(state.p));
     }
 
     /* -------------------------------------------------- SplitText lines
@@ -1459,6 +1435,17 @@ export function initSite(): () => void {
             gsap.to(obj, { v: end, duration: DUR, ease: "power2.out",
               onUpdate: () => { el.textContent = String(Math.round(obj.v)); } });
             if (!cycle.length) return;
+            /* The plus is part of the figure, not punctuation after it.
+               It is a sibling element (components/Sections.tsx) with a
+               colour of its own in the stylesheet, so it cannot inherit
+               its way through the cycle - it has to be painted alongside,
+               or the run reads as a number changing colour next to a
+               cream sign that will not. */
+            const plus = el.parentElement?.querySelector<HTMLElement>("i") ?? null;
+            const paint = (c: string) => {
+              el.style.color = c;
+              if (plus) plus.style.color = c;
+            };
             /* Each count starts a different distance into the palette, so
                the three of them are never on the same colour at the same
                time - a row that changes in unison reads as the page
@@ -1468,12 +1455,12 @@ export function initSite(): () => void {
             gsap.to(step, {
               n: DUR / HOLD, duration: DUR, ease: "none",
               onUpdate: () => {
-                el.style.color = cycle[(seed + Math.floor(step.n)) % cycle.length];
+                paint(cycle[(seed + Math.floor(step.n)) % cycle.length]);
               },
               /* Handed back to the stylesheet rather than parked on the
                  last colour: the figure's resting state is cream, and
                  .stat__num's own colour transition carries it there. */
-              onComplete: () => { el.style.color = ""; },
+              onComplete: () => { paint(""); },
             });
           },
         });
@@ -1493,11 +1480,20 @@ export function initSite(): () => void {
 
        So the base is per-row now, off data-marquee-base, defaulting to the
        30 every row used to share. */
+    /* The rows used to take a shove off the scroll: every Lenis velocity
+       reading was banked as a `boost` on top of the row's own clock and
+       spent over the next few frames, so a flick down the page threw the
+       client wall and the awards strip forward and let them coast back.
+       It is out. A row that changes speed because of something the reader
+       did somewhere else on the page reads as a glitch rather than as
+       parallax - and these two are lists of names, which are the one
+       thing on the page you have to be able to actually read while they
+       move. They run at their own rate now, and only at that. */
     let reflow = () => {};
     function initMarquees() {
       const items: {
         track: HTMLElement; dir: number; half: number;
-        current: number; boost: number; base: number; onScreen: boolean;
+        current: number; base: number; onScreen: boolean;
       }[] = [];
       /* A strip that is not on screen is still a strip being written to:
          the same transform every frame, the same layer recomposited, for
@@ -1506,10 +1502,7 @@ export function initSite(): () => void {
          The arithmetic below still runs for every row - it is a multiply
          and a modulo, and stopping it would mean a row that had been
          scrolled past came back parked where it was left rather than
-         where its own clock says it should be. What stops is the write.
-         The boost decays off screen too, for the same reason: a hard
-         flick past a hidden row would otherwise bank velocity it spends
-         all at once the moment the row appears. */
+         where its own clock says it should be. What stops is the write. */
       const seen = new IntersectionObserver(
         (entries) => entries.forEach((e) => {
           const it = items.find((s) => s.track === e.target);
@@ -1522,17 +1515,12 @@ export function initSite(): () => void {
         const dir = track.getAttribute("data-marquee") === "right" ? 1 : -1;
         const base = Number(track.dataset.marqueeBase);
         const state = {
-          track, dir, half: track.scrollWidth / 2, current: 0, boost: 0,
+          track, dir, half: track.scrollWidth / 2, current: 0,
           base: Number.isFinite(base) && base > 0 ? base : 30,
           onScreen: false,
         };
         items.push(state);
         seen.observe(track);
-        if (lenis) {
-          lenis.on("scroll", (e: { velocity?: number }) => {
-            state.boost += gsap.utils.clamp(-30, 30, (e.velocity || 0) * dir);
-          });
-        }
       });
       let last = performance.now();
       addTicker(() => {
@@ -1540,17 +1528,15 @@ export function initSite(): () => void {
         const dt = Math.min(0.05, (now - last) / 1000); last = now;
         items.forEach((s) => {
           if (!s.half) return;
-          s.current += (s.half / s.base) * s.dir * dt + s.boost * dt;
-          s.boost *= 0.9;
+          s.current += (s.half / s.base) * s.dir * dt;
           /* Wrapped by modulo rather than by a pair of one-step tests.
              The track is the same content twice, so any two offsets a
              half apart are the same picture and this can never be seen -
              but it holds for *any* offset, which the two tests did not.
              They only ever subtracted one half, in one direction each, so
-             a hard scroll (which feeds `boost` in either direction,
-             whatever `dir` is) could carry the offset past the end of the
-             content the wrap was guarding, and the strip ran out
-             mid-viewport and appeared to stop dead and jump back. */
+             an offset that had got past the end of the content the wrap
+             was guarding left the strip running out mid-viewport, dead
+             stopping and jumping back. */
           const t = ((s.current % s.half) + s.half) % s.half;
           s.current = t - s.half;
           if (s.onScreen) gsap.set(s.track, { x: s.current });
@@ -1564,7 +1550,6 @@ export function initSite(): () => void {
     function initCursor() {
       const cursor = document.querySelector<HTMLElement>(".cursor");
       const ring = document.querySelector<HTMLElement>(".cursor-ring");
-      const label = cursor && cursor.querySelector<HTMLElement>(".cursor__label");
       if (!cursor || !canHover) return;
 
       const xTo = gsap.quickTo(cursor, "x", { duration: 0.28, ease: "power3" });
@@ -1610,42 +1595,13 @@ export function initSite(): () => void {
         });
       }
 
-      /* Which element the disc is currently reading. Kept because some of
-         these words change while you are still standing on them - the
-         reel's transport is PAUSE until you press it and PLAY after, and
-         the AI grid's tiles do the same - and a label written once on
-         mouseenter would go on saying PAUSE at a stopped film until the
-         reader left the frame and came back. */
-      let reading: HTMLElement | null = null;
-
-      document.querySelectorAll<HTMLElement>("[data-cursor]").forEach((el) => {
-        on(el, "mouseenter", () => {
-          reading = el;
-          cursor.classList.add("is-active");
-          ring?.classList.add("is-active");
-          if (label) label.textContent = el.getAttribute("data-cursor");
-        });
-        on(el, "mouseleave", () => {
-          if (reading === el) reading = null;
-          cursor.classList.remove("is-active");
-          ring?.classList.remove("is-active");
-          if (label) label.textContent = "";
-        });
-      });
-
-      /* One observer for the whole page rather than one per element, and
-         filtered to the single attribute, so it costs nothing until a
-         word actually changes. React rewriting data-cursor on a hovered
-         tile comes through here too. */
-      if (label) {
-        const relabel = new MutationObserver((records) => {
-          for (const r of records) {
-            if (r.target === reading) label.textContent = (r.target as HTMLElement).getAttribute("data-cursor");
-          }
-        });
-        relabel.observe(document.body, { subtree: true, attributes: true, attributeFilter: ["data-cursor"] });
-        cleanups.push(() => relabel.disconnect());
-      }
+      /* Nothing here reads [data-cursor] any more. The disc that opened
+         over those elements with the word in it is gone (see .cursor in
+         globals.css) - so is the mouseenter/mouseleave pass that armed it
+         and the MutationObserver that kept the word current on the tiles
+         that rewrite it. The attribute is left on the markup because it
+         is still the selector that takes the native arrow off anything
+         the dot is standing in for. */
     }
 
     /* -------------------------------------------------- cursor spotlight */
@@ -2237,13 +2193,48 @@ export function initSite(): () => void {
       readGround();
       nav?.classList.remove("is-hidden");
 
+      /* ---- when the header gets out of the way ----
+
+         Not "is this frame going down". That is what it used to ask, and
+         a scroll is not a monotonic thing: Lenis eases, a pinned section
+         hands the scroll back a pixel or two as it releases, a trackpad
+         gives up in tiny alternating deltas. Every one of those flipped
+         the answer on a single frame, so the row blinked in and out the
+         whole way down the page - and never on the way up, where the
+         gesture is one long committed run and there is nothing to flip.
+
+         So it measures a RUN instead: how far the reader has gone one way
+         without turning round. Turning round starts the measure again from
+         wherever they turned, which is what makes a wobble cost nothing -
+         it never gets far enough in either direction to be an answer. One
+         number decides both edges, so the header cannot be asked to hide
+         and show inside the same gesture. */
+      const ARM = 90;      // px of one-way travel before the header answers
+      const TOP = 500;     // and never inside the first screen
       let lastY = 0;
+      let mark = 0;        // where the current run began
+      let way = 0;         // which way it is going: 1 down, -1 up
       ScrollTrigger.create({
         start: 0, end: "max",
         onUpdate: (self) => {
           readBar();
           const y = self.scroll();
-          if (nav) nav.classList.toggle("is-hidden", y > lastY && y > 500);
+          if (nav) {
+            /* held: the hero is driving, and the jump it makes at the
+               handover is not a reader scrolling down. The run is reset
+               with it, so what the reader does next is measured from
+               where the page actually ended up. */
+            if (navHold?.()) {
+              nav.classList.remove("is-hidden");
+              mark = y; way = 0;
+            } else {
+              const d = Math.sign(y - lastY);
+              if (d !== 0 && d !== way) { way = d; mark = y; }
+              const run = y - mark;
+              if (y <= TOP || run < -ARM) nav.classList.remove("is-hidden");
+              else if (run > ARM) nav.classList.add("is-hidden");
+            }
+          }
           lastY = y;
           readGround();
         },
