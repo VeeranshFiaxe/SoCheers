@@ -24,25 +24,33 @@ import { ART } from "@/lib/series-content";
 
    ---- the layers ----
 
-   Five, and the order of them is the whole design:
+   Six, and the order of them is the whole design:
 
      to     the deck's finished frame, underneath everything
-     from   the ordinary frame, with a STATIC hole where his face is
+     from   the ordinary frame, whole
+     hole   the deck's frame cut to the shape of his profile, fading in
+            as the profile leaves
      smear  the deck's frame again, blurred once and screen-blended,
-            stretched off the phone - the band of light, over both
-     face   his face, on its own layer, scaled ABOUT THE PHONE so that
-            it collapses into it
-     wisp   the same face again, blurred hard and screen-blended,
+            stretched off the phone - the band of light, over all three
+     face   the FRONT of his face, on its own layer, scaled ABOUT THE
+            PHONE so that it collapses into it
+     wisp   the same profile again, blurred hard and screen-blended,
             thrown further and faster - what is left of him
 
-   `from` and `face` carry complementary masks: where one is solid the
-   other is clear, and they are cut from the same photograph, so at rest
-   they are one picture with no seam in it. The hole does not open. His
-   face LEAVES, and what was always behind it is the deck's smear.
+   `face` and `hole` are cut to the same shape and are exact opposites
+   in time: as one goes the other arrives. At rest the face is the same
+   pixels in the same place as the plate under it, so there is no seam,
+   and at the end the deck's own smear is sitting where the profile was.
 
-   That is the difference from the pass before this one, where the mask
-   opened and the face stayed put. A hole that opens on its own is a
-   wipe: the picture changes and nothing in it moves, which is the one
+   WHAT LEAVES IS THE PROFILE AND NOT THE HEAD. The brow, the nose, the
+   lips, the line of the jaw. The ear, the hair and the back of his
+   skull stay exactly where they are, because in the deck's own frame
+   they have not moved - only the front of him has been drawn out into
+   the light. A mask that takes the whole head breaks that the moment
+   the two frames meet.
+
+   And the change does not arrive as a wipe. A hole that opens on its
+   own is a picture changing with nothing in it moving, which is the one
    thing this section is about.
 
    ---- and why nothing here animates a mask or a filter ----
@@ -93,19 +101,19 @@ import { ART } from "@/lib/series-content";
    left on them is the tenth the frame closes in by across the pull.
 
    Two numbers, measured off the files rather than guessed: THE PHONE at
-   39.8% 55.2%, where both plates go over 235 luma, and THE FACE at
-   50.5% 46.8%, the lit region of the ordinary one. The phone is the
-   point every layer in the stylesheet is scaled about and the point
-   every mote here is pulled to, so that one has to agree across the two
-   files. The face is where the motes are spawned; the stylesheet's own
-   mask sits wider and a little to its left, for a reason that is
-   written where it is set.
+   39.8% 55.2%, where both plates go over 235 luma, and THE PROFILE at
+   50.3% 49.5%, the front of the lit face in the ordinary one. The phone
+   is the point every layer in the stylesheet is scaled about and the
+   point every mote here is pulled to, so it has to agree across the two
+   files. The profile is where the motes come off, and it is the centre
+   of the one mask in the stylesheet.
 
    ---- the numbers the scroll writes ----
 
-     --p   the approach, damped. 0 while the section's top edge is two
-           thirds of the way down the window, 1 once it has gone a third
-           of the way past the top of it.
+     --p   the approach, damped and LATCHED. 0 while the section's top
+           edge is two thirds of the way down the window, 1 once it has
+           gone a third of the way past the top of it - and it never
+           goes back. Scrolling up does not put him together again.
      --s   his face going into the phone
      --fa  how much of it you can still see, which holds high and then
            drops - a face that fades as fast as it travels has gone
@@ -133,7 +141,7 @@ import { ART } from "@/lib/series-content";
    ============================================================ */
 
 const PHONE = { x: 0.398, y: 0.552 };
-const FACE = { x: 0.505, y: 0.468, rx: 0.055, ry: 0.12 };
+const FACE = { x: 0.503, y: 0.495, rx: 0.045, ry: 0.105 };
 
 type Mote = {
   x: number;
@@ -193,10 +201,18 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     let at = 0; /* where the picture actually is */
     let burst = 0;
 
+    /* THE LATCH. It only ever goes forward.
+
+       Scrolling back up used to put him back together, and then the
+       next pass down took him apart again - which makes the whole thing
+       a toy that answers the wheel rather than a thing that happened.
+       It happens once. After that the section is the deck's frame, and
+       the only way to see it again is to load the page again. */
     const aim = () => {
       const r = el.getBoundingClientRect();
       const vh = window.innerHeight || 1;
-      want = clamp01((vh * 0.66 - r.top) / (vh * 1.02));
+      const now = clamp01((vh * 0.66 - r.top) / (vh * 1.02));
+      if (now > want) want = now;
     };
 
     const write = () => {
@@ -461,13 +477,17 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
         {/* the deck's frame, underneath everything */}
         <img className="st-pull__to" src={to} alt="" decoding="async" />
 
-        {/* the ordinary frame, with a static hole where his face is */}
+        {/* the ordinary frame, whole */}
         <img className="st-pull__from" src={from} alt="" decoding="async" />
+
+        {/* and the deck's own smear, cut to the shape of his profile,
+            arriving at exactly the rate the profile leaves */}
+        <img className="st-pull__hole" src={to} alt="" decoding="async" />
 
         {/* the band of light, over both, stretched off the phone */}
         <img className="st-pull__smear" src={to} alt="" decoding="async" />
 
-        {/* his face, going in */}
+        {/* the front of his face, going in */}
         <img className="st-pull__face" src={from} alt="" decoding="async" />
 
         {/* and what is left of it, thrown further and faster */}

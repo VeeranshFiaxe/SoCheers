@@ -62,6 +62,14 @@ const TILES = [
   /* BFSI */
   { slug: "yes-bank", file: "BFSI/YES bank Caseboard.png" },
   { slug: "bhim-upi", master: "bhim-upi.src.mp4", at: 8 },
+  /* Two tiles that used to be pending() in lib/work-content.ts. Both
+     campaigns have a film, but the tile is a still either way - the wall
+     never plays anything - and both clients sent a key frame, so neither
+     needs a grab out of the cut. */
+  { slug: "indusind", file: "BFSI/IGI/Thumbnail.png" },
+  { slug: "zurich-kotak", file: "BFSI/Zurich Kotak Insurance/THUMBNAIL.png" },
+  /* FMCG. The first tile the tab has ever had that is not a placeholder. */
+  { slug: "belgian-waffle", file: "FMCG/Belgian Waffle/Thumbnail belgian waffle.jpg" },
   /* Entertainment */
   { slug: "dhurandhar-2", master: "dhurandhar-2.src.mp4", at: 24 },
   { slug: "maa-behen", file: "Entertainment/Maa Behen/Maa Behen cover.jpeg" },
@@ -111,6 +119,75 @@ const CASE_SHOTS = [
      and kept as assets/maa-behen-transit.src.jpg, so this script stays
      portable and nobody has to repeat that by hand. */
   { slug: "maa-behen/transit", master: "maa-behen-transit.src.jpg" },
+  /* Zurich Kotak. The board is a 16:9 deck slide rather than an
+     artboard, so it does not need the 2400 the Maa Behen one does - it
+     is already legible at the width a bleed block draws it. The four
+     that follow are the deck itself: two studio renders and two
+     photographs of the printed cards. */
+  { slug: "zurich-kotak/board", file: "BFSI/Zurich Kotak Insurance/Caseboard.png" },
+  { slug: "zurich-kotak/deck-box", file: "BFSI/Zurich Kotak Insurance/6 (1).jpg" },
+  { slug: "zurich-kotak/deck-cards", file: "BFSI/Zurich Kotak Insurance/3 (1).jpg" },
+  { slug: "zurich-kotak/deck-held", file: "BFSI/Zurich Kotak Insurance/2.jpg" },
+  { slug: "zurich-kotak/deck-fan", file: "BFSI/Zurich Kotak Insurance/13.jpg" },
+  /* Belgian Waffle's board, same shape and same reasoning. */
+  { slug: "belgian-waffle/board", file: "FMCG/Belgian Waffle/Case Study.png" },
+];
+
+/* ------------------------------------------------------------------
+   THE THREE PICTURES THAT HAD TO BE MADE RATHER THAN RESIZED.
+
+   Some of what the client sent is a set and not a picture: four square
+   social posts, two phone-shaped feed grids, two influencer screen
+   grabs. The case template's `duo` and `gallery` blocks would take them,
+   but both draw their cells at a fixed 4:5 - which centre-crops a 1:1
+   post through its logo, and takes a 399x864 feed grid down to a third
+   of itself. That is a real constraint of the layout and the right one
+   for photography; these are not photographs.
+
+   So they are composited here instead, into one picture each, and go on
+   the page as a single `image` block that keeps its own proportions.
+   The ground is --bg (#0b0b0c), so the gaps between cells read as the
+   page showing through rather than as a border round a contact sheet.
+
+   `cols` is the grid width; cells are laid out in order, each scaled to
+   the same cell width, and rows are as tall as their tallest cell.
+   ------------------------------------------------------------------ */
+const GROUND = { r: 11, g: 11, b: 12 };
+const GAP = 28;
+
+const COMPOSITES = [
+  /* IndusInd's rebrand, which is a before and an after and is not
+     legible as either one alone. Left is the Reliance General feed, right
+     is the same account after the change - the client's own pair. */
+  {
+    slug: "indusind/feed",
+    cols: 2,
+    files: ["BFSI/IGI/RGI before.png", "BFSI/IGI/IGI after.png"],
+  },
+  /* The four YES BANK social posts, as the 2x2 the case board itself
+     lays them out in. Square, so a 4:5 cell would cut the logo off. */
+  {
+    slug: "yes-bank/creatives",
+    cols: 2,
+    files: [
+      "BFSI/YES BANK/1 (4).jpg",
+      "BFSI/YES BANK/4 (2).jpg",
+      "BFSI/YES BANK/new-creatives.jpg",
+      "BFSI/YES BANK/Final-.jpg",
+    ],
+  },
+  /* The two influencer pickups. These are phone screen grabs at 256px
+     wide and they are not going to get sharper - but they are the
+     campaign's own proof of the influencer leg, and the page says the
+     influencers picked it up. Drawn small, at close to their own size. */
+  {
+    slug: "belgian-waffle/influencers",
+    cols: 2,
+    files: [
+      "FMCG/Belgian Waffle/Screenshot 2026-09-09 120611.png",
+      "FMCG/Belgian Waffle/Screenshot 2026-09-09 120630.png",
+    ],
+  },
 ];
 
 await mkdir(OUT, { recursive: true });
@@ -174,5 +251,71 @@ for (const { slug, file, master, width } of CASE_SHOTS) {
   dims.push(`  ${slug.padEnd(20)} ${String(out.width).padStart(5)} x ${String(out.height).padStart(5)}`);
   console.log(`${slug.padEnd(20)} ${out.width}x${out.height}  ${(out.size / 1024).toFixed(0)}KB  <- ${rel}`);
 }
+
+for (const { slug, cols, files, width } of COMPOSITES) {
+  const froms = files.map((f) => path.join(SRC, f));
+  const missing = froms.filter((f) => !existsSync(f));
+  if (missing.length) {
+    console.warn(`SKIP ${slug.padEnd(20)} missing: ${missing.length} of ${froms.length}`);
+    continue;
+  }
+
+  /* Every cell is drawn at the width of the widest source, so the
+     composite is never an upscale of anything - the smaller ones are
+     the ones that get resized, and only downwards. */
+  const metas = await Promise.all(froms.map((f) => sharp(f).metadata()));
+  const cell = Math.max(...metas.map((m) => m.width));
+
+  const cells = await Promise.all(
+    froms.map((f) =>
+      sharp(f).resize({ width: cell }).toBuffer({ resolveWithObject: true }),
+    ),
+  );
+
+  /* A row is as tall as its tallest cell; a shorter cell is centred. */
+  const rows = Math.ceil(cells.length / cols);
+  const rowH = Array.from({ length: rows }, (_, r) =>
+    Math.max(...cells.slice(r * cols, r * cols + cols).map((c) => c.info.height)),
+  );
+  const usedCols = Math.min(cols, cells.length);
+  const W = usedCols * cell + (usedCols - 1) * GAP;
+  const H = rowH.reduce((a, b) => a + b, 0) + (rows - 1) * GAP;
+
+  let y = 0;
+  const layers = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const it = cells[r * cols + c];
+      if (!it) break;
+      layers.push({
+        input: it.data,
+        left: c * (cell + GAP),
+        top: y + Math.round((rowH[r] - it.info.height) / 2),
+      });
+    }
+    y += rowH[r] + GAP;
+  }
+
+  await mkdir(path.join(CASES_OUT, path.dirname(slug)), { recursive: true });
+  /* Two passes on purpose. sharp applies resize before composite within
+     one pipeline, which would scale the empty ground and leave every
+     layer pinned to coordinates that no longer exist. So: composite at
+     full size to a buffer, then resize and encode that. */
+  const sheet = await sharp({
+    create: { width: W, height: H, channels: 3, background: GROUND },
+  })
+    .composite(layers)
+    .png()
+    .toBuffer();
+
+  const out = await sharp(sheet)
+    .resize({ width: width ?? WIDTH, withoutEnlargement: true })
+    .jpeg({ quality: 82, progressive: true, mozjpeg: true })
+    .toFile(path.join(CASES_OUT, `${slug}.jpg`));
+
+  dims.push(`  ${slug.padEnd(20)} ${String(out.width).padStart(5)} x ${String(out.height).padStart(5)}`);
+  console.log(`${slug.padEnd(20)} ${out.width}x${out.height}  ${(out.size / 1024).toFixed(0)}KB  <- ${files.length} files`);
+}
+
 
 console.log("\nfor lib/work-content.ts:\n" + dims.join("\n"));

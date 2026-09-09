@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 55.6 283 283" width="283" height="283">
+  <title>SoCheers</title>
+  <!-- The bulb from lib/logo-paths.ts, cropped to the ink and squared:
+       the ring and the three base bars in the line ink, the off-centre
+       disc in the brand yellow under them. No wordmark, because at 16px
+       the letters are a smudge and the bulb alone is the mark.
+
+       The line ink is the one thing that moves. The brand sheet draws it
+       near-black, which disappears on a dark tab strip, so it flips to
+       cream under prefers-color-scheme: dark. The yellow never moves: it
+       is the same #ffcb0c the site paints the logo with, and it is what
+       makes the tab identifiable at a glance in either theme.
+
+       Written by hand; scripts/build-favicons.mjs bakes the PNG and .ico
+       fallbacks in public/ from the same geometry, for the browsers that
+       ignore this file (Safari) or cannot switch theme with it (the
+       manifest and home-screen icons). -->
+  <style>
+    .ink { stroke: #231f20 }
+    @media (prefers-color-scheme: dark) { .ink { stroke: #f1ece1 } }
+  </style>
+  <circle cx="172.4" cy="151.7" r="85.7" fill="#ffcb0c"/>
+  <g class="ink" fill="none" stroke-width="16.5" stroke-linecap="round">
+    <path d="M152.72 250.22A88 88 0 1 1 247.28 250.22"/>
+    <path d="M163.5 275H236.5"/>
+    <path d="M169.6 298H230.4"/>
+    <path d="M175.1 320H224.9"/>
+  </g>
+</svg>

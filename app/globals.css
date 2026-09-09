@@ -1465,9 +1465,9 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
 }
 
 /* ---- the window ----
-   The film underneath is always the full stage - it never resizes and
-   never scales to fit a box. This is the aperture over it, and the whole
-   mechanic is one number: --reel-open, 0 for shut and 1 for full bleed,
+   The film underneath is cut to this same window and grows with it, so
+   the clip is trimming an edge rather than hiding most of a picture.
+   This is the aperture, and the whole mechanic is one number: --reel-open, 0 for shut and 1 for full bleed,
    written on the stage every frame by initReel and read by everything
    below - here, the label and the transport - through calc().
 
@@ -1501,17 +1501,27 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   background:#000;
 }
 
+/* The film is inset to the aperture, not to the stage - the same three
+   numbers the frame is cut with. This is the difference between a hole
+   and a lens: laid over the full stage, the shut window showed the
+   middle of a screen-sized picture and everything outside it was simply
+   gone, so the smaller the frame the harder the crop. Sized to the
+   window instead, the picture is the window's own size, and opening the
+   window scales the film up with it. One move, and the whole frame of
+   footage is on screen the entire way.
+
+   The insets are the camera, so there is no separate push transform on
+   top of them any more - a scale here would put back exactly the crop
+   this is undoing. */
 .reel__film{
-  position:absolute; inset:0; width:100%; height:100%;
+  position:absolute;
+  top:calc(var(--reel-y) * var(--reel-shut));
+  right:calc(var(--reel-x) * var(--reel-shut));
+  bottom:calc(var(--reel-y) * var(--reel-shut));
+  left:calc(var(--reel-x) * var(--reel-shut));
+  width:auto; height:auto;
   object-fit:cover; display:block;
-  /* The push. It sits 6% oversize while the window is shut and settles
-     to 1 as it opens, so the two moves are one move: the frame is still
-     coming toward you while the room is getting out of the way. On its
-     own transform rather than folded into the clip, because a clip crops
-     and a scale is the camera - they have to be free to disagree. */
-  transform:scale(calc(1 + .06 * var(--reel-shut)));
-  transform-origin:50% 50%;
-  will-change:transform;
+  will-change:top,right,bottom,left;
 }
 
 /* ---- the bars ----

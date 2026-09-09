@@ -1,422 +1,168 @@
 /* ============================================================
-   /test - THE PROJECTOR ENDING
+   /test - THE FILM ENDING
 
    Loaded only by app/test/page.tsx, so nothing in here is on the live
-   site. It is the look of the one act that differs from the real
-   overture: a blank wall, a projector standing in front of it, and what
-   happens to both once the bulb is dropped into the machine.
+   site. It is the look of the two things that differ from the real
+   overture and the real hero:
 
-   Everything else - the room, the bulb, the rope, the falls - is the
-   OVERTURE block in app/globals.css, unchanged and shared. This sheet
-   only adds, apart from two overrides on .ovt__face, both of them
-   because the picture on the standing wall is no longer a wall-sized
-   photograph but a projected rectangle inside one.
+     · the room ends on nothing - every wall goes over, so there is no
+       standing wall left to style;
+     · and the hero it hands to writes itself onto that blank: three
+       lines of type, then the middle one parting for the vibe film,
+       then the film growing edge to edge on the first scroll.
 
-   Five numbers drive the act, all set by lib/test-overture-motion.ts on
-   .overture--test and inherited down:
+   Everything else - the room, the bulb, the rope, the falls, the pin,
+   the definition, the crumble - is app/globals.css and lib/motion.ts,
+   unchanged and shared.
 
-     --proj      the machine is powered, 0 to 1. The socket, the vents,
-                 the lens and the spill all read it, so the ignition
-                 stutter is one property being set five times
-     --beam      how much light is actually reaching the wall. Separate
-                 from --proj on purpose: the lamp comes up before the gate
-                 opens, and the warm-up is mostly this number hunting for
-                 an exposure
-     --proj-img  whether there is a picture in the gate. Binary in
-                 practice - a slide is in or it is not
-     --grain     the film itself
-     --count     the 3 - 2 - 1 leader
+   Two numbers do most of the work down here, published on <html> by
+   initHero (publishFilm, lib/motion.ts) from the very measurement it
+   seats the hero's stage with:
+
+     --film-w    the film card's width at rest
+     --film-h    its height (its own 16:9, capped against short screens)
+
+   The stage is drawn at them and so is the hole the words open for it,
+   so the gap in the middle line IS the film's rectangle rather than a
+   guess kept in step with it by hand.
    ============================================================ */
-.overture--test {
-  --proj: 0;
-  --beam: 0;
-  --proj-img: 0;
-  --grain: 0;
-  --count: 0;
+/* .overture--test carries no tokens of its own any more. The room's are
+   in the OVERTURE block of app/globals.css; what used to be declared
+   here was the projector's five (--proj, --beam, --proj-img, --grain,
+   --count), and they went with the machine. The class is still on the
+   markup (components/TestOverture.tsx) as the hook this sheet would use
+   if the room ever needs to look different on this route again. */
 
-  /* How far in front of the plaster the machine stands. The engine sets
-     this too (PROJ_Z in lib/test-overture-motion.ts, which is the file
-     that owns the number - it measures the machine to aim the bulb at it
-     and to cut the beam); the value here is only so the machine is in the
-     right place on the frame before the engine has built. */
-  --proj-z: 210px;
+/* ============================================================
+   THE TEST HERO  (components/TestHero.tsx)
+
+   The hero this cut hands to has no artwork in it. It is a sentence -
+   "Hi, / We are / SoCheers" - typed onto black, and then the middle line
+   parts and the vibe film opens out of the gap. One scroll takes that
+   film edge to edge.
+
+   Three things below are worth knowing before reading it:
+
+   · the sentence is one voice at one size on three lines, and it is
+     centred as a block. That symmetry is load-bearing: initHero puts the
+     film at the dead centre of the pin rather than measuring the middle
+     line, which is only the same place if the first and third lines are
+     the same height as each other. Change one line's size and the film
+     comes off its row;
+
+   · the middle line is a grid, `1fr auto 1fr`, with an empty middle
+     column. That column's width is the whole parting - the words are
+     pushed out by it rather than moved by a transform of their own - and
+     because the outer columns are equal, the two leave the centre at the
+     same rate and the gap stays centred on the screen. A centred flex row
+     would have opened the hole around the row's own middle instead, which
+     sits half the difference between "We" and "are" off centre;
+
+   · and the growth of the film is a scale, not a reveal. .hero__stage is
+     moved and resized by initHero, and everything inside it is simply
+     100% x 100% of it, so the picture travels with the box - nothing is
+     uncovered at the end that was hidden at the start, and nothing is
+     cropped out of it along the way. The opposite of how the home page's
+     reel works (a fixed full-bleed film behind a clip-path that opens).
+     The one thing that does change is the box's own shape: it starts on
+     the film's 16:9 and finishes on the screen's, so the last stretch of
+     the scale trims the long edge rather than adding to it.
+   ============================================================ */
+.hero--test .hero__pin{ background:#000; }
+
+/* The sentence. Above the stage in the stacking order (.hero__stage is
+   z-index 3, globals.css): the words never overlap the film at rest, but
+   the film grows through them on the first scroll, and they have to be
+   seen fading rather than be covered mid-fade. */
+.hero--test .hero__intro{
+  position:absolute; inset:0; z-index:4;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none;
 }
-
-/* ------------------------------------------------------------
-   1 · THE WALL, AND THE RECTANGLE OF IT THAT IS A SCREEN
-   ------------------------------------------------------------ */
-.ovt__plaster {
-  position: absolute;
-  inset: 0;
-  background:
-    /* the fall of the room's own bulb across it, off centre because the
-       bulb is off centre */
-    radial-gradient(ellipse 70% 62% at 46% 40%, rgba(255, 236, 206, 0.1), rgba(0, 0, 0, 0) 62%),
-    /* and the wall itself: a warm off-grey with enough unevenness in it
-       to catch light rather than take it flat */
-    radial-gradient(ellipse 120% 90% at 30% 12%, #2a2724, #17161a 70%),
-    #141316;
-  /* Lit by the room's bulb and by nothing else - deliberately not by
-     --lit-floor, which the falling walls' pictures also read (.ovt__face
-     in globals.css). That is the finale's "this is the page now" switch
-     and it belongs to what is being projected, not to the wall around
-     it: by the time the camera arrives the bulb is inside the machine,
-     so the plaster is nearly black - which is what .hero__backdrop
-     underneath it is (see components/Hero.tsx). Brightening it here
-     would put a lit grey border around a photo that is about to be
-     handed to one on black. */
-  filter: brightness(calc(7% + var(--lit) * 93%));
+.hero--test .hero__lines{
+  --split:0;
+  display:flex; flex-direction:column; align-items:center;
+  gap:clamp(2px,.5vh,10px);
+  width:100%;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(34px,7.4vw,128px);
+  line-height:.98; letter-spacing:-.03em;
+  color:var(--cream);
+  text-shadow:0 6px 40px rgba(0,0,0,.6);
 }
+.hero--test .hero__line{ display:block; white-space:nowrap; }
 
-/* ---- the screen ----
-   Not the whole wall. This is the rectangle the beam actually lands on,
-   and it is deliberately the exact box the hero's own expanded photo
-   ends up in: containedBox() in lib/motion.ts fits the crowd shot's
-   aspect (1919 x 1079) to 94% of the viewport, and the three lines below
-   are that same fit written in CSS. The slab is viewport-sized, so when
-   the camera arrives this rectangle is sitting precisely where the real
-   photo underneath is - which is what keeps the hand-off geometry rather
-   than a match-move, now that the thing being handed over is a photo in
-   the middle of a screen instead of a wall-sized painting. */
-.ovt__screen {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  /* --screen, not 100% - the room is fixed at inset:0 and is as tall as
-     the viewport currently is, while .hero__pin is a flat 100svh. Those
-     are the same number on a desktop and half an address bar apart on a
-     phone, and this rectangle has to land on the hero's, not on the
-     room's. Same reasoning as .ovt__slab[data-final] in globals.css. */
-  top: calc(var(--screen) / 2);
-  height: calc(var(--screen) * 0.94);
-  max-height: calc(var(--screen) * 0.94);
-  max-width: 94%;
-  aspect-ratio: 1919 / 1079;
-  overflow: hidden;
+/* The middle line, and the reason the whole composition works: an empty
+   column between the two words, opened by --split from a word space out
+   to the film's own width. The row is given the film's height at the same
+   time, which is what pushes "Hi," up and "SoCheers" down so the picture
+   has a row of its own to sit in rather than covering the lines above and
+   below it. min-height, not height: at rest it is shorter than the line
+   box and must not squash it. */
+.hero--test .hero__line--split{
+  display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+  min-height:calc(var(--split) * var(--film-h, 0px));
 }
-
-/* the light on it, before there is anything in the gate to see */
-.ovt__wash {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: var(--beam);
-  mix-blend-mode: screen;
-  background:
-    radial-gradient(ellipse 76% 80% at 50% 46%,
-      rgba(255, 248, 230, 0.95) 0%,
-      rgba(255, 238, 202, 0.68) 44%,
-      rgba(255, 216, 160, 0.24) 76%,
-      rgba(255, 200, 130, 0.04) 100%);
-}
-
-/* ---- the gate ----
-   What is *in* the projection, and the one thing that shakes. It has to
-   settle back to an identity transform before the hand-off. */
-.ovt__gate {
-  position: absolute;
-  inset: 0;
-  display: block;
+.hero--test .hero__side--l{ text-align:right; }
+.hero--test .hero__side--r{ text-align:left; }
+.hero--test .hero__gap{
+  display:block; height:1px;
+  width:calc(.3em + var(--split) * var(--film-w, 0px));
 }
 
-/* The crowd, and it is not there until it has been projected. The
-   brightness curve and the cover fit are the shared .ovt__face rule in
-   globals.css; what is overridden is the phone's rule for the standing
-   wall, which fits that wall's picture into the whole viewport - right
-   when the picture *was* the wall, wrong now that it is a rectangle
-   inside one. The screen's own aspect already matches the photo's, so
-   cover here is an exact fit at both sizes. */
-.ovt__slab[data-blank] .ovt__face {
-  opacity: var(--proj-img);
+/* Each character is its own box so initHero can snap them on one at a
+   time - steps, not fades, which is the difference between type being
+   written and type arriving. */
+.hero--test .hero__ch{ display:inline-block; }
+
+/* The cursor at the end of whichever line is being written. Blinked on
+   background-color rather than on opacity, on purpose: opacity is what
+   GSAP uses to bring each caret in and take it away again, and a CSS
+   animation on the same property would simply win and leave three carets
+   blinking on a finished sentence. */
+.hero--test .hero__caret{
+  display:inline-block; vertical-align:baseline;
+  width:.07em; height:.74em; margin-left:.06em;
+  background:var(--cream);
+  animation:test-caret 1s steps(1) infinite;
 }
-@media (max-width: 700px) {
-  .ovt__slab[data-final][data-blank] .ovt__face {
-    object-fit: cover;
-    object-position: 50% 50%;
-    height: 100%;
-    inset: 0;
-  }
+@keyframes test-caret{ 50%{ background:transparent; } }
+
+/* The film. cover rather than contain: the box is the film's own aspect
+   at rest, so the two are identical there and the whole picture is on
+   screen, and cover is what carries it the rest of the way once the box
+   goes to the screen's shape. */
+.hero--test .hero__film{
+  position:absolute; inset:0; width:100%; height:100%;
+  object-fit:cover; display:block; background:#000;
 }
 
-/* a projected rectangle has a falloff, not a printed border */
-.ovt__gate-edge {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: calc(var(--beam) * 0.9);
-  background:
-    radial-gradient(ellipse 92% 94% at 50% 50%,
-      rgba(0, 0, 0, 0) 66%, rgba(0, 0, 0, 0.35) 92%, rgba(0, 0, 0, 0.6) 100%);
-  box-shadow: 0 0 60px 10px rgba(255, 226, 176, calc(var(--beam) * 0.16));
+/* And the photograph behind it, on exactly the same terms. The shared
+   rule in globals.css sizes this one from JS (the live hero blows it up
+   around a named region of itself); here there is no region and no crop,
+   so it is overridden back to filling its box. */
+.hero--test .hero__stage-img--test{
+  position:absolute; inset:0; width:100%; height:100%;
+  max-width:100%; object-fit:cover; display:block;
 }
 
-/* ---- the leader ---- */
-.ovt__count {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(22vh, 20vw);
-  aspect-ratio: 1;
-  transform: translate(-50%, -50%);
-  display: grid;
-  place-items: center;
-  opacity: var(--count);
-  pointer-events: none;
-}
-.ovt__count svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke: rgba(24, 20, 14, 0.5);
-  stroke-width: 1.1;
-}
-/* the sweeping hand: one turn per number, drawn from twelve o'clock,
-   which is why it is rotated a quarter turn back */
-.ovt__count svg [data-ovt-count-arc] {
-  stroke: rgba(20, 16, 10, 0.88);
-  stroke-width: 3.4;
-  stroke-dasharray: 289.03;
-  stroke-dashoffset: 289.03;
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
-}
-.ovt__count i {
-  position: relative;
-  font-family: var(--f-mono, ui-monospace, monospace);
-  font-style: normal;
-  font-weight: 700;
-  font-size: min(12vh, 11vw);
-  line-height: 1;
-  color: rgba(18, 15, 10, 0.86);
+/* At rest the film is a card: rounded, with an edge on it and a shadow
+   under it, so it reads as a clip lying between the words rather than a
+   hole cut through them. Both are scaled by one variable each, tweened to
+   0 by initHero as the box opens - at full bleed there is no card left to
+   have a corner or an edge. */
+.hero--test .hero__stage{
+  --card:1; --r:1;
+  border-radius:calc(var(--r) * clamp(10px, 1.1vw, 20px));
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,calc(.1 * var(--card))),
+    0 30px 90px rgba(0,0,0,calc(.75 * var(--card)));
 }
 
-/* ---- the film ----
-   feTurbulence rendered once into a background rather than a filter on
-   anything: a filter here would be recomputed every frame over a
-   full-screen element, and this is only ever meant to be a texture. It
-   walks by moving its own tile rather than by being transformed, because
-   the screen it sits in is what clips it. */
-.ovt__grain {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: calc(var(--grain) * 0.42);
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
-  background-size: 180px 180px;
-  animation: ovt-grain 0.5s steps(1) infinite;
-}
-@keyframes ovt-grain {
-  0%   { background-position: 0 0; }
-  20%  { background-position: -37px 21px; }
-  40%  { background-position: 29px -44px; }
-  60%  { background-position: -18px -13px; }
-  80%  { background-position: 43px 31px; }
-  100% { background-position: 0 0; }
-}
-
-/* ------------------------------------------------------------
-   2 · THE BEAM
-
-   Light in the air between the lens and the screen. A flat shape, but
-   the engine measures both of those and clips it to fit (fitBeam in
-   lib/test-overture-motion.ts), so it leaves the machine where the lens
-   actually is and lands exactly on the rectangle that is lit - rather
-   than at two numbers written here, which would only be right at one
-   camera position.
-
-   Sits in the stage rather than in the dolly: it is not an object in the
-   room, it is what the room looks like with a light on in it, and it
-   must not be caught in the 3D stack and skewed.
-   ------------------------------------------------------------ */
-.ovt__beam {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  pointer-events: none;
-  opacity: calc(var(--beam) * 0.46);
-  mix-blend-mode: screen;
-  filter: blur(16px);
-  /* brightest where it leaves the lens and thinning as it travels, which
-     is the one thing that makes a cone read as a volume rather than as a
-     shape someone drew */
-  background: linear-gradient(to top,
-    rgba(255, 240, 210, 0.62) 0%,
-    rgba(255, 232, 194, 0.3) 34%,
-    rgba(255, 224, 180, 0.12) 72%,
-    rgba(255, 220, 176, 0.06) 100%);
-}
-
-/* ------------------------------------------------------------
-   3 · THE MACHINE
-
-   Authored in a flat 340 x 300 box and pushed --proj-z forward of the
-   plaster inside the same wall element, so it keeps its distance from
-   the wall on its own as the camera moves.
-
-   Seen from behind and a little above, which is where the camera is: the
-   face we get is the back of the housing, the reels are on their arms
-   above the deck, and the lens is on the far side pointing away - so all
-   there is of it is the barrel and, once there is a bulb in the machine,
-   the ring of light on the front element and the spill around the cowl.
-
-   Off centre on purpose. A projector standing in the middle of its own
-   picture is a machine blocking the thing it exists to show.
-   ------------------------------------------------------------ */
-.ovt__proj {
-  position: absolute;
-  left: 24%;
-  bottom: 4%;
-  width: 306px;
-  height: 270px;
-  margin-left: -153px;
-  transform: translateZ(var(--proj-z));
-  pointer-events: none;
-}
-.ovt__proj-svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  /* Cold, it is a silhouette in a dark room and nothing more: it picks up
-     the room's bulb like everything else in here does, and once it is
-     running it is lit from inside instead. */
-  filter:
-    brightness(calc(26% + var(--lit) * 74% + var(--proj) * 22%))
-    drop-shadow(0 0 calc(var(--proj) * 26px) rgba(255, 176, 74, calc(var(--proj) * 0.5)));
-}
-
-/* the light that gets out of the machine before any of it reaches the
-   wall - drawn behind the housing, so the housing reads as a silhouette
-   with a fire in it */
-.ovt__proj-fire { opacity: calc(var(--proj) * 0.9); }
-
-/* ---- the body ---- */
-.ovt__proj-deck { fill: url(#tp-deck); }
-.ovt__proj-shell { fill: url(#tp-shell); }
-.ovt__proj-cowl { fill: #24232b; }
-.ovt__proj-foot { fill: #1d1c23; }
-.ovt__proj-base {
-  fill: #0c0c10;
-  filter: blur(1px);
-}
-.ovt__proj-knob {
-  fill: #2e2d37;
-  stroke: rgba(255, 255, 255, 0.12);
-  stroke-width: 1.4;
-}
-.ovt__proj-vents {
-  fill: none;
-  stroke: #08080c;
-  stroke-width: 5;
-  stroke-linecap: round;
-  /* the second place the lamp shows itself: light gets out of a machine
-     like this everywhere except where it is supposed to */
-  filter: drop-shadow(0 0 calc(var(--proj) * 7px) rgba(255, 168, 60, calc(var(--proj) * 0.95)));
-}
-.ovt__proj-arms {
-  fill: none;
-  stroke: #33323c;
-  stroke-width: 9;
-  stroke-linecap: round;
-}
-
-/* ---- the reels ----
-   They are the read on whether the machine is *running*: the lamp says
-   it is powered and the reels say it is playing, and those are two
-   different claims. */
-.ovt__reel-rim {
-  fill: #16161b;
-  stroke: #6f6e7b;
-  stroke-width: 4;
-}
-.ovt__reel-film {
-  fill: #2a2118;
-  stroke: rgba(0, 0, 0, 0.6);
-  stroke-width: 2;
-}
-.ovt__reel-spokes {
-  fill: none;
-  stroke: #5d5c69;
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-.ovt__reel-hub {
-  fill: #85838f;
-}
-
-/* ---- the lens ----
-   Pointing away, so the barrel is all there is of it until there is
-   something behind it to come through. */
-.ovt__lens-barrel {
-  fill: url(#tp-barrel);
-  stroke: rgba(0, 0, 0, 0.5);
-  stroke-width: 1.5;
-}
-.ovt__lens-face {
-  fill: #0a0a10;
-  stroke: rgba(160, 158, 170, 0.55);
-  stroke-width: 3;
-}
-.ovt__lens-glow {
-  fill: #fff3d2;
-  opacity: calc(var(--proj) * 0.85);
-  filter: blur(7px);
-}
-
-/* ---- the socket ----
-   The open lamp socket on the deck, under the cowl. Cold it is a hole
-   with a rim, which is the one detail that has to be legible in the hold
-   before anything happens - it is the question the bulb is the answer to.
-
-   It is also what the drop is aimed at: socketAt() in
-   lib/test-overture-motion.ts measures this group, so moving it here
-   moves the drop with it and nothing else has to be told. */
-.ovt__socket-well { fill: #05050a; }
-.ovt__socket-rim {
-  fill: none;
-  stroke: #6a6976;
-  stroke-width: 3.5;
-}
-.ovt__socket-fire {
-  fill: #ffd257;
-  opacity: var(--proj);
-  filter: blur(5px);
-}
-
-/* and the pool it throws on the floor around itself once it is lit */
-.ovt__proj-pool {
-  position: absolute;
-  left: 50%;
-  bottom: -14%;
-  width: 150%;
-  height: 40%;
-  margin-left: -75%;
-  border-radius: 50%;
-  pointer-events: none;
-  opacity: calc(var(--proj) * 0.5);
-  mix-blend-mode: screen;
-  filter: blur(18px);
-  background: radial-gradient(ellipse at center,
-    rgba(255, 198, 124, 0.5), rgba(255, 160, 70, 0) 70%);
-}
-
-/* ------------------------------------------------------------
-   THE PHONE
-
-   The machine is authored in flat pixels against a viewport-sized wall,
-   so on a narrow screen it is most of the frame. Same 700px cut the rest
-   of the sequence uses (globals.css, components/TestOverture.tsx,
-   lib/motion.ts): smaller, lower, and further off to the side, so the
-   rectangle above it still has room to be a screen.
-   ------------------------------------------------------------ */
-@media (max-width: 700px) {
-  .ovt__proj {
-    left: 27%;
-    bottom: 2%;
-    transform: translateZ(var(--proj-z)) scale(0.6);
-    transform-origin: 50% 100%;
-  }
+/* On a phone the sentence has to give the film a usable width, and the
+   only thing it has to give is its own size: "We [film] are" on a 390px
+   screen is three things sharing one line. */
+@media (max-width:700px){
+  .hero--test .hero__lines{ font-size:clamp(28px,7vw,44px); letter-spacing:-.02em; }
+  .hero--test .hero__gap{ width:calc(.26em + var(--split) * var(--film-w, 0px)); }
 }

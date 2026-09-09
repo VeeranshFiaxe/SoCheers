@@ -17,6 +17,11 @@ assets/bhim-upi.src.mp4
 assets/dhurandhar-2.src.mp4
 assets/made-in-titan.src.mp4
 assets/special-ops-2.src.mp4
+# The two case films the client sent later. Much smaller than the four
+# above - both arrived already compressed - but they are masters all the
+# same, and the web cuts under public/assets/work/cases/ are what serves.
+assets/igi-rebranding.src.mp4
+assets/zurich-kotak.src.mp4
 
 # The client's delivery folder, whole. It used to sit under public/, which
 # meant a deploy shipped 2GB of broadcast masters and print-size exports

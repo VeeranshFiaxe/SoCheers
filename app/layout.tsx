@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Caveat } from "next/font/google";
 import "./globals.css";
@@ -70,7 +70,26 @@ export const metadata: Metadata = {
   title: "SoCheers. Making more happen.",
   description:
     "SoCheers is an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",
+  /* The tab icon itself is not declared here. app/icon.svg, app/favicon.ico
+     and app/apple-icon.png are Next's file conventions, so the framework
+     emits and fingerprints those links on its own - and the SVG is the one
+     that matters, because it is the only one of the three that can carry
+     the near-black line ink on a light tab strip and the cream one on a
+     dark strip. All three are baked from the same geometry by
+     scripts/build-favicons.mjs. This only points at the manifest, which
+     has no file convention that fits a hand-written one. */
+  manifest: "/site.webmanifest",
 };
+
+/* The browser chrome around the page - the address bar on Android, the
+   title bar of an installed window. One value and not a pair, because the
+   site has no light mode: globals.css paints --bg dark in every theme, so
+   a light theme-color would only put a cream bar above a black page.
+
+   The favicon is the opposite case and that is why it is the one thing
+   here that switches: it is drawn on the *browser's* surface, not on the
+   site's, and that surface follows the reader's system theme. */
+export const viewport: Viewport = { themeColor: "#0b0b0c" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

@@ -41,7 +41,14 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                      caseHeadings() uses, so the two cannot drift. */
                   <h2 className="cs-copy__h" id={`heading-${i}`} data-split>{b.heading}</h2>
                 )}
-                <p className="cs-copy__p" data-reveal>{b.body}</p>
+                {/* A body is one paragraph unless the writer left a
+                    blank line in it, and then it is as many as they
+                    left - the client's write-ups arrive broken into
+                    beats, and running them together into one block
+                    loses the pauses they were written with. */}
+                {b.body.split("\n\n").map((p, j) => (
+                  <p className="cs-copy__p" data-reveal key={j}>{p}</p>
+                ))}
               </div>
             );
 
@@ -205,14 +212,17 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
              something only n knows. See .cs-stats in case.css. */
           case "stats":
             return (
-              <div className="cs-stats" key={key} data-n={b.items.length} data-reveal>
-                {b.items.map((s) => (
-                  <div className="cs-stat" key={s.label}>
-                    <b>{s.figure}</b>
-                    <span>{s.label}</span>
-                  </div>
-                ))}
-              </div>
+              <section className="cs-statset" key={key}>
+                {b.heading && <h2 className="cs-copy__h" id={`heading-${i}`} data-split>{b.heading}</h2>}
+                <div className="cs-stats" data-n={b.items.length} data-reveal>
+                  {b.items.map((s) => (
+                    <div className="cs-stat" key={s.label}>
+                      <b>{s.figure}</b>
+                      <span>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
             );
 
           /* The face and the job title are the reference's testimonial

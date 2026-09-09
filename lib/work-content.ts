@@ -17,12 +17,13 @@
    thumbnails, links, headlines and lines, and Netflix x MI has its
    film. Nothing on that section is a placeholder.
 
-   The browse wall under it is most of the way there. Twelve campaigns
-   are real now - the client's own case boards and case study films out
-   of public/assets/SC Website Revamp/03. Work/, cut for the web by
+   The browse wall under it is most of the way there. Fifteen campaigns
+   are real now - the client's own case boards, key art and case study
+   films out of assets/SC Website Revamp/03. Work/, cut for the web by
    scripts/build-wall.mjs. The rest of the brands on their list are
-   still holding their places behind placeholder pictures, and FMCG is
-   the whole of one tab: every folder under it in the drive is empty.
+   still holding their places behind placeholder pictures. FMCG used to
+   be the whole of one empty tab; Belgian Waffle is the first thing in
+   it, and the other five are still waiting.
 
    The case template is written and empty. Its five entries are the
    old placeholder set, they are not reachable from anywhere on the
@@ -356,6 +357,11 @@ const pending = (
   name: string,
   tag: string,
   kind: "image" | "video" = "image",
+  /* A brand can have its write-up before it has its pictures - the five
+     BFSI and FMCG cases arrived as copy with the imagery still to come.
+     Those tiles keep the placeholder picture and the PENDING badge, and
+     still open into the case page, because the page is real. */
+  slug?: string,
 ): WorkAsset => {
   const [w, h] = SHAPES[i % SHAPES.length];
   return {
@@ -367,6 +373,7 @@ const pending = (
     w, h,
     tags: [tag],
     pending: true,
+    ...(slug ? { slug } : {}),
   };
 };
 
@@ -408,14 +415,15 @@ const real = (
 export const WORK_ASSETS: WorkAsset[] = [
   /* ---- BFSI ---- */
   real("yes-bank", "Yes Bank", "Life Ko Banao Rich", "bfsi", "image", 1600, 1131, "yes-bank"),
-  real("bhim-upi", "BHIM UPI", "Mother's Day", "bfsi", "video", 1600, 900),
-  pending(0, "IndusInd", "bfsi", "video"),
-  pending(3, "Zurich Kotak", "bfsi"),
+  real("bhim-upi", "BHIM UPI", "Ask Her Again", "bfsi", "video", 1600, 900, "bhim-upi"),
+  real("indusind", "IndusInd General Insurance", "Forward Together", "bfsi", "video", 1600, 900, "indusind-general-insurance"),
+  real("zurich-kotak", "Zurich Kotak", "Game of Dares", "bfsi", "video", 1376, 768, "zurich-kotak-game-of-dares"),
 
   /* ---- FMCG ----
-     Nothing here yet. Every folder under FMCG/ in the client's drive is
-     empty, so all six are still holding their places. */
-  pending(4, "Belgian Waffle", "fmcg"),
+     One real tile, and it is the first this tab has had - every folder
+     under FMCG/ in the client's drive used to be empty. The other five
+     brands are still holding their places. */
+  real("belgian-waffle", "The Belgian Waffle Co.", "Everyone Knows", "fmcg", "video", 1600, 1200, "belgian-waffle"),
   pending(5, "Prava", "fmcg"),
   pending(6, "ITC", "fmcg", "video"),
   pending(7, "Havmor", "fmcg"),
@@ -517,7 +525,7 @@ export type CaseBlock =
      year, the people. Label / value pairs so it never has to be a
      fixed set of fields. */
   | { type: "credits"; heading?: string; items: { label: string; value: string }[] }
-  | { type: "stats"; items: { figure: string; label: string }[] }
+  | { type: "stats"; heading?: string; items: { figure: string; label: string }[] }
   /* `role` and `avatar` are the reference's testimonial card; without
      them this is the plain pull quote it has always been. */
   | { type: "quote"; text: string; who: string; role?: string; avatar?: string }
@@ -711,8 +719,6 @@ export const CASES: CaseStudy[] = [
       {
         type: "credits",
         items: [
-          { label: "Client", value: "Netflix" },
-          { label: "Scope", value: "Out of Home · Social" },
           { label: "Placement", value: "Inside Delhi Metro" },
         ],
       },
@@ -755,8 +761,6 @@ export const CASES: CaseStudy[] = [
       {
         type: "credits",
         items: [
-          { label: "Client", value: "Netflix" },
-          { label: "Scope", value: "Film · Social" },
           { label: "Year", value: "PENDING" },
         ],
       },
@@ -777,8 +781,6 @@ export const CASES: CaseStudy[] = [
       {
         type: "credits",
         items: [
-          { label: "Client", value: "Superdry Sport" },
-          { label: "Scope", value: "Film" },
           { label: "Year", value: "PENDING" },
         ],
       },
@@ -786,51 +788,72 @@ export const CASES: CaseStudy[] = [
   },
 
   /* ------------------------------------------------------------------
-     THE SIX CASE BOARDS - real write-ups, transcribed off the client's
-     own case study images rather than written here. Every heading below
-     is the board's own heading and every line of body copy is the
-     board's own copy; nothing in this batch was drafted for the site.
-     Numbers in `stats` are the board's own figures, kept exactly as
-     printed (including "Out of Stock" as a figure where the board used
-     words instead of a number).
+     THE FIVE WRITTEN-UP CASES - the client's own copy for BFSI and FMCG,
+     sent as a document rather than as case boards. Every heading and
+     every line below is theirs; the only editorial act was breaking the
+     bodies at the beats they wrote them in, which the copy block now
+     renders as paragraphs.
+
+     YES BANK is here rather than in the board batch below because its
+     write-up was rewritten by the client and replaces what was
+     transcribed off the board. The board itself is still on the page.
+
+     These arrived as copy with the pictures still to come, and the
+     pictures have since come: the Game of Dares stills and film, the
+     IndusInd launch film and before/after grid, the Belgian Waffle board
+     and influencer pickups, and a second set of YES BANK creatives. Every
+     hero on them is now the campaign's own key art rather than repo
+     placeholder. The one thing still outstanding is the BHIM case video,
+     which is a 250MB broadcast master nobody has cut for the web; that
+     page runs on the frame already pulled out of it.
      ------------------------------------------------------------------ */
   {
     slug: "yes-bank",
-    brand: "Yes Bank",
+    brand: "YES BANK",
     title: "Life Ko Banao Rich",
     meta: ["BFSI", "Social · Influencer"],
     intro:
-      "On this journey, we reminded India to find richness in every moment.",
+      "YES BANK was going through a rebrand, with a new identity and a new thought: Life Ko Banao Rich.",
     hero: "/assets/work/cases/yes-bank/hero.jpg",
     blocks: [
       {
         type: "copy",
-        heading: "Background",
-        body: "YES BANK was undergoing a rebranding move, where they wanted to go beyond an identity change and help Indians reimagine what life's richness looks like.",
+        heading: "The brief",
+        body: "The challenge was to make that idea mean something more than financial wealth, and show people what a richer life could actually look like.",
       },
       {
         type: "copy",
-        heading: "Objective",
-        body: "Establish the new image & tagline 'Life Ko Banao Rich' of YES BANK. Convey a simple message - 'You enjoy your moments, we'll take care of your money'.",
+        heading: "The insight",
+        body: "A bank statement usually tells you what happened to your money. But a rich life has a very different set of transactions. Time with your parents. A spontaneous night out. A holiday you still talk about. The little moments you'd happily spend on again.\n\nSo we asked a simple question: what would your life statement look like if it measured the moments that made it rich?",
       },
       {
         type: "copy",
-        heading: "Our Creative Approach",
-        body: "We started with a simple question, \"What does richness mean to you?\" followed by a showcase of how richness has various definitions using one of Bank's most trustworthy instruments, a bank statement. We delivered a unique, personalised \"Life Ki Statement from YES BANK\" to popular influencers, demonstrating how richness extends far beyond just financial achievements.",
-      },
-      {
-        type: "copy",
-        heading: "Impact",
-        body: "We instilled one of India's leading private banks in everybody's hearts by garnering,",
+        heading: "What we did",
+        body: "We turned one of the most recognisable things a bank sends you into something far more personal: a Life Ki Statement from YES BANK.\n\nUsing the format of a real bank statement, we reimagined everyday moments as deposits, withdrawals and balances, with influencers showing what richness meant in their own lives.\n\nThe campaign then extended across social, giving people more ways to see that richness isn't only what sits in your bank account. It's also what fills your life.",
       },
       {
         type: "stats",
+        heading: "And it worked.",
         items: [
-          { figure: "72M", label: "Total Instagram Reach" },
-          { figure: "10X", label: "Engagement across Facebook & Instagram" },
-          { figure: "3.1M", label: "Organic Reach on LinkedIn" },
+          { figure: "72M", label: "Total Instagram reach" },
+          { figure: "10X", label: "Engagement across Facebook + Instagram" },
+          { figure: "3.1M", label: "Organic reach on LinkedIn" },
           { figure: "10%", label: "Follower growth on LinkedIn" },
         ],
+      },
+      {
+        type: "copy",
+        body: "Life Ko Banao Rich became a way for YES BANK to talk about wealth in a much more human way.",
+      },
+      /* The four social posts, as one picture rather than four blocks or
+         a gallery - they are 1:1 and the gallery cell is 4:5, which would
+         crop every one of them through its logo. Composited by
+         scripts/build-wall.mjs; see the note over COMPOSITES there. */
+      {
+        type: "image",
+        src: "/assets/work/cases/yes-bank/creatives.jpg",
+        w: 1600, h: 1600,
+        caption: "Life Ko Banao Rich, across the feed",
       },
       {
         type: "board",
@@ -838,16 +861,234 @@ export const CASES: CaseStudy[] = [
         w: 1600, h: 1131,
         caption: "The case board",
       },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     ZURICH KOTAK - the client's own write-up, verbatim, and now their
+     own pictures too: the deck as it was rendered and as it was printed,
+     the New Year film, and the case board.
+     ------------------------------------------------------------------ */
+  {
+    slug: "zurich-kotak-game-of-dares",
+    brand: "Zurich Kotak General Insurance",
+    title: "Game of Dares",
+    meta: ["BFSI", "Gaming · Quick Commerce"],
+    intro:
+      "New Year is all about getting people together and having a good time.",
+    hero: "/assets/work/wall/zurich-kotak.jpg",
+    blocks: [
       {
-        type: "credits",
+        type: "copy",
+        heading: "The brief",
+        body: "That gave Zurich Kotak a much more interesting way into the occasion than another festive message.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "New Year parties have their own little routine. Food gets ordered, people get together, and sooner or later someone reaches for a game.\n\nAnd this year, there was yet another behaviour that was a new addition to fulfil this routine. Zepto - a brand that was already becoming part of how people prepared for the celebration, delivering everything from the last-minute essentials to the things nobody remembered to buy until the party had already started.\n\nIf the occasion was already happening on Zepto, and the behaviour was already happening around a game, we had two very useful pieces of the puzzle.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We brought them together with Game of Dares, a card game that folded insurance into the kind of playful challenges people were already looking for on New Year's Eve.\n\nThe game was then distributed through Zepto, reaching people at the very moment they were ordering for their celebrations.\n\nSo instead of asking people to engage with an insurance campaign, we gave them something they could actually bring to the party.",
+      },
+      /* The film is cut 4:5 for a feed, so it is placed here rather than
+         left to `film` - the automatic block runs 16:9 and would draw a
+         portrait film in a letterbox twice its width. The hero's "watch
+         the film" still finds it; see caseBlocks(). */
+      {
+        type: "video",
+        src: "/assets/work/cases/zurich-kotak/new-year.mp4",
+        poster: "/assets/work/wall/zurich-kotak.jpg",
+        ratio: "four-five",
+        caption: "The New Year film",
+      },
+      /* The deck itself: two studio renders and two photographs of the
+         printed cards, which is the point of putting them in one row -
+         the thing was made, not only designed. */
+      {
+        type: "gallery",
+        cols: 4,
         items: [
-          { label: "Client", value: "YES BANK" },
-          { label: "Scope", value: "Social · Influencer" },
+          { src: "/assets/work/cases/zurich-kotak/deck-box.jpg" },
+          { src: "/assets/work/cases/zurich-kotak/deck-cards.jpg" },
+          { src: "/assets/work/cases/zurich-kotak/deck-held.jpg" },
+          { src: "/assets/work/cases/zurich-kotak/deck-fan.jpg" },
+        ],
+        caption: "Game of Dares - the deck, and the deck in somebody's house",
+      },
+      {
+        type: "stats",
+        heading: "And it worked.",
+        items: [
+          { figure: "17,000+", label: "Game of Dares decks found their way into homes" },
+          { figure: "8.8M", label: "Reach" },
+          { figure: "164K", label: "Engagements" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/zurich-kotak/board.jpg",
+        w: 1600, h: 900,
+        caption: "The case board",
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     BHIM UPI - the client's own write-up, verbatim.
+
+     PENDING: the case video. The hero is the frame already pulled out
+     of it for the wall tile.
+     ------------------------------------------------------------------ */
+  {
+    slug: "bhim-upi",
+    brand: "BHIM UPI",
+    title: "Ask Her Again",
+    meta: ["BFSI", "Social · Film", "Mother's Day"],
+    intro:
+      "Every Mother's Day, we ask our mothers the same question: What do you want? And every year, millions of mothers give us the same answer: Nothing.",
+    hero: "/assets/work/wall/bhim-upi.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "BHIM wanted to use Mother's Day to challenge that answer, and make its role in giving people financial freedom feel relevant to mothers too.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "A mother knows exactly what her child wants.\n\nShe remembers the toy we pointed at in a shop. The restaurant we've been talking about. The thing we casually mentioned six months ago and forgot about themselves. Yet ask her what she wants, and “nothing” comes almost instinctively.\n\nWe've spent generations calling that selflessness. But somewhere along the way, selflessness became conditioning. A reflex so deeply learnt that she has stopped being asked to choose for herself. So maybe the problem was never that mothers didn't want anything. Maybe we just got too comfortable accepting “nothing” as an answer.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "For Mother's Day, BHIM launched Ask Her Again.\n\nWe asked the internet to do one small thing differently: when your mother said “nothing”, don't accept the first answer. Ask her again.\n\nAnd when children pushed a little harder, the “nothing” started giving way to the things she actually wanted. The conversation then moved beyond families, as brands across India joined in and helped turn a private exchange into a larger cultural issue.\n\nBecause financial agency isn't just about having money. It's about feeling free enough to choose what to do with it.",
+      },
+      {
+        type: "stats",
+        heading: "And it worked.",
+        items: [
+          { figure: "7.6M", label: "Views" },
+          { figure: "75+", label: "UGC entries" },
+          { figure: "1.8L+", label: "App downloads in 3 days" },
+          { figure: "50%", label: "Increase in gift card feature volume" },
         ],
       },
     ],
   },
 
+  /* ------------------------------------------------------------------
+     INDUSIND GENERAL INSURANCE - the client's own write-up, verbatim,
+     with the launch film and the before/after feed grid they asked for.
+     ------------------------------------------------------------------ */
+  {
+    slug: "indusind-general-insurance",
+    brand: "IndusInd General Insurance",
+    title: "Rebranding",
+    meta: ["BFSI", "Brand Film · Social"],
+    intro:
+      "Reliance General Insurance was becoming IndusInd General Insurance.",
+    hero: "/assets/work/wall/indusind.jpg",
+    film: "/assets/work/cases/indusind/rebranding.mp4",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "For a brand that people were already familiar with, a rebrand is a strange moment: the name, identity and visual world change, while the relationship with the brand has to remain familiar.\n\nHaving handled Reliance General's communication end-to-end, we were tasked with carrying that transition across its communication, from the first brand film to everyday social content.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "A new identity doesn't become familiar because you announce it once. People need to see it, recognise it and keep seeing it before the new name starts feeling like the brand they already knew.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We took the new IndusInd General Insurance identity through the entire communication journey, starting with the launch film and carrying it into the everyday content that followed.\n\nThe communication began subtly introducing the new identity on social, while the visual language of the feed moved from the old Reliance General world to the new IndusInd General Insurance one.",
+      },
+      /* The same account, before and after. One picture rather than a
+         `duo`, because the duo cell is 4:5 and these are 399x864 - a
+         phone-shaped feed grid put through a 4:5 crop is a third of a
+         feed and proves nothing. Composited by scripts/build-wall.mjs. */
+      {
+        type: "image",
+        src: "/assets/work/cases/indusind/feed.jpg",
+        w: 826, h: 864,
+        caption: "The feed, before and after",
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     BELGIAN WAFFLE - the client's own write-up, verbatim, and the first
+     piece of FMCG work on the site. The film is their own case video.
+     ------------------------------------------------------------------ */
+  {
+    slug: "belgian-waffle",
+    brand: "The Belgian Waffle Co.",
+    title: "Everyone Knows",
+    meta: ["FMCG", "Social · Outdoor · Influencer"],
+    intro:
+      "National Waffle Day falls on 19th July, and The Belgian Waffle Co. had already made the date synonymous with waffles.",
+    hero: "/assets/work/wall/belgian-waffle.jpg",
+    film: "https://www.youtube.com/watch?v=wv8XtVq8HbA",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "The job was to keep that association growing, and turn the day into a moment people would actively look forward to.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "By this point, 19th July didn't need an introduction. People already knew what the date meant.\n\nSo instead of spending the campaign telling everyone that National Waffle Day was coming, we decided to make the date itself the conversation.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We started by putting a fake ₹100 note into every order, with a simple message: “You know what this means, right?”\n\nThat became the first clue to 19th July. Influencers picked it up, employees took their own #EveryoneKnows stories on LinkedIn, and the conversation kept building around what was coming.\n\nThen we took it out of the feed and into the streets, turning the same ₹100 idea into outdoor, with the date and the offer waiting for people across the city.\n\nBy 19th July, the word was out. And so were the queues.",
+      },
+      /* The influencer leg, as it was actually seen: two phone screen
+         grabs, drawn at close to their own size rather than blown up
+         across the column. They are 256px wide and they are not going to
+         get sharper - they are also the only record of that part of the
+         campaign the client sent. */
+      {
+        type: "image",
+        src: "/assets/work/cases/belgian-waffle/influencers.jpg",
+        w: 540, h: 470,
+        caption: "The influencers picked it up",
+      },
+      {
+        type: "stats",
+        heading: "And it worked.",
+        items: [
+          { figure: "143.3M+", label: "Reach" },
+          { figure: "123.6M+", label: "Views" },
+          { figure: "2.2M+", label: "Engagements" },
+          { figure: "5L+", label: "Footfalls" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/belgian-waffle/board.jpg",
+        w: 1536, h: 864,
+        caption: "The case board",
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     THE CASE BOARDS - real write-ups, transcribed off the client's own
+     case study images rather than written here. Every heading below is
+     the board's own heading and every line of body copy is the board's
+     own copy; nothing in this batch was drafted for the site. Numbers in
+     `stats` are the board's own figures, kept exactly as printed
+     (including "Out of Stock" as a figure where the board used words
+     instead of a number).
+     ------------------------------------------------------------------ */
   {
     slug: "boat-marvel",
     brand: "boAt",
@@ -894,9 +1135,7 @@ export const CASES: CaseStudy[] = [
       {
         type: "credits",
         items: [
-          { label: "Client", value: "boAt" },
           { label: "Partner", value: "Marvel" },
-          { label: "Scope", value: "Social · Content" },
         ],
       },
     ],
@@ -945,13 +1184,6 @@ export const CASES: CaseStudy[] = [
         w: 1600, h: 900,
         caption: "The case board",
       },
-      {
-        type: "credits",
-        items: [
-          { label: "Client", value: "Croma" },
-          { label: "Scope", value: "Social · Influencer" },
-        ],
-      },
     ],
   },
 
@@ -997,13 +1229,6 @@ export const CASES: CaseStudy[] = [
         src: "/assets/work/wall/croma-dreams.jpg",
         w: 1600, h: 900,
         caption: "The case board",
-      },
-      {
-        type: "credits",
-        items: [
-          { label: "Client", value: "Croma" },
-          { label: "Scope", value: "Out of Home · Social" },
-        ],
       },
     ],
   },
@@ -1051,13 +1276,6 @@ export const CASES: CaseStudy[] = [
         w: 1600, h: 1135,
         caption: "The case board",
       },
-      {
-        type: "credits",
-        items: [
-          { label: "Client", value: "BGMI (Krafton)" },
-          { label: "Scope", value: "Influencer · Video" },
-        ],
-      },
     ],
   },
 
@@ -1100,13 +1318,6 @@ export const CASES: CaseStudy[] = [
         src: "/assets/work/wall/wacoal.jpg",
         w: 1600, h: 900,
         caption: "The case board",
-      },
-      {
-        type: "credits",
-        items: [
-          { label: "Client", value: "Wacoal" },
-          { label: "Scope", value: "Influencer · CGI" },
-        ],
       },
     ],
   },
@@ -1167,9 +1378,7 @@ export const CASES: CaseStudy[] = [
       ] },
       { type: "quote", text: "PENDING - a line from the client or the press.", who: "PENDING - attribution", role: "PENDING - title, brand" },
       { type: "credits", heading: "Credits", items: [
-        { label: "Client", value: "PENDING" },
         { label: "Agency", value: "SoCheers" },
-        { label: "Scope", value: "PENDING" },
         { label: "Year", value: "PENDING" },
       ] },
       { type: "faq", heading: "Questions", items: [
@@ -1299,7 +1508,7 @@ export const caseHasFilm = (c: CaseStudy) =>
    the headings, so it stays the same rule in both places that need it -
    here and in the renderer - and neither has to know how many headings
    came before it. */
-const HEADED = new Set(["copy", "scope", "steps", "credits", "faq"]);
+const HEADED = new Set(["copy", "scope", "steps", "credits", "faq", "stats"]);
 
 export const caseHeadings = (blocks: CaseBlock[]) =>
   blocks.flatMap((b, i) =>

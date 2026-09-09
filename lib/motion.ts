@@ -380,8 +380,82 @@ export function initSite(): () => void {
       const tint = document.querySelector<HTMLElement>("[data-stage-tint]");
       const vignette = document.querySelector<HTMLElement>("[data-stage-vignette]");
       const entry = document.querySelector<HTMLElement>("[data-meaning]");
-      if (!hero || !pin || !frame || !stage) return;
-      const boxEnd = () => containedBox(pin.offsetWidth, pin.offsetHeight);
+      if (!hero || !pin || !stage) return;
+
+      /* ---------------------------------------------------- the test cut
+         /test runs a hero with no artwork in it: a greeting and the vibe
+         film, small on black, which grows to fill the screen and only
+         then hands over to the crowd shot for the definition. See
+         components/TestHero.tsx for what that is and why.
+
+         It is a branch in here rather than a second engine because
+         everything around the timeline - the pin, the lock, the phase
+         machine, the crumble, the scrollbar, the refresh handling - is
+         the same machinery and none of it should be forked to change
+         which pictures the timeline moves. What the branch changes is
+         three things: where the stage starts, what is inside it, and that
+         there is one more resting frame between the first and the last. */
+      const isTest = hero.hasAttribute("data-hero-test");
+      const film = document.querySelector<HTMLVideoElement>("[data-test-film]");
+      const greet = document.querySelector<HTMLElement>("[data-test-intro]");
+      if (!isTest && !frame) return;
+
+      /* Where the picture ends up.
+
+         The live hero stops at 94% of the viewport, contained: it is a
+         photograph, and a photograph blown past its own frame reads as a
+         crop of itself. The test cut's is a film, and it is asked to be
+         full screen - so it goes edge to edge and covers, which is the
+         one place in this sequence where the aspect ratios do not agree
+         and something has to give at the top and bottom. It gives
+         continuously, as part of the same scale, rather than being a
+         window opening onto footage that was there all along. */
+      const boxEnd = () =>
+        isTest
+          ? { left: 0, top: 0, w: pin.offsetWidth, h: pin.offsetHeight }
+          : containedBox(pin.offsetWidth, pin.offsetHeight);
+
+      /* Where the film sits before anything has been scrolled: whole, and
+         dead centre - because that is where the sentence's middle line
+         is. The type is three lines of one size, stacked and centred
+         (app/test/test.css), so the first and third are the same height
+         and the middle one is centred on the pin by construction. Which
+         means the film's row can be found without measuring it - and
+         without a measurement that would have to be re-taken on every
+         frame of the parting, while that row is still opening.
+
+         Its aspect is the film's own (16:9, and the crowd shot is the
+         same), which is what makes the growth a scale rather than a
+         reveal - boxEnd() is that same rectangle at full screen, so every
+         edge travels and nothing is ever cut out of it. */
+      const FILM_AR = 16 / 9;                     // /media/vibe-video.mp4, 1600x900
+      const boxSmall = () => {
+        const bw = pin.offsetWidth, bh = pin.offsetHeight;
+        /* Wider on a phone, where the words either side of it are already
+           as small as they can reasonably be asked to get. */
+        let w = phone.matches ? bw * 0.44 : Math.min(bw * 0.34, 560);
+        let h = w / FILM_AR;
+        /* and never so tall that the two lines it pushes apart are pushed
+           off the top and bottom of the screen */
+        const maxH = bh * 0.36;
+        if (h > maxH) { h = maxH; w = h * FILM_AR; }
+        return { left: (bw - w) / 2, top: (bh - h) / 2, w, h };
+      };
+
+      /* And the same rectangle, published, because the sentence has to
+         open a hole exactly this size for it: the middle line's spacer is
+         --film-w wide and the row is --film-h tall once the words have
+         parted (app/test/test.css). One measurement, read in both places,
+         so the gap and the picture cannot drift apart. */
+      const publishFilm = () => {
+        if (!isTest) return;
+        const b = boxSmall();
+        const st = document.documentElement.style;
+        st.setProperty("--film-w", `${b.w.toFixed(1)}px`);
+        st.setProperty("--film-h", `${b.h.toFixed(1)}px`);
+      };
+      publishFilm();
+      on(window, "resize", publishFilm);
 
       // Where the artwork's window lands on screen. The artwork is
       // object-fit:cover on a wide screen and object-fit:contain on a phone
@@ -392,6 +466,7 @@ export function initSite(): () => void {
       // cover scales until neither axis is short, contain until neither
       // overflows.
       const box = () => {
+        if (isTest) return boxSmall();
         const bw = pin.offsetWidth, bh = pin.offsetHeight;
         const scale = phone.matches
           ? Math.min(bw / FRAME.w, bh / FRAME.h)
@@ -417,12 +492,21 @@ export function initSite(): () => void {
           y: sh / 2 - (win.t + win.h / 2) * ch,
         });
       };
-      const fitCrop = () => { fit(photo, PHOTO, PWIN); };
+      /* Nothing to fit on the test cut: the stage is the media's own
+         aspect at both ends, so the film and the photo are plain
+         100%/100% children of it (app/test/test.css) and they scale with
+         the box for free. */
+      const fitCrop = () => { if (!isTest) fit(photo, PHOTO, PWIN); };
 
       // publish where the window's centre sits relative to the viewport centre,
       // so the nav links can sit exactly above it (the window is not quite
       // centred in the artwork, and cover-fitting shifts it further)
       const publishCentre = () => {
+        if (isTest) {
+          /* no artwork, so the window is simply the middle of the screen */
+          document.documentElement.style.setProperty("--hero-cx", "0px");
+          return;
+        }
         const b = box();
         const dx = b.left + b.w / 2 - pin.offsetWidth / 2;
         document.documentElement.style.setProperty("--hero-cx", `${dx.toFixed(2)}px`);
@@ -444,9 +528,11 @@ export function initSite(): () => void {
         };
         still();
         on(window, "resize", still);
-        gsap.set(frame, { autoAlpha: 0 });
+        if (frame) gsap.set(frame, { autoAlpha: 0 });
+        if (greet) gsap.set(greet, { autoAlpha: 0 });
+        if (film) gsap.set(film, { autoAlpha: 0 });
         gsap.set(photo, { autoAlpha: 1 });
-        gsap.set(tint, { autoAlpha: 0 });
+        if (tint) gsap.set(tint, { autoAlpha: 0 });
         gsap.set(backdrop, { autoAlpha: 1 });
         gsap.set(vignette, { autoAlpha: 1 });   // already at rest, so already expanded
         // the entry is simply there, already written
@@ -464,9 +550,135 @@ export function initSite(): () => void {
       // stuck there (outside the scrub) until the next scroll event - the
       // frozen-small-box-top-left glitch on a mid-hero reload.
       seat();
-      gsap.set(tint, { autoAlpha: 1 });
+      if (tint) gsap.set(tint, { autoAlpha: 1 });
       gsap.set(backdrop, { autoAlpha: 0 });
       gsap.set(vignette, { autoAlpha: 0 });
+      /* the test cut opens on the film, so the photograph behind it is
+         not there yet - it arrives with the definition */
+      if (isTest) gsap.set(photo, { autoAlpha: 0 });
+
+      /* The film, attached rather than authored (see TestHero.tsx). Not
+         at boot: the overture owns the screen for the whole of its run on
+         this route, and 12MB of video pulled during it is bandwidth taken
+         from the room's own pictures. Waits for the hand-off, and stops
+         whenever the hero is not the screen so a paused-in-a-corner
+         <video> is not decoding frames nobody is looking at. */
+      if (isTest && film) {
+        const src = film.dataset.testFilm;
+        const fetchFilm = () => {
+          if (ac.signal.aborted || !src || film.src) return;
+          film.src = src;
+          /* an explicit load(): setting .src on an element parsed with
+             preload="none" does not always start the fetch on its own */
+          film.load();
+        };
+        on(document, OVERTURE_DONE, fetchFilm);
+        // no overture on this load (reduced motion, a second tab) - then
+        // there is nothing to wait for and the hero is already the screen
+        if (!overture) fetchFilm();
+
+        /* And the intent to run it goes to lib/autoplay.ts rather than to
+           play(), same as the home page's reel: one ask is not enough
+           against a frame that has not decoded yet or a policy that will
+           relent on the reader's first gesture. */
+        const keeper = keepPlaying(film);
+        cleanups.push(() => keeper.destroy());
+        const transport = new IntersectionObserver((entries) => {
+          for (const e of entries) keeper.want(e.isIntersecting);
+        }, { rootMargin: "10% 0px", threshold: 0 });
+        transport.observe(hero);
+        observers.push(transport);
+      }
+
+      /* -------------------------------------------------- the opening
+         The two beats that come before the reader has done anything.
+
+         The room this cut hands back from ends on nothing: every wall
+         goes over and the camera runs on into the dark, so what the
+         cross-fade lands on is a black screen with a black page under it
+         (lib/test-overture-motion.ts). The composition is not arrived at
+         - it is built here, in front of you, and this is the only part of
+         the hero that plays itself:
+
+           write  the sentence types itself onto the black, a line at a
+                  time, with a cursor at the end of whichever line is
+                  being written. Snapped on per character, never faded: a
+                  fade is type appearing, a snap is type being written
+           part   the middle line comes apart. "We" leaves to the left,
+                  "are" to the right, the row opens to the film's own
+                  height - which is what lifts "Hi," and lowers
+                  "SoCheers" clear of it - and the film opens out of the
+                  middle of the gap, already playing, and stays playing
+
+         Both are on their own clock rather than on tl's: tl is the
+         scrolled sequence and its very first frame is the state this
+         leaves behind, so there is nothing here to scroll into, out of or
+         past. The scroll is simply not listened to while it runs (see
+         canAct below) - the same deal the overture gets, and for the same
+         reason: a gesture aimed at an intro must not be banked against
+         the sequence waiting behind it. */
+      let introRunning = false;
+      const lines = greet?.querySelector<HTMLElement>("[data-test-lines]") ?? null;
+      if (isTest && greet && lines) {
+        const chars = (n: number) => `[data-test-ch="${n}"]`;
+        const caret = (n: number) => `[data-test-caret="${n}"]`;
+
+        /* The first frame, asserted rather than left to the stylesheet: a
+           blank screen. Not one letter written, the middle line closed
+           up, and the film a flat line at the centre of it with nothing
+           to see. Set here so it is true from the moment the hero mounts,
+           which is well before the overture is finished with the screen
+           and long before anything below plays. */
+        gsap.set(greet, { autoAlpha: 1 });
+        gsap.set("[data-test-ch]", { autoAlpha: 0 });
+        gsap.set("[data-test-caret]", { autoAlpha: 0 });
+        gsap.set(lines, { "--split": 0 });
+        gsap.set(stage, { autoAlpha: 0, scaleX: 0, scaleY: 0.42, transformOrigin: "50% 50%" });
+        gsap.set("[data-hero-cue]", { autoAlpha: 0 });
+
+        /* per character, per beat between one line and the next, and the
+           parting. Fast: this is a hand writing a greeting, not a
+           terminal printing one. */
+        const CH = 0.055;
+        const BEAT = 0.34;
+        const PART = 1.15;
+
+        const opening = () => {
+          if (introRunning) return;
+          introRunning = true;
+          const t = gsap.timeline({ onComplete: () => { introRunning = false; } });
+
+          let at = 0.4;                          // a held beat of black first
+          [1, 2, 3].forEach((n) => {
+            const count = greet.querySelectorAll(chars(n)).length;
+            t.set(caret(n), { autoAlpha: 1 }, at);
+            /* duration 0, staggered: a character is written or it is not,
+               and there is no frame in which one is half-there */
+            t.to(chars(n), { autoAlpha: 1, duration: 0, stagger: CH }, at);
+            at += count * CH;
+            t.to(caret(n), { autoAlpha: 0, duration: 0.12 }, at + 0.18);
+            at += BEAT;
+          });
+
+          /* and then the sea parts. The gap opening between the words and
+             the film growing out of it are two halves of one move, so
+             they run on the same clock and the same ease - the words are
+             never ahead of the picture they are making room for, and
+             never behind it. */
+          at += 0.15;
+          t.to(lines, { "--split": 1, duration: PART, ease: "power3.inOut" }, at);
+          t.to(stage, { autoAlpha: 1, duration: 0.24, ease: "power1.out" }, at + PART * 0.08);
+          t.to(stage, { scaleX: 1, scaleY: 1, duration: PART, ease: "power3.inOut" }, at);
+          /* only now is there anything to scroll for */
+          t.to("[data-hero-cue]", { autoAlpha: 1, duration: 0.5 }, at + PART + 0.15);
+        };
+
+        /* The room owns the screen until it says otherwise. With no room
+           in front of us - a second tab, a load that skipped it - there
+           is nothing to wait for and the page is already the screen. */
+        if (overture) on(document, OVERTURE_DONE, opening);
+        else opening();
+      }
 
       /* Timeline shape, as fractions of the pin:
            0 ──── EXPAND ──── +HOLD0 ──── ENTRY (the definition) ──── hold ──── 1 */
@@ -474,6 +686,11 @@ export function initSite(): () => void {
       const HOLD0 = 0.03;                         // the photo holds, undisturbed, before the type
       const ENTRY = 0.44;                         // the entry writes itself in
       const AT = EXPAND + HOLD0;                  // where the entry starts
+      /* The test cut's extra resting frame: the film full screen, nothing
+         written on it. Just past the last thing phase 1 does (the
+         vignette, which finishes at EXPAND * 1.05) and just short of AT,
+         so it is a settled frame in both directions. */
+      const OPEN = EXPAND + HOLD0 * 0.67;
       // the remaining ~0.18 is the hold on the finished entry before the pin releases
 
       gsap.set(entry, { autoAlpha: 1 });
@@ -503,12 +720,30 @@ export function initSite(): () => void {
          below. It is the first thing added to tl, so it is child 0. */
       const grow = tl.getChildren(false, true, false)[0] as gsap.core.Tween;
       // the artwork pushes toward the viewer and dissolves as its window takes over
-      tl.to("[data-frame-img]", { scale: 1.45, duration: EXPAND, ease: "power2.out" }, 0);
-      tl.to(tint, { autoAlpha: 0, duration: EXPAND * 0.75, ease: "power1.inOut" }, EXPAND * 0.1);
+      if (frame) {
+        tl.to("[data-frame-img]", { scale: 1.45, duration: EXPAND, ease: "power2.out" }, 0);
+        tl.to(frame, { autoAlpha: 0, duration: EXPAND * 0.6, ease: "power2.in" }, EXPAND * 0.35);
+      }
+      if (tint) tl.to(tint, { autoAlpha: 0, duration: EXPAND * 0.75, ease: "power1.inOut" }, EXPAND * 0.1);
+      /* The test cut has no artwork to dissolve - what leaves as the film
+         takes the screen is the greeting, lifting off the top of it. */
+      if (greet) {
+        tl.to(greet, { autoAlpha: 0, y: -26, duration: EXPAND * 0.5, ease: "power2.in" }, 0);
+      }
+      /* and the card the film sits on stops being a card. --card scales
+         both halves of the stage's shadow at once (app/test/test.css), so
+         the hairline and the drop go together and there is nothing left
+         drawing an edge once the film is the screen. */
+      if (isTest) {
+        tl.fromTo(stage, { "--card": 1 }, { "--card": 0, duration: EXPAND * 0.7, ease: "power2.in" }, 0);
+        /* and the corners square off as it goes. A rounded rectangle is
+           a clip on a card; at full bleed there is no card and the
+           radius would just be four bites out of the screen. */
+        tl.fromTo(stage, { "--r": 1 }, { "--r": 0, duration: EXPAND * 0.8, ease: "power2.inOut" }, 0);
+      }
       // the blurred backdrop arrives on the same beat, so the letterboxed
       // margin never reads as an empty gap once the photo takes over
       tl.to(backdrop, { autoAlpha: 1, duration: EXPAND * 0.42, ease: "power1.inOut" }, EXPAND * 0.22);
-      tl.to(frame, { autoAlpha: 0, duration: EXPAND * 0.6, ease: "power2.in" }, EXPAND * 0.35);
       tl.to("[data-hero-cue]", { autoAlpha: 0, duration: 0.04 }, 0.02);
       // only once the stage is done growing - the small window never gets it
       tl.to(vignette, { autoAlpha: 1, duration: EXPAND * 0.25, ease: "power1.out" }, EXPAND * 0.8);
@@ -532,6 +767,21 @@ export function initSite(): () => void {
       tl.fromTo("[data-meaning-veil]",
         { autoAlpha: 0 },
         { autoAlpha: 1, duration: ENTRY * 0.4, ease: "power1.inOut" }, AT);
+
+      /* And on the test cut the picture under the type changes with it:
+         the film hands over to the crowd shot on the same beat the stage
+         settles back and dims. Both are the same rectangle in the same
+         place at the same aspect, so this is a dissolve between two
+         pictures and not a move - the film stops being what you watch and
+         the photograph starts being what you read on. */
+      if (isTest && film) {
+        tl.fromTo(film,
+          { autoAlpha: 1 },
+          { autoAlpha: 0, duration: ENTRY * 0.34, ease: "power1.inOut" }, AT);
+        tl.fromTo(photo,
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: ENTRY * 0.34, ease: "power1.inOut" }, AT);
+      }
 
       // the headword types itself in, one letter at a time - steps(1) so
       // each character snaps straight to visible instead of fading, which
@@ -596,7 +846,33 @@ export function initSite(): () => void {
       // so parking the hold checkpoint there would have every "rest" frame
       // land mid-swap instead of on the finished entry.
       const REST = 0, HOLD = 0.97, DONE = 1 + CRUMBLE;
-      type Stage = "rest" | "hold" | "done";
+      type Stage = "rest" | "open" | "hold" | "done";
+
+      /* The checkpoints, in the order a scroll walks them. The live cut
+         has two beats and the test cut has three - the film filling the
+         screen is a frame you stop on, not something you pass through -
+         so the walk is a list rather than a pair of if()s, and adding the
+         extra stop is one entry rather than a second state machine.
+
+         Each stop carries the time it sits at on tl's own clock and how
+         long it takes to move ONTO it - fwd when the reader is going down
+         the list, back when they are coming up it. The live numbers are
+         unchanged: rest -> hold in 2.6, hold -> done in 1.5, done -> hold
+         in 1.3 and hold -> rest in 1.5. */
+      const STOPS: { name: Stage; t: number; fwd: number; back: number }[] = isTest
+        ? [
+            { name: "rest", t: REST, fwd: 0, back: 1.5 },
+            { name: "open", t: OPEN, fwd: 2.0, back: 1.3 },
+            { name: "hold", t: HOLD, fwd: 2.2, back: 1.3 },
+            { name: "done", t: DONE, fwd: 1.5, back: 0 },
+          ]
+        : [
+            { name: "rest", t: REST, fwd: 0, back: 1.5 },
+            { name: "hold", t: HOLD, fwd: 2.6, back: 1.3 },
+            { name: "done", t: DONE, fwd: 1.5, back: 0 },
+          ];
+      const stopAt = (n: Stage) => STOPS.findIndex((v) => v.name === n);
+
       let phase: Stage = "rest";
       let busy = false;
       let cooldown = 0;
@@ -886,8 +1162,12 @@ export function initSite(): () => void {
       }) as EventListener);
 
       const advance = () => {
-        if (phase === "rest") { phase = "hold"; play(HOLD, 2.6); return; }
-        if (phase === "hold") { phase = "done"; play(DONE, 1.5, release); return; }
+        const next = STOPS[stopAt(phase) + 1];
+        if (next) {
+          phase = next.name;
+          play(next.t, next.fwd, next.name === "done" ? release : undefined);
+          return;
+        }
         // Already crumbled, yet still holding the scroll. Nothing is left to
         // advance into and the pinned screen is empty, so this used to be a
         // dead end - a reader stranded on the black wall with scrolling
@@ -896,8 +1176,8 @@ export function initSite(): () => void {
         if (locked) release();
       };
       const retreat = () => {
-        if (phase === "hold") { phase = "rest"; play(REST, 1.5); return; }
-        if (phase === "done") { phase = "hold"; play(HOLD, 1.3); }
+        const prev = STOPS[stopAt(phase) - 1];
+        if (prev) { phase = prev.name; play(prev.t, prev.back); }
       };
 
       /* Taking the scroll back as the reader comes up into the pin.
@@ -957,7 +1237,11 @@ export function initSite(): () => void {
          happened. Nothing may be spent until the screen is actually ours. */
       const overtureOwns = () =>
         document.documentElement.classList.contains("is-overture");
-      const canAct = () => !overtureOwns() && !busy && performance.now() > cooldown;
+      /* introRunning is the same rule one beat later: the page's own
+         opening (above) is not scrolled either, and a flick thrown at it
+         must not be spent on the sequence behind it. */
+      const canAct = () =>
+        !overtureOwns() && !introRunning && !busy && performance.now() > cooldown;
       const intent = (dir: 1 | -1) => {
         if (!canAct()) return;
         if (dir > 0) advance(); else retreat();

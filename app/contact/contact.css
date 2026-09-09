@@ -431,18 +431,41 @@
 
 /* ---------- the careers branch ----------
    Choosing "find my next job" empties the form: Zoho hides every field on
-   that branch and shows this note instead, so the panel does the same. No
-   submit under it - there would be nothing to send. */
-.ctf__note{
-  border:1px solid var(--line); border-radius:16px;
-  background:var(--bg-2); padding:clamp(20px,2.4vw,28px);
-  font-size:15px; line-height:1.7; color:var(--muted);
+   that branch and shows a note instead, so the panel does the same. No
+   submit under it - there would be nothing to send.
+
+   Drawn as the panel's own paper with two routes under it rather than as a
+   bordered card with a bulleted list inside. A card inside the form panel
+   is a box in a box, and a two-item list needs no markers - the two rows
+   are the only things here, and each one is a link you can hit anywhere. */
+.ctf__note{ display:flex; flex-direction:column; }
+.ctf__note-lead{
+  font-size:clamp(16px,1.4vw,19px); line-height:1.6; color:var(--cream);
+  max-width:38ch;
 }
-.ctf__note ul{ list-style:none; margin-top:14px; display:flex; flex-direction:column; gap:12px; }
-.ctf__note li{ padding-left:18px; position:relative; }
-.ctf__note li::before{ content:"A"; position:absolute; left:0; color:var(--accent); }
-.ctf__note a{ color:var(--cream); text-decoration:underline; text-underline-offset:3px; transition:color .25s; }
-.ctf__note a:hover{ color:var(--accent); }
+.ctf__note-row{
+  display:flex; align-items:baseline; gap:14px;
+  margin-top:14px; padding:16px 0 15px;
+  border-bottom:1px solid var(--line);
+  color:var(--cream); transition:gap .35s var(--ease), color .35s;
+}
+.ctf__note-row:first-of-type{ margin-top:26px; border-top:1px solid var(--line); }
+.ctf__note-row svg{ margin-left:auto; align-self:center; color:var(--accent); flex:none; }
+.ctf__note-label{
+  flex:none; min-width:11ch;
+  font-family:var(--f-mono); font-weight:500; font-size:10.5px; letter-spacing:.18em;
+  text-transform:uppercase; color:var(--muted);
+}
+.ctf__note-value{ font-size:clamp(15px,1.2vw,17px); line-height:1.4; }
+.ctf__note-row:hover,
+.ctf__note-row:focus-visible{ gap:20px; color:var(--accent); }
+.ctf__note-row:hover .ctf__note-label{ color:var(--accent); }
+
+@media (max-width:560px){
+  .ctf__note-row{ flex-wrap:wrap; gap:6px 14px; }
+  .ctf__note-label{ min-width:0; width:100%; }
+  .ctf__note-row:hover{ gap:6px 14px; }
+}
 
 /* ---------- the deck upload ----------
    The native file input is unstyleable across browsers, so it is made

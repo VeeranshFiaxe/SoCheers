@@ -16,40 +16,27 @@
      dock     the mark shrinks into the corner and becomes the flat lockup
      fall     the walls go over forwards, one by one, faster each time
 
-   and then, instead of the last wall expanding into the hero:
+   and then, instead of the last wall expanding into an artwork:
 
-     setup    the camera walks up to what is left - blank plaster, and a
-              slide projector standing in front of it, switched off. It
-              holds there. Nothing is projected, nothing is branded: the
-              only thing in the frame is a screen and a machine that is
-              not running
-     return   the mark comes back out of the corner. It stops being a logo
-              and is a bulb again, lit, drifting in over the machine
-     drop     it falls into the projector's open socket. The room's light
-              goes out with it - that light is not in the room any more,
-              it is inside the machine
-     ignite   the projector takes it: a kick, a shudder, the reels start
-              turning, the lamp house comes up, and light finds the wall
-     warm-up  and does not resolve. Flashes, exposure hunting, grain,
-              frame jitter, the gate finding focus, and a 3 - 2 - 1 leader
-     reveal   the hero arrives as a projection on the plaster
+     dark     the last wall goes over like all the others and there is
+              nothing behind it. The camera runs on into the empty room,
+              the light goes with the walls, and the screen is blank
 
-   The hand-off is unchanged and is still the reason the geometry is what
-   it is: every wall is a viewport-sized element, so the standing wall at
-   translateZ(0) with the camera at 0 is pixel-identical to the real
-   .hero__frame behind it. All that has changed is how the picture got
-   onto that wall.
+   What it hands back to is components/TestHero.tsx, which is black at
+   that moment too - so the cross-fade is black over black, and the first
+   thing the reader sees on the page is the greeting writing itself onto
+   it. That opening is the hero's own (initHero, lib/motion.ts); this
+   ending pre-empts none of it - no HERO_CUE is sent - and the reader's
+   scroll only enters after it, to take the film full screen.
 
    Depth bookkeeping, since three numbers do all the work:
      · wall i sits at z = -(i+1) * GAP
      · the camera (the dolly) sits at z = cam
      · so wall i is GAP away from the camera when cam = i * GAP
-   and the projector rides inside the last wall's own element, pushed
-   PROJ_Z forward of the plaster, so it keeps its distance from the wall
-   without anyone having to move it.
+   and every wall has been passed once cam is beyond walls.length * GAP.
    ============================================================ */
 import { gsap } from "gsap";
-import { cueHero, OVERTURE_DONE, OVERTURE_START } from "./overture";
+import { OVERTURE_DONE, OVERTURE_START } from "./overture";
 import { ROPE, ropePath } from "./logo-paths";
 import { OVERTURE_SFX } from "./content";
 
@@ -88,19 +75,11 @@ const OVERLAP = [1.1, 0.95, 0.8, 0.72, 0.66, 0.6, 0.56, 0.54, 0.52, 0.51, 0.5, 0
 const SOUND_WALLS = 9;
 
 /* ---- the new ending's geometry ----
-   How far in front of the plaster the projector stands, and how far the
-   camera closes in on the pair of them before it holds. PROJ_Z is written
-   twice - here and as --proj-z in app/test/test.css - because the element
-   is positioned by CSS and measured by this file; if one moves the other
-   has to. APPROACH has to stay well under GAP: it is a step toward the
-   last wall, not the step into it, and the run at the wall at the very
-   end still has GAP - APPROACH left to cover. */
-const PROJ_Z = 210;
-const APPROACH = 150;
-
-/* the leader ring in the countdown - 2 * PI * r, and r is 46 in the SVG
-   the markup draws (components/TestOverture.tsx) */
-const ARC = 289.03;
+   How long the camera takes to run on past the fallen last wall into the
+   empty dark behind it. Slower than a fall and eased at both ends: it is
+   the one move in the sequence that is not something being knocked over,
+   and what it arrives at is a blank screen. */
+const DARK = 1.1;
 
 /* Both clocks start the moment the mark is on screen and waiting, not from
    page load - the wait a visitor actually feels is the one after there is
@@ -251,21 +230,6 @@ export function initTestOverture(root: HTMLElement): () => void {
     const bead = q("[data-ovt-bead]")!;
     const dockMark = q("[data-ovt-dock]")!;
     const skip = q<HTMLButtonElement>("[data-ovt-skip]")!;
-
-    /* --- the new ending's cast -------------------------------------- */
-    const proj = q("[data-ovt-proj]")!;
-    const socket = q("[data-ovt-socket]")!;
-    const reels = qq("[data-ovt-reel]");
-    const beam = q("[data-ovt-beam]")!;
-    const lens = q("[data-ovt-lens]")!;
-    const screenEl = q("[data-ovt-screen]")!;
-    const wash = q("[data-ovt-wash]")!;
-    const gate = q("[data-ovt-gate]")!;
-    const grain = q("[data-ovt-grain]")!;
-    const count = q("[data-ovt-count]")!;
-    const countArc = q("[data-ovt-count-arc]")!;
-    const countN = q("[data-ovt-count-n]")!;
-
     if (!walls.length) return;
 
     /* when the mark had the room to itself and started waiting - see
@@ -306,31 +270,6 @@ export function initTestOverture(root: HTMLElement): () => void {
     walls.forEach((w, i) => gsap.set(w, { z: -(i + 1) * GAP }));
     cam.z = 0;
     pushCam();
-
-    /* and the machine, cold. Every one of these is put back rather than
-       assumed, for the same reason the slabs are: a rebuild has to start
-       from a known first frame, not from wherever the last one stopped. */
-    /* --proj-z is declared in app/test/test.css so the machine is in the
-       right place on the server-rendered frame too, but this file is the
-       one that owns the number: it is the distance the beam is cut
-       against and the depth the bulb is dropped into. */
-    gsap.set(root, {
-      "--proj": 0, "--beam": 0, "--proj-img": 0, "--grain": 0, "--count": 0,
-      "--proj-z": `${PROJ_Z}px`,
-    });
-    gsap.set(proj, { autoAlpha: 1, x: 0, y: 0, rotation: 0 });
-    /* Each reel turns about its own hub, in the SVG's own coordinates -
-       svgOrigin rather than transformOrigin, because the two are
-       different sizes in different places and a percentage origin would
-       be measured against each one's own box after GSAP had already
-       started writing transforms into it. The numbers come off the
-       element (components/TestOverture.tsx), so the drawing owns them. */
-    reels.forEach((r) => gsap.set(r, { rotation: 0, svgOrigin: r.dataset.ovtReel || "0 0" }));
-    gsap.set(gate, { x: 0, y: 0, scale: 1, autoAlpha: 1 });
-    gsap.set([beam, wash, grain, count, countN], { clearProps: "opacity,visibility" });
-    countN.textContent = "";
-    countArc.style.strokeDashoffset = String(ARC);
-
     /* The page belongs to us now. Fires on replays too, which is what
        re-locks the scroll after the site has already been handed back. */
     document.dispatchEvent(new CustomEvent(OVERTURE_START));
@@ -705,10 +644,11 @@ export function initTestOverture(root: HTMLElement): () => void {
        composition never changes, the room just keeps going. */
     function falls(next: () => void) {
       const tl = line({ onComplete: next });
-      const last = walls.length - 1;            // the hero wall - it stays up
       let at = 0;
 
-      for (let i = 0; i < last; i++) {
+      /* Every one of them, the last included. The room does not end on a
+         wall any more - it ends on the hole where the last one was. */
+      for (let i = 0; i < walls.length; i++) {
         const dur = FALL[Math.min(i, FALL.length - 1)];
         const slab = slabs[i];
         const force = Math.max(0.34, 1 - i * 0.11);
@@ -733,315 +673,36 @@ export function initTestOverture(root: HTMLElement): () => void {
         at += dur * (OVERLAP[Math.min(i, OVERLAP.length - 1)]);
       }
 
-      /* a held beat on the hero wall before the camera commits to it */
-      tl.to({}, { duration: 0.45 });
+      /* a held beat on the empty corridor before the camera runs into it */
+      tl.to({}, { duration: 0.3 });
     }
 
     /* ============================================================
-       7 · THE PROJECTOR
+       7 · THE DARK
 
-       Everything from here down is what this cut exists to try. The last
-       wall is blank and there is a machine in front of it, and the
-       sequence now has to explain - without a word of copy - that the
-       light you switched on at the start is what makes the machine work.
+       There is no wall at the end of this corridor. The last one goes
+       over with all the others, and what is behind it is nothing - so
+       the only thing left for the camera to do is keep going, into a
+       room with everything in it knocked flat.
 
-       Five beats, and they are deliberately in that order:
-
-         setup    hold on a blank wall and a dead projector. Cut this beat
-                  and the drop lands on a frame nobody has read yet
-         return   the bulb comes back out of the corner, lit
-         drop     it falls into the socket; the room goes dark with it
-         ignite   the machine takes the light and starts turning
-         warm-up  and only then does the wall get a picture - badly, and
-                  then properly
-
-       The camera does not move from the moment it arrives until the run
-       at the wall at the very end: the machine is what is happening, and
-       a camera drifting over it would be a second thing happening.
+       That blank is the point. It is the sheet the page writes itself
+       onto: the hero underneath is black at this moment too, so the
+       cross-fade below is black over black and there is no seam to see.
+       The greeting is typed out a beat later, on the page's own clock
+       (initHero's opening, lib/motion.ts).
        ============================================================ */
-
-    /* The beam runs between two things that are both inside a perspective
-       stack, so where it starts and ends is a measurement rather than a
-       number that can be written into a stylesheet. Cut once, on the
-       frame the lamp house comes up, and again on a resize - the camera
-       is holding still through all of it. */
-    function fitBeam() {
-      const l = lens.getBoundingClientRect();
-      const w = screenEl.getBoundingClientRect();
-      if (!l.width || !w.width) return;
-      const vw = window.innerWidth || 1;
-      const vh = window.innerHeight || 1;
-      const X = (v: number) => ((v / vw) * 100).toFixed(2);
-      const Y = (v: number) => ((v / vh) * 100).toFixed(2);
-      /* The front element of the lens, which is where the light actually
-         leaves the machine, and the lit rectangle, which is where it
-         lands. Everything between the two is the cone - so the beam is
-         the only thing in here that never has to be told where either the
-         machine or the picture is. */
-      const ax = l.left + l.width / 2;
-      const ay = l.top + l.height / 2;
-      const r = l.width * 0.45;
-      beam.style.clipPath =
-        `polygon(${X(ax - r)}% ${Y(ay)}%, ` +
-        `${X(w.left)}% ${Y(w.bottom)}%, ${X(w.left)}% ${Y(w.top)}%, ` +
-        `${X(w.right)}% ${Y(w.top)}%, ${X(w.right)}% ${Y(w.bottom)}%, ` +
-        `${X(ax + r)}% ${Y(ay)}%)`;
-    }
-    on(window, "resize", fitBeam);
-
-    /* Where the bulb has to end up, in the screen pixels the rig is moved
-       in. Read when the tween starts rather than when the timeline is
-       built: the camera moves between those two points and the socket
-       moves with it. */
-    const socketAt = () => {
-      const r = socket.getBoundingClientRect();
-      return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
-    };
-    /* and how big it has to be to look like it belongs in that socket - a
-       fraction of the machine's own on-screen width. sway.offsetWidth is
-       --lamp-w in plain pixels: a layout width, so it is not itself
-       scaled by whatever the rig currently is. */
-    const bulbScale = () =>
-      (proj.getBoundingClientRect().width * 0.3) / (sway.offsetWidth || 400);
-
-    /* a frame slipping through the gate: one shake, at whatever strength
-       the warm-up has reached */
-    function jitter(tl: gsap.core.Timeline, at: number, amt: number, dur: number) {
-      tl.to(gate, {
-        keyframes: [
-          { x: amt, y: -amt * 1.6, duration: dur * 0.3 },
-          { x: -amt * 0.7, y: amt * 0.9, duration: dur * 0.35 },
-          { x: 0, y: 0, duration: dur * 0.35 },
-        ],
-        ease: "none",
-      }, at);
-    }
-
-    function projector() {
+    function arrive() {
       const tl = line({ onComplete: () => handOff(false) });
-      const finalSlab = slabs[slabs.length - 1];
 
-      /* ---- a - the setup ------------------------------------------ */
-      /* One step toward what is left, and stop. Not the whole gap: that
-         step is the last thing that happens, and spending it here would
-         leave the reveal with nowhere to go. */
+      /* the light in the room goes with the walls - nothing left to lift
+         off the floor, so it falls away rather than coming up */
+      tl.to(root, { "--lit": 0.12, duration: DARK * 0.9, ease: "power2.inOut" }, 0);
       tl.to(cam, {
-        z: (walls.length - 1) * GAP + APPROACH,
-        duration: 0.9, ease: "power2.inOut", onUpdate: pushCam,
+        z: (walls.length + 0.55) * GAP,
+        duration: DARK, ease: "power2.inOut", onUpdate: pushCam,
       }, 0);
-      /* and the room comes down to what one bulb parked in a corner
-         actually throws: enough to read blank plaster and a dark machine
-         by, and not a lumen more */
-      tl.to(root, { "--lit": 0.4, duration: 0.9, ease: "power2.inOut" }, 0);
-
-      /* the hold. Short - it is the beat in which a viewer sees that
-         there is a projector and that it is off, and no longer than
-         that; a longer one was the sequence waiting for the audience
-         rather than the other way round. */
-      let t = 1.35;
-
-      /* ---- b - the bulb comes back -------------------------------- */
-      /* It stops being the site's logo and is an object again: the flat
-         lockup goes, the lit fixture comes back under it, and it lights
-         on the way in rather than arriving already alight - the idea is
-         being carried across the room, not teleported into it.
-
-         One move, and it lands. There used to be a hover-and-breathe
-         beat over the socket before the drop; it read as the sequence
-         padding itself out, and it was the single longest thing between
-         the last wall falling and the picture arriving. */
-      tl.to(dockMark, { autoAlpha: 0, duration: 0.2, ease: "power2.in" }, t);
-      tl.to(svg, { autoAlpha: 1, duration: 0.24, ease: "power2.out" }, t + 0.08);
-      tl.to(root, { "--lit": 0.75, duration: 0.42, ease: "power2.out" }, t + 0.08);
-
-      tl.to(rig, {
-        x: () => socketAt().cx - window.innerWidth / 2,
-        y: () => socketAt().cy - window.innerHeight / 2
-              - proj.getBoundingClientRect().height * 0.62,
-        scale: bulbScale,
-        duration: 0.86, ease: "power2.inOut",
-      }, t + 0.04);
-      t += 0.94;
-
-      /* ---- c - the drop ------------------------------------------- */
-      tl.to(rig, {
-        y: () => socketAt().cy - window.innerHeight / 2,
-        duration: 0.2, ease: "power2.in",
-      }, t);
-      t += 0.2;
-
-      /* Contact. The machine takes the hit, and the room's light goes out
-         with it - that light is not in the room any more, it is inside
-         the housing. */
-      tl.add(() => sfx("fall"), t);
-      tl.to(rig, { autoAlpha: 0, duration: 0.12, ease: "power2.in" }, t + 0.02);
-      tl.to(root, { "--lit": 0.06, duration: 0.22, ease: "power2.in" }, t);
-      tl.fromTo(flash, { opacity: 0 }, { opacity: 0.16, duration: 0.05, yoyo: true, repeat: 1 }, t);
-      tl.to(proj, {
-        keyframes: [
-          { y: 5, duration: 0.05 },
-          { y: -3, duration: 0.06 },
-          { y: 0, duration: 0.11 },
-        ], ease: "power2.out",
-      }, t);
-      t += 0.26;
-
-      /* ---- d - ignition ------------------------------------------- */
-      /* It does not start cleanly. It coughs: the lamp strikes and dies
-         twice before it holds, and the body shakes the whole time it is
-         deciding. Hard sets, for the same reason the bulb's own ignition
-         is hard sets - a lamp is conducting or it is not, and easing
-         between the two is what makes CGI flicker look fake. */
-      tl.add(() => sfx("on"), t);
-      tl.add(fitBeam, t);
-
-      const strike = (v: number, at: number) => tl.set(root, { "--proj": v }, at);
-      strike(0.55, t + 0.05);
-      strike(0, t + 0.1);
-      strike(0.85, t + 0.19);
-      strike(0.1, t + 0.24);
-      strike(1, t + 0.34);
-      tl.to(root, { "--proj": 1, duration: 0.3, ease: "power2.out" }, t + 0.34);
-
-      /* the vibration of a motor that has just been asked to start */
-      tl.to(proj, {
-        keyframes: [
-          { x: 1.6, y: -1, duration: 0.05 },
-          { x: -1.4, y: 1.2, duration: 0.05 },
-          { x: 1, y: 0.6, duration: 0.05 },
-          { x: -0.6, y: -0.5, duration: 0.05 },
-          { x: 0, y: 0, duration: 0.06 },
-        ],
-        ease: "none", repeat: 2,
-      }, t + 0.05);
-
-      /* and the reels start turning, and keep turning - slow to begin
-         with, because the same motor is dragging them up to speed.
-
-         The second half of that is started from a callback rather than
-         added to this timeline, and it is not a style choice: a child
-         with repeat:-1 gives its parent an infinite duration, so the act
-         would never reach its own onComplete and the hand-off would never
-         fire. It is killed by bail() and by the teardown, which is where
-         every other ticker and tween in here ends up anyway. */
-      tl.to(reels, { rotation: 300, duration: 1, ease: "power1.in" }, t + 0.16);
-      tl.add(() => {
-        gsap.to(reels, { rotation: "+=3600", duration: 8, ease: "none", repeat: -1 });
-      }, t + 1.16);
-
-      t += 0.44;
-
-      /* ---- e - the warm-up ---------------------------------------- */
-      /* Light finds the rectangle, and the rectangle is not a picture
-         yet: it is white with nothing in it, hunting for an exposure.
-         This part has to read as mechanical rather than designed -
-         everything below is a machine failing to settle. */
-      const bm = (v: number, at: number) => tl.set(root, { "--beam": v }, at);
-      bm(0.35, t);
-      bm(0, t + 0.05);
-      bm(0.8, t + 0.12);
-      bm(0.15, t + 0.18);
-      bm(0.6, t + 0.25);
-      bm(1, t + 0.32);
-      tl.to(root, { "--beam": 0.9, duration: 0.36, ease: "power1.inOut" }, t + 0.36);
-
-      /* grain arrives with the light and does not fully leave until the
-         picture does */
-      tl.to(root, { "--grain": 1, duration: 0.2 }, t + 0.12);
-      /* the wall stops being a thing lit by a bulb and becomes a screen */
-      tl.to(finalSlab, { "--lit-floor": 0.72, duration: 0.5, ease: "power2.out" }, t + 0.14);
-
-      /* the gate finding focus: soft and off its marks, and then not */
-      tl.fromTo(gate,
-        { filter: "blur(9px)", scale: 1.035 },
-        { filter: "blur(0px)", scale: 1, duration: 0.8, ease: "power2.out" }, t + 0.14);
-      jitter(tl, t + 0.06, 7, 0.2);
-      jitter(tl, t + 0.3, 5, 0.17);
-      jitter(tl, t + 0.56, 3, 0.15);
-
-      t += 0.68;
-
-      /* ---- f - the leader ----------------------------------------- */
-      /* 3 - 2 - 1, one ring sweep per number, with the exposure still
-         hunting underneath. Academy leader, more or less, which is the
-         one piece of film language everybody can read without being told
-         what it is. Run faster than a real one: the beat is recognised
-         in the first half second and everything after that is waiting. */
-      const BEAT = 0.62;
-      tl.to(root, { "--count": 1, duration: 0.14 }, t);
-      [3, 2, 1].forEach((n, i) => {
-        const at = t + i * BEAT;
-        tl.add(() => { countN.textContent = String(n); }, at);
-        tl.fromTo(countArc,
-          { strokeDashoffset: ARC },
-          { strokeDashoffset: 0, duration: BEAT * 0.92, ease: "none" }, at);
-        tl.fromTo(countN, { autoAlpha: 0.2 }, { autoAlpha: 1, duration: 0.1 }, at);
-        jitter(tl, at, 4, 0.14);
-        /* the exposure ticking down and back as each frame goes through */
-        tl.set(root, { "--beam": 0.62 }, at + 0.02);
-        tl.set(root, { "--beam": 0.95 }, at + 0.06);
-      });
-      t += BEAT * 3;
-
-      /* the last frame of leader runs out and the gate goes dark for
-         about as long as a splice does */
-      tl.to(root, { "--count": 0, duration: 0.1 }, t);
-      tl.set(root, { "--beam": 0.1 }, t + 0.1);
-      tl.set(root, { "--beam": 0 }, t + 0.15);
-      t += 0.22;
-
-      /* ---- g - the reveal ----------------------------------------- */
-      /* and the crowd is there.
-
-         Not the artwork, and nothing that then expands into something
-         else: the picture the projector puts on the wall is the picture
-         the hero used to travel to on the first scroll. So there is no
-         wordmark-then-whoomph beat any more, and no swell under it - a
-         carriage drops, a frame lands, and that is the sound a projector
-         makes. It arrives on one frame for the same reason: a fade is a
-         dissolve, and a dissolve belongs to a different machine. */
-      tl.add(() => sfx("fall"), t);
-      tl.set(root, { "--beam": 1 }, t);
-      tl.set(root, { "--proj-img": 1 }, t);
-      tl.fromTo(flash, { opacity: 0 }, { opacity: 0.2, duration: 0.06, yoyo: true, repeat: 1 }, t);
-      tl.to(finalSlab, { "--lit-floor": 1, duration: 0.7, ease: "power2.out" }, t);
-      jitter(tl, t + 0.02, 5, 0.18);
-      jitter(tl, t + 0.36, 2, 0.12);
-      /* the grain thins as the machine settles, but a trace of it stays
-         until the very last frame - the picture is still on a wall */
-      tl.to(root, { "--grain": 0.4, duration: 0.9, ease: "power2.out" }, t + 0.14);
-      t += 0.6;
-
-      /* ---- h - the run at the wall -------------------------------- */
-      /* The camera closes what is left of the last GAP until the wall
-         sits at translateZ(0) with an identity transform - and .ovt__screen
-         inside it is cut to exactly the box the hero's own expanded photo
-         occupies, so what is on screen at the end of this is the same
-         picture, the same size, in the same place as the page underneath.
-
-         Which is what the cue below is for. The hero is normally at its
-         first frame - the crowd shot still folded up inside the artwork's
-         little window - and handing a full-screen projection back to that
-         would be a cut. It is jumped to its expanded frame here, behind
-         the black, so the fade at the end has nothing to travel. The
-         definition is not written yet: that is the next beat, and it
-         happens on the page (see finish() in handOff). */
-      const RUN = 1.3;
-      tl.add(() => cueHero("expanded"), t);
-      tl.to(cam, {
-        z: walls.length * GAP,
-        duration: RUN, ease: "power3.inOut", onUpdate: pushCam,
-      }, t);
-      /* the gate has to land at exactly zero - it is carrying the picture
-         and the hand-off is a match, so half a pixel of jitter left on it
-         would be the seam */
-      tl.set(gate, { x: 0, y: 0, scale: 1, filter: "none" }, t);
-      /* the machine goes with the camera: it is nearer than the wall, so
-         it grows and leaves the bottom of the frame on its own */
-      tl.to(proj, { autoAlpha: 0, duration: RUN * 0.45, ease: "power2.in" }, t);
-      tl.to(root, { "--grain": 0, "--beam": 0, duration: RUN * 0.7, ease: "power2.inOut" }, t + RUN * 0.22);
-      tl.to(vignette, { autoAlpha: 0, duration: RUN * 0.76, ease: "power2.inOut" }, t);
-      tl.to(skip, { autoAlpha: 0, duration: 0.4 }, t);
+      tl.to(vignette, { autoAlpha: 0, duration: DARK * 0.7, ease: "power2.inOut" }, 0.1);
+      tl.to(skip, { autoAlpha: 0, duration: 0.4 }, 0);
     }
 
     /* ---------------------------------------------------- the hand-off */
@@ -1049,14 +710,11 @@ export function initTestOverture(root: HTMLElement): () => void {
       if (handedOff) return;
       handedOff = true;
 
-      /* Nothing is marked as seen and nothing is left docked in the
-         corner, and both of those follow from the same change. The bulb
-         does not survive this cut - it went into the projector, which is
-         the whole point of it - so the corner is left to the nav's own
-         lockup, which is already fading up there (see .nav__logo in
-         globals.css). And /test is a thing you load in order to watch, so
-         it plays from the top every single time rather than once per tab:
-         no sessionStorage, no replay button, reload is the replay. */
+      /* Nothing is marked as seen. /test is a thing you load in order to
+         watch, so it plays from the top every single time rather than
+         once per tab: no sessionStorage, no replay button, reload is the
+         replay - which is also why the docked mark is left as scenery
+         rather than being wired up as one. */
       lamp.tabIndex = -1;
 
       const finish = () => {
@@ -1064,18 +722,11 @@ export function initTestOverture(root: HTMLElement): () => void {
         gsap.set([pull, skip], { display: "none" });
         document.dispatchEvent(new CustomEvent(OVERTURE_DONE));
 
-        /* And then the definition, over the photo that was just
-           projected. It is the real one - the hero's own phase 2, played
-           on its own timeline (HERO_CUE in lib/overture.ts) - rather than
-           a copy of the type laid into the room, so the words, the
-           typesetting and the order they arrive in are the page's and
-           there is only ever one of them.
-
-           Held a beat past the fade so the two do not overlap: the
-           picture has to be seen arriving before anything is written on
-           top of it. A skipped run gets it immediately and at speed,
-           since skipping means "put me at the end". */
-        after(instant ? 0 : 0.4, () => cueHero("defined", instant ? 0 : 2.2));
+        /* And nothing else. This cut hands the screen back at the hero's
+           own first frame - the greeting and the small film - so every
+           beat after this one belongs to the reader's scroll. No HERO_CUE
+           is sent (contrast the projector cut, which had to jump the hero
+           past the beats the room had already played). */
       };
 
       if (instant) {
@@ -1109,28 +760,18 @@ export function initTestOverture(root: HTMLElement): () => void {
       timers.forEach(clearTimeout);
       timers.length = 0;
 
-      gsap.killTweensOf([proj, reels, gate, beam, wash, grain, count]);
-
-      /* The end state of this cut, not of the live one: the picture is on
-         the wall because it has been projected there, so skipping out
-         means the projection has already happened - beam spent, machine
-         gone with the camera, gate square, grain off. */
-      gsap.set(root, {
-        "--lit": 0.06, "--guide": 0,
-        "--proj": 0, "--beam": 0, "--grain": 0, "--count": 0, "--proj-img": 1,
-      });
+      /* The end state of this cut: every wall down, the room dark, the
+         camera already past where the last one stood. */
+      gsap.set(root, { "--lit": 0.12, "--guide": 0 });
       gsap.set(slabs, { autoAlpha: 0 });
-      gsap.set(slabs[walls.length - 1], { autoAlpha: 1, rotationX: 0, "--lit-floor": 1 });
-      gsap.set(gate, { x: 0, y: 0, scale: 1, filter: "none", autoAlpha: 1 });
-      gsap.set(proj, { autoAlpha: 0 });
 
-      /* and the bulb is inside the machine, which is off screen - so
-         unlike the live cut there is nothing left in the corner to set */
-      gsap.set(rig, { autoAlpha: 0 });
+      /* The mark survives this ending, so a skip has to leave it docked
+         rather than gone - the corner is where it lives from here on. */
+      gsap.set(rig, { autoAlpha: 1 });
       gsap.set(svg, { autoAlpha: 0 });
-      gsap.set(dockMark, { autoAlpha: 0 });
+      gsap.set(dockMark, { autoAlpha: 1 });
       gsap.set([pull, skip], { autoAlpha: 0 });
-      cam.z = walls.length * GAP;
+      cam.z = (walls.length + 0.55) * GAP;
       pushCam();
       handOff(instant);
     }
@@ -1142,9 +783,10 @@ export function initTestOverture(root: HTMLElement): () => void {
     /* ---------------------------------------------------- run it
        No gate on this route and no instant path: /test is loaded in order
        to watch the sequence, so it always plays, and always from black.
-       The only change to the chain is its last link - falls() now hands
-       to the projector rather than to a wall that expands. */
-    boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(projector); }))));
+       The only change to the chain is its last link - falls() knocks
+       every wall over and hands to a run into the dark, rather than
+       leaving one standing to expand into an artwork. */
+    boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(arrive); }))));
   }, root);
 
   /* -------------------------------------------------- teardown

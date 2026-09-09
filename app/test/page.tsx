@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import "./test.css";
 import Footer from "@/components/Footer";
-import Hero from "@/components/Hero";
-import { Awards, Clients, Reel, What, Who } from "@/components/Sections";
+import { Awards, Clients, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
+import TestHero from "@/components/TestHero";
 import TestOverture from "@/components/TestOverture";
 
 /* ============================================================
-   /test - THE PROJECTOR CUT
+   /test - THE FILM CUT
 
    The home page, with one act of the opening sequence swapped out. It
    exists to be watched and compared against the real thing, so:
@@ -19,14 +19,37 @@ import TestOverture from "@/components/TestOverture";
      · and it plays from black every single time it is loaded, rather
        than once per tab like the live sequence does.
 
-   Everything below the sequence is the real home page's components,
-   imported rather than copied: the point of the experiment is the
-   hand-off into that hero, so it has to be that hero.
+   What changed in this cut, in the order you meet it:
+
+     · the room's last wall goes over like all the others. There is no
+       wall left standing, no projector in front of it and no crowd shot
+       thrown onto it - the camera simply runs on into the dark and hands
+       over (lib/test-overture-motion.ts);
+     · what it hands to is a blank screen, which then writes itself:
+       "Hi," / "We are" / "SoCheers" types on a line at a time, and then
+       the middle line parts - "We" left, "are" right - and the vibe film
+       opens out of the gap between them, playing, and keeps playing.
+       That is components/TestHero.tsx, and it plays itself: the reader
+       has not scrolled yet;
+     · one scroll then grows the film from that gap to fill the screen -
+       the whole picture scaling with its frame, never cropped - and the
+       next hands over to the crowd shot for the dictionary entry, which
+       is the live hero's own phase 2 unchanged;
+     · and the reel section is gone from below WHO WE ARE, because that
+       film has moved up into the hero and playing it twice on one page
+       would be the page repeating itself.
+
+   Everything else is the real home page's components, imported rather
+   than copied.
 
    Nothing here modifies the live cut. components/Overture.tsx,
-   lib/overture-motion.ts and the OVERTURE block in globals.css are
-   untouched; this route runs components/TestOverture.tsx and
-   lib/test-overture-motion.ts, which are copies with the ending replaced.
+   components/Hero.tsx, lib/overture-motion.ts and the OVERTURE block in
+   globals.css are untouched; this route runs components/TestOverture.tsx,
+   components/TestHero.tsx and lib/test-overture-motion.ts. The one shared
+   file it reaches into is lib/motion.ts, where initHero branches on
+   data-hero-test - the pin, the lock, the phase walk and the crumble are
+   the same machinery, and only the pictures and the number of resting
+   frames differ.
    ============================================================ */
 
 export const metadata: Metadata = {
@@ -65,9 +88,8 @@ export default function TestPage() {
       <Footer />
 
       <main id="top" data-foot-lift>
-        <Hero />
+        <TestHero />
         <Who />
-        <Reel />
         <What />
         <Clients />
         <Awards />

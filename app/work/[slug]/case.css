@@ -309,6 +309,13 @@
   overflow:hidden;
 }
 
+/* The newer cases set the client's own "And it worked." over the
+   figures, so the grid can sit inside a section with a heading on it and
+   be reachable from the contents list. A stats block with no heading is
+   an unchanged grid: the space below is drawn by the adjacency, not by
+   the wrapper. */
+.cs-statset .cs-copy__h + .cs-stats{ margin-top:clamp(24px,3.4vh,38px); }
+
 /* ---- filling the rows ----
 
    Six columns and a span per cell rather than `auto-fit`, because the

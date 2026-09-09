@@ -129,45 +129,41 @@ export default function ContactForm() {
         </fieldset>
 
         {intent === "job" ? (
-          /* Zoho's own note, kept word for word. There is deliberately no
-             submit under it: on this branch the form has no fields, and a
-             send button over an empty form is a dead end dressed up as a
-             door. */
+          /* Zoho's own copy for this branch, less the middle line: the two
+             location pages it linked to (join-the-cheersquad-mumbai and
+             -bengaluru) do not exist any more, so the whole item went with
+             them rather than leaving two dead links in the panel.
+
+             Set as two labelled rows rather than a bulleted list - it is
+             two routes to the same place, and a list of two with a marker
+             beside each read as a form with no fields in it. There is
+             deliberately no submit: on this branch Zoho collects nothing. */
           <div className="ctf__note">
-            <p>
+            <p className="ctf__note-lead">
               Since you are interested in working at SoCheers, here is how we do
               most of our hiring.
             </p>
-            <ul>
-              <li>
-                Via our openings for specific roles:{" "}
-                <a href="https://socheers.net/careers/" target="_blank" rel="noopener noreferrer">
-                  SoCheers.net &gt; Careers
-                </a>
-              </li>
-              <li>
-                Nothing matches or not sure? Apply anyway based on location for{" "}
-                <a
-                  href="https://socheers.net/join-the-cheersquad-mumbai/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Mumbai
-                </a>{" "}
-                or{" "}
-                <a
-                  href="https://socheers.net/join-the-cheersquad-bengaluru/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Bengaluru
-                </a>
-              </li>
-              <li>
-                By directly connecting with our recruitment team:{" "}
-                <a href="mailto:careers@socheers.net">careers@socheers.net</a>
-              </li>
-            </ul>
+
+            <a
+              className="ctf__note-row"
+              href="https://socheers.net/careers/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span className="ctf__note-label">Open roles</span>
+              <span className="ctf__note-value">SoCheers.net &gt; Careers</span>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+
+            <a className="ctf__note-row" href="mailto:careers@socheers.net">
+              <span className="ctf__note-label">Our recruitment team</span>
+              <span className="ctf__note-value">careers@socheers.net</span>
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
           </div>
         ) : (
           <>

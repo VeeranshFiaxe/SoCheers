@@ -668,21 +668,29 @@
    room, the same phone in the same place, with an ordinary face on it -
    and THAT is what the section is met with. The scroll takes him apart.
 
-   Five layers, and the order of them is the whole design:
+   Six layers, and the order of them is the whole design:
 
      to     the deck's finished frame, underneath everything
-     from   the ordinary frame, with a STATIC hole where his face is
+     from   the ordinary frame, whole
+     hole   the deck's frame cut to the shape of his profile, fading in
+            as the profile leaves
      smear  the deck's frame again, blurred once and screen-blended,
-            stretched off the phone - the band of light, over both
-     face   his face, on its own layer, scaled ABOUT THE PHONE so that
-            it collapses into it
-     wisp   the same face again, blurred hard and screen-blended,
+            stretched off the phone - the band of light, over all three
+     face   the FRONT of his face, on its own layer, scaled ABOUT THE
+            PHONE so that it collapses into it
+     wisp   the same profile again, blurred hard and screen-blended,
             thrown further and faster - what is left of him
 
-   `from` and `face` carry complementary masks - where one is solid the
-   other is clear - and they are cut from the same photograph, so at
-   rest they are one picture with no seam in it. The hole does not open.
-   His face LEAVES, and what was always behind it is the deck's smear.
+   `face` and `hole` are cut to the same shape and are exact opposites
+   in time: as one goes the other arrives. At rest the face is the same
+   pixels in the same place as the plate under it, so there is no seam,
+   and at the end the deck's own smear is sitting where the profile was.
+
+   What leaves is the PROFILE and not the head. The ear, the hair and
+   the back of his skull do not move, because in the deck's own frame
+   they have not moved - only the front of him has been drawn out into
+   the light. Taking the whole head breaks that the moment the two
+   frames meet.
 
    Between them runs the canvas: motes lifting off his face and
    accelerating into the phone. See components/SeriesPull.tsx.
@@ -761,39 +769,25 @@
   container-type:size;
   --p:1; --s:1; --fa:0; --g:1; --b:0;
 
-  /* the face, and its complement. Written once here and used by three
-     layers, so a change to the shape of his head is one edit rather
-     than three that have to stay in step.
+  /* THE FRONT OF HIS FACE, and nothing else.
 
-     The core is solid out to 46% and clear from 100%, and the two are
-     exact complements of each other. In the soft ring between, they do
-     not quite sum to one - the two layers cover a(1-a) less than the
-     whole, and a quarter of the plate underneath shows through at the
-     half-way line.
+     What leaves is the profile - the brow, the nose, the lips, the line
+     of the jaw. The ear, the hair and the back of his head stay exactly
+     where they are, because that is what the deck's own frame does: go
+     and look at it, the head is still a head and it is only the front
+     of it that has been drawn out into the light. A mask that takes the
+     whole head breaks that the moment the two frames meet.
 
-     So the ring has to be put where the two files AGREE, and that is
-     what sets how wide this is. The place they disagree is the band of
-     light running from his face to the phone, x 0.39 to 0.53, and the
-     ring must not cross it: the core runs from 0.376 to 0.569, which
-     holds the whole of that plus the phone and the lit face, and the
-     ring past it falls on the back of his head, his shoulder and the
-     wall - dark, and the same dark in both files.
+     Solid from x 0.470 to 0.535 and y 0.415 to 0.575, which is the lit
+     profile and stops short of the ear at 0.58. The fall-off past it is
+     the cheek, and it SHOULD be soft: a face that detaches on a hard
+     edge is a cut-out, not a face coming apart.
 
-     Measured, not guessed. Over the two actual plates this leaves a
-     worst error of 19 luma steps in 255 at a single pixel and 2.5 at
-     the 99.5th percentile, which is nothing. The version before it was
-     a third this size, put the ring straight across the phone, and left
-     650 pixels wrong by up to 58.
-
-     What that width also means: what leaves is not just his face, it is
-     his head, and the phone stays because the phone is the ORIGIN
-     everything is scaled about - a point does not move when you scale
-     around it. What is left behind, uncovered, is the deck's own head
-     with the face already gone out of it. */
-  --cut:radial-gradient(ellipse 21% 50.2% at 47.25% 47%,
-    #000 0%, #000 46%, rgba(0,0,0,.55) 72%, rgba(0,0,0,0) 100%);
-  --uncut:radial-gradient(ellipse 21% 50.2% at 47.25% 47%,
-    rgba(0,0,0,0) 0%, rgba(0,0,0,0) 46%, rgba(0,0,0,.45) 72%, #000 100%);
+     One gradient, used by three layers - the face, the wisp behind it
+     and the patch that takes its place - so the shape of what leaves is
+     one edit rather than three that have to stay in step. */
+  --cut:radial-gradient(ellipse 6.5% 15.5% at 50.3% 49.5%,
+    #000 0%, #000 50%, rgba(0,0,0,.5) 76%, rgba(0,0,0,0) 100%);
 }
 .st-pull__frame{
   position:absolute; left:50%; top:50%; z-index:1;
@@ -815,19 +809,45 @@
    animated - see the note above. */
 .st-pull__to,
 .st-pull__from,
+.st-pull__hole,
 .st-pull__face{ filter:contrast(1.09) saturate(.88); }
 
 /* the deck's frame, underneath everything */
 .st-pull__to{ z-index:1; }
 
-/* the ordinary frame, with the hole where his face is. It does not
-   move; it hands the room over to the plate underneath it, and it does
-   that a long way behind the face. */
+/* the ordinary frame, whole and unmasked. It does not move; it hands
+   the room over to the plate underneath it, and it does that a long way
+   behind the face.
+
+   Unmasked on purpose. It used to carry the exact complement of the
+   face's own mask, the two of them summing to one picture - except that
+   two layers at a and 1-a do not sum to one, they sum to 1 - a(1-a),
+   and a quarter of the plate underneath showed through along the soft
+   ring between them. In the rest state, where the reader can stop and
+   look at it. Which is why the mask above got wider and wider until it
+   was taking his whole head, to keep that ring off anything the two
+   files disagree about.
+
+   So the complement is gone and .st-pull__hole does the job instead:
+   this plate stays whole, the face sits on top of it as the same pixels
+   in the same place, and the patch that replaces the face fades IN as
+   the face leaves rather than being uncovered by it. Nothing is
+   half-covered at rest, so the mask is free to be the shape it should
+   be. */
 .st-pull__from{
   z-index:2;
   opacity:calc(1 - var(--g));
-  -webkit-mask-image:var(--uncut);
-  mask-image:var(--uncut);
+}
+
+/* WHAT TAKES ITS PLACE. The deck's frame, cut to the same shape as the
+   face and fading in exactly as fast as the face fades out, so the
+   profile that leaves is replaced by the smear the deck already has
+   there. Under the face, over the ordinary plate. */
+.st-pull__hole{
+  z-index:3;
+  opacity:calc(1 - var(--fa));
+  -webkit-mask-image:var(--cut);
+  mask-image:var(--cut);
 }
 
 /* THE BAND OF LIGHT. The deck's own frame, blurred once, screen-blended
@@ -844,7 +864,7 @@
    settles to a trace, so what is left on the screen at the end is the
    photograph and not an effect. */
 .st-pull__smear{
-  z-index:3;
+  z-index:4;
   mix-blend-mode:screen;
   transform-origin:39.8% 55.2%;
   opacity:calc(var(--b) * .85 + var(--g) * .12);
@@ -870,10 +890,16 @@
    before it has gone anywhere, which is what the pass before this one
    did. */
 .st-pull__face{
-  z-index:4;
+  z-index:5;
   transform-origin:39.8% 55.2%;
   opacity:var(--fa);
-  transform:scale(calc(1 - var(--s) * .88)) scaleX(calc(1 + var(--s) * 1.05));
+  /* two scales, not one uniform one with a stretch multiplied on top:
+     (1-.88s)(1+2.2s) rises above 1 before it falls, so the profile
+     drifted AWAY from the phone for the first third of its own journey
+     before turning round. Shrinking each axis by its own amount cannot
+     do that. It flattens four times faster than it narrows, which is
+     what turns it into a band of light on the way in. */
+  transform:scaleY(calc(1 - var(--s) * .9)) scaleX(calc(1 - var(--s) * .6));
   -webkit-mask-image:var(--cut);
   mask-image:var(--cut);
   will-change:transform, opacity;
@@ -885,11 +911,13 @@
    the sharp one tells you what is moving, this one tells you how fast.
    It lives entirely inside the burst. */
 .st-pull__wisp{
-  z-index:5;
+  z-index:6;
   mix-blend-mode:screen;
   transform-origin:39.8% 55.2%;
   opacity:calc(var(--b) * .8);
-  transform:scale(calc(1 - var(--s) * .94)) scaleX(calc(1 + var(--s) * 2));
+  /* flatter than the face and not as far in, so it lies behind it as a
+     trail rather than arriving with it */
+  transform:scaleY(calc(1 - var(--s) * .95)) scaleX(calc(1 - var(--s) * .35));
   filter:blur(16px) brightness(1.45) saturate(.8);
   -webkit-mask-image:var(--cut);
   mask-image:var(--cut);
@@ -898,7 +926,7 @@
 
 /* what the screen throws back into the room as it takes him */
 .st-pull__glow{
-  position:absolute; inset:0; z-index:6; pointer-events:none;
+  position:absolute; inset:0; z-index:7; pointer-events:none;
   mix-blend-mode:screen;
   opacity:calc(var(--b) * .85 + var(--g) * .2);
   background:
