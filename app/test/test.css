@@ -70,63 +70,123 @@
    ============================================================ */
 .hero--test .hero__pin{ background:#000; }
 
-/* The sentence. Above the stage in the stacking order (.hero__stage is
-   z-index 3, globals.css): the words never overlap the film at rest, but
-   the film grows through them on the first scroll, and they have to be
-   seen fading rather than be covered mid-fade. */
+/* The sentence, and it sits UNDER the stage (which is z-index 3,
+   globals.css). The words and the film never overlap at rest - the film
+   opens into a hole the words make for it - so the only time this
+   matters is the first scroll, and there the film is meant to pass in
+   front of the sentence rather than through it: one plane coming
+   forward over another going away. initHero recedes the type on the same
+   beat (scaled back, dimmed, softened), which is what makes the pair
+   read as depth rather than as a crossfade. */
 .hero--test .hero__intro{
-  position:absolute; inset:0; z-index:4;
+  position:absolute; inset:0; z-index:2;
   display:flex; align-items:center; justify-content:center;
   pointer-events:none;
 }
 .hero--test .hero__lines{
   --split:0;
+  /* it is scaled and blurred as one block on the way out, so it needs a
+     layer of its own rather than being rasterised per character */
+  will-change:transform,opacity,filter;
+  /* shrink-to-fit and centred, which is what makes the row's own box
+     exactly the sentence - so the typing clip starts on the first glyph
+     rather than at the edge of the screen */
+  align-items:center;
   display:flex; flex-direction:column; align-items:center;
   gap:clamp(2px,.5vh,10px);
   width:100%;
+  /* Sized so the whole row fits on one line with the film in the middle
+     of it. The grid below gives each side (100% - --film-w) / 2, and the
+     film is 34vw - so "SoCheers", the longer of the two sides, has about
+     a third of the screen to sit in. 6.6vw leaves that comfortable at
+     every width rather than fitting it exactly at one. */
+  /* the caret is absolutely placed against this box */
+  position:relative;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(34px,7.4vw,128px);
+  font-size:clamp(30px,6.6vw,116px);
   line-height:.98; letter-spacing:-.03em;
-  color:var(--cream);
+  /* the site's own blue, not a colour of its own - it is the accent
+     every other page is keyed to (--sky, app/globals.css) */
+  color:var(--accent);
   text-shadow:0 6px 40px rgba(0,0,0,.6);
 }
 .hero--test .hero__line{ display:block; white-space:nowrap; }
 
-/* The middle line, and the reason the whole composition works: an empty
-   column between the two words, opened by --split from a word space out
-   to the film's own width. The row is given the film's height at the same
-   time, which is what pushes "Hi," up and "SoCheers" down so the picture
-   has a row of its own to sit in rather than covering the lines above and
-   below it. min-height, not height: at rest it is shorter than the line
-   box and must not squash it. */
+/* The line, and the reason the whole composition works: an empty column
+   between "We are" and "SoCheers", opened by --split from a word space
+   out to the film's own width. The row is given the film's height at the
+   same time, so the picture has a row of its own to sit in rather than
+   overrunning the type either side of it. min-height, not height: at rest
+   it is shorter than the line box and must not squash it. */
 .hero--test .hero__line--split{
   display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
   min-height:calc(var(--split) * var(--film-h, 0px));
 }
-.hero--test .hero__side--l{ text-align:right; }
+/* "We are" is the lead-in and "SoCheers" is the name, so they are not
+   the same weight of thing and they do not get the same colour: the
+   line is set in the site's blue and the half in front of the film is
+   pulled back to plain cream. The accent lands on the word that is
+   actually the point. */
+.hero--test .hero__side--l{ text-align:right; color:var(--cream); }
 .hero--test .hero__side--r{ text-align:left; }
 .hero--test .hero__gap{
   display:block; height:1px;
   width:calc(.3em + var(--split) * var(--film-w, 0px));
 }
 
-/* Each character is its own box so initHero can snap them on one at a
-   time - steps, not fades, which is the difference between type being
-   written and type arriving. */
-.hero--test .hero__ch{ display:inline-block; }
+/* A half of the sentence: "We are" on one side of the film, "SoCheers"
+   on the other. Nothing animates on these any more - they sit at their
+   natural width from the first frame, and what types them is a clip on
+   the row above (initHero, lib/motion.ts).
 
-/* The cursor at the end of whichever line is being written. Blinked on
-   background-color rather than on opacity, on purpose: opacity is what
-   GSAP uses to bring each caret in and take it away again, and a CSS
-   animation on the same property would simply win and leave three carets
-   blinking on a finished sentence. */
+   That is the whole reason the shutter moved up a level. These are the
+   grid's own columns, one right-aligned and one left-aligned, so a box
+   here opening from zero width opens AWAY from the centre - the sentence
+   typed itself outwards in two directions from the middle of the line.
+   A clip on the row instead travels one edge across both of them, left
+   to right, and neither box ever changes size. */
+.hero--test .hero__type{ display:inline-block; white-space:nowrap; }
+
+/* The caret.
+
+   One, not one per run. The old pair sat inside the two halves of the
+   line, and with those halves shut to zero width they collapsed into a
+   stack of thin bars in the middle of the screen - which is what got
+   them removed. This one is a single bar outside the row, placed and
+   driven in pixels by initHero (lib/motion.ts) off the same measurement
+   the typing clip uses, so it rides the leading edge of the sweep
+   instead of being carried by a box that is changing size.
+
+   It is the first thing on the screen. The room hands over on black and
+   the caret is already sitting there blinking, a beat before the first
+   character lands - so the pause reads as a page about to be written
+   rather than as nothing happening.
+
+   Cream, not the line's blue: it is the colour of the words it is about
+   to write ("We are"), and a caret is part of the writing rather than a
+   mark of its own. */
 .hero--test .hero__caret{
-  display:inline-block; vertical-align:baseline;
-  width:.07em; height:.74em; margin-left:.06em;
+  position:absolute; left:0; top:0;
+  width:.06em; height:.82em;
   background:var(--cream);
-  animation:test-caret 1s steps(1) infinite;
+  border-radius:1px;
+  /* off until the room is out of the way. Two attributes rather than an
+     opacity tween, because the blink IS an opacity animation and a tween
+     on the same property would be fighting it every frame. */
+  opacity:0;
 }
-@keyframes test-caret{ 50%{ background:transparent; } }
+.hero--test .hero__caret[data-caret-on]{
+  animation:hero-caret 1.06s steps(1,end) infinite;
+}
+/* Solid while it is actually moving. A cursor blinks when it is waiting
+   for you and holds steady while it is being typed at - the blink is
+   what says "idle", so blinking through the sweep would be the one
+   moment it means the opposite of what is happening. */
+.hero--test .hero__caret[data-typing]{ animation:none; opacity:1; }
+@keyframes hero-caret{ 0%,50%{ opacity:1 } 50.01%,100%{ opacity:0 } }
+@media (prefers-reduced-motion:reduce){
+  .hero--test .hero__caret[data-caret-on]{ animation:none; opacity:1; }
+}
 
 /* The film. cover rather than contain: the box is the film's own aspect
    at rest, so the two are identical there and the whole picture is on
@@ -160,9 +220,11 @@
 }
 
 /* On a phone the sentence has to give the film a usable width, and the
-   only thing it has to give is its own size: "We [film] are" on a 390px
-   screen is three things sharing one line. */
+   only thing it has to give is its own size: "We are [film] SoCheers" on
+   a 390px screen is three things sharing one line, and the film is 40%
+   of it before the type gets a say. Small type, then - it is that or the
+   line breaks, and a line that breaks has nowhere to put the picture. */
 @media (max-width:700px){
-  .hero--test .hero__lines{ font-size:clamp(28px,7vw,44px); letter-spacing:-.02em; }
+  .hero--test .hero__lines{ font-size:clamp(16px,4.4vw,30px); letter-spacing:-.02em; }
   .hero--test .hero__gap{ width:calc(.26em + var(--split) * var(--film-w, 0px)); }
 }

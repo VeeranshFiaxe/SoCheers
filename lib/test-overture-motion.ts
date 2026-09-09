@@ -79,7 +79,7 @@ const SOUND_WALLS = 9;
    empty dark behind it. Slower than a fall and eased at both ends: it is
    the one move in the sequence that is not something being knocked over,
    and what it arrives at is a blank screen. */
-const DARK = 1.1;
+const DARK = 0.16;
 
 /* Both clocks start the moment the mark is on screen and waiting, not from
    page load - the wait a visitor actually feels is the one after there is
@@ -643,8 +643,11 @@ export function initTestOverture(root: HTMLElement): () => void {
        makes this a corridor being opened up rather than a slideshow: the
        composition never changes, the room just keeps going. */
     function falls(next: () => void) {
-      const tl = line({ onComplete: next });
+      const tl = line();
       let at = 0;
+      /* the frame the last slab is down and gone - see the note under the
+         loop, which is where `next` is actually fired from */
+      let landed = 0;
 
       /* Every one of them, the last included. The room does not end on a
          wall any more - it ends on the hole where the last one was. */
@@ -659,7 +662,13 @@ export function initTestOverture(root: HTMLElement): () => void {
         tl.to(slab, { rotationZ: i % 2 ? 2.4 : -2.4, duration: dur, ease: "power1.in" }, at);
         tl.to(slab, { opacity: 0, duration: dur * 0.34, ease: "power2.in" }, at + dur * 0.68);
 
-        tl.add(impact(force, i < SOUND_WALLS), at + dur * 0.9);
+        /* The tail of the stack goes over too fast to track one wall at
+           a time, so it falls silently (SOUND_WALLS above) - except for
+           the very last one, which is not texture: it is the last thing
+           that happens in this room, everything after it is waiting on
+           it, and a final impact with no sound on it reads as the
+           sequence being cut off rather than finished. */
+        tl.add(impact(force, i < SOUND_WALLS || i === walls.length - 1), at + dur * 0.9);
 
         /* the camera moves up into the space, starting before the wall has
            finished going over so the two read as one motion */
@@ -670,11 +679,32 @@ export function initTestOverture(root: HTMLElement): () => void {
           onUpdate: pushCam,
         }, at + dur * 0.5);
 
+        landed = at + dur;
         at += dur * (OVERLAP[Math.min(i, OVERLAP.length - 1)]);
       }
 
-      /* a held beat on the empty corridor before the camera runs into it */
-      tl.to({}, { duration: 0.3 });
+      /* And the hand-off goes on the frame the last slab finishes going
+         over, not on this timeline's onComplete.
+
+         onComplete waits for the longest child, and the longest child at
+         the end of the run is the last impact: its dust plume alone is
+         0.16 + 0.75 of a second, and the camera step behind it another
+         0.7 of a fall. All of that plays out with every wall already flat
+         and nothing standing behind them - which is a second of black
+         screen between the last thing you see happen and the page being
+         handed the screen. That second was the whole gap.
+
+         Nothing is cut short by moving it: the fall has finished, its
+         thud has been struck, and the dust and the camera keep running
+         underneath a page that already owns the screen (the room fades
+         out over the top of them in handOff). */
+      tl.add(next, landed);
+
+      /* The hand-off is not aimed inside the fall either. It was once, to
+         kill the black that followed it, and it killed the fall instead:
+         the room's fade-out started while the last wall was still
+         rotating, so the last thing the sequence does was never seen
+         finishing. `landed` is the frame after it, not during it. */
     }
 
     /* ============================================================
@@ -688,12 +718,25 @@ export function initTestOverture(root: HTMLElement): () => void {
        That blank is the point. It is the sheet the page writes itself
        onto: the hero underneath is black at this moment too, so the
        cross-fade below is black over black and there is no seam to see.
-       The greeting is typed out a beat later, on the page's own clock
-       (initHero's opening, lib/motion.ts).
+
+       And none of it is in front of the page any more. It hands the
+       screen over on its own first frame, so everything in it - the
+       light dying, the last step of the camera, the vignette going -
+       runs behind a page that already has the screen. The pause before
+       the sentence starts is held there rather than here (initHero's
+       opening, lib/motion.ts), which is the only place it can be tuned
+       as a beat rather than as a camera move.
        ============================================================ */
     function arrive() {
-      const tl = line({ onComplete: () => handOff(false) });
+      /* On this frame, with everything below running over the top of it.
+         The last wall has finished going over by the time this is
+         reached, so there is nothing left in the room to interrupt - and
+         the beat the reader waits through before the sentence starts is
+         held on the page's own clock rather than here, where it would be
+         a camera moving past nothing. */
+      handOff(false);
 
+      const tl = line();
       /* the light in the room goes with the walls - nothing left to lift
          off the floor, so it falls away rather than coming up */
       tl.to(root, { "--lit": 0.12, duration: DARK * 0.9, ease: "power2.inOut" }, 0);
@@ -701,8 +744,8 @@ export function initTestOverture(root: HTMLElement): () => void {
         z: (walls.length + 0.55) * GAP,
         duration: DARK, ease: "power2.inOut", onUpdate: pushCam,
       }, 0);
-      tl.to(vignette, { autoAlpha: 0, duration: DARK * 0.7, ease: "power2.inOut" }, 0.1);
-      tl.to(skip, { autoAlpha: 0, duration: 0.4 }, 0);
+      tl.to(vignette, { autoAlpha: 0, duration: DARK * 0.7, ease: "power2.inOut" }, 0);
+      tl.to(skip, { autoAlpha: 0, duration: 0.3 }, 0);
     }
 
     /* ---------------------------------------------------- the hand-off */
@@ -738,10 +781,25 @@ export function initTestOverture(root: HTMLElement): () => void {
         return;
       }
 
+      /* finish() on the first frame of it, not part-way through.
+
+         Both halves of this fade are black over black: the room has
+         nothing left standing and the page under it has not written a
+         word yet, so there is nothing here for anyone to see dissolve.
+         And finish() is what actually hands the screen over - it adds
+         .is-done, which is `background:transparent !important`
+         (app/globals.css), so the page is visible the instant it runs
+         and every frame of tween after it is invisible by definition.
+         Delaying it was therefore not a cross-fade, it was a wait: the
+         reader sat in front of black for as long as the delay lasted.
+
+         The tween is kept, and kept short, only for the room's own
+         leftovers - the vignette and the flash still have to go
+         somewhere rather than pop off. */
       const tl = line();
-      tl.to([stage, vignette, flash], { autoAlpha: 0, duration: 0.6, ease: "power2.inOut" }, 0);
-      tl.to(root, { backgroundColor: "rgba(0,0,0,0)", duration: 0.6, ease: "power2.inOut" }, 0);
-      tl.add(finish, 0.2);
+      tl.to([stage, vignette, flash], { autoAlpha: 0, duration: 0.35, ease: "power2.inOut" }, 0);
+      tl.to(root, { backgroundColor: "rgba(0,0,0,0)", duration: 0.35, ease: "power2.inOut" }, 0);
+      tl.add(finish, 0);
     }
 
     /* ---------------------------------------------------- skipping out

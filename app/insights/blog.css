@@ -44,7 +44,11 @@
   display:grid; grid-template-columns:minmax(0,1fr) minmax(0,0.92fr);
   gap:clamp(28px,4vw,64px); align-items:center;
 
-  --hero-drop:60px;
+  /* The artwork is parked, so the fold has nothing tall beside it to
+     measure against and the eyebrow was sitting almost on the header.
+     The gap back is this knob, not the padding above it - the clamp is
+     the section's own air and this is how far the fold is slid down. */
+  --hero-drop:112px;
 }
 /* With the artwork out of the markup there is no second column to fill, so
    the copy takes the whole width rather than sitting in half a grid with a

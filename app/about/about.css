@@ -897,16 +897,15 @@
      from it, so the burst is pigment sprayed onto paper rather than
      light coming out of a hole.
 
-     It is the same family the accent is in, which on this page is the
-     brand's pink - the burst is the page's own colour at five values,
-     not a second one.
+     It is the same family the accent is in, which is the brand's blue -
+     the burst is the page's own colour at five values, not a second one.
 
      Held down in strength as well - see the opacity below. */
-  --sp-deep:   #5a0f2e;
-  --sp-dark:   #9c1d4c;
-  --sp-mid:    #d63a6b;
-  --sp-bright: #f07ba0;
-  --sp-pale:   #fde9f0;
+  --sp-deep:   #0e4454;
+  --sp-dark:   #146e8f;
+  --sp-mid:    #179ecf;
+  --sp-bright: #50c9f1;
+  --sp-pale:   #e8f7fd;
   /* On black the burst was the only thing lighting the panel and could
      be spent at full strength. On cream it is competing with dark type
      over it, so it drops back to being a tint behind the figure. */

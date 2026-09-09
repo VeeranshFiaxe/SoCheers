@@ -54,9 +54,9 @@ export function Who() {
           {STATS.map((s) => (
             <div className="stat" key={s.label} data-reveal>
               <div className="stat__num">
-                {/* data-count-hue: the count runs through the design book's
-                        solids on its way up - initCounters in lib/motion.ts. */}
-                    <span data-count={s.count} data-count-hue>0</span>
+                {/* No data-count-hue: the count runs up white and stays
+                    white - the colour only arrives on hover. */}
+                <span data-count={s.count}>0</span>
                 <i>+</i>
               </div>
               <div className="stat__label">{s.label}</div>

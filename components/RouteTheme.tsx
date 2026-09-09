@@ -5,13 +5,15 @@ import { usePathname } from "next/navigation";
 /* ============================================================
    ONE ACCENT PER PAGE
 
-   Every page leads with a colour of its own - home blue, work yellow,
-   about pink, AI work orange, insights purple, let's chat green, all of
-   them off the design book's solids, and /series the streaming red it
-   already blocks its own words in. The whole site reads them through
-   the same three tokens (--accent / --accent-deep / --accent-ink), so
-   no rule anywhere names a colour. This is the one place that decides
-   which triple those tokens point at.
+   Every page leads with the brand's blue - the bright cut on the dark
+   ground, the deeper cut on a light one. /series is the exception and
+   keeps the streaming red it already blocks its own words in. The whole
+   site reads them through the same three tokens (--accent /
+   --accent-deep / --accent-ink), so no rule anywhere names a colour.
+   This is the one place that decides which triple those tokens point
+   at. The groups are kept apart even though they now hold the same
+   values, so re-cutting one page's colour stays a change to the
+   stylesheet.
 
    The colours themselves are not here. They are declared in
    app/globals.css as --page-<group>-* groups; this only ever names a
@@ -38,9 +40,9 @@ const ROUTES: ReadonlyArray<readonly [string, Group]> = [
   ["/ai-work", "ai"],
   ["/insights", "read"],
   /* /series leads with the streaming red it already blocks its accent
-     words in, rather than with the reading purple - see the note over
-     --page-series-* in app/globals.css. The two drafts beside it are
-     still purple; they are not that page. */
+     words in, rather than with the site's blue - see the note over
+     --page-series-* in app/globals.css. The two drafts beside it are not
+     that page and stay on the reading group. */
   ["/series", "series"],
   ["/series-1", "read"],
   ["/series-deck", "read"],

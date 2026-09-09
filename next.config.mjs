@@ -2,6 +2,12 @@
 const nextConfig = {
   reactStrictMode: false,
 
+  /* The dev server is reached from other devices on the LAN (phones, a
+     second laptop) through the Windows hotspot address, so Next has to
+     be told that origin is expected - otherwise it refuses the
+     cross-origin dev requests for its own internal assets. */
+  allowedDevOrigins: ["192.168.137.1"],
+
   /* The Insights page used to live at /blogs and its route folder is
      app/insights/ now. The old path is not in the site's own markup
      anywhere - the nav has always labelled it Insights and only the href

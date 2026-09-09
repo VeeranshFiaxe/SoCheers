@@ -433,7 +433,7 @@ export function initSite(): () => void {
         const bw = pin.offsetWidth, bh = pin.offsetHeight;
         /* Wider on a phone, where the words either side of it are already
            as small as they can reasonably be asked to get. */
-        let w = phone.matches ? bw * 0.44 : Math.min(bw * 0.34, 560);
+        let w = phone.matches ? bw * 0.40 : Math.min(bw * 0.34, 560);
         let h = w / FILM_AR;
         /* and never so tall that the two lines it pushes apart are pushed
            off the top and bottom of the screen */
@@ -450,12 +450,30 @@ export function initSite(): () => void {
       const publishFilm = () => {
         if (!isTest) return;
         const b = boxSmall();
+        /* A zero is not a small film, it is a measurement taken before
+           there was anything to measure. This runs inside initHero, and
+           initHero is reached at mount - so a layout that is not settled
+           yet, a window with no width, a tab restored in the background
+           all read 0 here. Publishing that would leave the sentence
+           opening a hole of nothing while the stage itself, re-measured
+           on the next refresh, has a real box: the words would part
+           around a picture that is not where the gap is. Skip it, and
+           let the refresh below bring the real numbers. */
+        if (b.w < 1 || b.h < 1) return;
         const st = document.documentElement.style;
         st.setProperty("--film-w", `${b.w.toFixed(1)}px`);
         st.setProperty("--film-h", `${b.h.toFixed(1)}px`);
       };
       publishFilm();
       on(window, "resize", publishFilm);
+      /* And again on every refresh, which is where every other
+         measurement in here is re-taken (see remeasure below). Without
+         it the sentence's hole is whatever the very first read said and
+         stays there: a resize is covered by the listener above, but a
+         first read taken before layout had settled was not covered by
+         anything. */
+      ScrollTrigger.addEventListener("refresh", publishFilm);
+      cleanups.push(() => ScrollTrigger.removeEventListener("refresh", publishFilm));
 
       // Where the artwork's window lands on screen. The artwork is
       // object-fit:cover on a wide screen and object-fit:contain on a phone
@@ -517,6 +535,7 @@ export function initSite(): () => void {
         const b = box();
         gsap.set(stage, { x: b.left, y: b.top, width: b.w, height: b.h });
         fitCrop();
+        publishFilm();
       };
 
       if (prefersReduced) {
@@ -620,57 +639,208 @@ export function initSite(): () => void {
       let introRunning = false;
       const lines = greet?.querySelector<HTMLElement>("[data-test-lines]") ?? null;
       if (isTest && greet && lines) {
-        const chars = (n: number) => `[data-test-ch="${n}"]`;
-        const caret = (n: number) => `[data-test-caret="${n}"]`;
+        /* The row, which is what the shutter runs across. Not the two
+           runs inside it: see below. */
+        const row = greet.querySelector<HTMLElement>(".hero__line--split");
+        /* the blinking bar that arrives before the writing does */
+        const caret = greet.querySelector<HTMLElement>("[data-test-caret]");
+        /* every character of it, which is how many steps the shutter
+           takes - "We are" + a space + "SoCheers" */
+        const CHARS = 15;
 
-        /* The first frame, asserted rather than left to the stylesheet: a
-           blank screen. Not one letter written, the middle line closed
-           up, and the film a flat line at the centre of it with nothing
-           to see. Set here so it is true from the moment the hero mounts,
-           which is well before the overture is finished with the screen
-           and long before anything below plays. */
         gsap.set(greet, { autoAlpha: 1 });
-        gsap.set("[data-test-ch]", { autoAlpha: 0 });
-        gsap.set("[data-test-caret]", { autoAlpha: 0 });
+        /* The line, shut.
+
+           One shutter across the whole row, not one per run. Each half
+           used to open its own box from zero width, and because those
+           boxes are the grid's own columns - "We are" right-aligned in
+           its column, "SoCheers" left-aligned in the next - a box
+           growing from nothing grew AWAY from the centre. So the
+           sentence typed itself outwards from the middle in two
+           directions, which is not how anything is written.
+
+           A clip on the row instead. The runs sit at their natural
+           widths the whole time, so the layout never moves, and what
+           travels is a single edge - left to right, across "We are",
+           across the word space, across "SoCheers", in one pass. The
+           row is shrink-to-fit and centred, so the clip's own box is
+           exactly the sentence and the sweep starts on the first glyph
+           rather than at the edge of the screen. */
+        if (row) gsap.set(row, { clipPath: "inset(0 100% 0 0)" });
+        if (caret) {
+          caret.removeAttribute("data-caret-on");
+          caret.removeAttribute("data-typing");
+        }
         gsap.set(lines, { "--split": 0 });
         gsap.set(stage, { autoAlpha: 0, scaleX: 0, scaleY: 0.42, transformOrigin: "50% 50%" });
         gsap.set("[data-hero-cue]", { autoAlpha: 0 });
 
-        /* per character, per beat between one line and the next, and the
-           parting. Fast: this is a hand writing a greeting, not a
-           terminal printing one. */
-        const CH = 0.055;
-        const BEAT = 0.34;
+        /* per character, the beat between the sentence finishing and the
+           line coming apart, and the parting itself. Fast: this is a
+           hand writing a greeting, not a terminal printing one. */
+        const CH = 0.075;
+        const BEAT = 0.26;
+        /* How long the caret sits on the empty screen, blinking, before
+           the first character lands. It is the entire gap between the
+           room ending and the page starting - the overture hands over on
+           the frame its last wall is down (lib/test-overture-motion.ts),
+           so this beat is not a wait, it is the cursor. */
+        const LEAD = 0.2;
         const PART = 1.15;
+        /* how long the finished composition - the line, parted, with the
+           film sitting in it - is held before it takes itself to full
+           screen.
+
+           Long enough that the film is watched rather than glimpsed:
+           it has only just opened out of the gap, and taking it to the
+           screen straight afterwards meant the small state - the one
+           frame where the sentence and the picture are one composition -
+           was never really on screen at all. */
+        const HOLD_OPEN = 1.9;
+
+        /* The scroll cue, and it arrives late on this cut: for the whole
+           of the opening there is nothing a scroll would do that the
+           page is not already doing for itself. It is shown once the
+           film has taken the screen on its own, which is the first
+           moment the reader is actually holding the next move. */
+        const showCue = () => {
+          gsap.to("[data-hero-cue]", { autoAlpha: 1, duration: 0.5, overwrite: true });
+        };
 
         const opening = () => {
           if (introRunning) return;
           introRunning = true;
           const t = gsap.timeline({ onComplete: () => { introRunning = false; } });
 
-          let at = 0.4;                          // a held beat of black first
-          [1, 2, 3].forEach((n) => {
-            const count = greet.querySelectorAll(chars(n)).length;
-            t.set(caret(n), { autoAlpha: 1 }, at);
-            /* duration 0, staggered: a character is written or it is not,
-               and there is no frame in which one is half-there */
-            t.to(chars(n), { autoAlpha: 1, duration: 0, stagger: CH }, at);
-            at += count * CH;
-            t.to(caret(n), { autoAlpha: 0, duration: 0.12 }, at + 0.18);
-            at += BEAT;
-          });
+          /* The beat between the room and the sentence, and this is the
+             one number that sets it.
+
+             The overture hands the screen over the moment its last wall
+             has finished going over and its thud has been struck (falls
+             and arrive, lib/test-overture-motion.ts) - not before, so
+             nothing of that fall is cut short - and then the page holds
+             here, black, for this long before the first character. Which
+             is the whole pause: there is nothing else between the two. */
+          let at = LEAD;
+
+          /* The caret first, and on the same frame the room lets go.
+
+             It is placed by measurement rather than by layout: the row
+             wears the typing clip, so a caret living inside it would be
+             cut off by the edge it is supposed to be riding, and it sits
+             outside the row instead - which means its x is something to
+             be computed. Both ends come off the same boxes the clip is
+             measured from below, so the bar starts exactly on the first
+             glyph and finishes exactly on the last. */
+          const runs = row
+            ? Array.from(row.querySelectorAll<HTMLElement>("[data-test-type]"))
+            : [];
+          const lineBox = lines.getBoundingClientRect();
+          const firstBox = runs[0]?.getBoundingClientRect() ?? null;
+          const lastBox = runs[runs.length - 1]?.getBoundingClientRect() ?? null;
+          const rowBox = row?.getBoundingClientRect() ?? null;
+
+          if (caret && firstBox && lastBox && rowBox && lineBox.width) {
+            const from = firstBox.left - lineBox.left;
+            const to = lastBox.right - lineBox.left;
+            /* centred on the row's own middle, which at --split 0 is the
+               middle of the line box - the film has not opened yet and
+               the row is still just type */
+            caret.style.top = `${rowBox.top - lineBox.top + rowBox.height / 2}px`;
+            gsap.set(caret, { x: from, yPercent: -50, clearProps: "opacity" });
+            t.add(() => caret.setAttribute("data-caret-on", ""), 0);
+
+            /* it stops blinking the moment it starts being typed at, and
+               travels on the sweep's own quantised clock so the bar is
+               always at the edge of the last character rather than
+               sliding smoothly through them */
+            t.add(() => caret.setAttribute("data-typing", ""), at);
+            t.to(caret, {
+              x: to,
+              duration: CHARS * CH,
+              ease: `steps(${CHARS})`,
+              onComplete: () => caret.removeAttribute("data-typing"),
+            }, at);
+          }
+
+          /* One pass, one edge, left to right.
+
+             steps(), one per character of the whole sentence: the clip
+             travels continuously but the ease quantises it, so glyphs
+             land one at a time rather than being wiped through. It is
+             not exact - characters are not all the same width, so a step
+             is an average glyph rather than the next one - and at this
+             rate nobody can tell, which is the only reason it is allowed
+             to be an approximation.
+
+             The word space between "We are" and "SoCheers" is crossed
+             like any other character. There is no pause in the middle of
+             the line, because it is one line. */
+          const TYPE = CHARS * CH;
+          if (row) {
+            /* Where the sentence actually starts inside the row, as a
+               percentage of it.
+
+               Not zero: the grid's two outer columns are always the same
+               width (that is what keeps the gap centred on screen), so
+               the shorter half - "We are" - is right-aligned in a column
+               cut for the longer one, and the row begins with a hundred
+               or so pixels of nothing. Starting the clip at the row's
+               own left edge spent the first eighth of the typing
+               sweeping across that. Measured instead, so the first step
+               lands on the first letter. */
+            const rr = row.getBoundingClientRect();
+            const first = row.querySelector<HTMLElement>("[data-test-type]");
+            const lead = first && rr.width
+              ? ((first.getBoundingClientRect().left - rr.left) / rr.width) * 100
+              : 0;
+            t.fromTo(row,
+              { clipPath: `inset(0 ${(100 - lead).toFixed(2)}% 0 0)` },
+              { clipPath: "inset(0 0% 0 0)", duration: TYPE, ease: `steps(${CHARS})`,
+                /* and the clip comes off entirely once it has nothing
+                   left to hide: the row is about to grow to three times
+                   this width as the line parts, and a clip box that has
+                   to keep up with that is a clip box that can catch it
+                   out on a slow frame. */
+                onComplete: () => gsap.set(row, { clipPath: "none" }) },
+              at);
+          }
+          at += TYPE;
 
           /* and then the sea parts. The gap opening between the words and
              the film growing out of it are two halves of one move, so
              they run on the same clock and the same ease - the words are
              never ahead of the picture they are making room for, and
              never behind it. */
-          at += 0.15;
+          at += BEAT;
+          /* and the cursor goes as the line comes apart. It has written
+             what it came to write, and leaving it blinking beside a
+             sentence that is now opening around a film would be a text
+             field sitting under a picture. */
+          if (caret) {
+            t.add(() => caret.removeAttribute("data-caret-on"), at);
+            t.set(caret, { opacity: 0 }, at);
+          }
           t.to(lines, { "--split": 1, duration: PART, ease: "power3.inOut" }, at);
           t.to(stage, { autoAlpha: 1, duration: 0.24, ease: "power1.out" }, at + PART * 0.08);
           t.to(stage, { scaleX: 1, scaleY: 1, duration: PART, ease: "power3.inOut" }, at);
-          /* only now is there anything to scroll for */
-          t.to("[data-hero-cue]", { autoAlpha: 1, duration: 0.5 }, at + PART + 0.15);
+
+          /* And then it does not stop and wait to be scrolled.
+
+             The opening is one thought - a sentence written, opened, and
+             the picture in it taken to the screen - and stopping two
+             thirds of the way through it to ask for a gesture broke the
+             thought in half. So the last beat plays itself too: a hold
+             long enough to read the composition it has just built, and
+             then the scrolled sequence's own first move, driven from
+             here rather than by a wheel.
+
+             It goes through advance() and not through tl directly, so
+             the phase machine ends up at `open` exactly as it would have
+             if the reader had done it - which is what lets them scroll
+             back up out of it, or on into the definition, with nothing
+             the wiser about who started it. */
+          t.add(() => advance(showCue), at + PART + HOLD_OPEN);
         };
 
         /* The room owns the screen until it says otherwise. With no room
@@ -727,8 +897,24 @@ export function initSite(): () => void {
       if (tint) tl.to(tint, { autoAlpha: 0, duration: EXPAND * 0.75, ease: "power1.inOut" }, EXPAND * 0.1);
       /* The test cut has no artwork to dissolve - what leaves as the film
          takes the screen is the greeting, lifting off the top of it. */
-      if (greet) {
-        tl.to(greet, { autoAlpha: 0, y: -26, duration: EXPAND * 0.5, ease: "power2.in" }, 0);
+      if (greet && lines) {
+        /* The film does not push the words off the screen - it passes in
+           front of them. .hero__stage sits above .hero__intro in the
+           stacking order (app/test/test.css) so the growing box simply
+           covers the sentence, and the sentence recedes underneath it:
+           scaled back about the same centre the film is growing from,
+           dimming and softening as it goes.
+
+           Which is the whole 3D read, and it is two tweens rather than a
+           perspective camera: one plane coming forward, one going away,
+           both about the middle of the screen. Slower than the film, and
+           finished before it is - the words are behind the picture well
+           before the picture is the screen, so there is never a frame of
+           type peeking out at the edge of a full-bleed film. */
+        tl.to(lines, {
+          scale: 0.82, autoAlpha: 0, filter: "blur(6px)",
+          duration: EXPAND * 0.62, ease: "power2.in",
+        }, 0);
       }
       /* and the card the film sits on stops being a card. --card scales
          both halves of the stage's shadow at once (app/test/test.css), so
@@ -759,11 +945,22 @@ export function initSite(): () => void {
       /* The photo eases back and dims - it becomes the page, not the subject.
          fromTo with an explicit starting filter, never to(): from a computed
          `filter:none` GSAP reads every missing component as 0, not 1, so a
-         plain to() ramps brightness 0 → .5 and the screen goes black first. */
+         plain to() ramps brightness 0 → .5 and the screen goes black first.
+
+         immediateRender:false, and on the test cut it is load-bearing
+         rather than tidiness. A fromTo paints its start values the moment
+         it is added to a timeline, even a paused one parked at 0 - so
+         this `scale: 1`, added here at build time, was landing on top of
+         the closed film the opening had just set two hundred lines above
+         (scaleX 0, scaleY .42) and wiping it. The picture then had
+         nothing to open out of: it simply faded up at full size in the
+         middle of the sentence instead of growing out of the gap between
+         the words. Deferred, it records its start when the playhead first
+         reaches AT, which is where it is actually meant to be read. */
       tl.fromTo(stage,
         { scale: 1, filter: "brightness(1) saturate(1)" },
         { scale: 1.05, filter: "brightness(.55) saturate(.7)",
-          duration: ENTRY * 0.4, ease: "power1.inOut" }, AT);
+          duration: ENTRY * 0.4, ease: "power1.inOut", immediateRender: false }, AT);
       tl.fromTo("[data-meaning-veil]",
         { autoAlpha: 0 },
         { autoAlpha: 1, duration: ENTRY * 0.4, ease: "power1.inOut" }, AT);
@@ -1161,11 +1358,11 @@ export function initSite(): () => void {
         }
       }) as EventListener);
 
-      const advance = () => {
+      const advance = (onArrive?: () => void) => {
         const next = STOPS[stopAt(phase) + 1];
         if (next) {
           phase = next.name;
-          play(next.t, next.fwd, next.name === "done" ? release : undefined);
+          play(next.t, next.fwd, next.name === "done" ? release : onArrive);
           return;
         }
         // Already crumbled, yet still holding the scroll. Nothing is left to

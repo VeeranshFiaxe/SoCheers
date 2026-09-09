@@ -1,18 +1,30 @@
 import { IMG, MEANING, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
 
-/* The greeting, and it is written rather than placed: every character
-   below is its own element so initHero can snap them on one at a time.
-   Three lines, because the sentence is read as three beats - and because
-   the middle one is the one that has to come apart. */
-const GREETING = "Hi, We are SoCheers";
+/* The greeting. Written rather than placed - but written the way a
+   typewriter writes, which is not one letter fading in after another.
 
-function typed(word: string, line: number) {
-  return word.split("").map((ch, i) => (
-    <span className="hero__ch" data-test-ch={line} key={i}>
-      {ch}
-    </span>
-  ));
-}
+   What was here before was a span per character, snapped or risen on in
+   a stagger. Both read as a reveal effect rather than as typing: at this
+   size the letters are a hundred pixels tall, so sixteen separate paint
+   events are sixteen separate events, and nothing about them is a hand
+   moving along a line.
+
+   So the characters are not addressed individually at all any more. Each
+   run of text is a box with `overflow:hidden` whose width is grown from
+   zero (initHero, lib/motion.ts) on a steps() ease with one step per
+   character - so a glyph is either fully there or not there, and they
+   arrive left to right at a fixed rate, which is what typing is.
+
+   And no cursor. There was one riding the end of each run, which is the
+   textbook way to sell this - but with every run shut at zero width the
+   four of them collapse into a stack of little white bars in the middle
+   of an otherwise empty screen, sitting there through the beat before
+   the first letter. Whatever it says about typewriters, what it looks
+   like is four dots of nothing. The shutter reads as typing on its own.
+
+   Two runs, because the sentence is one line and the picture opens in
+   the middle of it. */
+const GREETING = "We are SoCheers";
 
 /* ============================================================
    THE HERO, TEST CUT  (/test only - the live one is
@@ -24,34 +36,38 @@ function typed(word: string, line: number) {
    projected, so the hero has to be the whole opening on its own, and it
    is three frames rather than two:
 
-     write  black, and then the sentence types itself onto it, line by
-            line: "Hi," / "We are" / "SoCheers". Nothing else is on the
-            screen and nothing has been scrolled - the room handed over
-            to a blank page, and this is the page answering
-     part   the middle line comes apart. "We" goes left, "are" goes
-            right, and the vibe film opens out of the gap between them,
-            already playing. It stays playing from here on
-     open   one scroll, and the film grows out of that gap to fill the
-            screen - edge to edge. The FILM grows, not a window onto it:
+     write  black, and then the sentence types itself onto it:
+            "We are SoCheers", one line, uncovered left to right a
+            character at a time. Nothing else is on the screen and
+            nothing has been scrolled - the room's last wall has gone
+            over, its thud has landed, and after a beat of black this is
+            the page answering it
+     part   the line comes apart in the middle. "We are" goes left,
+            "SoCheers" goes right, and the vibe film opens out of the gap
+            between them, already playing. It stays playing from here on
+     open   and then, on its own, the film grows out of that gap to fill
+            the screen - edge to edge. No scroll: the reader has not
+            touched anything yet and this beat finishes the thought the
+            other two started. The FILM grows, not a window onto it:
             the box and the picture scale together the whole way, so
             nothing is ever uncovered at the end that was hidden at the
             start, and nothing is cropped out of it on the way. This is
             the difference from the reel section on the home page, which
             is a clip-path opening onto a fixed full-bleed film
-     hold   one more scroll, and the film hands over to the crowd shot -
+     hold   the first scroll, and the film hands over to the crowd shot -
             same rectangle, same place - and the dictionary entry writes
             itself over it, exactly as it does on the live site
 
-   and then the third scroll crumbles the whole thing away into WHO WE
+   and then the second scroll crumbles the whole thing away into WHO WE
    ARE, which is the live behaviour, untouched.
 
    Markup only. The motion is initHero in lib/motion.ts, which branches
    on data-hero-test; the look is the TEST HERO block in app/test/test.css
    on top of the shared .hero rules in app/globals.css.
 
-   The first two beats are not the reader's - they play themselves, once,
-   the moment the overture hands the screen back (OVERTURE_DONE), and the
-   scroll is held for the whole of them. Which is why the room ends on
+   The first three beats are not the reader's - they play themselves,
+   once, the moment the overture hands the screen back (OVERTURE_DONE),
+   and the scroll is held for the whole of them. Which is why the room ends on
    nothing now: there is no composition left standing at the end of the
    corridor for the camera to arrive on, because the composition is built
    here, in front of you, out of a blank screen.
@@ -91,26 +107,45 @@ export default function TestHero() {
           <span className="sr-only">{GREETING}</span>
 
           <div className="hero__lines" data-test-lines aria-hidden="true">
-            <span className="hero__line">
-              {typed("Hi,", 1)}
-              <i className="hero__caret" data-test-caret={1} />
-            </span>
+            {/* One line, and the film opens inside it. "We are" is
+                right-aligned in its column, "SoCheers" left-aligned in
+                the other, and the empty column between them is what the
+                picture grows out of.
 
+                The grid is 1fr auto 1fr, so the two outer columns are
+                always the same width and the middle one therefore stays
+                dead centre of the screen whatever is in it - which is
+                where initHero puts the film, without ever measuring this
+                line. A centred flex row would have opened the hole
+                around the row's own middle instead, and the middle of
+                "We are ... SoCheers" is not the middle of the screen. */}
             <span className="hero__line hero__line--split">
-              <span className="hero__side hero__side--l">{typed("We", 2)}</span>
+              <span className="hero__side hero__side--l">
+                <span className="hero__type" data-test-type={1}>We are</span>
+              </span>
               {/* the sea itself: nothing in it, and it is the reason the
-                  two words are where they are */}
+                  two halves of the line are where they are */}
               <span className="hero__gap" aria-hidden="true" />
               <span className="hero__side hero__side--r">
-                {typed("are", 2)}
-                <i className="hero__caret" data-test-caret={2} />
+                <span className="hero__type" data-test-type={2}>SoCheers</span>
               </span>
             </span>
 
-            <span className="hero__line">
-              {typed("SoCheers", 3)}
-              <i className="hero__caret" data-test-caret={3} />
-            </span>
+            {/* The caret, and it is on screen before anything else is.
+
+                The room hands over on black, and for a fifth of a second
+                that black is all there is - which reads as a dead frame
+                unless something in it says the page is about to be
+                written. A cursor blinking on an empty screen is that
+                something: it is the oldest "type is coming" signal there
+                is, and it turns the pause into an intake of breath.
+
+                A sibling of the row rather than a child of it, because
+                the row wears the typing clip - a caret inside it would be
+                cut off by the very edge it is meant to be riding. It is
+                placed and moved from initHero (lib/motion.ts), which is
+                where the sweep's own clock lives. */}
+            <span className="hero__caret" data-test-caret aria-hidden="true" />
           </div>
         </div>
 

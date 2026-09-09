@@ -30,7 +30,16 @@
   /* the mono labels are 10-11px, tracked past .2em and a pixel of
      stroke: --muted at .5 reads as "not there" at that size. Same token
      and same reasoning as .s-page in app/series-1/series.css. */
-  --dim:rgba(241,236,225,.68);
+  --dim:rgba(241,236,225,.78);
+
+  /* ---- and the body copy, for the same reason one step up ----
+     The site's --muted is .5 of the cream, which holds on a flat panel
+     and does not hold here: every paragraph on this route sits over a
+     photograph, and half an alpha against a picture is not the same
+     read as half an alpha against #0b0b0c. Raised on the route rather
+     than in globals.css, because nowhere else on the site sets body
+     copy over a plate. */
+  --muted:rgba(241,236,225,.72);
 
   /* ---- the highlighter ----
 
@@ -195,7 +204,7 @@
 .st-hero__title{
   margin:0 auto;
   font-family:var(--f-display); font-weight:400;
-  font-size:clamp(15px,1.95vw,30px); line-height:1.16;
+  font-size:clamp(14px,1.72vw,26px); line-height:1.18;
   letter-spacing:-.012em;
   color:var(--cream);
   max-width:none; white-space:nowrap;
@@ -254,7 +263,7 @@
      sentence inside a 375px screen with its gutters intact. */
   .st-hero__title{
     max-width:none;
-    font-size:clamp(12px,3.6vw,22px);
+    font-size:clamp(11px,3.2vw,19px);
     letter-spacing:-.01em;
   }
   .st-hero__scrim{
@@ -308,9 +317,9 @@
    four frames in front of it. */
 .st-bg{
   z-index:0;
-  opacity:.42;
+  opacity:.34;
   transform:scale(1.12);
-  filter:blur(7px) saturate(.66) brightness(.84);
+  filter:blur(7px) saturate(.66) brightness(.72);
 }
 
 /* ---- the four frames ----
@@ -361,7 +370,7 @@
    uses the whole of one. */
 .st-scrim{
   position:absolute; inset:0; z-index:2; pointer-events:none;
-  background:linear-gradient(to right, rgba(11,11,12,.82), rgba(11,11,12,.3) 60%, rgba(11,11,12,.55));
+  background:linear-gradient(to right, rgba(11,11,12,.93), rgba(11,11,12,.5) 60%, rgba(11,11,12,.66));
 }
 
 /* ---- the grade ----
@@ -437,13 +446,18 @@
    heading on the page. */
 .st-beat__line{
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(20px,2.68vw,39px); line-height:1.1; letter-spacing:-.03em;
+  font-size:clamp(18px,2.36vw,34px); line-height:1.12; letter-spacing:-.03em;
   color:var(--cream);
+  /* the scrim carries the block; this carries the letterforms. A short
+     tight shadow rather than the long soft one on the title card - it
+     is separating type from the grain immediately behind it, not
+     lifting a name off a whole frame. */
+  text-shadow:0 2px 18px rgba(11,11,12,.85);
   /* 22ch, not the 15ch this measure was set at when the type was half
      again bigger. A measure is a count of characters and the type shrank
      underneath it, so 15ch stopped being a short line and started being
      a narrow column - same sentence, two lines more. */
-  max-width:22ch; text-wrap:balance;
+  max-width:24ch; text-wrap:balance;
   margin-top:22px;
 }
 .st-beat__eyebrow + .st-beat__line{ margin-top:26px; }
@@ -471,14 +485,16 @@
 
 .st-beat__mark{
   margin-top:clamp(14px,1.8vh,20px);
-  font-size:clamp(18px,1.66vw,25px); line-height:1.22; letter-spacing:-.015em;
-  font-weight:500; color:var(--cream); opacity:.88;
+  font-size:clamp(17px,1.46vw,22px); line-height:1.24; letter-spacing:-.015em;
+  font-weight:500; color:var(--cream); opacity:1;
+  text-shadow:0 2px 16px rgba(11,11,12,.8);
   max-width:22ch;
 }
 .st-beat__copy{
   margin-top:clamp(18px,2.4vh,30px);
   max-width:38ch; font-size:clamp(15px,1.15vw,18px); line-height:1.62;
   color:var(--muted);
+  text-shadow:0 1px 12px rgba(11,11,12,.8);
 }
 
 /* ============================================================
@@ -519,7 +535,7 @@
 }
 .st-beat[data-side="left"] .st-beat__words{ margin-left:auto; }
 .st-beat[data-side="left"] .st-scrim{
-  background:linear-gradient(to left, rgba(11,11,12,.82), rgba(11,11,12,.3) 60%, rgba(11,11,12,.55));
+  background:linear-gradient(to left, rgba(11,11,12,.93), rgba(11,11,12,.5) 60%, rgba(11,11,12,.66));
 }
 /* the cascade. Fixed rather than cycled: with three strips on the page
    the zigzag only has to keep four frames from reading as one long
@@ -1113,7 +1129,7 @@
 .st-beat[data-stage="title"] .st-beat__line,
 .st-beat[data-stage="end"] .st-beat__line{
   font-family:var(--f-display); font-weight:500;
-  font-size:clamp(16px,1.62vw,25px); line-height:1.24; letter-spacing:-.015em;
+  font-size:clamp(15px,1.43vw,22px); line-height:1.26; letter-spacing:-.015em;
   max-width:24ch;
   color:var(--muted);
 }
@@ -1142,7 +1158,7 @@
      actually has rather than off the whole screen - at the old size
      "the continuity" ran wider than its own column and the block on
      "kink." was pushed out under it. */
-  font-size:clamp(24px,2.86vw,50px); line-height:1; letter-spacing:-.042em;
+  font-size:clamp(22px,2.52vw,44px); line-height:1; letter-spacing:-.042em;
   max-width:none; opacity:1;
   color:var(--cream);
   text-shadow:0 26px 64px rgba(0,0,0,.55);
@@ -1823,6 +1839,7 @@
   max-width:68ch;
   font-size:clamp(15px,1.16vw,18px); line-height:1.6;
   color:var(--muted);
+  text-shadow:0 1px 12px rgba(11,11,12,.8);
   /* the run-up is one long sentence, and at the column's old width it
      broke with its last word alone on a line of its own. The paragraph
      gets the extra measure rather than a smaller size - see the widened
@@ -1851,7 +1868,9 @@
 .st-cues li{
   padding:7px 12px;
   border:1px solid var(--faint);
-  background:rgba(11,11,12,.45);
+  /* a chip is only legible if its ground is - at .45 the picture behind
+     it was reading straight through eleven pixels of tracked mono */
+  background:rgba(11,11,12,.72);
   backdrop-filter:blur(3px);
   font-family:var(--f-mono); font-weight:500;
   font-size:11px; letter-spacing:.14em; text-transform:uppercase;
@@ -1874,7 +1893,7 @@
   padding:9px 14px 9px 13px;
   border:1px solid var(--faint);
   border-left:2px solid var(--accent);
-  background:rgba(11,11,12,.55);
+  background:rgba(11,11,12,.75);
   font-family:var(--f-display); font-weight:600;
   font-size:clamp(13px,1.05vw,16px); letter-spacing:-.005em;
   text-transform:none;
@@ -1983,7 +2002,7 @@
      a side to be on is the one thing the layout no longer has. */
   .st-beat[data-side="left"] .st-beat__words{ margin-left:0; }
   .st-beat[data-side="left"] .st-scrim{
-    background:linear-gradient(to right, rgba(11,11,12,.82), rgba(11,11,12,.3) 60%, rgba(11,11,12,.55));
+    background:linear-gradient(to right, rgba(11,11,12,.93), rgba(11,11,12,.5) 60%, rgba(11,11,12,.66));
   }
 
   /* ---- the strip ---- full width, below the type. A 21:9 frame at
@@ -2103,11 +2122,11 @@
     );
   }
   .st-beat[data-stage="title"] .st-beat__line,
-  .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(16px,4.08vw,22px); }
+  .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(15px,3.6vw,20px); }
   /* same handoff at this width - the setup line stays at copy size */
   .st-beat[data-stage="title"] .st-beat__line{ font-size:clamp(15px,3.9vw,18px); }
   .st-beat[data-stage="title"] .st-beat__mark,
-  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(24px,6.85vw,41px); }
+  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(22px,6.03vw,36px); }
   .st-beat[data-stage="title"] .st-beat__copy{ max-width:none; }
 
   /* ---- the reel ---- four episodes, not eight. Eight verticals across

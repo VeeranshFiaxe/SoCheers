@@ -53,7 +53,7 @@ import TestOverture from "@/components/TestOverture";
    ============================================================ */
 
 export const metadata: Metadata = {
-  title: "Test · projector cut",
+  title: "Test · film cut",
   robots: { index: false, follow: false },
 };
 

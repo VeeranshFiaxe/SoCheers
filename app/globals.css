@@ -34,9 +34,9 @@
   /* ---- ONE ACCENT PER PAGE ----
 
      The site used to run on cream and a single green that was nowhere in
-     the brand. It runs on the brand's six solids instead, one to a route,
-     so each page has a leading colour of its own and the whole set still
-     reads as one identity.
+     the brand. It runs on one of the brand's own solids instead - the
+     blue, on every page. (/series is the exception, and keeps the
+     streaming red it blocks its own words in.)
 
      Three tokens travel together, and every rule reads one of them rather
      than naming a colour:
@@ -45,38 +45,44 @@
        --accent-deep the same colour re-cut for a light panel, where the
                      bright value would burn out (.is-light, /contact,
                      /insights - all of which re-point --accent to this)
-       --accent-ink  what sits ON a fill of --accent. Dark for five of
-                     the six; the purple is mid-value enough that cream
-                     is the legible one, which is exactly why this is a
-                     token and not a repeated var(--accent-ink).
+       --accent-ink  what sits ON a fill of --accent. A near-black under
+                     the blue; the series red is dark enough that cream is
+                     the legible one there, which is exactly why this is a
+                     token and not a literal.
 
      The route sets which triple is live - components/RouteTheme.tsx maps
      the pathname to a --page-* group and points --accent at it before
      first paint, so there is no frame of the wrong colour on entry. The
      values live here, in CSS, and the component only ever names a group. */
+  /* One colour for the whole site. Every page leads with the brand's
+     blue - the bright cut on the dark ground, the deeper cut on a light
+     one (About's panels, /insights, /contact re-point --accent at
+     --accent-deep themselves). Six colours to a page read as six
+     identities; one reads as one identity. /series keeps its red (see
+     below) and is the only exception. */
   --page-home-accent:  var(--sky);
   --page-home-deep:    #0e7ea8;
   --page-home-ink:     #04161d;
 
-  --page-work-accent:  var(--yellow);
-  --page-work-deep:    #8a6c00;
-  --page-work-ink:     #1c1500;
+  --page-work-accent:  var(--sky);
+  --page-work-deep:    #0e7ea8;
+  --page-work-ink:     #04161d;
 
-  --page-about-accent: var(--pink);
-  --page-about-deep:   #bf1450;
-  --page-about-ink:    #1e0410;
+  --page-ai-accent:    var(--sky);
+  --page-ai-deep:      #0e7ea8;
+  --page-ai-ink:       #04161d;
 
-  --page-ai-accent:    var(--tangerine);
-  --page-ai-deep:      #b8440f;
-  --page-ai-ink:       #1d0800;
+  --page-about-accent: var(--sky);
+  --page-about-deep:   #0e7ea8;
+  --page-about-ink:    #04161d;
 
-  --page-read-accent:  var(--purple);
-  --page-read-deep:    #7a3a82;
-  --page-read-ink:     #f6f1e8;
+  --page-read-accent:  var(--sky);
+  --page-read-deep:    #0e7ea8;
+  --page-read-ink:     #04161d;
 
-  --page-chat-accent:  var(--leaf);
-  --page-chat-deep:    #55892a;
-  --page-chat-ink:     #0c1704;
+  --page-chat-accent:  var(--sky);
+  --page-chat-deep:    #0e7ea8;
+  --page-chat-ink:     #04161d;
 
   /* The one page that leads with a colour that is not in the design
      book, and it is deliberate: /series argues about what the streaming
@@ -1240,22 +1246,14 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   transition:transform .5s var(--ease);
 }
 .stat:not(:first-child){ border-left:1px solid var(--line); }
-.stat:nth-child(1){ --stat-accent:var(--accent); }
-/* the two behind it come off the design book's solids rather than being
-   mixed for this row - a lavender and an amber that were near-brand but
-   not the brand read as a fourth and fifth colour on a page that has six */
-.stat:nth-child(2){ --stat-accent:var(--purple); }
-.stat:nth-child(3){ --stat-accent:var(--tangerine); }
+/* One accent across the row: three different hovers read as three
+   unrelated figures rather than one set of counts. */
+.stat{ --stat-accent:var(--accent); }
 .stat:hover{ transform:translateY(-4px); }
-.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,3.3vw,50px); line-height:.88; letter-spacing:-.02em; transition:color .4s; }
+.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,3.3vw,50px); line-height:.88; letter-spacing:-.02em; color:#fff; transition:color .4s; }
 .stat:hover .stat__num{ color:var(--stat-accent, var(--accent)); }
-/* The digits carry their own transition as well as the figure's: the
-   count-up drives an inline colour on the span (initCounters), and
-   without this the palette would cut between solids instead of moving
-   through them. Shorter than the hold, so each colour still arrives and
-   sits rather than being permanently on its way somewhere. */
 .stat__num [data-count]{ transition:color .22s linear; }
-.stat__num i{ color:var(--cream); font-style:normal; transition:color .22s linear; }
+.stat__num i{ color:#fff; font-style:normal; transition:color .22s linear; }
 .stat:hover .stat__num i{ color:var(--stat-accent, var(--accent)); }
 .stat__label{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
 

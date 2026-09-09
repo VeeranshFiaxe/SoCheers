@@ -457,34 +457,66 @@ const WALL = [
    ------------------------------------------------------------------ */
 const W = (file: string) => `/assets/work/${file}`;
 
-/* The four titles behind the binge claim. All wide, all from the
-   platforms named in the sentence above them, so the claim and the
-   evidence are on one screen.
+/* The four frames behind the binge claim - and now, for the first
+   time, four titles you can actually watch.
 
-   The fourth used to be dhurandhar-2.jpg, and it is off the strip: that
-   file is a case-study board - a phone render on black with the result
-   set beside it in display type - and the other three are frames out of
-   the work. A render among stills reads as a slide someone pasted in,
-   and it is the one band on the section whose subject is a mockup of a
-   screen rather than what was on the screen.
+   ---- what came off ----
 
-   Its first replacement was netflix-mi-srh.jpg, the key art from the
-   same campaign as bands 1 and 3, and it went the same way: three of
-   four frames on one campaign is not a credit list, and the key art is
-   a red poster among graded stills.
+   Bands 1 and 3 were netflix-mi.jpg and netflix-srh.jpg - the Netflix x
+   Mumbai Indians and Netflix x Sunrisers key frames. Both are real
+   Netflix work and both are IPL: two of the four pieces of evidence
+   under "the shows that taught the world how to binge" were cricket
+   teams. Two passes after that put ads in the gap instead - a Netflix
+   case-study board, then a Tito Films brand-film thumbnail - and an ad
+   is not a show either. The sentence names shows, so the strip is
+   shows.
 
-   made-in-titan.jpg is here on its picture rather than its platform. It
-   is a letterboxed film still in the same register as special-ops-2,
-   which is the only other frame on the strip that looks like it came
-   out of something you would watch - and the band is doing that job,
-   not naming a title. It is worth being straight about the trade: it is
-   a Titan brand film, so the fourth piece of evidence under a sentence
-   about "the shows that taught the world how to binge" is not a show.
-   See the note in SECTION 6. */
+   ---- what is there now ----
+
+   series-mandala-murders.jpg and series-breathe.jpg. Both are the
+   published landscape thumbnails for series Tito Films worked on - the
+   production house credited at the foot of this page (see SERIES_CTA) -
+   pulled off the films they list at titofilms.com/films:
+
+     band 1  The World of Mandala Murders, Netflix
+     band 3  Breathe: Into The Shadows, Prime Video
+
+   They are thumbnails rather than frames on purpose. A thumbnail is the
+   picture somebody chose to represent a show, and it arrives carrying
+   the platform mark and the title - which is the difference between a
+   picture that looks like television and a piece of evidence. On a
+   strip whose whole job is receipts, that is the point.
+
+   This also closes the gap this section has carried since it was
+   written. The cues name Netflix, Prime and Hotstar; until now the
+   frames could not answer for Prime at all, because public/assets/work
+   has no Prime title in it. Band 3 is that answer, and the three cues
+   and the three platforms on the strip are finally the same three.
+
+   ---- the letterbox ----
+
+   The thumbnails are 16:9 and the band is 21:9, so they are not cropped
+   to fit: a cover crop takes the vertical middle and the vertical
+   middle is exactly where the logo and the title are not. Each is set
+   at full height in the centre of the band with a blurred, darkened
+   copy of itself carrying the width - the same device .st-bg uses to
+   stand this section's column in a room, turned inward on one frame.
+   The band's own overscan (left:-9%, width:118% on .st-band img) trims
+   about 128px a side and the padding is 190px, so nothing of the
+   thumbnail is lost to it.
+
+   ---- band 4 ----
+
+   made-in-titan.jpg is the one frame left that is not a show. It is
+   SoCheers' own work rather than a production credit, which is the
+   argument for keeping it on a strip that is supposed to be evidence of
+   what this agency has made - but it is a Titan brand film, and under a
+   sentence about shows it is the weakest of the four. It is the next
+   band to go if a series still from the work library turns up. */
 const RECEIPTS = [
-  W("pinned/netflix-mi.jpg"),
+  "series-mandala-murders.jpg",
   W("wall/special-ops-2.jpg"),
-  W("pinned/netflix-srh.jpg"),
+  "series-breathe.jpg",
   W("wall/made-in-titan.jpg"),
 ];
 
@@ -781,12 +813,15 @@ export const SECTIONS: Section[] = [
        one, and reading order in a 2x2 is still 1, 2, 3, 4.
 
        1. cjc-4, top left. "The feed is full of brands trying to win
-          the next three seconds" - a canyon of billboards bursting out
-          of a flat white wall, every surface sold, one small figure on
-          the pavement in front of it. It is also the plate (groundOf
-          takes frame 1), so the section is stood inside the thing it
-          is describing, and it holds up blown up because the density
-          is the whole picture.
+          the next three seconds" - a Times Square wall of billboards
+          stacked to the sky, every surface sold, and a pavement full
+          of people underneath with not one of them looking up. It is
+          also the plate (groundOf takes frame 1), so the section is
+          stood inside the thing it is describing, and it holds up
+          blown up because the density is the whole picture. It
+          replaced an AI street whose signage was garbled non-Latin
+          type - unreadable text on the page's first frame of the
+          section reads as an error rather than as noise.
        2. cjc-1, top right. "Another trend, another static, another
           Reel that starts and ends before you've had time to care" -
           a phone taped to the side of a head as a headphone and an
@@ -821,12 +856,13 @@ export const SECTIONS: Section[] = [
        work in its frames. The sentence names the platforms; the four
        bands are the titles.
 
-       Standing gap: the cues name Netflix, Prime and Hotstar, and the
-       four frames are two Netflix, one JioHotstar and one Titan brand
-       film, because RECEIPTS is fishing in a library that has no Prime
-       title and exactly one Hotstar still in it. A wide frame from a
-       Prime show is the missing asset and it replaces the fourth band
-       outright; a second Hotstar one would earn the third.
+       The cues name Netflix, Prime and Hotstar, and as of the current
+       RECEIPTS the frames answer for all three: Mandala Murders on
+       Netflix, Special Ops 2 on JioHotstar, Breathe: Into The Shadows
+       on Prime Video. The standing gap this note used to carry - no
+       Prime title anywhere in public/assets/work - is closed by going
+       to the production credit for it rather than to the work library.
+       Band 4 is the one frame that is still not a show; see RECEIPTS.
 
        The platform names are set as chips rather than run into the
        sentence. They are three one-word sentences in the client's copy
@@ -836,10 +872,17 @@ export const SECTIONS: Section[] = [
     lines: ["We build campaigns for the shows", "that taught the world how to binge."],
     cues: ["Netflix.", "Prime.", "Hotstar."],
     cuesLead: true,
+    /* Three paragraphs in the client's copy, set as two. "So we tried
+       it. It worked." is the answer to the question the sentence before
+       it asks, and standing alone two lines down it read as an orphan
+       rather than as a landing - a five-word paragraph with a full
+       paragraph's air over it. It is joined to the line it answers, so
+       the wondering and the result sit on the same line and finish at
+       the same edge. Same move, and the same rule, as SECTION 5 above:
+       no word is changed, cut or reordered; one paragraph break is. */
     copy: [
       "We know what makes someone press \"Next Episode\" because we've spent years building that exact moment.",
-      "Then we started wondering why brands don't design for the same itch.",
-      "So we tried it. It worked.",
+      "Then we started wondering why brands don't design for the same itch. So we tried it. It worked.",
     ],
     frames: RECEIPTS,
   },
