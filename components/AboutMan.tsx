@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { acquirePointerField } from "@/lib/pointer-field";
+import { isLite, trackRect } from "@/lib/perf";
 
 /* ==============================================================
    The figure beside the intro line: a suited man with a CRT for a
@@ -202,7 +203,8 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
        are advisory and both are missing on some browsers, so absence is
        treated as "probably fine" rather than "probably not". */
     const nav = navigator as Navigator & { deviceMemory?: number };
-    const thin = (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+    /* ...or one the site has already found struggling (lib/perf.ts) */
+    const thin = isLite() || (nav.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
 
     let teardown = () => {};
     let cancelled = false;
@@ -354,18 +356,23 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
          sweeping an empty room on the devices most people read it on was
          the single biggest thing missing from the mobile build. */
       const pointer = reduced ? null : acquirePointerField();
+      /* the host's box, taken at the start of each frame (lib/perf.ts) -
+         asked for inside the loop below it was a forced layout per frame,
+         because GSAP has already written that frame's styles by then */
+      const box = trackRect(el!);
 
       /* ---------------------------------------------------- the loop */
 
       let yaw = 0, pitch = 0;
       let raf = 0, last = 0;
       let blinkIn = 2 + Math.random() * 3, blinking = -1;
-      const minFrame = thin ? 1000 / 30 : 0;
+      /* asked each frame, so a runtime switch to lite takes effect */
+      const minFrame = () => (thin || isLite() ? 1000 / 30 : 0);
       const look = eyeMat.uniforms.uLook.value as InstanceType<typeof THREE.Vector2>;
 
       function frame(now: number) {
         raf = requestAnimationFrame(frame);
-        if (now - last < minFrame) return;
+        if (now - last < minFrame()) return;
         const dt = Math.min((now - last) / 1000, 0.1);
         last = now;
 
@@ -381,7 +388,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
         const attn = pointer?.read();
         if (attn?.live) {
           const px = attn.x, py = attn.y;
-          const r = el!.getBoundingClientRect();
+          const r = box.read();
           /* measured against the viewport, not the element: the head
              should keep following while the cursor is off reading the
              paragraph beside it, which is most of the time */
@@ -440,7 +447,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
       let onScreen = false;
       function play() {
         if (raf || reduced || !onScreen || document.hidden) return;
-        last = performance.now() - minFrame;
+        last = performance.now() - minFrame();
         raf = requestAnimationFrame(frame);
       }
       function pause() {
@@ -451,6 +458,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
 
       const io = new IntersectionObserver((entries) => {
         onScreen = entries.some((e) => e.isIntersecting);
+        box.active(onScreen);
         if (onScreen) play(); else pause();
       }, { rootMargin: "10%" });
       io.observe(el!);
@@ -473,6 +481,7 @@ export default function AboutMan({ turn = 0, phase = 0 }: { turn?: number; phase
         io.disconnect();
         ro.disconnect();
         pointer?.release();
+        box.release();
         document.removeEventListener("visibilitychange", onVis);
         renderer.domElement.removeEventListener("webglcontextlost", onLost);
         root.traverse((o) => {

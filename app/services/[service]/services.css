@@ -47,7 +47,24 @@
    clears it by - the header is 22px of padding around a ~46px lockup and
    is the same object on every route, so the number that works there
    works here. .sec's own top padding is replaced rather than added to. */
-.sv-top{ padding-top:clamp(112px,15vh,158px); }
+.sv-top{
+  padding-top:clamp(112px,15vh,158px);
+  min-height:100svh; overflow:hidden;
+  display:flex; flex-direction:column; justify-content:flex-end;
+}
+.sv-top > .wrap{ position:relative; z-index:1; width:100%; }
+
+/* The bucket's cover, full bleed behind the whole hero. Shaded from the
+   left for the copy, and faded into the page ground at the foot so the
+   next section starts without a seam. */
+.sv-top__bg{ position:absolute; inset:0; z-index:0; }
+.sv-top__bg img{ width:100%; height:100%; object-fit:cover; object-position:50% 40%; }
+.sv-top__bg::after{
+  content:""; position:absolute; inset:0;
+  background:
+    linear-gradient(to top, var(--bg) 0%, rgba(11,11,12,.55) 38%, rgba(11,11,12,.25) 100%),
+    linear-gradient(to right, rgba(11,11,12,.72) 0%, rgba(11,11,12,.2) 70%, transparent);
+}
 
 /* Back to where the click came from, and the only small mono label on
    the page: it is the way out, not a heading. The home page has just had
@@ -61,14 +78,8 @@
 }
 .sv-back:hover{ color:var(--accent); gap:13px; }
 
-/* Copy left, one tall frame right - the same two-column hero the
-   Insights page runs, at the same ratio and the same gap, so a reader
-   arriving from there meets a shape they have already met. */
-.sv-hero{
-  margin-top:clamp(26px,4vh,44px);
-  display:grid; grid-template-columns:minmax(0,1fr) minmax(0,0.62fr);
-  gap:clamp(28px,4vw,64px); align-items:center;
-}
+/* Copy over the picture, left-aligned. */
+.sv-hero{ margin-top:clamp(26px,4vh,44px); max-width:62rem; }
 
 /* The site heading scale, unchanged: this is the clamp every other page
    hero runs, so "Strategy" here is the same size as "Things worth
@@ -82,24 +93,8 @@
    starts being scanned. */
 .sv-hero__lede{
   margin-top:26px; max-width:48ch;
-  font-size:clamp(15px,1.2vw,19px); line-height:1.7; color:var(--muted);
-}
-
-/* The cover, held at 3:4 rather than at the art's own 9:16: a full 9:16
-   frame in this column is over a thousand pixels tall on a wide screen,
-   which makes the hero a scroll rather than a screen. The crop is off
-   the centre, which is where these are composed. */
-.sv-hero__visual{
-  position:relative; overflow:hidden; border-radius:18px;
-  border:1px solid var(--line);
-  aspect-ratio:3/4; width:100%; max-width:420px; margin-left:auto;
-}
-.sv-hero__visual img{ width:100%; height:100%; object-fit:cover; }
-/* the same veil the home page's cards wear, so a picture on this site
-   always sits behind the same weight of shade wherever it turns up */
-.sv-hero__visual::after{
-  content:""; position:absolute; inset:0;
-  background:linear-gradient(to top, rgba(11,11,12,.62), rgba(11,11,12,.06) 62%, transparent);
+  font-size:clamp(15px,1.2vw,19px); line-height:1.7;
+  color:color-mix(in srgb, var(--cream) 82%, transparent);
 }
 
 /* ------------------------------------------------------------------
@@ -168,18 +163,32 @@
    table, and these are not alternatives to each other. */
 .sv-faq__list{
   margin-top:clamp(30px,4.5vh,50px);
-  display:flex; flex-direction:column; gap:clamp(22px,3.2vh,36px);
-  max-width:74ch;
+  display:flex; flex-direction:column;
+  max-width:74ch; border-bottom:1px solid var(--faint);
+  interpolate-size:allow-keywords;
 }
-.sv-q{ border-top:1px solid var(--faint); padding-top:18px; }
-/* The accent's one outing on running type here, and it earns it: a
-   reader scanning for their own question is scanning for these. */
+.sv-q{ border-top:1px solid var(--faint); }
+/* Closed by default; the arrow opens it. */
 .sv-q__q{
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  padding:clamp(16px,2.4vh,22px) 0;
+  cursor:pointer; list-style:none;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(17px,1.4vw,21px); line-height:1.3; color:var(--accent);
+  font-size:clamp(17px,1.4vw,21px); line-height:1.3;
+  transition:color .3s var(--ease);
 }
+.sv-q__q::-webkit-details-marker{ display:none; }
+.sv-q__q:hover, .sv-q[open] .sv-q__q{ color:var(--accent); }
+.sv-q__arrow{ flex:none; transition:transform .35s var(--ease); }
+.sv-q[open] .sv-q__arrow{ transform:rotate(180deg); }
+/* smooth open where the browser supports animating details */
+.sv-q::details-content{
+  block-size:0; overflow:hidden;
+  transition:block-size .4s var(--ease), content-visibility .4s allow-discrete;
+}
+.sv-q[open]::details-content{ block-size:auto; }
 .sv-q__a{
-  margin-top:10px;
+  padding-bottom:clamp(16px,2.4vh,22px);
   font-size:clamp(14px,1.1vw,17px); line-height:1.65; color:var(--muted);
 }
 
@@ -252,13 +261,6 @@
   .sv-plates{ grid-template-columns:repeat(2, minmax(0,1fr)); }
 }
 @media (max-width:860px){
-  /* The hero stacks, and the frame goes first: on a phone the picture is
-     what says which of the three pages this is, and it says it before a
-     91px headline has finished arriving. Centred, because a portrait
-     plate hard left under centred-width copy reads as a column that
-     failed to line up. */
-  .sv-hero{ grid-template-columns:1fr; gap:clamp(22px,4vw,34px); }
-  .sv-hero__visual{ order:-1; max-width:320px; margin:0 auto; }
   .sv-ask{ align-items:flex-start; }
 }
 @media (max-width:640px){

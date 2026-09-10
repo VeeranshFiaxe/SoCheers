@@ -138,10 +138,12 @@ export default async function ServicePage({ params }: Params) {
 
       <main id="top" className="sv-page">
         {/* ---- the top ------------------------------------------------
-            Copy left, one tall frame right, on the same grid the Insights
-            hero uses - so a reader arriving here from any other page
-            meets a shape they have already met. */}
+            The bucket's cover fills the whole hero, full bleed, with the
+            copy set over it. Decorative: the sentence carries the meaning. */}
         <section className="sec sv-top no-border">
+          <div className="sv-top__bg" aria-hidden="true">
+            <img src={bucket.img} alt="" fetchPriority="high" decoding="async" />
+          </div>
           <div className="wrap">
             <Link className="sv-back" href="/#what" prefetch>
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -157,13 +159,6 @@ export default async function ServicePage({ params }: Params) {
                     running copy rather than as a heading, because it is a
                     definition and it is meant to be quotable whole. */}
                 <p className="sv-hero__lede" data-reveal>{copy.lede}</p>
-              </div>
-
-              {/* The bucket's cover - the frame the home page's card rests
-                  on before anything is hovered. Decorative: the sentence
-                  beside it is what carries the meaning. */}
-              <div className="sv-hero__visual" data-reveal>
-                <img src={bucket.img} alt="" fetchPriority="high" decoding="async" />
               </div>
             </div>
           </div>
@@ -197,25 +192,6 @@ export default async function ServicePage({ params }: Params) {
           </div>
         </section>
 
-        {/* ---- the questions ------------------------------------------
-            Real headings, not an accordion. A question hidden behind a
-            summary is a question a crawler has to be trusted to open, and
-            there are three of them - there is nothing here to save room
-            on. */}
-        <section className="sec sv-faq">
-          <div className="wrap">
-            <h2 className="sec__title" data-split>Questions we get asked.</h2>
-            <dl className="sv-faq__list">
-              {copy.faq.map((f) => (
-                <div className="sv-q" key={f.q} data-reveal>
-                  <dt className="sv-q__q">{f.q}</dt>
-                  <dd className="sv-q__a">{f.a}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </section>
-
         {/* ---- the way on ---------------------------------------------
             The other two disciplines, each on its own cover, and the ask.
             No heading over it: the two names are the heading. */}
@@ -243,6 +219,28 @@ export default async function ServicePage({ params }: Params) {
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
               </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ---- the questions ------------------------------------------
+            Last on the page, closed by default. <details> keeps every
+            answer in the DOM, so crawlers still read it. */}
+        <section className="sec sv-faq">
+          <div className="wrap">
+            <h2 className="sec__title" data-split>Questions we get asked.</h2>
+            <div className="sv-faq__list">
+              {copy.faq.map((f) => (
+                <details className="sv-q" key={f.q} data-reveal>
+                  <summary className="sv-q__q">
+                    <span>{f.q}</span>
+                    <svg className="sv-q__arrow" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                      <path d="M6 9l6 6 6-6" />
+                    </svg>
+                  </summary>
+                  <p className="sv-q__a">{f.a}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>

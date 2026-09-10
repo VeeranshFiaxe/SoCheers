@@ -121,13 +121,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             The key is spelled out rather than imported because this runs
             before any module does. It is SEEN in lib/overture.ts - if one
-            moves, both move. */}
+            moves, both move.
+
+            The second half is the same kind of question about the
+            machine: whether it gets the lite stylesheet (html.sc-lite -
+            see lib/perf.ts, which also owns the runtime half of it and
+            LITE_KEY). Decided here for the same reason - a header that
+            paints with its glass blur and loses it after hydration is a
+            flicker, not an optimisation. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
-              "try{if(sessionStorage.getItem('sc-overture-seen')==='1'||" +
+              "try{var d=document.documentElement,n=navigator,c=n.connection||{};" +
+              "if(sessionStorage.getItem('sc-overture-seen')==='1'||" +
               "matchMedia('(prefers-reduced-motion: reduce)').matches)" +
-              "document.documentElement.classList.add('sc-seen')}catch(e){}",
+              "d.classList.add('sc-seen');" +
+              "if(sessionStorage.getItem('sc-lite')==='1'||c.saveData||" +
+              "(n.hardwareConcurrency||8)<=4||(n.deviceMemory||8)<=4)" +
+              "d.classList.add('sc-lite')}catch(e){}",
           }}
         />
         {/* and if there is no script at all, there is no one to open it */}

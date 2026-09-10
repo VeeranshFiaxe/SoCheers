@@ -195,6 +195,26 @@
   .cs-toc{ display:none; }
 }
 
+/* ---- a case with nothing to read ----
+   Only a board, or a board and a photo. There is no reading column for
+   the rail to ride beside, so the rail becomes a row over the work -
+   Back on the left, the action on the right, a hairline under them -
+   and the work takes the full width of the page. A board is set in
+   small type, and every pixel of width it gets is legibility. */
+.cs-article--visual{ padding-top:clamp(22px,3.6vh,40px); }
+.cs-article--visual .cs-article__in{ grid-template-columns:minmax(0,1fr); gap:clamp(22px,3.4vh,36px); }
+.cs-article--visual .cs-rail__in{
+  position:static; max-height:none; overflow:visible;
+  flex-direction:row; align-items:center; justify-content:space-between; width:100%;
+  padding-bottom:clamp(18px,2.6vh,26px); border-bottom:1px solid var(--line);
+}
+.cs-article--visual .cs-body{ --col:none; }
+.cs-article--visual .cs-body > * + *{ margin-top:clamp(40px,6vh,72px); }
+/* A photo keeps its own shape, so a portrait one is held to a height the
+   screen can show whole instead of running three screens tall at the
+   full width. --ar is the picture's width over its height. */
+.cs-article--visual .cs-shot:not(.cs-shot--bleed){ max-width:min(100%, calc(82svh * var(--ar, 1.5))); }
+
 /* ============================================================
    THE BODY
 
@@ -268,9 +288,25 @@
 
 /* A board is an artboard - tall, dense, and read by looking closely. It
    gets the full width it can take and a light ground, because these are
-   almost always laid out for white. */
+   almost always laid out for white. The frame is a link out to the full
+   size, and the badge in its corner is what says so. */
 .cs-board{ max-width:none; }
-.cs-board__in{ background:#f4f2ec; }
+.cs-board__in{ position:relative; display:block; background:#f4f2ec; }
+.cs-board__in img{ transition:transform .9s var(--ease); }
+.cs-board__in:hover img{ transform:scale(1.012); }
+.cs-board__zoom{
+  position:absolute; right:clamp(10px,1.4vw,18px); bottom:clamp(10px,1.4vw,18px); z-index:1;
+  display:grid; place-items:center; width:42px; height:42px; border-radius:50%;
+  background:rgba(4,4,5,.66); color:var(--cream);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  transition:background .35s var(--ease), color .35s var(--ease), transform .45s var(--ease);
+}
+.cs-board__in:hover .cs-board__zoom{ background:var(--accent); color:var(--accent-ink); transform:scale(1.08); }
+.cs-board__in:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+@media (prefers-reduced-motion:reduce){
+  .cs-board__in img, .cs-board__zoom{ transition:none; }
+  .cs-board__in:hover img, .cs-board__in:hover .cs-board__zoom{ transform:none; }
+}
 
 .cs-body figcaption{
   margin-top:12px;
@@ -472,28 +508,33 @@
 .cs-play{
   position:relative; display:block; width:100%;
   overflow:hidden; border-radius:12px; background:#000;
-  border:0; padding:0;
 }
 .cs-play > video,
 .cs-play > iframe,
-.cs-play > img{
+.cs-play__facade{
   position:absolute; inset:0; width:100%; height:100%; display:block; border:0;
 }
 .cs-play > video{ object-fit:contain; background:#000; }
 
-.cs-play--facade{ cursor:none; }
-@media (hover:none){ .cs-play--facade{ cursor:pointer; } }
-.cs-play--facade > img{ transition:transform .9s var(--ease), opacity .5s var(--ease); }
+/* The poster is a layer over the player, not a stand-in for it: a
+   player warmed ahead of the click loads underneath and the poster
+   simply goes when it is pressed. */
+.cs-play__facade{ z-index:1; padding:0; background:#000; overflow:hidden; cursor:none; }
+@media (hover:none){ .cs-play__facade{ cursor:pointer; } }
+.cs-play__facade > img{
+  position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+  transition:transform .9s var(--ease), opacity .5s var(--ease);
+}
 /* A still under a play button needs to sit back a little or the button
    fights it; on hover the frame comes forward, which is the only signal
    this control needs. */
-.cs-play--facade::after{
+.cs-play__facade::after{
   content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
   background:rgba(4,4,5,.28);
   transition:background .5s var(--ease);
 }
-.cs-play--facade:hover::after{ background:rgba(4,4,5,.12); }
-.cs-play--facade:hover > img{ transform:scale(1.03); }
+.cs-play__facade:hover::after{ background:rgba(4,4,5,.12); }
+.cs-play__facade:hover > img{ transform:scale(1.03); }
 .cs-play__btn{
   position:absolute; z-index:2; left:50%; top:50%; transform:translate(-50%,-50%);
   display:grid; place-items:center;
@@ -502,14 +543,15 @@
   padding-left:3px; /* a triangle is optically left of centre in its box */
   transition:transform .45s var(--ease);
 }
-.cs-play--facade:hover .cs-play__btn{ transform:translate(-50%,-50%) scale(1.08); }
-.cs-play--facade:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+.cs-play__facade:hover .cs-play__btn{ transform:translate(-50%,-50%) scale(1.08); }
+/* Inset, because the box around it clips anything drawn outside. */
+.cs-play__facade:focus-visible{ outline:2px solid var(--accent); outline-offset:-2px; }
 
 @media (prefers-reduced-motion:reduce){
-  .cs-play--facade > img, .cs-play__btn,
-  .cs-play--facade:hover > img, .cs-play--facade:hover .cs-play__btn{ transition:none; }
-  .cs-play--facade:hover > img{ transform:none; }
-  .cs-play__btn, .cs-play--facade:hover .cs-play__btn{ transform:translate(-50%,-50%); }
+  .cs-play__facade > img, .cs-play__btn,
+  .cs-play__facade:hover > img, .cs-play__facade:hover .cs-play__btn{ transition:none; }
+  .cs-play__facade:hover > img{ transform:none; }
+  .cs-play__btn, .cs-play__facade:hover .cs-play__btn{ transform:translate(-50%,-50%); }
 }
 
 /* ============================================================

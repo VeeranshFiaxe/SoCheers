@@ -64,6 +64,14 @@ const ART = {
      OVERTURE_WALLS in lib/content.ts */
   "who-culture": "public/assets/who-culture.jpg",
   "crowd-wall": "public/assets/about/crowd.jpg",
+  /* the four step cards on the Series page (`steps` in
+     lib/series-content.ts). Drawn about 400px square and delivered as
+     PNGs of up to two megabytes each - re-run this after replacing any
+     of them, or the page keeps showing the old one. */
+  "series-brand": "public/assets/series/Brand.png",
+  "series-strategy": "public/assets/series/Strategy.png",
+  "series-films": "public/assets/series/Films.png",
+  "series-together": "public/assets/series/Together.png",
 };
 
 /* Nothing on this site draws one of these wider than about 1500px, and

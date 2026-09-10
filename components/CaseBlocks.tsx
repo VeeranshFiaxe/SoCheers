@@ -58,7 +58,12 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
              the picture, not about its dimensions. */
           case "image":
             return (
-              <figure className={b.bleed ? "cs-shot cs-shot--bleed" : "cs-shot"} key={key} data-reveal>
+              <figure
+                className={b.bleed ? "cs-shot cs-shot--bleed" : "cs-shot"}
+                key={key}
+                style={{ "--ar": b.w / b.h } as React.CSSProperties}
+                data-reveal
+              >
                 <div className="cs-shot__in" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
                   <img src={b.src} alt={b.caption ?? ""} loading="lazy" />
                 </div>
@@ -195,13 +200,34 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
 
           /* A case board is a tall, dense artboard - it is read by
              zooming into it, not by glancing at it, so it gets its own
-             block rather than being an image with a different caption. */
+             block rather than being an image with a different caption.
+             The frame is a link to the largest cut, opened on its own,
+             where the browser's zoom does the reading. `large` is served
+             to screens that can use it and skipped by the ones that
+             cannot. */
           case "board":
             return (
               <figure className="cs-board" key={key} data-reveal>
-                <div className="cs-board__in" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
-                  <img src={b.src} alt={b.caption ?? "Case board"} loading="lazy" />
-                </div>
+                <a
+                  className="cs-board__in"
+                  href={b.large?.src ?? b.src}
+                  target="_blank"
+                  rel="noopener"
+                  style={{ aspectRatio: `${b.w} / ${b.h}` }}
+                  aria-label={`${b.caption ?? "Case board"} - open full size`}
+                  data-cursor="Zoom"
+                >
+                  <img
+                    src={b.src}
+                    srcSet={b.large ? `${b.src} ${b.w}w, ${b.large.src} ${b.large.w}w` : undefined}
+                    sizes={b.large ? "100vw" : undefined}
+                    alt={b.caption ?? "Case board"}
+                    loading="lazy"
+                  />
+                  <span className="cs-board__zoom" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" /></svg>
+                  </span>
+                </a>
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
             );

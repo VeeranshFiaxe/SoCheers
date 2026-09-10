@@ -1,40 +1,5 @@
 /* ============================================================
-   /test - THE FILM ENDING
-
-   Loaded only by app/test/page.tsx, so nothing in here is on the live
-   site. It is the look of the two things that differ from the real
-   overture and the real hero:
-
-     · the room ends on nothing - every wall goes over, so there is no
-       standing wall left to style;
-     · and the hero it hands to writes itself onto that blank: three
-       lines of type, then the middle one parting for the vibe film,
-       then the film growing edge to edge on the first scroll.
-
-   Everything else - the room, the bulb, the rope, the falls, the pin,
-   the definition, the crumble - is app/globals.css and lib/motion.ts,
-   unchanged and shared.
-
-   Two numbers do most of the work down here, published on <html> by
-   initHero (publishFilm, lib/motion.ts) from the very measurement it
-   seats the hero's stage with:
-
-     --film-w    the film card's width at rest
-     --film-h    its height (its own 16:9, capped against short screens)
-
-   The stage is drawn at them and so is the hole the words open for it,
-   so the gap in the middle line IS the film's rectangle rather than a
-   guess kept in step with it by hand.
-   ============================================================ */
-/* .overture--test carries no tokens of its own any more. The room's are
-   in the OVERTURE block of app/globals.css; what used to be declared
-   here was the projector's five (--proj, --beam, --proj-img, --grain,
-   --count), and they went with the machine. The class is still on the
-   markup (components/TestOverture.tsx) as the hook this sheet would use
-   if the room ever needs to look different on this route again. */
-
-/* ============================================================
-   THE TEST HERO  (components/TestHero.tsx)
+   THE HERO  (components/Hero.tsx, imported by app/page.tsx)
 
    The hero this cut hands to has no artwork in it. It is a sentence -
    "Hi, / We are / SoCheers" - typed onto black, and then the middle line

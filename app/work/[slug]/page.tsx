@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import WorkMotion from "@/components/WorkMotion";
 import CaseBlocks from "@/components/CaseBlocks";
 import CaseNav from "@/components/CaseNav";
-import { CASES, caseBlocks, caseHasFilm, caseHeadings, findCase } from "@/lib/work-content";
+import { CASES, caseBlocks, caseHasFilm, caseHeadings, caseIsVisual, findCase } from "@/lib/work-content";
 
 /* Five known cases, so they prerender. A slug that is not one of them is
    a 404 rather than an empty template - a case page with nothing in it
@@ -77,6 +77,9 @@ export default async function Case({
      both the contents list and the renderer, so the two cannot see
      different pages. See caseBlocks() in lib/work-content.ts. */
   const blocks = caseBlocks(c);
+  /* A case with nothing to read - only its board and pictures - has no
+     reading column to sit a rail beside. See .cs-article--visual. */
+  const visual = caseIsVisual(blocks);
 
   return (
     <>
@@ -123,14 +126,16 @@ export default async function Case({
         </header>
 
         {/* ---- the article ---- */}
-        <div className="cs-article">
+        <div className={visual ? "cs-article cs-article--visual" : "cs-article"}>
           <div className="grid-lines grid-lines--mark" aria-hidden="true"><i /><i /><i /><i /></div>
 
           <div className="wrap cs-article__in">
             <CaseNav items={caseHeadings(blocks)} />
 
             <article className="cs-body">
-              <p className="cs-lede" data-reveal>{c.intro}</p>
+              {/* The lede is writing, and a visual case has none. Its
+                  intro still stands as the page's description. */}
+              {!visual && <p className="cs-lede" data-reveal>{c.intro}</p>}
               <CaseBlocks blocks={blocks} />
             </article>
           </div>

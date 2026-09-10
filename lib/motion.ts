@@ -19,6 +19,7 @@ import { HERO_CUE, type HeroCue, OVERTURE_DONE, OVERTURE_START, shouldRunOvertur
 import { keepPlaying } from "./autoplay";
 import { MEANING, WCARD_SFX } from "./content";
 import { acquirePointerField } from "./pointer-field";
+import { isLite, slowNetwork, watchFrames } from "./perf";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -134,7 +135,13 @@ export function initSite(): () => void {
   ) => target.addEventListener(type, fn, { signal: ac.signal } as AddEventListenerOptions);
 
   const tickers: gsap.TickerCallback[] = [];
-  const addTicker = (fn: gsap.TickerCallback) => { gsap.ticker.add(fn); tickers.push(fn); };
+  /* `first` puts the callback at the head of GSAP's tick, before anything
+     has been rendered that frame - which is where a pass that only READS
+     layout belongs (see initTilt) */
+  const addTicker = (fn: gsap.TickerCallback, first = false) => {
+    gsap.ticker.add(fn, false, first);
+    tickers.push(fn);
+  };
   const splits: SplitText[] = [];
   const observers: IntersectionObserver[] = [];
   const intervals: number[] = [];
@@ -178,6 +185,12 @@ export function initSite(): () => void {
        the header is left alone; the next gesture the reader actually makes
        is what decides. Null on every page that never sets it. */
     let navHold: (() => boolean) | null = null;
+
+    /* The intro's push-in, for the one picture a plain scale tween cannot
+       be put on: the live hero's stage photo carries a counter-scale of its
+       own (place() in initHero), so the settle is handed to it as a
+       multiplier instead. Null until initHero sets it, and on the test cut. */
+    let heroSettle: ((k: number) => void) | null = null;
 
     /* -------------------------------------------------- Lenis */
     function initLenis() {
@@ -333,8 +346,18 @@ export function initSite(): () => void {
       const tl = gsap.timeline({ onComplete: () => ScrollTrigger.refresh() });
       // the stage photo sits inside the same window as the artwork, so it
       // rides the same settle
-      tl.from("[data-frame-img], [data-stage-img]",
-        { scale: 1.06, autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
+      if (heroSettle) {
+        const push = heroSettle;
+        let k = 1.06;
+        const settle = { get v() { return k; }, set v(n: number) { k = n; push(n); } };
+        tl.from("[data-frame-img]",
+          { scale: 1.06, autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
+        tl.from("[data-stage-img]", { autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
+        tl.fromTo(settle, { v: 1.06 }, { v: 1, duration: 2.0, ease: "power2.out" }, 0);
+      } else {
+        tl.from("[data-frame-img], [data-stage-img]",
+          { scale: 1.06, autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
+      }
       // the greeting is written on the frame, so it follows the frame in
       // rather than arriving with it
       tl.from(".hero__greet", { autoAlpha: 0, y: 12, duration: 0.9, ease: "power2.out" }, 0.5);
@@ -386,7 +409,7 @@ export function initSite(): () => void {
          /test runs a hero with no artwork in it: a greeting and the vibe
          film, small on black, which grows to fill the screen and only
          then hands over to the crowd shot for the definition. See
-         components/TestHero.tsx for what that is and why.
+         components/Hero.tsx for what that is and why.
 
          It is a branch in here rather than a second engine because
          everything around the timeline - the pin, the lock, the phase
@@ -399,6 +422,19 @@ export function initSite(): () => void {
       const film = document.querySelector<HTMLVideoElement>("[data-test-film]");
       const greet = document.querySelector<HTMLElement>("[data-test-intro]");
       if (!isTest && !frame) return;
+
+      /* What happened, and when, for the ?motion-debug read-out below:
+         the last few beats of the handshake with the overture and every
+         move of the phase machine, with where it came from. The panel
+         shows what state the hero is in; this shows how it got there. */
+      const trail: string[] = [];
+      const note = (m: string) => {
+        trail.push(`${(performance.now() / 1000).toFixed(2)}s ${m}`);
+        if (trail.length > 10) trail.shift();
+      };
+      note(`init  overture=${overture} reduced=${prefersReduced}`);
+      on(document, OVERTURE_START, () => note("overture START"));
+      on(document, OVERTURE_DONE, () => note("overture DONE"));
 
       /* Where the picture ends up.
 
@@ -418,7 +454,7 @@ export function initSite(): () => void {
       /* Where the film sits before anything has been scrolled: whole, and
          dead centre - because that is where the sentence's middle line
          is. The type is three lines of one size, stacked and centred
-         (app/test/test.css), so the first and third are the same height
+         (app/hero.css), so the first and third are the same height
          and the middle one is centred on the pin by construction. Which
          means the film's row can be found without measuring it - and
          without a measurement that would have to be re-taken on every
@@ -445,7 +481,7 @@ export function initSite(): () => void {
       /* And the same rectangle, published, because the sentence has to
          open a hole exactly this size for it: the middle line's spacer is
          --film-w wide and the row is --film-h tall once the words have
-         parted (app/test/test.css). One measurement, read in both places,
+         parted (app/hero.css). One measurement, read in both places,
          so the gap and the picture cannot drift apart. */
       const publishFilm = () => {
         if (!isTest) return;
@@ -512,9 +548,76 @@ export function initSite(): () => void {
       };
       /* Nothing to fit on the test cut: the stage is the media's own
          aspect at both ends, so the film and the photo are plain
-         100%/100% children of it (app/test/test.css) and they scale with
+         100%/100% children of it (app/hero.css) and they scale with
          the box for free. */
-      const fitCrop = () => { if (!isTest) fit(photo, PHOTO, PWIN); };
+      /* ---- the grow, on the compositor ----
+
+         The live stage used to be grown by its width and height, with the
+         photo inside it re-sized to cover it, on every frame of the grow.
+         Both are layout, and the photo is the size of the screen - so the
+         most-watched move on the site was a relayout and a repaint of a
+         full-screen picture per frame, which is what stuttered on a thin
+         machine and on anything without GPU raster.
+
+         Nothing is resized any more. The stage is laid out ONCE at its end
+         rectangle and the photo once at the size that covers it (lay());
+         the grow moves a translate and a scale on each. The stage is
+         scaled from its end rectangle down to wherever the grow has got to
+         - non-uniformly, since the artwork's window is square and the end
+         is 16:9 - and the photo is counter-scaled inside it so that it
+         stays a uniform cover of the stage's current box. overflow:hidden
+         on the stage is still the window.
+
+         Both sit at scale 1 or below for the whole grow, so their layers
+         are rastered at full size and only ever scaled down on the GPU:
+         no repaint, and nothing goes soft when it lands. The rectangle is
+         the same eased interpolation between box() and boxEnd() the old
+         tween did, so every frame is where it always was. */
+      const geo = { a: box(), e: boxEnd(), pw: 0, ph: 0 };
+      let growP = 0;        // how far through the grow, 0..1, already eased
+      let settle = 1;       // the intro's push-in, multiplied into the photo's scale
+      const setStage = gsap.quickSetter(stage, "css") as (v: object) => void;
+      const setPhoto = photo ? (gsap.quickSetter(photo, "css") as (v: object) => void) : null;
+
+      const lay = () => {
+        geo.a = box();
+        geo.e = boxEnd();
+        const { e } = geo;
+        const k = Math.max(e.w / PHOTO.w, e.h / PHOTO.h);
+        geo.pw = PHOTO.w * k;
+        geo.ph = PHOTO.h * k;
+        gsap.set(stage, { width: e.w, height: e.h });
+        if (photo) {
+          gsap.set(photo, {
+            width: geo.pw, height: geo.ph,
+            left: (e.w - geo.pw) / 2, top: (e.h - geo.ph) / 2,
+            x: 0, y: 0,
+          });
+        }
+      };
+
+      const place = () => {
+        const { a, e, pw, ph } = geo;
+        /* a zero is a measurement taken before layout, not a small stage */
+        if (e.w < 1 || e.h < 1 || a.w < 1 || a.h < 1 || pw < 1 || ph < 1) return;
+        const p = growP;
+        const w = a.w + (e.w - a.w) * p;
+        const h = a.h + (e.h - a.h) * p;
+        const l = a.left + (e.left - a.left) * p;
+        const t = a.top + (e.top - a.top) * p;
+        const sx = w / e.w, sy = h / e.h;
+        /* scaled about its own centre - the default origin, and the one the
+           dim and the dissolve scale about too - so the translate is to
+           where that centre has to be */
+        setStage({ x: l + (w - e.w) / 2, y: t + (h - e.h) / 2, scaleX: sx, scaleY: sy });
+        if (setPhoto) {
+          const k = Math.max(w / pw, h / ph) * settle;
+          setPhoto({ scaleX: k / sx, scaleY: k / sy });
+        }
+      };
+
+      /* the test cut has nothing to fit - see above */
+      const fitCrop = () => { if (!isTest) place(); };
 
       // publish where the window's centre sits relative to the viewport centre,
       // so the nav links can sit exactly above it (the window is not quite
@@ -532,9 +635,13 @@ export function initSite(): () => void {
       publishCentre();
       on(window, "resize", publishCentre);
       const seat = () => {
-        const b = box();
-        gsap.set(stage, { x: b.left, y: b.top, width: b.w, height: b.h });
-        fitCrop();
+        if (isTest) {
+          const b = box();
+          gsap.set(stage, { x: b.left, y: b.top, width: b.w, height: b.h });
+        } else {
+          lay();
+          place();
+        }
         publishFilm();
       };
 
@@ -543,7 +650,8 @@ export function initSite(): () => void {
         const still = () => {
           const b = boxEnd();
           gsap.set(stage, { x: b.left, y: b.top, width: b.w, height: b.h });
-          fitCrop();
+          /* a still has no grow to put on the compositor: fitted directly */
+          if (!isTest) fit(photo, PHOTO, PWIN);
         };
         still();
         on(window, "resize", still);
@@ -569,6 +677,10 @@ export function initSite(): () => void {
       // stuck there (outside the scrub) until the next scroll event - the
       // frozen-small-box-top-left glitch on a mid-hero reload.
       seat();
+      if (!isTest) {
+        heroSettle = (k) => { settle = k; place(); };
+        cleanups.push(() => { heroSettle = null; });
+      }
       if (tint) gsap.set(tint, { autoAlpha: 1 });
       gsap.set(backdrop, { autoAlpha: 0 });
       gsap.set(vignette, { autoAlpha: 0 });
@@ -576,7 +688,7 @@ export function initSite(): () => void {
          not there yet - it arrives with the definition */
       if (isTest) gsap.set(photo, { autoAlpha: 0 });
 
-      /* The film, attached rather than authored (see TestHero.tsx). Not
+      /* The film, attached rather than authored (see Hero.tsx). Not
          at boot: the overture owns the screen for the whole of its run on
          this route, and 12MB of video pulled during it is bandwidth taken
          from the room's own pictures. Waits for the hand-off, and stops
@@ -586,6 +698,7 @@ export function initSite(): () => void {
         const src = film.dataset.testFilm;
         const fetchFilm = () => {
           if (ac.signal.aborted || !src || film.src) return;
+          note("film src set");
           film.src = src;
           /* an explicit load(): setting .src on an element parsed with
              preload="none" does not always start the fetch on its own */
@@ -615,7 +728,7 @@ export function initSite(): () => void {
          The room this cut hands back from ends on nothing: every wall
          goes over and the camera runs on into the dark, so what the
          cross-fade lands on is a black screen with a black page under it
-         (lib/test-overture-motion.ts). The composition is not arrived at
+         (lib/overture-motion.ts). The composition is not arrived at
          - it is built here, in front of you, and this is the only part of
          the hero that plays itself:
 
@@ -683,7 +796,7 @@ export function initSite(): () => void {
         /* How long the caret sits on the empty screen, blinking, before
            the first character lands. It is the entire gap between the
            room ending and the page starting - the overture hands over on
-           the frame its last wall is down (lib/test-overture-motion.ts),
+           the frame its last wall is down (lib/overture-motion.ts),
            so this beat is not a wait, it is the cursor. */
         const LEAD = 0.2;
         const PART = 1.15;
@@ -710,14 +823,39 @@ export function initSite(): () => void {
         const opening = () => {
           if (introRunning) return;
           introRunning = true;
-          const t = gsap.timeline({ onComplete: () => { introRunning = false; } });
+          note("opening starts");
+          /* On its own clock, and a clock that cannot jump.
+
+             The site runs GSAP with lag smoothing off (initLenis - it is
+             what keeps Lenis glued to the wheel), so the global clock is
+             wall time: a stall of three seconds is three seconds of
+             animation spent in one frame. And this opening starts on the
+             hand-off, which is exactly where the page stalls - the
+             refresh the lock's release asks for, twelve megabytes of film
+             starting to load, the room's last tweens still running on top.
+             On a slower machine that stall was longer than the whole
+             opening, so the first frame anyone saw was the film already
+             going to full screen: typed, parted and held, all off screen.
+
+             So the timeline is paused and walked forward from the ticker
+             by at most one short frame at a time. A stall now slows the
+             opening down instead of skipping it, and every beat of it
+             reaches the screen. */
+          const t = gsap.timeline({
+            paused: true,
+            onComplete: () => { introRunning = false; gsap.ticker.remove(drive); },
+          });
+          const drive = (_time: number, dt: number) => {
+            t.time(t.time() + Math.min(dt, 50) / 1000, false);
+          };
+          addTicker(drive);
 
           /* The beat between the room and the sentence, and this is the
              one number that sets it.
 
              The overture hands the screen over the moment its last wall
              has finished going over and its thud has been struck (falls
-             and arrive, lib/test-overture-motion.ts) - not before, so
+             and arrive, lib/overture-motion.ts) - not before, so
              nothing of that fall is cut short - and then the page holds
              here, black, for this long before the first character. Which
              is the whole pause: there is nothing else between the two. */
@@ -881,10 +1019,22 @@ export function initSite(): () => void {
          window grows, so there is nothing to cross-fade and no seam. */
       // power2.out, not inOut: an eased-in start meant the first stretch of
       // scroll showed almost no growth, compounding the long-runway feel
-      tl.fromTo(stage,
-        { x: () => box().left, y: () => box().top, width: () => box().w, height: () => box().h },
-        { x: () => boxEnd().left, y: () => boxEnd().top, width: () => boxEnd().w, height: () => boxEnd().h,
-          duration: EXPAND, ease: "power2.out", onUpdate: fitCrop }, 0);
+      if (isTest) {
+        tl.fromTo(stage,
+          { x: () => box().left, y: () => box().top, width: () => box().w, height: () => box().h },
+          { x: () => boxEnd().left, y: () => boxEnd().top, width: () => boxEnd().w, height: () => boxEnd().h,
+            duration: EXPAND, ease: "power2.out" }, 0);
+      } else {
+        /* The live grow drives one number and place() turns it into the
+           two transforms. A getter/setter rather than an onUpdate, so the
+           stage moves on every render of the timeline - including the ones
+           asked to suppress their callbacks. */
+        const grower = {
+          get p() { return growP; },
+          set p(v: number) { growP = v; place(); },
+        };
+        tl.fromTo(grower, { p: 0 }, { p: 1, duration: EXPAND, ease: "power2.out" }, 0);
+      }
       /* The one tween whose values are pixels off the current viewport, kept
          so a viewport change can make it read them again - see remeasure()
          below. It is the first thing added to tl, so it is child 0. */
@@ -900,7 +1050,7 @@ export function initSite(): () => void {
       if (greet && lines) {
         /* The film does not push the words off the screen - it passes in
            front of them. .hero__stage sits above .hero__intro in the
-           stacking order (app/test/test.css) so the growing box simply
+           stacking order (app/hero.css) so the growing box simply
            covers the sentence, and the sentence recedes underneath it:
            scaled back about the same centre the film is growing from,
            dimming and softening as it goes.
@@ -917,7 +1067,7 @@ export function initSite(): () => void {
         }, 0);
       }
       /* and the card the film sits on stops being a card. --card scales
-         both halves of the stage's shadow at once (app/test/test.css), so
+         both halves of the stage's shadow at once (app/hero.css), so
          the hairline and the drop go together and there is nothing left
          drawing an edge once the film is the screen. */
       if (isTest) {
@@ -1147,6 +1297,7 @@ export function initSite(): () => void {
            timeline on its end state and hand the scroll back. */
         onLeave: () => {
           if (!wired || refreshing() || !locked) return;
+          note("pin onLeave -> done");
           gsap.killTweensOf(tl);
           tl.time(DONE);
           phase = "done";
@@ -1312,10 +1463,13 @@ export function initSite(): () => void {
          and the artwork would have nothing to come back to on the way up.
          Events suppressed - this is a remeasure, not a playthrough, and the
          crumble's handover .set()s must not fire a second time. */
+      /* The live grow keeps no pixels of its own - its rectangles are in
+         geo - so for it a remeasure is lay() and a repaint of whatever frame
+         the grow is parked on. */
       const remeasure = () => {
+        if (!isTest) { lay(); place(); return; }
         grow.invalidate();
         grow.render(grow.totalTime(), true, true);
-        fitCrop();
       };
       ScrollTrigger.addEventListener("refresh", remeasure);
       cleanups.push(() => ScrollTrigger.removeEventListener("refresh", remeasure));
@@ -1343,6 +1497,7 @@ export function initSite(): () => void {
          state the rest of this machine already knows how to reverse out
          of and carry on from. */
       on(document, HERO_CUE, ((e: CustomEvent<HeroCue>) => {
+        note(`HERO_CUE ${e.detail?.at}`);
         const to = e.detail?.at === "defined" ? HOLD : AT;
         const next: Stage = e.detail?.at === "defined" ? "hold" : "rest";
         const run = Number(e.detail?.run) || 0;
@@ -1360,6 +1515,7 @@ export function initSite(): () => void {
 
       const advance = (onArrive?: () => void) => {
         const next = STOPS[stopAt(phase) + 1];
+        note(`advance ${phase}->${next?.name ?? "-"}${onArrive ? " (auto)" : ""}`);
         if (next) {
           phase = next.name;
           play(next.t, next.fwd, next.name === "done" ? release : onArrive);
@@ -1588,6 +1744,7 @@ export function initSite(): () => void {
         if (Math.abs(off) < 2) return;
         if (off > window.innerHeight * 1.5) {
           console.warn("[socheers] hero lock overrun - releasing");
+          note("lock overrun -> done");
           gsap.killTweensOf(tl);
           tl.time(DONE);
           phase = "done";
@@ -1637,6 +1794,8 @@ export function initSite(): () => void {
             `lenis    ${lenis ? (lenis.isStopped ? "stopped" : "running") : "none"}`,
             `reduced  ${prefersReduced}   overture ${overture}`,
             `wheel    ${wheelSeen}`,
+            "",
+            ...trail,
           ].join("\n");
         };
         addTicker(paintPanel);
@@ -1770,8 +1929,35 @@ export function initSite(): () => void {
        Pure transform + opacity, no clip-path at all, so there is nothing
        here for the GPU to rasterise every frame beyond a compositor layer. */
     function initSplits() {
+      /* Width only. The lines are re-cut against the element's new measure,
+         and nothing about a viewport that only changed height has moved
+         where they break - see the ScrollTrigger.config note at the top of
+         this file for why a phone's address bar must not count as a resize. */
+      let splitW = window.innerWidth;
+      const rebuilders: Array<() => void> = [];
+      /* Settled, not per-event: a window being dragged fires this by the
+         dozen, and every one of them would re-cut every sentence on the
+         page. The type is only wrong once the drag stops. */
+      let recut = 0;
+      on(window, "resize", () => {
+        if (window.innerWidth === splitW) return;
+        splitW = window.innerWidth;
+        window.clearTimeout(recut);
+        recut = window.setTimeout(() => {
+          if (ac.signal.aborted) return;
+          rebuilders.forEach((f) => f());
+          ScrollTrigger.refresh();
+        }, 180);
+      });
+
       document.querySelectorAll<HTMLElement>("[data-split]").forEach((el) => {
-        const build = () => {
+        /* Everything the last build left on the element, so a rebuild can
+           take it back off: SplitText holds the original HTML, the timeline
+           holds a ScrollTrigger of its own. */
+        let live: SplitText | null = null;
+        let tl: gsap.core.Timeline | null = null;
+
+        const build = (instant = false) => {
           if (ac.signal.aborted) return;
           // reduced motion: no mask at all, so nothing can clip a descender
           if (prefersReduced) { gsap.set(el, { autoAlpha: 1 }); return; }
@@ -1786,6 +1972,7 @@ export function initSite(): () => void {
 
           const split = new SplitText(el, { type: "lines", linesClass: "split-line" });
           splits.push(split);
+          live = split;
 
           // Each line gets its own overflow:hidden mask so it can rise up
           // from behind a fixed edge instead of just fading in place - the
@@ -1816,19 +2003,55 @@ export function initSite(): () => void {
           // rather than rising onto it); everything else rises.
           const fromAbove = el.getAttribute("data-wipe") === "down";
 
+          if (instant) {
+            gsap.set(split.lines, { yPercent: 0, autoAlpha: 1 });
+            return;
+          }
+
           gsap.set(split.lines, { yPercent: fromAbove ? -120 : 120, autoAlpha: 0 });
 
           const STEP = 0.08;
-          const tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 84%" } });
+          tl = gsap.timeline({ scrollTrigger: { trigger: el, start: "top 84%" } });
           tl.to(split.lines, {
             yPercent: 0, autoAlpha: 1,
             duration: 0.95, ease: "power3.out", stagger: STEP,
           }, 0);
         };
+
+        /* A re-cut, not a second split on top of the first.
+
+           The line spans, the masks wrapped round them and the screen-reader
+           copy are all built here rather than by SplitText, so the way back
+           to a clean element is the plugin's own revert() - it restores the
+           HTML it captured when it was constructed, which was before any of
+           that was added. The timeline goes with it: its ScrollTrigger is
+           measured against lines that are about to stop existing. */
+        const rebuild = () => {
+          if (ac.signal.aborted || prefersReduced || !live) return;
+          /* Read off the lines that are about to be thrown away rather than
+             tracked as a flag: if the reader can already see this sentence,
+             the re-cut has to land it in its resting state. Replaying the
+             wipe under someone who is dragging a window reads as the page
+             glitching, and arming it again on type that is already on screen
+             would simply leave it hidden - the trigger it is waiting for is
+             a scroll that has already happened. */
+          const shown = live.lines.length > 0 &&
+            Number(gsap.getProperty(live.lines[live.lines.length - 1], "opacity")) > 0.5;
+          tl?.scrollTrigger?.kill();
+          tl?.kill();
+          tl = null;
+          const i = splits.indexOf(live);
+          if (i >= 0) splits.splice(i, 1);
+          live.revert();
+          live = null;
+          build(shown);
+        };
+
         // build on both settle paths: a rejected fonts.ready must not strand
         // the text behind visibility:hidden
-        if (document.fonts && document.fonts.ready) document.fonts.ready.then(build, build);
-        else build();
+        const first = () => { build(); rebuilders.push(rebuild); };
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(first, first);
+        else first();
       });
     }
 
@@ -1844,10 +2067,14 @@ export function initSite(): () => void {
       // clip-path wipe: no travelling mask edge to draw attention to
       // itself, just the photo easing up to full size and opacity as it
       // arrives, which reads as considered rather than as an effect firing.
+      /* The blur is the expensive half of this - a filter re-run over the
+         whole picture on every frame of the settle - so a lite machine
+         (lib/perf.ts) gets the fade, the lift and the scale without it. */
+      const soft = !isLite();
       document.querySelectorAll<HTMLElement>("[data-clip]").forEach((el, i) => {
         gsap.fromTo(el,
-          { autoAlpha: 0, y: 22, scale: 1.04, filter: "blur(6px)" },
-          { autoAlpha: 1, y: 0, scale: 1, filter: "blur(0px)",
+          { autoAlpha: 0, y: 22, scale: 1.04, ...(soft ? { filter: "blur(6px)" } : {}) },
+          { autoAlpha: 1, y: 0, scale: 1, ...(soft ? { filter: "blur(0px)" } : {}),
             duration: 1.2, ease: "power2.out", delay: (i % 3) * 0.08,
             scrollTrigger: { trigger: el, start: "top 86%" } });
       });
@@ -2061,6 +2288,11 @@ export function initSite(): () => void {
         on(window, "mousedown", () => { press = 0.82; });
         on(window, "mouseup", () => { press = 1; });
 
+        /* the last shape written, so a ring resting under a still pointer is
+           not rewritten every frame - it is a blended layer, and every write
+           recomposites what is under it */
+        let wroteK = -1;
+        let wrotePress = -1;
         addTicker(() => {
           const rx = gsap.getProperty(ring, "x") as number;
           const ry = gsap.getProperty(ring, "y") as number;
@@ -2068,6 +2300,9 @@ export function initSite(): () => void {
           const lag = Math.min(Math.hypot(dx, dy) / STRETCH_AT, 1);
           // ease the response so small jitters near the pointer do nothing
           const k = lag * lag;
+          if (k < 0.0005 && wroteK < 0.0005 && press === wrotePress) return;
+          wroteK = k;
+          wrotePress = press;
           setRing({
             rotate: `${(Math.atan2(dy, dx) * 180) / Math.PI}deg`,
             scaleX: (1 + k * 0.6) * press,
@@ -2116,6 +2351,8 @@ export function initSite(): () => void {
          until the reader moves again. */
       let px = NaN, py = NaN;
       addTicker(() => {
+        // hidden by the stylesheet on a lite machine too - html.sc-lite in globals.css
+        if (isLite()) return;
         const p = pointer.read();
         if (!p.live) return;
         if (touch) {
@@ -2230,9 +2467,16 @@ export function initSite(): () => void {
          treat a repeat of the value it is already on as a no-op, it
          restarts the tween. So a card that has already been told zero is
          left alone until it has something else to hear. */
+      /* ...and the two passes are two tickers. The read runs at the head of
+         GSAP's tick, before anything has been rendered that frame, so the
+         layout it reads is the one the browser already has; run after the
+         render, it was a forced layout of the page every frame a card was
+         on screen. The box is a frame behind the scroll, under a 0.8s ease. */
+      let live = false;
       addTicker(() => {
         const p = pointer.read();
-        if (!p.live) return;
+        live = p.live;
+        if (!live) return;
         const mx = p.x, my = p.y;
 
         // ---- read
@@ -2250,7 +2494,10 @@ export function initSite(): () => void {
           );
           it.s = it.hover ? 1 : (it.ambient ? AMBIENT * Math.max(0, 1 - out / REACH) : 0);
         });
+      }, true);
 
+      addTicker(() => {
+        if (!live) return;
         // ---- write
         items.forEach((it) => {
           if (!it.onScreen) return;
@@ -2298,13 +2545,17 @@ export function initSite(): () => void {
       // hit short - same approach as the overture's cues (see sfx() in
       // lib/overture-motion.ts). Autoplay rejection is swallowed: a missed
       // whir is not a reason to break the hover cycle.
-      const wcardClips = WCARD_SFX.map((src) => {
+      /* not fetched at all on touch, which never plays them (below), and
+         not fetched up front on a slow line - a hover sound is not worth
+         bandwidth the pictures need */
+      const wcardClips: HTMLAudioElement[] = touch ? [] : WCARD_SFX.map((src) => {
         const a = new Audio(src);
-        a.preload = "auto";
+        a.preload = slowNetwork() ? "none" : "auto";
         a.volume = 0.5;
         return a;
       });
       const playWCardSfx = () => {
+        if (!wcardClips.length) return;
         const clip = wcardClips[Math.floor(Math.random() * wcardClips.length)];
         const el = clip.cloneNode(true) as HTMLAudioElement;
         el.volume = clip.volume;
@@ -2329,11 +2580,14 @@ export function initSite(): () => void {
             i = (i + 1) % imgs.length;
             show(i);
           }, 420);
-          intervals.push(timer);
         };
         const halt = () => {
           if (timer) { window.clearInterval(timer); timer = null; }
         };
+        /* one cleanup per card, rather than one interval id per hover -
+           pushing every id ever started grew that list for as long as the
+           page was being hovered */
+        cleanups.push(halt);
 
         const settle = () => {
           halt();
@@ -2455,12 +2709,16 @@ export function initSite(): () => void {
       // the shared parent is one extra layout read that can drift a frame
       // out of step. Sharing the exact element the image reveal triggers
       // off guarantees the same "top 86%" crossing fires both at once.
+      /* no mist on a lite machine (lib/perf.ts): a blur animated over a
+         turbulence-filtered SVG is a full re-filter on every frame of it */
+      const soft = !isLite();
       els.forEach((el) => {
         const photo = el.closest<HTMLElement>("[data-tilt]");
         const trigger = photo?.querySelector<HTMLElement>("[data-clip]") || el.parentElement || el;
         gsap.fromTo(el,
-          { autoAlpha: 0, scale: 0.92, filter: "blur(18px)" },
-          { autoAlpha: 1, scale: 1, filter: "blur(0px)", duration: 1.3, ease: "power3.out",
+          { autoAlpha: 0, scale: 0.92, ...(soft ? { filter: "blur(18px)" } : {}) },
+          { autoAlpha: 1, scale: 1, ...(soft ? { filter: "blur(0px)" } : {}),
+            duration: 1.3, ease: "power3.out",
             scrollTrigger: { trigger, start: "top 86%" } });
       });
       if (prefersReduced) return;
@@ -2516,9 +2774,11 @@ export function initSite(): () => void {
       // Read pass then write pass, and nothing written that is already
       // where it is being sent - see the long note over initTilt's ticker
       // for what interleaving the two costs.
+      let live = false;
       addTicker(() => {
         const p = pointer.read();
-        if (!p.live) return;
+        live = p.live;
+        if (!live) return;
         const mx = p.x, my = p.y;
 
         // ---- read
@@ -2535,7 +2795,10 @@ export function initSite(): () => void {
           it.ux = dx / dist;
           it.uy = dy / dist;
         });
+      }, true);
 
+      addTicker(() => {
+        if (!live) return;
         // ---- write
         items.forEach((it) => {
           if (!it.onScreen) return;
@@ -2674,6 +2937,41 @@ export function initSite(): () => void {
       readGround();
       nav?.classList.remove("is-hidden");
 
+      /* From then on the browser says when a ground crosses the header,
+         instead of being asked on every scroll frame. This used to run in
+         the ScrollTrigger update below: a rect for the header and one for
+         every light panel, read after that frame's styles were written - a
+         forced layout of the page per scroll frame, on every route. An
+         observer whose root is a one-pixel band across the header's
+         midline asks the same question of the layout the browser has
+         already done. Re-armed only when that line or the viewport's
+         height moves. */
+      let groundIO: IntersectionObserver | null = null;
+      let bandY = -1;
+      let bandH = -1;
+      const armGround = () => {
+        if (!nav || !lights.length) return;
+        const bar = nav;
+        const vh = window.innerHeight;
+        /* offsetTop, not the rect: the hide transform would move the line */
+        const y = Math.round(bar.offsetTop + bar.offsetHeight / 2);
+        if (groundIO && y === bandY && vh === bandH) return;
+        bandY = y;
+        bandH = vh;
+        groundIO?.disconnect();
+        const under = new Set<Element>();
+        groundIO = new IntersectionObserver((entries) => {
+          for (const e of entries) {
+            if (e.isIntersecting) under.add(e.target);
+            else under.delete(e.target);
+          }
+          bar.classList.toggle("is-on-light", under.size > 0);
+        }, { rootMargin: `${-y}px 0px ${-Math.max(0, vh - y - 1)}px 0px` });
+        lights.forEach((el) => groundIO?.observe(el));
+      };
+      armGround();
+      cleanups.push(() => groundIO?.disconnect());
+
       /* ---- when the header gets out of the way ----
 
          Not "is this frame going down". That is what it used to ask, and
@@ -2717,10 +3015,9 @@ export function initSite(): () => void {
             }
           }
           lastY = y;
-          readGround();
         },
       });
-      on(window, "resize", () => { readGround(); remeasure(); });
+      on(window, "resize", () => { armGround(); remeasure(); });
     }
 
     /* -------------------------------------------------- the meaning entry
@@ -2853,13 +3150,28 @@ export function initSite(): () => void {
              on its own */
           film.load();
         };
-        const idle = (window as unknown as {
-          requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
-        }).requestIdleCallback;
-        if (idle) idle(fetchFilm, { timeout: 2500 });
-        else {
-          const t = window.setTimeout(fetchFilm, 1200);
-          cleanups.push(() => window.clearTimeout(t));
+        if (slowNetwork()) {
+          /* Except on a slow line (lib/perf.ts), where the early fetch is
+             the wrong trade: twelve megabytes pulled at idle is the whole
+             connection, taken from every picture the reader is actually
+             looking at. There it waits until the stage is within a screen
+             and a half - the film is late, the page is not. */
+          const near = new IntersectionObserver((entries) => {
+            if (!entries.some((e) => e.isIntersecting)) return;
+            near.disconnect();
+            fetchFilm();
+          }, { rootMargin: "150% 0px" });
+          near.observe(stage);
+          observers.push(near);
+        } else {
+          const idle = (window as unknown as {
+            requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+          }).requestIdleCallback;
+          if (idle) idle(fetchFilm, { timeout: 2500 });
+          else {
+            const t = window.setTimeout(fetchFilm, 1200);
+            cleanups.push(() => window.clearTimeout(t));
+          }
         }
       }
 
@@ -3226,6 +3538,9 @@ export function initSite(): () => void {
 
     /* -------------------------------------------------- boot */
     document.documentElement.classList.remove("no-js");
+    /* and start watching whether this machine is keeping up - see
+       lib/perf.ts. Once per tab; a second engine asking is a no-op. */
+    watchFrames();
 
     /* Every step below is independent, and several of them are the only
        thing that will ever un-hide a piece of the page. Run bare and in a

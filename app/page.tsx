@@ -1,6 +1,7 @@
+import "./hero.css";
 import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
-import { Awards, Clients, Reel, What, Who } from "@/components/Sections";
+import { Awards, Clients, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
 
 export default function Home() {
@@ -15,10 +16,12 @@ export default function Home() {
           (.foot-run), because nothing about a fixed element adds height. */}
       <Footer />
 
+      {/* No reel section below WHO WE ARE: the vibe film opens inside the
+          hero now (components/Hero.tsx), and playing it twice on one page
+          would be the page repeating itself. */}
       <main id="top" data-foot-lift>
         <Hero />
         <Who />
-        <Reel />
         <What />
         <Clients />
         <Awards />

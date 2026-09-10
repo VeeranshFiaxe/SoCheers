@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { OVERTURE_FINAL, OVERTURE_WALLS } from "@/lib/content";
+import { OVERTURE_WALLS } from "@/lib/content";
 import { cueOverture, shouldRunOverture } from "@/lib/overture";
 import SoCheersLockup from "./SoCheersLockup";
 
@@ -26,8 +26,6 @@ import SoCheersLockup from "./SoCheersLockup";
    ============================================================ */
 
 /* Everything the opening sequence paints, in the order it needs them.
-   The last entry is the hero the camera ends up inside, which is also the
-   first thing the page underneath draws - so it is worth the wait twice.
 
    A function rather than a constant because a phone does not paint the
    same pictures: some walls have a 9:16 stand-in that the <picture> in
@@ -40,7 +38,7 @@ import SoCheersLockup from "./SoCheersLockup";
 function assets() {
   const phone =
     typeof window !== "undefined" && window.matchMedia("(max-width:700px)").matches;
-  return [...OVERTURE_WALLS.map((w) => (phone && w.m) || w.img), OVERTURE_FINAL];
+  return OVERTURE_WALLS.map((w) => (phone && w.m) || w.img);
 }
 
 const MIN = 1150;   // ms - the floor, so the count reads as a count

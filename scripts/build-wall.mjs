@@ -131,6 +131,14 @@ const CASE_SHOTS = [
   { slug: "zurich-kotak/deck-fan", file: "BFSI/Zurich Kotak Insurance/13.jpg" },
   /* Belgian Waffle's board, same shape and same reasoning. */
   { slug: "belgian-waffle/board", file: "FMCG/Belgian Waffle/Case Study.png" },
+  /* The cases that are only a board. The page draws the board across the
+     full width and links it out to be zoomed, so each gets a 2400 cut
+     beside its 1600 tile - the page serves whichever the screen needs.
+     Wacoal's master is 1672 wide, so its tile already is the board. */
+  { slug: "boat-marvel/board", file: "B2B + Others/Boat.jpg", width: 2400 },
+  { slug: "croma-ac/board", file: "B2B + Others/Croma.jpg", width: 2400 },
+  { slug: "croma-dreams/board", file: "B2B + Others/FLIPKART-MOODBOARD-4.jpg", width: 2400 },
+  { slug: "bgmi/board", file: "B2B + Others/_BGMI UPDATE PODCAST_Case Study.jpg", width: 2400 },
 ];
 
 /* ------------------------------------------------------------------

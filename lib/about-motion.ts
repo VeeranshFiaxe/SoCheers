@@ -387,6 +387,21 @@ export function initAbout(): () => void {
        (see .ab-people__shot in about.css). It arrives on the shared
        engine's image reveal like every other photograph on the page. */
 
+    /* -------------------------------------------------- the drivers' thread
+       Each length of thread draws down from its knot to the next one as
+       the run scrolls in. One transform per length, scrubbed. */
+    if (!prefersReduced) {
+      document.querySelectorAll<HTMLElement>(".driver__thread").forEach((el) => {
+        gsap.fromTo(el, { scaleY: 0 }, {
+          scaleY: 1, ease: "none",
+          scrollTrigger: {
+            trigger: el, start: "top 88%", end: "bottom 62%",
+            scrub: 0.8, invalidateOnRefresh: true,
+          },
+        });
+      });
+    }
+
     /* -------------------------------------------------- the founders hold
        There used to be a climb ahead of this: the intro was pinned at the
        fold with pinSpacing off, so the founders panel was dragged up

@@ -20,30 +20,24 @@
      fall     that first wall goes over forwards and there is another
               behind it, and another, faster each time - the mark is
               already parked in the corner for all of it
-     hero     the camera runs at the last wall until it is exactly the
-              size of the screen and the sequence hands over to the real
-              hero underneath it. The docked mark stays: a small fixture
-              in the corner, still clickable, still the replay
-
-   The hand-off is the only part with a hard constraint, and the whole 3D
-   layout is arranged around it: every wall is a viewport-sized element, so
-   a wall sitting at translateZ(0) with the camera at 0 has an identity
-   transform and is therefore *pixel-identical* to the real .hero__frame
-   behind it. The last camera move is the one that puts the final wall
-   exactly there. Nothing has to be measured or matched; the geometry does
-   it, and the cross-fade at the end is a safety net rather than the trick.
+     dark     the last wall goes over like all the others and there is
+              nothing behind it. The camera runs on into the empty room
+              and the screen is handed to the hero underneath, which is
+              black at that moment too - so the cross-fade is black over
+              black, and the first thing the reader sees on the page is
+              the greeting writing itself (initHero, lib/motion.ts). The
+              docked mark stays: a small fixture in the corner, still
+              clickable, still the replay
 
    Depth bookkeeping, since three numbers do all the work:
      · wall i sits at z = -(i+1) * GAP
      · the camera (the dolly) sits at z = cam
      · so wall i is GAP away from the camera when cam = i * GAP
-   which means "the front wall is always GAP away" is just "cam steps by
-   GAP every time one goes over", and the finale is one last step of GAP.
+   and every wall has been passed once cam is beyond walls.length * GAP.
    ============================================================ */
 import { gsap } from "gsap";
 import {
   OVERTURE_DONE,
-  OVERTURE_REPLAY,
   OVERTURE_START,
   markOvertureSeen,
 } from "./overture";
@@ -83,6 +77,10 @@ const OVERLAP = [1.1, 0.95, 0.8, 0.72, 0.66, 0.6, 0.56, 0.54, 0.52, 0.51, 0.5, 0
    handed a thud to the first wall of the silent tail instead of leaving
    the same pictures sounding as before. */
 const SOUND_WALLS = 9;
+
+/* How long the camera takes to run on past the fallen last wall into the
+   empty dark behind it. */
+const DARK = 0.16;
 
 /* Both clocks start the moment the mark is on screen and waiting, not from
    page load - the wait a visitor actually feels is the one after there is
@@ -326,7 +324,10 @@ export function initOverture(
       let loaded = 0;
       let done = false;
       const finish = () => {
-        if (done) return;
+        /* aborted: this run was torn down (a replay, a navigation) while
+           its pictures were still arriving, and the timelines next() would
+           build belong to a sequence that no longer exists */
+        if (done || ac.signal.aborted) return;
         done = true;
         next();
       };
@@ -409,7 +410,17 @@ export function initOverture(
     };
     drawRope();
 
+    /* Where the rope was last drawn. The room lives in the layout, so this
+       ticker is on every page of the visit - and it used to rewrite four
+       path strings every frame for all of it, long after the rope had
+       stopped moving or been put away. Now it draws only what changed. */
+    let drawnX = NaN;
+    let drawnY = NaN;
+
     addTicker(() => {
+      /* handed back: the rope is display:none and nothing moves it again
+         until a replay, which builds a new one */
+      if (handedOff) return;
       if (ropeMode === "drag") {
         /* chase the pointer rather than snapping to it - the lag is the
            weight of the cord */
@@ -429,7 +440,11 @@ export function initOverture(
           ropeState.px = 0; ropeState.vx = 0;
         }
       }
-      drawRope();
+      if (ropeState.px !== drawnX || ropeState.py !== drawnY) {
+        drawnX = ropeState.px;
+        drawnY = ropeState.py;
+        drawRope();
+      }
       if (ropeLive && ropeFire && ropeState.py > ROPE.trigger) {
         ropeLive = false;
         ropeFire();
@@ -642,11 +657,15 @@ export function initOverture(
        makes this a corridor being opened up rather than a slideshow: the
        composition never changes, the room just keeps going. */
     function falls(next: () => void) {
-      const tl = line({ onComplete: next });
-      const last = walls.length - 1;            // the hero wall - it stays up
+      const tl = line();
       let at = 0;
+      /* the frame the last slab is down and gone - see the note under the
+         loop, which is where `next` is actually fired from */
+      let landed = 0;
 
-      for (let i = 0; i < last; i++) {
+      /* Every one of them, the last included. The room does not end on a
+         wall - it ends on the hole where the last one was. */
+      for (let i = 0; i < walls.length; i++) {
         const dur = FALL[Math.min(i, FALL.length - 1)];
         const slab = slabs[i];
         const force = Math.max(0.34, 1 - i * 0.11);
@@ -657,7 +676,10 @@ export function initOverture(
         tl.to(slab, { rotationZ: i % 2 ? 2.4 : -2.4, duration: dur, ease: "power1.in" }, at);
         tl.to(slab, { opacity: 0, duration: dur * 0.34, ease: "power2.in" }, at + dur * 0.68);
 
-        tl.add(impact(force, i < SOUND_WALLS), at + dur * 0.9);
+        /* the tail falls silently (SOUND_WALLS above) - except the very
+           last wall, whose thud is what says the room is finished rather
+           than cut off */
+        tl.add(impact(force, i < SOUND_WALLS || i === walls.length - 1), at + dur * 0.9);
 
         /* the camera moves up into the space, starting before the wall has
            finished going over so the two read as one motion */
@@ -668,58 +690,34 @@ export function initOverture(
           onUpdate: pushCam,
         }, at + dur * 0.5);
 
+        landed = at + dur;
         at += dur * (OVERLAP[Math.min(i, OVERLAP.length - 1)]);
       }
 
-      /* a held beat on the hero wall before the camera commits to it */
-      tl.to({}, { duration: 0.45 });
+      /* The hand-off goes on the frame the last slab finishes going over,
+         not on this timeline's onComplete: that waits for the last
+         impact's dust and camera step, which play out over a room with
+         nothing left standing - a second of black before the page gets
+         the screen. They keep running underneath the page instead. */
+      tl.add(next, landed);
     }
 
-    /* ---------------------------------------------------- 7 · the finale
-       The mark has already docked (dock(), run alongside the first wall
-       going over), so all that is left is the run at the standing wall:
-       the camera closes the last GAP until the wall is at z = 0 with an
-       identity transform, which is to say it *is* the hero - so the
-       hand-off only has to stop being in front of it. */
-    /* Paced off the expand cue rather than off nothing in particular. The
-       cue is one continuous swell that resolves on its own last beat, so
-       the push has to be about as long as the recording is - land the wall
-       early and the tail plays over a page that has already arrived, which
-       is what "it doesn't finish" sounds like. The clip runs ~2.0s; the
-       push holds the screen for RUN and the hand-off's own 0.6s fade
-       carries the last of it. Retime this if the recording changes. */
-    const RUN = 1.95;
+    /* ---------------------------------------------------- 7 · the dark
+       No wall at the end of the corridor. The page is handed the screen
+       on this frame, and the light dying, the last camera step and the
+       vignette going all run behind a page that is already black. The
+       pause before the greeting is held in initHero (lib/motion.ts). */
+    function arrive() {
+      handOff(false);
 
-    /* The cue starts where the picture does, not where the timeline does.
-       The push is power3.inOut, so it spends its first third of a second
-       barely moving - about 1.5% of the distance covered - and a cue fired
-       at 0 is a cue fired over a still frame. Held back to the point the
-       camera is visibly running at the wall, which is what the swell is
-       supposed to be the sound of. The clip is longer than what is left of
-       RUN by design: the hand-off's fade carries its last beat. */
-    const LEAD = 0.33;
-
-    function finale() {
-      const tl = line({ onComplete: handOff });
-
-      /* it stops being a lamp lighting a room and becomes a light on a page */
-      tl.to(root, { "--lit": 0.55, duration: RUN * 0.83, ease: "power2.inOut" }, 0);
-
-      tl.add(() => sfx("expand"), LEAD);
-
-      /* the run at the wall */
+      const tl = line();
+      tl.to(root, { "--lit": 0.12, duration: DARK * 0.9, ease: "power2.inOut" }, 0);
       tl.to(cam, {
-        z: walls.length * GAP,
-        duration: RUN,
-        ease: "power3.inOut",
-        onUpdate: pushCam,
+        z: (walls.length + 0.55) * GAP,
+        duration: DARK, ease: "power2.inOut", onUpdate: pushCam,
       }, 0);
-
-      /* and as it fills the screen it stops being lit *by* something and
-         just becomes the picture: the room's darkness lifts off it */
-      tl.to(slabs[walls.length - 1], { "--lit-floor": 1, duration: RUN * 0.76, ease: "power2.inOut" }, 0);
-      tl.to(vignette, { autoAlpha: 0, duration: RUN * 0.76, ease: "power2.inOut" }, 0);
-      tl.to(skip, { autoAlpha: 0, duration: 0.4 }, 0);
+      tl.to(vignette, { autoAlpha: 0, duration: DARK * 0.7, ease: "power2.inOut" }, 0);
+      tl.to(skip, { autoAlpha: 0, duration: 0.3 }, 0);
     }
 
     /* ---------------------------------------------------- the hand-off */
@@ -728,15 +726,11 @@ export function initOverture(
       handedOff = true;
       markOvertureSeen();
 
-      /* The bulb stays. It is the one piece of the overture that survives
-         into the page - a fixture in the corner that is still swinging, and
-         still the switch: clicking it runs the whole thing again. */
-      lamp.tabIndex = 0;
-      lamp.setAttribute("aria-label", "Play the opening sequence again");
-      lamp.setAttribute("data-cursor", "Light it");
-      on(lamp, "click", () => {
-        document.dispatchEvent(new CustomEvent(OVERTURE_REPLAY));
-      });
+      /* The switch after the hand-off is the nav's own logo
+         (components/Nav.tsx), which hides with the header. The docked bulb
+         takes no clicks or focus, or it would sit invisible in the corner
+         replaying the sequence once the header has gone. */
+      lamp.tabIndex = -1;
 
       const finish = () => {
         root.classList.add("is-done");
@@ -753,10 +747,13 @@ export function initOverture(
         return;
       }
 
+      /* finish() on the first frame: both halves are black, and finish()
+         is what makes the page visible (.is-done), so delaying it would
+         only be a wait. The short tween is for the room's leftovers. */
       const tl = line();
-      tl.to([stage, vignette, flash], { autoAlpha: 0, duration: 0.6, ease: "power2.inOut" }, 0);
-      tl.to(root, { backgroundColor: "rgba(0,0,0,0)", duration: 0.6, ease: "power2.inOut" }, 0);
-      tl.add(finish, 0.2);
+      tl.to([stage, vignette, flash], { autoAlpha: 0, duration: 0.35, ease: "power2.inOut" }, 0);
+      tl.to(root, { backgroundColor: "rgba(0,0,0,0)", duration: 0.35, ease: "power2.inOut" }, 0);
+      tl.add(finish, 0);
     }
 
     /* ---------------------------------------------------- skipping out
@@ -775,9 +772,9 @@ export function initOverture(
       timers.forEach(clearTimeout);
       timers.length = 0;
 
-      gsap.set(root, { "--lit": 0.55, "--guide": 0 });
+      /* the end state: every wall down, the room dark */
+      gsap.set(root, { "--lit": 0.12, "--guide": 0 });
       gsap.set(slabs, { autoAlpha: 0 });
-      gsap.set(slabs[walls.length - 1], { autoAlpha: 1, rotationX: 0, "--lit-floor": 1 });
 
       const t = dockTarget();
       gsap.set(rig, {
@@ -790,7 +787,7 @@ export function initOverture(
       gsap.set(svg, { autoAlpha: 0 });
       gsap.set(dockMark, { autoAlpha: 1 });
       gsap.set([pull, skip], { autoAlpha: 0 });
-      cam.z = walls.length * GAP;
+      cam.z = (walls.length + 0.55) * GAP;
       pushCam();
       handOff(instant);
     }
@@ -806,7 +803,7 @@ export function initOverture(
     if (opts.instant) {
       bail(true);
     } else {
-      boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(finale); }))));
+      boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(arrive); }))));
     }
   }, root);
 
@@ -818,6 +815,14 @@ export function initOverture(
     ac.abort();
     timers.forEach(clearTimeout);
     tickers.forEach((fn) => gsap.ticker.remove(fn));
+    /* Everything past boot() is built after the pictures load, outside the
+       context's synchronous run - so ctx.revert() never saw those
+       timelines, nor the guide's endless pulse on root. A replay
+       mid-sequence left the old run playing on elements the new run was
+       resetting. Killed by hand. */
+    running.forEach((tl) => tl.kill());
+    running.length = 0;
+    gsap.killTweensOf(root);
     ctx.revert();
     // a replay starts the room again from black - anything still sounding
     // from the last run belongs to a sequence that no longer exists

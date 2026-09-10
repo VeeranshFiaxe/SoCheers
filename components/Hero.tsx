@@ -1,67 +1,202 @@
 import { IMG, MEANING, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
 
-/* The artwork is the hero. Its own inner window expands to full screen into
-   the team photo, and then - still in the same pin - the name gets defined
-   over that photo (lib/motion.ts). */
+/* The greeting. Written rather than placed - but written the way a
+   typewriter writes, which is not one letter fading in after another.
+
+   What was here before was a span per character, snapped or risen on in
+   a stagger. Both read as a reveal effect rather than as typing: at this
+   size the letters are a hundred pixels tall, so sixteen separate paint
+   events are sixteen separate events, and nothing about them is a hand
+   moving along a line.
+
+   So the characters are not addressed individually at all any more. Each
+   run of text is a box with `overflow:hidden` whose width is grown from
+   zero (initHero, lib/motion.ts) on a steps() ease with one step per
+   character - so a glyph is either fully there or not there, and they
+   arrive left to right at a fixed rate, which is what typing is.
+
+   And no cursor. There was one riding the end of each run, which is the
+   textbook way to sell this - but with every run shut at zero width the
+   four of them collapse into a stack of little white bars in the middle
+   of an otherwise empty screen, sitting there through the beat before
+   the first letter. Whatever it says about typewriters, what it looks
+   like is four dots of nothing. The shutter reads as typing on its own.
+
+   Two runs, because the sentence is one line and the picture opens in
+   the middle of it. */
+const GREETING = "We are SoCheers";
+
+/* ============================================================
+   THE HERO  (the home page)
+
+   What the projector cut used to hand back to was the real hero: the
+   SOC▢HEERS artwork with the crowd shot folded up inside its little
+   window. This cut has no artwork, no room left standing and nothing
+   projected, so the hero has to be the whole opening on its own, and it
+   is three frames rather than two:
+
+     write  black, and then the sentence types itself onto it:
+            "We are SoCheers", one line, uncovered left to right a
+            character at a time. Nothing else is on the screen and
+            nothing has been scrolled - the room's last wall has gone
+            over, its thud has landed, and after a beat of black this is
+            the page answering it
+     part   the line comes apart in the middle. "We are" goes left,
+            "SoCheers" goes right, and the vibe film opens out of the gap
+            between them, already playing. It stays playing from here on
+     open   and then, on its own, the film grows out of that gap to fill
+            the screen - edge to edge. No scroll: the reader has not
+            touched anything yet and this beat finishes the thought the
+            other two started. The FILM grows, not a window onto it:
+            the box and the picture scale together the whole way, so
+            nothing is ever uncovered at the end that was hidden at the
+            start, and nothing is cropped out of it on the way. This is
+            the difference from the reel section on the home page, which
+            is a clip-path opening onto a fixed full-bleed film
+     hold   the first scroll, and the film hands over to the crowd shot -
+            same rectangle, same place - and the dictionary entry writes
+            itself over it, exactly as it does on the live site
+
+   and then the second scroll crumbles the whole thing away into WHO WE
+   ARE, which is the live behaviour, untouched.
+
+   Markup only. The motion is initHero in lib/motion.ts, which branches
+   on data-hero-test; the look is app/hero.css
+   on top of the shared .hero rules in app/globals.css.
+
+   The first three beats are not the reader's - they play themselves,
+   once, the moment the overture hands the screen back (OVERTURE_DONE),
+   and the scroll is held for the whole of them. Which is why the room ends on
+   nothing now: there is no composition left standing at the end of the
+   corridor for the camera to arrive on, because the composition is built
+   here, in front of you, out of a blank screen.
+
+   The film's rectangle is measured once by initHero and published on
+   <html> as --film-w / --film-h. The stage is drawn at those numbers and
+   so is the gap the words open to make room for it - one measurement,
+   read in both places, rather than a card and a hole kept the same size
+   by hand.
+   ============================================================ */
 export default function Hero() {
   return (
-    <section className="hero" data-hero data-sec="0">
+    <section className="hero hero--test" data-hero data-hero-test data-sec="0">
       <div className="hero__pin" data-hero-pin>
-        {/* the SOC▢HEERS artwork, full bleed */}
-        <div className="hero__frame" data-frame>
-          {/* the first thing on the page and the last thing the overture walks
-              into, so it is worth saying so out loud rather than letting it
-              queue behind the stage photo underneath it */}
-          <img src={IMG.frame} alt="SoCheers" fetchPriority="high" decoding="async" data-frame-img />
-          <span className="hero__greet">Hi! We Are</span>
+        {/* The sentence, and it is the whole composition - there is no
+            artwork on this cut, so the type carries the screen on its own
+            and the film sits inside it rather than under it.
+
+            Three lines of one voice at one size, stacked and centred: it
+            is a single sentence being written, not a heading with a
+            caption. The middle line is a three-column grid - "We", a
+            spacer, "are" - so that when the spacer opens the two words
+            leave the centre at exactly the same rate. Centring a flex row
+            instead would have opened the gap around the row's own middle,
+            which is off-centre by half the difference between the two
+            words, and the film would have sat beside its own hole.
+
+            The spacer's width and the row's height are --film-w and
+            --film-h, published by initHero off the same measurement it
+            seats the stage with, so the gap the words open IS the film's
+            rectangle rather than a guess at it. --split walks 0 to 1 and
+            carries both.
+
+            Read out as one line, since a screen reader has no use for
+            three boxes and eighteen letter spans. */}
+        <div className="hero__intro" data-test-intro>
+          <span className="sr-only">{GREETING}</span>
+
+          <div className="hero__lines" data-test-lines aria-hidden="true">
+            {/* One line, and the film opens inside it. "We are" is
+                right-aligned in its column, "SoCheers" left-aligned in
+                the other, and the empty column between them is what the
+                picture grows out of.
+
+                The grid is 1fr auto 1fr, so the two outer columns are
+                always the same width and the middle one therefore stays
+                dead centre of the screen whatever is in it - which is
+                where initHero puts the film, without ever measuring this
+                line. A centred flex row would have opened the hole
+                around the row's own middle instead, and the middle of
+                "We are ... SoCheers" is not the middle of the screen. */}
+            <span className="hero__line hero__line--split">
+              <span className="hero__side hero__side--l">
+                <span className="hero__type" data-test-type={1}>We are</span>
+              </span>
+              {/* the sea itself: nothing in it, and it is the reason the
+                  two halves of the line are where they are */}
+              <span className="hero__gap" aria-hidden="true" />
+              <span className="hero__side hero__side--r">
+                <span className="hero__type" data-test-type={2}>SoCheers</span>
+              </span>
+            </span>
+
+            {/* The caret, and it is on screen before anything else is.
+
+                The room hands over on black, and for a fifth of a second
+                that black is all there is - which reads as a dead frame
+                unless something in it says the page is about to be
+                written. A cursor blinking on an empty screen is that
+                something: it is the oldest "type is coming" signal there
+                is, and it turns the pause into an intake of breath.
+
+                A sibling of the row rather than a child of it, because
+                the row wears the typing clip - a caret inside it would be
+                cut off by the very edge it is meant to be riding. It is
+                placed and moved from initHero (lib/motion.ts), which is
+                where the sweep's own clock lives. */}
+            <span className="hero__caret" data-test-caret aria-hidden="true" />
+          </div>
         </div>
 
-        {/* Flat black, sitting behind the contained stage. The stage never
-            grows past the photo's own resolution - it stays letterboxed -
-            and this fills the margin around it instead of stretching the
-            photo edge to edge. */}
+        {/* Flat black behind the film. It is already the page's ground at
+            rest, so this only earns its keep once the film is full size
+            and letterboxed - see .hero__backdrop in globals.css. */}
         <div className="hero__backdrop" data-hero-backdrop aria-hidden="true" />
 
-        {/* The artwork's own window, lifted out so it can grow. At rest it is
-            pixel-identical to the artwork behind it; it cross-fades to the
-            black-and-white team photo on the way to full screen (contained,
-            not full-bleed - see hero__backdrop above for the margin). */}
+        {/* The box the film lives in. Sized and moved entirely from JS
+            (initHero), small at rest and screen-filling at `open`; its
+            aspect is the film's own at both ends, so everything inside it
+            is width:100%/height:100% and scales with it rather than being
+            cropped by it. */}
         <div className="hero__stage" data-hero-stage>
-          {/* The set rather than the master. This grows to fill the
-              screen, so `sizes` is 100vw and the browser picks on its own
-              pixel width - the 4K laptop the 7680 was cut for still gets
-              it, and a phone decodes two megapixels instead of thirty
-              three. See TEAM_SRCSET in lib/content.ts. */}
+          {/* No src in the markup, same arrangement as the home page's
+              reel: 12MB of film must not be fetched on a page whose first
+              two acts are a dark room. initHero attaches it once the
+              overture has handed the screen back, and pauses it whenever
+              the hero is not the screen. */}
+          <video
+            className="hero__film"
+            data-test-film="/media/vibe-video.mp4"
+            poster="/media/vibe-video-poster.jpg"
+            muted
+            loop
+            playsInline
+            preload="none"
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+
+          {/* The crowd, underneath the definition. Starts invisible and
+              cross-fades in as the entry begins writing, so the film is
+              what you watch and the photograph is what you read on. Same
+              file and same set the live hero draws, at the same rectangle
+              - the aspect matches the film's, so the swap does not move
+              a single edge. */}
           <img
-            className="hero__stage-img"
+            className="hero__stage-img hero__stage-img--test"
+            data-stage-img
             src={IMG.team}
             srcSet={TEAM_SRCSET}
             sizes={TEAM_SIZES}
             alt="The SoCheers team"
-            data-stage-img
           />
-          {/* The same photo, tinted blue to match the artwork's window at
-              rest - one continuous image instead of a second layer cross-
-              fading in, so growing into the full photo never jumps. Fades
-              out as the stage expands (motion.ts). */}
-          <div className="hero__stage-tint" data-stage-tint aria-hidden="true" />
-          {/* No dissolve grid here any more. The hero used to arrive
-              behind 176 black tiles that cleared in a random stagger,
-              which is a slide-deck block transition however it is timed -
-              the intro is a single settle now, see heroIntro() in
-              lib/motion.ts. components/PixGrid.tsx still exists and is
-              still used by the featured-work tiles. */}
 
-          {/* Hidden while the window is still small and growing; motion.ts
-              fades it in only once the stage has finished expanding, so the
-              small square never gets it - just a light bleed at the screen's
-              own edges once the photo is full size. */}
           <div className="hero__stage-vignette" data-stage-vignette aria-hidden="true" />
         </div>
 
-        {/* The dictionary entry, set over the photo once it is full screen.
-            Same pin, so the crowd shot you just watched arrive is the page
-            this gets written onto. */}
+        {/* The dictionary entry, unchanged from the live hero: same words,
+            same typesetting, same order, written by the same phase of the
+            same timeline. */}
         <div className="meaning" data-meaning>
           <div className="meaning__veil" data-meaning-veil aria-hidden="true" />
 
@@ -70,8 +205,7 @@ export default function Hero() {
               <h2 className="meaning__word" data-meaning-word>
                 {/* The split spans are decorative (typed in letter by letter,
                     see [data-meaning-char] in lib/motion.ts) - the real word
-                    lives in this visually-hidden copy, same pattern as
-                    [data-split] elsewhere (see .sr-only in globals.css). */}
+                    lives in this visually-hidden copy. */}
                 <span className="sr-only">{MEANING.word}</span>
                 <span aria-hidden="true">
                   {MEANING.word.split("").map((ch, i) => (

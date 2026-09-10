@@ -119,7 +119,12 @@ export const HERO = {
      folder and the only one that is a room rather than a face, which is
      what an opening frame has to be - a face at that scale is a
      portrait and the sentence is then a caption on somebody. */
-  still: "open-wide.jpg",
+  /* now series-hero-red.jpg (Unsplash WiCvC9u7OpE): one silhouette in
+     the dark in front of a curved wall of red screen pixels. The page's
+     red, one viewer and a wall of content - darker and more dystopian
+     than the popcorn-and-3D-glasses still it replaces, which stays in
+     the tree for the Work tab. */
+  still: "series-hero-red.jpg",
 } as const;
 
 /* The <meta> description. Not on the screen anywhere, so it is written
@@ -849,7 +854,24 @@ export const SECTIONS: Section[] = [
        What came off: series-signage-night.jpg, noise.jpg,
        series-empty-room.jpg and open-tall.jpg. The first and third were
        stock bought for this strip; all four stay in the tree. */
-    frames: ["cjc-4.jpg", "cjc-1.jpg", "cjc-3.jpg", "cjc-2.jpg"],
+    /* ---- replaced again, for relevance ----
+
+       The cjc set read as mood rather than as the sentences. Each tile
+       is now the paragraph it sits beside, graded dark and a little
+       dystopian to match the rest of the page, and no two of them are
+       a person on a phone (Unsplash):
+
+       1. job-1-feed  - a street at night buried under lit billboards.
+                        The feed full of brands.
+       2. job-2-reel  - a wall of CRTs, half of them glitching. Another
+                        trend, another static, another Reel.
+       3. job-3-zero  - one figure on a platform floating in the dark.
+                        Starting from zero.
+       4. job-4-slow  - a black and white corridor, everyone walking
+                        away. The slow way to retain anyone.
+
+       The cjc files stay in the tree. */
+    frames: ["job-1-feed.jpg", "job-2-reel.jpg", "job-3-zero.jpg", "job-4-slow.jpg"],
   },
   {
     /* SECTION 6 - THE RECEIPTS, and the first section that gets real
@@ -913,7 +935,8 @@ export const SECTIONS: Section[] = [
     frames: [
       "mokai-1.jpg",
       "reel-1.jpg",
-      "mokai-2.jpg",
+      /* was mokai-2.jpg, which is a static plate and read as an empty frame */
+      "format-ep-3.jpg",
       "reel-2.jpg",
       "mokai-3.jpg",
       "reel-3.jpg",
@@ -953,25 +976,27 @@ export const SECTIONS: Section[] = [
         no: "01",
         title: "BRAND",
         body: "You bring the brief, ambition and territory you want to own.",
-        art: "/assets/series/Brand.png",
+        /* WebP cuts of assets/series/*.png, made by scripts/build-art.mjs -
+           re-run it after replacing a PNG */
+        art: "/assets/art/series-brand.webp",
       },
       {
         no: "02",
         title: "STRATEGY",
         body: "We find the world and build the narrative.",
-        art: "/assets/series/Strategy.png",
+        art: "/assets/art/series-strategy.webp",
       },
       {
         no: "03",
         title: "FILMS",
         body: "We turn that spine into episodes, characters, visual language and production.",
-        art: "/assets/series/Films.png",
+        art: "/assets/art/series-films.webp",
       },
       {
         no: "04",
         title: "TOGETHER",
         body: "We make, release, learn, build on what lands and keep the story moving.",
-        art: "/assets/series/Together.png",
+        art: "/assets/art/series-together.webp",
       },
     ],
   },
@@ -1032,7 +1057,11 @@ export const SECTIONS: Section[] = [
        It is a 1200x1500 portrait in a full-bleed landscape frame, so it
        is cropped hard and it does NOT take the 2x blow-up the title
        card's single band uses - see #section-yours in series.css. */
-    frames: ["ending.jpg"],
+    /* REPLACED: the curtain read as a theatre prop, not as the end of
+       anything. series-end-exit.jpg (Unsplash qR7XWhuTag0) is a red EXIT
+       sign alone in the dark with two red eyes watching over it - the
+       way out, in the page's own grade. ending.jpg stays in the tree. */
+    frames: ["series-end-exit.jpg"],
     cta: { label: "Now, let's make yours ?", href: "/contact" },
   },
 ];

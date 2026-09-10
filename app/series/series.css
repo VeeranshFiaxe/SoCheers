@@ -141,8 +141,13 @@
   z-index:0;
   opacity:.72;
   transform:scale(1.06);
-  filter:blur(.8px) saturate(.86) brightness(.66);
+  /* no blur: the plate is series-hero-red, mostly black already, and it
+     has to read sharp. Full saturation so the red wall holds. */
+  filter:brightness(.85);
 }
+/* a portrait file in a landscape frame: the window sits low enough to
+   hold the red wall and the head in front of it */
+.st-hero .st-hero__plate{ object-position:50% 72%; }
 
 /* 1 - the scrim. Centre-weighted now rather than raked to the left: the
    type sits in the middle of the screen, so the darkest part of the
@@ -152,7 +157,7 @@
 .st-hero__scrim{
   position:absolute; inset:0; z-index:2; pointer-events:none;
   background:
-    radial-gradient(80% 62% at 50% 50%, rgba(11,11,12,.9), rgba(11,11,12,.5) 58%, rgba(11,11,12,.28) 100%),
+    radial-gradient(80% 62% at 50% 50%, rgba(11,11,12,.62), rgba(11,11,12,.34) 58%, rgba(11,11,12,.2) 100%),
     linear-gradient(to bottom, rgba(11,11,12,.72), transparent 26%, transparent 62%, rgba(11,11,12,.9));
 }
 
@@ -268,7 +273,7 @@
   }
   .st-hero__scrim{
     background:
-      radial-gradient(90% 50% at 50% 50%, rgba(11,11,12,.9), rgba(11,11,12,.56) 62%, rgba(11,11,12,.34) 100%),
+      radial-gradient(90% 50% at 50% 50%, rgba(11,11,12,.66), rgba(11,11,12,.4) 62%, rgba(11,11,12,.24) 100%),
       linear-gradient(to bottom, rgba(11,11,12,.76), transparent 24%, transparent 64%, rgba(11,11,12,.94));
   }
 }
@@ -992,9 +997,12 @@
    value. Worth it - they were a detail at the hem of a frame nobody
    reads to the bottom of, and the lit curtain behind the type is what
    the section actually needed. */
+/* The note above is for ending.jpg. The plate is now series-end-exit.jpg,
+   a 3:2 landscape, so cover barely crops it; the centre holds both eyes
+   and the EXIT sign. */
 #section-yours .st-poster__band:only-child > img,
 #section-yours .st-poster__band:only-child > video{
-  object-position:50% 62%;
+  object-position:50% 50%;
 }
 
 /* ---- and the type in the middle of it ------------------------------
@@ -1120,6 +1128,29 @@
     );
 }
 
+/* ---- the title card's own ground ------------------------------------
+
+   The shared gradient above is written for a card whose block is the
+   name and a button. This one carries three pieces of type and the
+   setup sentence sits at the TOP of that block, which lands around the
+   middle of the frame - where the shared ramp is still only .2 and the
+   sentence was reading through the picture behind it rather than on it.
+
+   Same shape, ramp brought up: the wash starts closing at 40% instead
+   of 62% so the whole block, first line included, sits on ground rather
+   than half on it. The top two thirds of the picture are untouched. */
+#section-kink .st-scrim{
+  background:linear-gradient(
+    to bottom,
+    rgba(11,11,12,.58),
+    rgba(11,11,12,.12) 22%,
+    rgba(11,11,12,.34) 40%,
+    rgba(11,11,12,.74) 55%,
+    rgba(11,11,12,.9) 68%,
+    rgba(11,11,12,.95) 80%
+  );
+}
+
 /* the type on a poster is a different shape to the type on a strip: the
    sentence is the small half and the name is the big one, which is the
    inverse of every other section */
@@ -1148,6 +1179,11 @@
   font-size:clamp(15px,1.15vw,18px); line-height:1.62;
   letter-spacing:-.005em;
   max-width:44ch;
+  /* it is the highest thing in the block and so the least covered by
+     the ground under it - held a step brighter than --muted, with the
+     same shadow the name carries, so it separates from the picture */
+  color:var(--dim);
+  text-shadow:0 2px 18px rgba(11,11,12,.9);
 }
 .st-beat[data-stage="title"] .st-beat__mark,
 .st-beat[data-stage="end"] .st-beat__mark{
@@ -1195,13 +1231,13 @@
     "line line"
     "mark body";
   column-gap:clamp(28px,4vw,84px);
-  row-gap:clamp(20px,2.8vh,34px);
+  row-gap:clamp(6px,1vh,12px);
   align-items:start;
 }
 .st-beat[data-stage="title"] .st-beat__line{
   grid-area:line;
   max-width:none;
-  padding-bottom:clamp(14px,2vh,22px);
+  padding-bottom:0;
 }
 
 /* ---- the name, in italics ----
@@ -1226,7 +1262,11 @@
      optical line rather than the same box edge */
   padding-top:clamp(4px,.8vh,10px);
 }
-.st-beat[data-stage="title"] .st-beat__copy{ max-width:44ch; }
+.st-beat[data-stage="title"] .st-beat__copy{
+  max-width:44ch;
+  color:var(--dim);
+  text-shadow:0 2px 18px rgba(11,11,12,.9);
+}
 
 /* On the title card the body block draws its own top edge - a rule and
    the padding under it - so the first paragraph's own margin would be a
@@ -2097,9 +2137,9 @@
   }
   .st-beat[data-stage="title"] .st-beat__words{ display:block; }
   .st-beat[data-stage="title"] .st-beat__line{
-    padding-bottom:clamp(12px,1.8vh,18px);
+    padding-bottom:0;
   }
-  .st-beat[data-stage="title"] .st-beat__mark{ margin-top:clamp(14px,2.2vh,22px); }
+  .st-beat[data-stage="title"] .st-beat__mark{ margin-top:clamp(6px,1vh,10px); }
   /* the end card keeps its centring at this width - it is one frame and
      one block here too, and the reason the other stages give up the
      middle of the screen (a picture behind a paragraph) does not apply
@@ -2111,8 +2151,11 @@
   /* the type is at the top of the screen at this width, so the ground
      under it has to be too - the desktop scrim is weighted to the
      bottom, where the type no longer is */
+  /* #section-kink is named here so its desktop-only bottom-weighted
+     ground does not outrank this on specificity */
   .st-beat[data-stage="title"] .st-scrim,
-  .st-beat[data-stage="end"] .st-scrim{
+  .st-beat[data-stage="end"] .st-scrim,
+  #section-kink .st-scrim{
     background:linear-gradient(
       to bottom,
       rgba(11,11,12,.94),
@@ -2203,12 +2246,16 @@
    full of crew - sits above the middle of the plate and a centred crop
    takes the top of it.
 
-   BRAND is the exception and it is left centred on purpose: it is the
-   one landscape frame, so it loses WIDTH rather than height, and the
-   SoCheers Films / Krafton lockup burned across its bottom edge sits
-   centred and survives the square crop. Moving that one off centre
-   would cut the lockup rather than the picture. */
-#section-process .st-step:nth-child(1) .st-step__art > img{ object-position:50% 50%; }
+   BRAND is the exception and does not get cropped at all. It is not a
+   production still, it is a finished key art poster: heads at the top
+   edge, a headline burned across the bottom. A square cover crop eats
+   both ends of it at once, and no object-position saves both. So it is
+   contained inside the card instead - the poster sits whole on the
+   plate, letterboxed left and right, which is what a poster on a wall
+   looks like anyway. */
+#section-process .st-step:nth-child(1) .st-step__art > img{
+  object-fit:contain; object-position:50% 50%;
+}
 #section-process .st-step:nth-child(2) .st-step__art > img{ object-position:50% 38%; }
 #section-process .st-step:nth-child(3) .st-step__art > img{ object-position:50% 42%; }
 #section-process .st-step:nth-child(4) .st-step__art > img{ object-position:50% 44%; }
@@ -2236,6 +2283,14 @@
    block already releases every measure on the page. */
 @media (min-width:901px){
   #section-job .st-beat__copy{ max-width:44ch; text-wrap:pretty; }
+  /* narrower type column, so the copy keeps clear air from the 2x2 */
+  #section-job .st-beat__words{ max-width:min(44%, 560px); }
+
+  /* section 7: the format paragraph runs wide, two or three lines
+     instead of four */
+  #section-format .st-beat__words{ max-width:min(88%, 1100px); }
+  #section-format .st-beat__line{ max-width:24ch; }
+  #section-format .st-beat__copy{ max-width:80ch; }
 }
 
 /* ---- section 6's focal points ----
@@ -2262,7 +2317,6 @@
    the burnt-in bar, which drops the picture inside the frame far enough
    to clear every head. The band itself does not move. */
 #section-receipts .st-band:nth-child(4) img{ object-position:50% 20%; }
-
 /* ============================================================
    SECTION 5 - the one strip that is not a strip.
 
@@ -2311,7 +2365,7 @@
 #section-job .st-strip{
   display:grid;
   grid-template-columns:repeat(2,1fr);
-  width:min(44%, 600px);
+  width:min(38%, 520px);
   gap:clamp(8px,1.2vw,18px);
   align-items:stretch;
 }
@@ -2345,7 +2399,21 @@
    4. cjc-2 at 32% - shows 14-71%, which is the sign cluster. BELIEVE,
       DREAM BIG, ONE WAY, NO LIMITS and the CREATE graffiti all land
       inside it. The slogans are the whole point of the picture. */
-#section-job .st-band:nth-child(1) img{ object-position:50% 50%; }
-#section-job .st-band:nth-child(2) img{ object-position:50% 85%; }
-#section-job .st-band:nth-child(3) img{ object-position:50% 25%; }
-#section-job .st-band:nth-child(4) img{ object-position:50% 32%; }
+/* The values above were for the cjc set. The current four (see the
+   note on `frames` in lib/series-content.ts) are cropped to their
+   subject: the sign-heavy right side of 1, the middle of the CRT wall
+   in 2, the figure on the platform in 3, the vanishing point of 4. */
+#section-job .st-band:nth-child(1) img{ object-position:62% 50%; }
+#section-job .st-band:nth-child(2) img{ object-position:50% 45%; }
+#section-job .st-band:nth-child(3) img{ object-position:50% 54%; }
+#section-job .st-band:nth-child(4) img{ object-position:45% 50%; }
+
+/* ---- lite (html.sc-lite - see lib/perf.ts) --------------------------
+
+   The pull's two blurs come down to the radii the narrow layout already
+   runs, for the reason given there: full-frame blurs under screen
+   blends are the one thing thin hardware cannot pay for. Same picture,
+   softer glow. The cue chips keep their ground and lose the glass. */
+html.sc-lite .st-pull__smear{ filter:blur(3px) brightness(1.12); }
+html.sc-lite .st-pull__wisp{ filter:blur(7px) brightness(1.45) saturate(.8); }
+html.sc-lite .st-cues li{ backdrop-filter:none; -webkit-backdrop-filter:none; }

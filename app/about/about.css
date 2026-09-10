@@ -278,7 +278,6 @@
    over this or under it. */
 .ab-founders{ background:#f4f2ec; z-index:6; overflow:clip visible; }
 .ab-people  { background:#f4f2ec; z-index:3; }
-.ab-drives  { background:#f4f2ec; z-index:4; }
 .ab-space   { background:#f4f2ec; z-index:5; }
 
 /* No seam at any of those joins.
@@ -330,7 +329,6 @@
 .ab-intro{ box-shadow:0 -1px 0 #f4f2ec; }
 .ab-founders,
 .ab-people,
-.ab-drives,
 .ab-space{ box-shadow:0 -1px 0 #f4f2ec; }
 /* the crowd is not in that list any more. It has no background of its own
    now, and a cream hairline above its top edge would be drawn straight
@@ -1254,318 +1252,188 @@
      .ab-founders above - so there is no lock left here to undo */
 }
 
-/* ---------- 4 · if you ask our people ----------
-   The claim, and then the evidence for it in two columns: the statements
-   on the left, the whole company on the right. It was three full-width
-   bands stacked down the middle - claim, letterboxed photograph,
-   statements - and each band was a different width from the one above it,
-   so nothing on the page shared an edge with anything else. No one-screen
-   lock; the section takes the height it needs. */
-/* Tighter at both ends than it was (13vh / 12vh): the photograph inside
-   is bigger now and the room the section needs comes from the picture,
-   not from paper around it. */
-.ab-people{ padding:clamp(72px,9.5vh,120px) 0 clamp(40px,5vh,64px); }
-
-/* ---- the frame ----
-   The claim across the top, and under it one row: statement, photograph,
-   statement.
-
-   Three arrangements got here. A two-column grid with the photograph in
-   the right-hand column, which cropped it - the source is a 4:5 shot of
-   the entire company on a staircase, and any column a grid can give it is
-   a decision about which rows of people to throw away. Then a single
-   centred stack, which showed the picture whole but left the claim with a
-   couple of hundred pixels of dead page either side of it. Then the two
-   statements up beside the claim, which filled that space with the wrong
-   thing: they were level with a heading rather than with the picture they
-   describe, and they cost the claim the width it needed to set properly.
-
-   Now the claim gets the full measure on its own line, and the statements
-   flank the photograph - which is the one element in the section tall
-   enough to give a paragraph something to stand against. */
-.ab-people__body{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
-  column-gap:clamp(24px,3.4vw,64px);
-  align-items:center; justify-items:center;
-}
-
-.ab-people__head{
-  grid-column:1 / -1; grid-row:1;
-  display:flex; flex-direction:column; align-items:center; text-align:center;
-}
-/* The page's claim about itself, moved here from the intro. Set at the
-   scale that claim deserves - display face, tight tracking - and now on a
-   measure wide enough to hold it in two lines. It was capped at 18ch,
-   which broke a forty-character sentence into four lines of three or four
-   words each: at this size that is not a headline, it is a column of
-   fragments. The heading has the whole row to itself, so it can have the
-   width. */
-/* face and size come from the page's shared heading scale, further down
-   this file - what is set here is only what is particular to this one */
-.ab-people__title{
-  margin-top:clamp(16px,2.4vh,28px);
-  max-width:26ch; text-wrap:balance;
-}
-/* The turn in the sentence, in the site's own voice - the same accent
-   italic the home page gives its pitch and its name. It reads as the
-   second half answering the first rather than as one long claim. */
-.ab-people__title em{
-  color:var(--accent); font-weight:400; font-style:italic;
-}
-
-/* ---- the photograph ----
-   Cropped, but only at the top, and by about a third.
-
-   It ran uncut for a while, at the source's own 4:5. Shown whole it is
-   the honest frame and the wrong one for this section: a portrait that
-   tall makes the row as deep as the picture, which put the claim, the
-   photograph and the two statements over more than one screen - and the
-   part of it doing the least work is the top. The company is standing on
-   a staircase, so the bottom of the frame is the front rows at full size
-   and the top is ceiling, beams and the backs of heads.
-
-   So the window is 5:4 and the picture is pinned near the foot of it
-   (object-position 92%): everything lost comes off the top, the front of
-   the group is kept whole, and the frame comes out wider than it is
-   tall - which is also what lets the two statements either side of it
-   have a column worth reading in.
-
-   Height first, width from the ratio. It is the height that decides how
-   much of the screen the section fills, so that is what is measured
-   against the viewport; the width cap is only there to keep the frame clear of
-   the two columns beside it, and neither ever asks the browser to upscale
-   the 1080px source (public/assets/about/people.jpg).
-
-   The figure is exactly as wide as the frame inside it, so the caption's
-   two ends land on the picture's two edges without either being told a
-   width - and the `auto` middle track above takes its width from the
-   picture rather than the other way round, which is what leaves the
-   statements whatever is left. */
-.ab-people__shot{
-  grid-column:2; grid-row:2;
-  margin:clamp(32px,4.6vh,60px) auto 0;
-  width:fit-content; max-width:100%;
-}
-.ab-people__shot img{
-  display:block;
-  /* 42svh left the row shorter than the space around it - the section
-     finished on a picture with a screen's worth of paper under it and
-     air above the claim. The frame takes that back: at 54svh the row is
-     tall enough that the section reads as filled rather than as
-     something floating in the middle of the page. Still capped at the
-     source's own width, so it is never upscaled. */
-  height:clamp(300px, 54svh, 620px);
-  width:auto; aspect-ratio:5/4;
-  max-width:min(52vw, 1080px);
-  /* cover, so the window is filled and the crop is aimed rather than the
-     picture being squeezed into a shape it is not */
-  object-fit:cover; object-position:center 92%;
-  border-radius:14px;
-}
-/* ---- the two statements ----
-   One either side of the picture, level with it, each under its own
-   hairline and numeral - the drivers' device further down the page, which
-   is what makes these read as part of one argument.
-
-   Ranged left, both of them, inside a centred row: a centred paragraph of
-   thirty words is a wedding invitation. The row is symmetrical; the prose
-   inside it is prose. */
-.ab-people__note{
-  width:100%; grid-row:2;
-  /* Narrower than the column it sits in, and held against the picture
-     rather than centred in the space. The row is as tall as the
-     photograph, and a statement set across the full track ran to four
-     short lines and then left half a picture's worth of white above and
-     below itself. On a tighter measure the same words run to six, which
-     stands closer to the height of the thing beside it - and pulling the
-     column in from the outside rather than from both edges keeps the
-     hairline touching the picture instead of floating away from it. */
-  max-width:27ch;
-  border-top:1px solid var(--line);
-  padding-top:clamp(16px,2vh,24px);
-  /* the page's one body size again, not a third scale of its own */
-  font-size:clamp(14.5px,1.1vw,17.5px); line-height:1.62; color:var(--muted);
-  text-align:left; text-wrap:pretty;
-}
-.ab-people__note--l{ grid-column:1; justify-self:end; }
-.ab-people__note--r{ grid-column:3; justify-self:start; }
-/* the numeral sits on the hairline, at the head of its own column */
-.ab-people__idx{
-  display:block; margin-bottom:12px;
-  font-family:var(--f-mono); font-weight:500; font-style:normal;
-  font-size:11px; letter-spacing:.24em; color:var(--accent);
-}
-
-@media (max-width:1000px){
-  /* Below this the side columns are too narrow to hold a thirty-word
-     paragraph without it setting four words to a line, so the row folds:
-     claim, photograph, then the two statements as a pair underneath. */
-  .ab-people__body{ grid-template-columns:repeat(2,1fr); }
-  .ab-people__shot{ grid-column:1 / -1; grid-row:2; }
-  /* width first here, height from the ratio: stacked, the picture has the
-     whole column and there is nothing beside it whose height it has to
-     stay level with */
-  .ab-people__shot img{ width:100%; height:auto; max-width:100%; }
-  /* stacked under the picture, the measure cap and the pull toward it
-     both stop meaning anything - they are there to fill a column beside
-     a tall photograph, and there is no such column here */
-  .ab-people__note{ grid-row:3; margin-top:clamp(30px,4.5vh,52px); max-width:none; }
-  .ab-people__note--l{ grid-column:1; justify-self:stretch; }
-  .ab-people__note--r{ grid-column:2; justify-self:stretch; }
-}
-@media (max-width:860px){
-  .ab-people__title{ max-width:none; }
-  .ab-people__body{ grid-template-columns:1fr; }
-  .ab-people__note{ grid-column:1; }
-  .ab-people__note--r{ grid-column:1; grid-row:4; }
-  /* the phone is the one place the picture can afford its own shape
-     again: nothing stands beside it and nothing is competing for the
-     height, so the crop opens back out towards the source */
-  .ab-people__shot img{ aspect-ratio:1/1; object-position:center 88%; }
-}
-
-/* ---------- 5 · what drives us (where the page turns light) ----------
-   The panel's own top edge is the whole transition now, so this section
-   needs no veil and no bleed of its own - just the room to breathe under
-   the rounded corner it arrives on. */
-/* Sat off-centre between its neighbours: the top was 18vh and the
-   bottom 13vh, and on top of that the people section above finishes on
-   ~8.5vh of its own padding while the space section below opens on only
-   ~4.5vh of its. Two paddings stack at each seam, so what the eye
-   actually measures is people-bottom + drives-top above the question,
-   and drives-bottom + space-top under the cards - which came out about a
-   hundred pixels heavier at the top.
-
-   So the section's own top padding comes down to roughly its bottom
-   padding less the difference between the two neighbours, and the two
-   gaps land within a few pixels of each other at any viewport height.
-   The crowd used to close this section out, which is why the foot of it
-   had no padding at all until recently. */
-.ab-drives{ padding:clamp(48px,6vh,76px) 0 clamp(88px,13vh,150px); }
-.ab-drives__inner{ position:relative; z-index:2; }
-
-/* .is-light - the light-panel token remap - used to be declared here and
-   now lives in app/globals.css. It started as this page's own trick and
-   is used by three routes, and a rule in a route stylesheet only exists
-   on the route that imports it: on /series and /ai-work the class matched
-   nothing and cream type landed on a cream ground. */
-/* Back on Satoshi, at the page's own heading size.
-
-   It spent a while in the script face on the argument that the section
-   addresses the reader directly and the three cards under it are written
-   in the same hand. The heading is doing the same job every other h2 on
-   the page does, though, and setting one of them in a different family
-   reads as a different page - so the handwriting stays where it belongs,
-   on the driver names, and the question is set like the rest.
-
-   Centred is a separate decision and it stands: this is the one section
-   built symmetrically, with the three cards ranged under the question on
-   the same axis. Every other head on the page stays ranged left. */
-.ab-drives__title{
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(28px,4.4vw,62px); line-height:1.02; letter-spacing:-.03em;
-  text-align:center; text-transform:none;
-}
-/* The mask is still padded, just by less than the script needed: every
-   line of a [data-split] heading is wrapped in its own overflow:hidden
-   box that is exactly the line box, and at a leading of 1.02 the sans
-   overshoots it slightly at the ascenders. Padded on all four sides and
-   taken straight back out as negative margin, so nothing moves - the
-   clip box just stops cutting into the ink. */
-.ab-drives__title .line-mask{
-  padding:.12em .06em;
-  margin:-.12em -.06em;
-}
-/* the heading is centred, the cards keep the full column */
-.ab-drives__inner{ display:flex; flex-direction:column; align-items:center; }
-.ab-drives__inner > .drivers{ align-self:stretch; }
+/* ---------- 4 · who we are + what drives us ----------
+   One screen, two columns. Left: the claim, and under it the group shot
+   with the two statements stacked beside it. Right: the drivers, as a
+   short vertical run hung on one thread (AboutPeople in
+   components/AboutSections.tsx). These were two sections; they are one
+   argument, so they share a screen now. The one-screen lock is desktop
+   only - below 1000px the columns stack and the section takes its own
+   height. */
 
 /* The page's heading scale, in one place. Every h2 on this page carrying
-   the display face is the same size, so a reader moving down it never has
-   to work out whether a change of type means a change of subject. What
-   drives us is set to match; it just keeps its own centred alignment. */
+   the display face shares the face and tracking; the two heads in the
+   shared screen below step down in size so both columns fit one screen. */
 .ab-people__title,
 .ab-space__title{
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(28px,4.4vw,62px); line-height:1.02; letter-spacing:-.03em;
   text-transform:none;
 }
-/* ---- the cards ----
-   Three of them, built out of the site's own card, with one line of
-   colour each.
 
-   The box is the home page's featured-work tile in light: a hairline
-   border on a rounded corner, a faint panel wash, an index in mono, body
-   copy in the muted grey (.tile in globals.css). The name is the part
-   that is this section's own - written in the script, and set in a brand
-   solid handed to the card inline on --c (see DRIVER_COLORS in
-   components/AboutSections.tsx).
+.ab-people{
+  min-height:100svh;
+  display:flex; flex-direction:column; justify-content:center;
+  padding:clamp(84px,10vh,120px) 0 clamp(40px,5vh,64px);
+}
+/* stretched back to full width - an auto inline margin on a flex item
+   otherwise shrink-wraps it (see .ab-founders > .wrap) */
+.ab-who{
+  align-self:stretch; width:100%;
+  display:grid;
+  grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+  column-gap:clamp(40px,5.5vw,110px);
+  align-items:center;
+}
 
-   The colour stays in the type. It washed the whole card for a version -
-   tinted background, coloured border, a hard shadow in the same solid,
-   confetti over the section - and three saturated blocks in the middle
-   of a page that otherwise runs on cream, near-black and one accent read
-   as a different site. One written word per card is the whole of it, and
-   the card only picks the colour up anywhere else on hover, where it
-   takes the border for as long as you are pointing at it.
+/* ---- left: claim, photograph, statements ---- */
+.ab-people__body{
+  display:grid;
+  grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+  column-gap:clamp(22px,2.4vw,40px);
+  align-items:end;
+}
+.ab-people__head{ grid-column:1 / -1; }
+.ab-people__title{
+  margin-top:clamp(14px,2vh,24px);
+  font-size:clamp(28px,3.6vw,54px);
+  max-width:22ch; text-wrap:balance;
+}
+.ab-people__title em{
+  color:var(--accent); font-weight:400; font-style:italic;
+}
 
-   The index is the page's own device: .ab-people__idx sets the two
-   statements further up in exactly this way, which is what makes the
-   drivers read as the continuation of that argument. It stays on the
-   accent rather than joining in - it is the same mark in all three
-   cards, so it is the thing holding them together while the names are
-   each doing their own thing. */
+/* Width from the column, height capped by the screen. The source is a
+   4:5 shot of the whole company on a staircase; the window is 5:4 and
+   pinned near the foot (92%), so what gets cropped is ceiling and back
+   rows, never the front of the group. */
+.ab-people__shot{ margin:clamp(22px,3.4vh,40px) 0 0; }
+.ab-people__shot img{
+  display:block; width:100%; height:auto;
+  aspect-ratio:5/4; max-height:min(50svh, 560px);
+  object-fit:cover; object-position:center 92%;
+  border-radius:14px;
+}
+
+.ab-people__notes{
+  display:flex; flex-direction:column; gap:clamp(18px,2.6vh,30px);
+}
+.ab-people__note{
+  border-top:1px solid var(--line);
+  padding-top:clamp(12px,1.6vh,18px);
+  font-size:clamp(13.5px,1vw,16px); line-height:1.6; color:var(--muted);
+  text-align:left; text-wrap:pretty;
+}
+
+/* ---- right: what drives us ---- */
+.ab-drives{ position:relative; }
+.ab-drives__title{
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(24px,2.4vw,38px); line-height:1.02; letter-spacing:-.03em;
+  text-transform:none;
+}
+/* every line of a [data-split] heading is clipped to its line box, and at
+   this leading the sans overshoots it at the ascenders - padded out and
+   taken straight back so nothing moves */
+.ab-drives__title .line-mask{
+  padding:.12em .06em;
+  margin:-.12em -.06em;
+}
+
 .drivers{
-  margin-top:clamp(38px,6vh,66px);
-  display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(16px,2vw,28px);
+  --gap:clamp(18px,2.8vh,32px);
+  --name:clamp(22px,1.9vw,30px);
+  --knot:12px;
+  /* the knot's centre, level with the middle of the name */
+  --knot-y:calc(var(--name) * .56);
+  list-style:none; margin:clamp(22px,3.4vh,40px) 0 0; padding:0;
+  display:flex; flex-direction:column; gap:var(--gap);
 }
 .driver{
   position:relative;
-  border:1px solid var(--line); border-radius:16px;
-  background:var(--panel);
-  padding:clamp(20px,2.1vw,30px);
-  transition:border-color .45s var(--ease), background-color .45s var(--ease), transform .5s var(--ease);
+  padding-left:calc(var(--knot) + clamp(16px,1.4vw,24px));
 }
-.driver:hover{
-  border-color:color-mix(in srgb, var(--c) 60%, transparent);
-  background:color-mix(in srgb, var(--c) 5%, var(--panel));
-  transform:translateY(-4px);
+/* A ring in the driver's colour, filled with paper so the thread ends
+   under it rather than running through it. Fills in on hover. */
+.driver__knot{
+  position:absolute; left:0; z-index:1;
+  top:calc(var(--knot-y) - var(--knot) / 2);
+  width:var(--knot); height:var(--knot); border-radius:50%;
+  border:2px solid var(--c); background:#f4f2ec;
+  transition:background-color .35s var(--ease), transform .45s var(--ease);
 }
-/* Numeral and name on one line, sharing a baseline - the arrangement
-   .tile__meta uses on the home page. Baseline, not centre: the two are
-   set in different families at very different sizes, and centring them
-   would hang the small one in the middle of the big one's x-height. */
+.driver:hover .driver__knot{ background:var(--c); transform:scale(1.25); }
+
+/* From this knot's centre to the next one's: the list gap plus this
+   driver's own height lands exactly on the next knot. Stretched to fit,
+   with a non-scaling stroke so the line weight never changes. GSAP scales
+   it down from the top as it scrolls in. */
+.driver__thread{
+  position:absolute; left:0; z-index:0;
+  top:var(--knot-y);
+  width:var(--knot); height:calc(100% + var(--gap));
+  transform-origin:top center;
+  pointer-events:none;
+}
+.driver__thread svg{ display:block; width:100%; height:100%; overflow:visible; }
+.driver__thread path{
+  fill:none; stroke:rgba(11,11,12,.34); stroke-width:1.25; stroke-linecap:round;
+}
+
+/* numeral and name on one baseline, as .tile__meta sets them */
 .driver__top{
   display:flex; align-items:baseline; gap:.7em;
-  margin-bottom:12px;
+  margin-bottom:6px;
 }
-/* The index, set as .ab-people__idx sets it, in the page's own ink
-   rather than the accent: beside a name that is already carrying the
-   card's colour, an accent numeral made two coloured things on one line
-   and neither of them led. */
 .driver__idx{
   font-family:var(--f-mono); font-weight:500; font-style:normal;
   font-size:11px; letter-spacing:.24em; color:var(--cream);
 }
-/* The one written word on the card, and the only colour on it.
-
-   Bigger than the sans would be set at the same rank: Caveat's lowercase
-   runs small, so matching a 23px display name optically takes about a
-   third more - the same correction .tag-script makes in globals.css. */
+/* the one written word per driver, and the only colour on it */
 .driver__head{
   display:block;
   font-family:var(--f-playful); font-weight:700;
-  font-size:clamp(24px,2.2vw,34px); line-height:1.05; letter-spacing:0;
+  font-size:var(--name); line-height:1.05; letter-spacing:0;
   color:var(--c);
 }
-/* the same body size as .ab-space__copy and the founders' bios - one
-   reading size for the whole page */
-.driver p{ font-size:clamp(13px,1vw,15.5px); line-height:1.6; color:var(--muted); }
+.driver p{
+  max-width:42ch;
+  font-size:clamp(13px,.95vw,15px); line-height:1.55; color:var(--muted);
+  text-wrap:pretty;
+}
 
-/* the lift on hover is decoration, and decoration is the first thing to go */
 @media (prefers-reduced-motion:reduce){
-  .driver:hover{ transform:none; }
+  .driver:hover .driver__knot{ transform:none; }
+}
+
+/* Narrow desktop: the column beside the photograph gets too thin for the
+   statements, so they drop under it as a pair and the photo gives up a
+   little height to pay for them. */
+@media (max-width:1200px){
+  .ab-who{ grid-template-columns:minmax(0,1.45fr) minmax(0,1fr); }
+  .ab-people__body{ grid-template-columns:1fr; }
+  .ab-people__shot img{ max-height:min(38svh, 460px); }
+  .ab-people__notes{
+    margin-top:clamp(18px,2.6vh,28px);
+    display:grid; grid-template-columns:1fr 1fr; gap:clamp(18px,2vw,28px);
+  }
+}
+/* Below this the two columns stack and the one-screen lock comes off. */
+@media (max-width:1000px){
+  .ab-people{
+    min-height:0; display:block;
+    padding:clamp(72px,9.5vh,120px) 0 clamp(48px,7vh,80px);
+  }
+  .ab-who{ grid-template-columns:1fr; row-gap:clamp(56px,8vh,88px); }
+  .ab-people__shot img{ max-height:none; }
+  .ab-drives{ max-width:560px; }
+}
+@media (max-width:860px){
+  .ab-people__title{ max-width:none; }
+  .ab-people__notes{ grid-template-columns:1fr; }
+  /* on a phone nothing competes for the height, so the crop opens back
+     out towards the source */
+  .ab-people__shot img{ aspect-ratio:1/1; object-position:center 88%; }
 }
 
 /* ---------- the crowd ----------
@@ -2152,8 +2020,6 @@
   /* the field of words thins out: at this size the rows are only three
      or four tokens wide and start reading as words rather than as tone */
   .ab-intro__ghost{ font-size:clamp(26px, 9vw, 46px); opacity:.055; }
-  .drivers{ grid-template-columns:1fr; }
-  .ab-drives{ padding-top:clamp(96px,15vh,150px); }
   /* The one-screen lock comes off here. On a phone the title, the copy
      and a 16:9 frame cannot all be worth looking at inside 100svh -
      something has to give, and forcing the fit would shrink the

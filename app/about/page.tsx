@@ -3,7 +3,7 @@ import "./about.css";
 import AboutMotion from "@/components/AboutMotion";
 import AboutHero from "@/components/AboutHero";
 import {
-  AboutCrowd, AboutDrives, AboutEnd, AboutFounders,
+  AboutCrowd, AboutEnd, AboutFounders,
   AboutIntro, AboutPeople, AboutSpace,
 } from "@/components/AboutSections";
 
@@ -30,7 +30,6 @@ export default function About() {
           <AboutIntro />
           <AboutFounders />
           <AboutPeople />
-          <AboutDrives />
           <AboutSpace />
           <AboutCrowd />
           <AboutEnd />

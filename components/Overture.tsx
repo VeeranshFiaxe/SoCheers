@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import {
   OVERTURE_CUE,
   OVERTURE_DONE,
@@ -10,7 +9,7 @@ import {
   shouldRunOverture,
 } from "@/lib/overture";
 import { initOverture } from "@/lib/overture-motion";
-import { OVERTURE_FINAL, OVERTURE_WALLS } from "@/lib/content";
+import { OVERTURE_WALLS } from "@/lib/content";
 import {
   BARS,
   BAR_STROKE,
@@ -40,19 +39,10 @@ import SoCheersLockup from "./SoCheersLockup";
    effect just takes the attribute off when the answer is yes.
    ============================================================ */
 
-/* The room, in depth order. The last entry is the hero artwork itself and is
-   marked as such - it is the one wall that stays standing, and the sequence
-   ends by walking the camera into it until it is pixel-for-pixel the real
-   hero underneath (see finale() in lib/overture-motion.ts). */
-const WALLS = [
-  ...OVERTURE_WALLS.map((w) => ({ ...w, final: false })),
-  /* The two phone fields spelled out as absent rather than left off. The
-     final wall does not get a portrait stand-in like the others do: it is
-     the hero, so on a phone it is shown whole instead of re-shot - see
-     .ovt__slab[data-final] in the phone block of globals.css. Writing them
-     out keeps every member of this array the same shape. */
-  { img: OVERTURE_FINAL, label: "SoCheers", m: undefined, mpos: undefined, final: true },
-];
+/* The room, in depth order. Every wall falls - nothing is left standing,
+   and the sequence hands over to a black hero that writes itself (see
+   arrive() in lib/overture-motion.ts and components/Hero.tsx). */
+const WALLS = OVERTURE_WALLS;
 
 /* The width the phone's column starts at. Same number as the --lamp-w
    breakpoint below it in globals.css and as PHONE in lib/motion.ts - the
@@ -401,24 +391,13 @@ function Rope() {
   );
 }
 
-/* The one route this does not play on. /test is an experiment carrying a
-   different ending (components/TestOverture.tsx), and the room is mounted
-   in the layout - so without this both cuts would build at once, fight
-   over [data-overture], and take the screen twice. Named here rather than
-   guarded in the layout so the exception sits next to the thing it is an
-   exception to. */
-const TEST_ROUTE = "/test";
-
 export default function Overture() {
   /* Re-running initOverture is how the replay works: the docked mark fires
      OVERTURE_REPLAY, this bumps, the effect tears the old run down and
      builds a clean one. */
   const [run, setRun] = useState(0);
-  const path = usePathname();
-  const off = path === TEST_ROUTE;
 
   useEffect(() => {
-    if (off) return;
     const root = document.querySelector<HTMLElement>('[data-overture]');
     if (!root) return;
 
@@ -470,9 +449,7 @@ export default function Overture() {
       document.removeEventListener(OVERTURE_CUE, build);
       teardown();
     };
-  }, [run, off]);
-
-  if (off) return null;
+  }, [run]);
 
   return (
     /* Not aria-hidden as a whole: it covers the page while it runs, so the
@@ -488,7 +465,6 @@ export default function Overture() {
               <div
                 className="ovt__slab"
                 data-ovt-slab
-                data-final={w.final || undefined}
                 /* Only read inside the phone's media query in globals.css,
                    so a wall with no mpos - and every wall on a wide screen
                    - falls back to a plain centre crop. */

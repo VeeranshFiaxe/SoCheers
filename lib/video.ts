@@ -25,6 +25,10 @@
    which the renderer passes in.
    ============================================================ */
 
+/* Where YouTube frames are served from. Also the origin CaseVideo
+   checks the player's messages against. */
+export const YT_HOST = "https://www.youtube-nocookie.com";
+
 export type ParsedVideo =
   | { kind: "file"; src: string; poster?: string }
   | { kind: "youtube"; id: string; src: string; poster: string }
@@ -46,9 +50,11 @@ export function parseVideo(src: string, poster?: string): ParsedVideo {
       id,
       /* The privacy-preserving host, and the flags that stop the player
          being a channel page: no related videos from other channels at
-         the end, no branding watermark, and our own play click starts
-         it, so autoplay is on for the frame the reader just asked for. */
-      src: `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1&playsinline=1`,
+         the end, no branding watermark. `enablejsapi` is what lets
+         CaseVideo load the player ahead of the click and start it on
+         the click; it adds `origin`, and `autoplay` when the player was
+         not loaded ahead. */
+      src: `${YT_HOST}/embed/${id}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1`,
       poster: poster ?? `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`,
     };
   }

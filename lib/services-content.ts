@@ -74,15 +74,15 @@ export const SERVICE_COPY: Record<string, ServiceCopy> = {
     faq: [
       {
         q: "What does a strategy engagement with SoCheers include?",
-        a: "Usually positioning, an audience and journey read, a platform and content plan, and the media thinking that goes with it. Scope is set per brand - some arrive with positioning settled and need the platform half, some need all of it.",
+        a: "Positioning, audience and journey mapping, a platform and content plan, and media planning. Scope is set per brand.",
       },
       {
         q: "Do you take on strategy without creative or production?",
-        a: "Yes. The three are built to run together, and most briefs use all three, but strategy is sold on its own where a brand already has partners for the rest.",
+        a: "Yes. Most briefs use all three, but strategy runs on its own too.",
       },
       {
         q: "Which categories have you done this for?",
-        a: "BFSI, FMCG, fashion and beauty, entertainment, lifestyle and B2B - across roughly thirty categories in twelve years.",
+        a: "BFSI, FMCG, fashion, beauty, entertainment, lifestyle and B2B - about thirty categories in twelve years.",
       },
     ],
   },
@@ -105,19 +105,21 @@ export const SERVICE_COPY: Record<string, ServiceCopy> = {
         "Identity, packaging and the physical things a brand puts in a hand.",
       "Tactical Execution":
         "The fast work - moments, reactions and launches that will not wait for a cycle.",
+      "Art Direction & Design":
+        "The look of the work - illustration, layout and visual style that make an idea recognisable at a glance.",
     },
     faq: [
       {
         q: "What does an integrated campaign mean here?",
-        a: "One idea, made once and cut for each place it has to live - film, social, influencer, retail, out of home - rather than a TVC with adaptations bolted on afterwards.",
+        a: "One idea, cut for every place it lives - film, social, influencer, retail, outdoor - not a TVC with add-ons.",
       },
       {
         q: "Do you work on retainers or on projects?",
-        a: "Both. Campaigns run as projects; content franchises and tactical work run on retainer, because being present between campaigns is the point of them.",
+        a: "Both. Campaigns are projects; content and tactical work run on retainer.",
       },
       {
         q: "Who does the writing?",
-        a: "An in-house team. Copy, scripts and social writing all sit with the same group that develops the idea, which is what keeps a line from getting thinner every time it is handed on.",
+        a: "Our in-house team - the same people who develop the idea.",
       },
     ],
   },
@@ -140,11 +142,11 @@ export const SERVICE_COPY: Record<string, ServiceCopy> = {
     faq: [
       {
         q: "Is production in-house or outsourced?",
-        a: "In-house. Direction, shoot, edit, sound and motion are all SoCheers teams, which is why a change in the edit does not become a change in the brief.",
+        a: "In-house. Direction, shoot, edit, sound and motion are all our own teams.",
       },
       {
         q: "Can you produce work you did not write?",
-        a: "Yes. Production takes external scripts and boards, and a fair amount of the studio's year is exactly that.",
+        a: "Yes. We regularly shoot external scripts and boards.",
       },
       {
         q: "Where do you shoot?",

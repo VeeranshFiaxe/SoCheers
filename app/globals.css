@@ -967,16 +967,20 @@ html.sc-seen .loader{ display:none; }
 .hero__stage{
   position:absolute; z-index:3; overflow:hidden; border-radius:0;
   top:0; left:0; width:120px; height:60px;
-  will-change:width,height,transform,filter;
+  /* transform, not width/height: the stage is laid out once at its full
+     size and the grow is a scale on the compositor (place() in
+     lib/motion.ts). will-change on a layout property promises nothing. */
+  will-change:transform,filter;
   /* An explicit identity filter, not `none`. GSAP reads the components it is
      about to animate off the computed value, and every one missing from
      `none` reads as 0 - which would flash the photo to black at the start of
      the dim in phase 2. */
   filter:brightness(1) saturate(1);
 }
-/* Sized/offset in JS to sit exactly inside the artwork's window at rest,
-   then re-fit as the stage grows - see fit() in motion.ts. */
-.hero__stage-img{ position:absolute; top:0; left:0; max-width:none; }
+/* Laid out once at the size it has when the stage is full (lay() in
+   lib/motion.ts) and only ever scaled DOWN from there, so its own layer is
+   rastered at full resolution and the grow never has to repaint it. */
+.hero__stage-img{ position:absolute; top:0; left:0; max-width:none; will-change:transform; }
 
 /* A faint blue colour-wash over the photo, matching the artwork's own window
    at rest - weighted to the edges and near-clear at the centre, like a
@@ -1201,8 +1205,24 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    it is supposed to be leaning on. Turned round, the two columns close on
    the mark at the same distance and the arrangement reads as one object
    with a sentence either side of it. */
-.who__copy{ position:relative; display:flex; flex-direction:column; align-items:flex-end; text-align:right; gap:clamp(16px,2.2vh,26px); align-self:center; }
-.who__say{ align-self:center; }
+/* The two columns are built the same way, mirrored, rather than one
+   being a flex column and the other a bare block - which is what they
+   were, and it showed. The claim shrank to the width of its own longest
+   line (297px of a 389px track at 1440) while the pitch filled its track
+   (390px), so the two sentences either side of the mark were set to two
+   different measures: the right-hand block read wider and heavier than
+   the left, and the arrangement leaned. Same structure, same measure,
+   opposite alignment - the hard edge of each faces the mark, the rag
+   faces the page's own margin. */
+.who__copy,
+.who__say{ position:relative; display:flex; flex-direction:column; align-self:center; }
+.who__copy{ align-items:flex-end; text-align:right; }
+.who__say{ align-items:flex-start; text-align:left; }
+/* Full track, both sides. This is the measure itself, not a cosmetic
+   width: the claim was shrink-to-fit and the pitch was not, and the
+   paragraph is also what SplitText measures its line breaks against. */
+.who__lede,
+.who__pitch{ width:100%; }
 
 /* Lede + pitch share one type size so they read as one statement that
    flips register mid-sentence: roman cream, then italic accent. */
@@ -1405,8 +1425,8 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
      full-bleed inside the paragraph (.split-line / .line-mask above), so
      this inherits straight down onto each of them and the wipe is
      untouched. */
-  .who__copy{ align-items:center; text-align:center; }
-  .who__say{ text-align:center; }
+  .who__copy,
+  .who__say{ align-items:center; text-align:center; }
   .who__stats{ flex-wrap:wrap; }
   .stat{ flex:1; min-width:100px; padding:0 20px 12px; }
   .stat:not(:first-child){ border-left:1px solid var(--line); }
@@ -2085,7 +2105,12 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   padding-bottom:.2em;
   margin-bottom:-.2em;
 }
-.split-line{ display:block; will-change:transform, opacity; }
+/* No standing will-change. Every line of every split heading on a page is
+   one of these, and a permanent promise made each its own compositor
+   layer for the whole visit - dozens of layers of GPU memory held for an
+   entrance that plays once. GSAP promotes a line for the length of its
+   own tween and lets it go after. */
+.split-line{ display:block; }
 
 .no-js [data-split]{ visibility:visible !important; }
 .no-js [data-split],.no-js [data-reveal],.no-js [data-clip]{ opacity:1 !important; transform:none !important; clip-path:none !important; }
@@ -2146,6 +2171,10 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   opacity:0 !important; pointer-events:none;
   transition:opacity .45s var(--ease);
 }
+/* the lamp sets pointer-events:auto for itself, so the rig's none does not
+   reach it - without this an invisible bulb keeps catching clicks in the
+   corner after the nav (the real switch) has hidden */
+.overture.is-done .ovt__lamp{ pointer-events:none; }
 
 /* ---- the room ---- */
 .ovt__stage{
@@ -2203,9 +2232,6 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   text-shadow:0 1px 12px rgba(0,0,0,.9);
   opacity:calc(var(--lit) * .9);
 }
-/* the hero wall is the site, not an exhibit - no caption, no edge */
-.ovt__slab[data-final] .ovt__label,
-.ovt__slab[data-final] .ovt__edge{ display:none; }
 
 /* what comes up off the floor when one lands */
 .ovt__dust{
@@ -2434,50 +2460,6 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
      the <picture> in components/Overture.tsx - so by the time it gets
      here, every wall is a picture that was composed upright. */
   .ovt__face{ object-position:var(--mpos, 50% 50%); }
-
-  /* 2 · the wall that does not fall.
-
-     The hero artwork is one wide picture with the wordmark drawn across
-     the full width of it and the crowd window in the middle, and there is
-     no crop of it that is still the logo: a column through the centre
-     keeps the window and two blue slivers, which is the mark with its
-     name cut off. So this one is not re-shot and it is not cropped - it
-     is shown whole, sitting in the middle of the black it was always on.
-     A widescreen artwork letterboxed on a phone is a thing people have
-     seen; a wordmark with the letters sliced off is not.
-
-     Two consequences, and both are wanted. The room behind it stays black
-     where the picture is not, which is what the room already was. And the
-     window inside the artwork is now a genuinely small window rather than
-     most of the screen - so the hero's own expand, which grows that
-     window into the crowd photo, has somewhere to travel on a phone for
-     the first time. .hero__frame below is fitted the same way and
-     lib/motion.ts measures the window against the same fit, which is what
-     keeps the hand-off pixel-for-pixel. */
-  .ovt__slab[data-final]{ background:#000; }
-  .ovt__slab[data-final] .ovt__face{
-    object-fit:contain;
-    /* And it is contained inside the hero's box, not the room's.
-
-       Those are the same box on a wide screen and not always the same box
-       on a phone: .overture is fixed at inset:0, so it is as tall as the
-       viewport currently is, while .hero__pin is a flat 100svh - the
-       height with the address bar showing (see --screen above). Scrolled
-       to the top with the bar out they agree, which is every first run.
-       A replay fired from a page whose bar has retracted is the case they
-       do not, and cover never had to care: a picture cropped to fill is
-       in the same place whatever the box is. A picture centred in it is
-       not, and the difference is the band jumping half an address bar on
-       the cross-fade at the exact moment the two layers are both visible.
-
-       So the standing wall is fitted against the same number the hero
-       underneath it is, and the hand-off stays geometry rather than luck.
-       The strip below is the black slab, over the pin's own black, which
-       is nothing to look at. top:0 rather than centred because the page is
-       parked at the top for the whole sequence, so the pin starts at the
-       top of the screen. */
-    height:var(--screen); bottom:auto;
-  }
 }
 
 /* ---- while it runs, the site holds still ---- */
@@ -2995,3 +2977,32 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   font-size:15px; line-height:1.65; color:var(--muted);
 }
 .cmodal__submit:disabled{ opacity:.6; }
+
+/* ============================================================
+   LITE
+   html.sc-lite is a machine that cannot pay for the expensive half of
+   the look - see lib/perf.ts for who decides, and when. Nothing here
+   changes what is on the page. It takes out the effects that cost a
+   full-screen composite every frame and are close to invisible on their
+   own; the engines do the same on their side.
+   ============================================================ */
+/* Glass without the blur. backdrop-filter re-blurs whatever scrolls
+   under the capsule on every frame; a denser fill reads as the same
+   island. The light variant is restated because the first rule outranks
+   .nav.is-on-light. */
+html.sc-lite .nav .nav__cta,
+html.sc-lite .nav__links,
+html.sc-lite .nav__menu{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+html.sc-lite .nav{ --nav-island:rgba(12,12,14,.9); }
+html.sc-lite .nav.is-on-light{ --nav-island:rgba(255,255,255,.9); }
+
+/* the page-wide glow: a screen blend over the whole viewport on every
+   scroll frame, for a tint of a few percent */
+html.sc-lite .spotlight{ display:none; }
+
+html.sc-lite .cmodal{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(6,6,7,.9); }
+
+/* the halo behind the particle mark holds its light rather than
+   breathing - a blurred, blended layer re-composited every frame */
+html.sc-lite .plogo::before,
+html.sc-lite .plogo::after{ animation:none; }

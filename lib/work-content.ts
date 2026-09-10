@@ -509,7 +509,9 @@ export type CaseBlock =
      because they are one thing, and because a row of phone-shaped films
      wants to be a row rather than a stack. */
   | { type: "reel"; items: { src: string; poster?: string; label?: string }[]; ratio?: Ratio; caption?: string }
-  | { type: "board"; src: string; w: number; h: number; caption?: string }
+  /* `large` is a bigger cut of the same board: served to screens that can
+     use it, and what the frame links out to for zooming. */
+  | { type: "board"; src: string; w: number; h: number; caption?: string; large?: { src: string; w: number } }
   /* Any number of stills as a grid. `duo` stays because a considered
      pair is its own composition; this is for the six frames from the
      shoot that are a gallery and not a layout. */
@@ -641,22 +643,15 @@ export const CASES: CaseStudy[] = [
   /* ------------------------------------------------------------------
      THE FIRST REAL CASE.
 
-     Every word below is off the client's own case board - the file at
-     Entertainment/Maa Behen/MAA-BEHEN---Case-Study-(NEW).jpg.jpeg,
-     which is a finished case study that happened to be delivered as a
-     picture. The headings are its headings and the paragraphs are its
-     paragraphs; nothing here was written for the website.
-
-     Two things to know if this is ever compared against the board:
+     The client sent this as a finished case board - the file at
+     Entertainment/Maa Behen/MAA-BEHEN---Case-Study-(NEW).jpg.jpeg - and
+     no write-up. The page shows the board rather than retelling it in
+     paragraphs, with the one photo the board does not already carry.
 
      The board's headline reads RENAMED for Maa Behen and the campaign
      cover reads RECLAIMED. Both are the client's, so each is kept where
      they put it - the board's word is the page's title because the page
      is the board, and the cover keeps its own on the wall tile.
-
-     The board sets the renamings with arrows, and they are kept as
-     arrows rather than turned into a sentence, because that is the
-     idea: the old sign on the left, the new sign on the right.
      ------------------------------------------------------------------ */
   {
     slug: "maa-behen",
@@ -672,55 +667,16 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work/cases/maa-behen/transit.jpg",
     blocks: [
       {
-        type: "copy",
-        heading: "The problem",
-        body: "Maa Behen (“Mother Sister” in Hindi) is a film about three women pushing back against society’s rules and judgement. Instead of advertising to women, we wanted to launch the film inside a space already reserved for them.",
-      },
-      {
-        type: "copy",
-        heading: "The insight",
-        body: "Millions of women travel every day in Delhi Metro’s women-only compartments, identified by familiar “Ladies Only” signage. For a film called Maa Behen, the media space was already there.",
-      },
-      {
-        type: "image",
-        src: "/assets/work/cases/maa-behen/train.jpg",
-        w: 720, h: 1280,
-        caption: "Western Railway, Mumbai",
-      },
-      {
-        type: "copy",
-        heading: "The creative proposition",
-        body: "If the space belonged to women, its language could belong to Maa Behen. Instead of adding ads, we transformed the Metro’s existing women-only signage into media for the film.",
-      },
-      {
-        type: "copy",
-        heading: "The creative manifestation",
-        body: "We didn’t advertise inside the Ladies’ Compartment. We renamed it. “Ladies Only” → “Entry for Maa Behen Only.” “Reserved for Ladies” → “Reserved for Maa Behen.” From doors to compartment signage, the transit’s everyday language became the campaign.",
-      },
-      {
-        type: "copy",
-        heading: "Impact",
-        body: "Commuters noticed before we told them to. Women began photographing and sharing the renamed signage organically, turning an everyday piece of transit infrastructure into a citywide conversation.",
-      },
-      {
-        type: "stats",
-        items: [
-          { figure: "17M", label: "Organic social media reach" },
-          { figure: "250K", label: "In earned media" },
-          { figure: "1.3M", label: "Total media reach" },
-        ],
-      },
-      {
         type: "board",
         src: "/assets/work/cases/maa-behen/board.jpg",
         w: 2400, h: 1350,
         caption: "The case board",
       },
       {
-        type: "credits",
-        items: [
-          { label: "Placement", value: "Inside Delhi Metro" },
-        ],
+        type: "image",
+        src: "/assets/work/cases/maa-behen/train.jpg",
+        w: 720, h: 1280,
+        caption: "Western Railway, Mumbai",
       },
     ],
   },
@@ -1081,13 +1037,16 @@ export const CASES: CaseStudy[] = [
   },
 
   /* ------------------------------------------------------------------
-     THE CASE BOARDS - real write-ups, transcribed off the client's own
-     case study images rather than written here. Every heading below is
-     the board's own heading and every line of body copy is the board's
-     own copy; nothing in this batch was drafted for the site. Numbers in
-     `stats` are the board's own figures, kept exactly as printed
-     (including "Out of Stock" as a figure where the board used words
-     instead of a number).
+     THE CASE BOARDS - campaigns the client sent as a finished case
+     study image and no write-up. The board is the write-up, so the page
+     shows the board and does not retell it in paragraphs: the hero, the
+     board across the full width, and a link out to read it at full
+     size. See caseIsVisual() for the layout that gets.
+
+     `large` is the 2400 cut from scripts/build-wall.mjs, served to
+     screens that can use it. Wacoal has none - its master is 1672 wide,
+     so the tile is already the largest there is. The intros are kept
+     for the page description and are not drawn.
      ------------------------------------------------------------------ */
   {
     slug: "boat-marvel",
@@ -1099,44 +1058,11 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work/cases/boat-marvel/hero.jpg",
     blocks: [
       {
-        type: "copy",
-        heading: "Objective",
-        body: "Ignite brand loyalty by celebrating the fandom and their love for Marvel characters, highlighting product quality & features.",
-      },
-      {
-        type: "copy",
-        heading: "Insight",
-        body: "Fans crave unique merchandise and we wanted to deepen their connection to the Marvel universe.",
-      },
-      {
-        type: "copy",
-        heading: "Concept",
-        body: "Create a unique audio experience for MARVEL fans and boAtheads in India, inspiring them to #UnleashYourSuper.",
-      },
-      {
-        type: "copy",
-        heading: "Execution",
-        body: "To channel powerful vibes in all our communication, we used terms, visuals & audio related to superheroes. boAtheads got a power-packed launch with immersive 3D audio & visuals, superhero-infused animation and text, hyping the product's features.",
-      },
-      {
-        type: "stats",
-        items: [
-          { figure: "Out of Stock", label: "in a record-breaking week!" },
-          { figure: "715K", label: "Total Engagement" },
-          { figure: "9.5M+", label: "Total Views" },
-        ],
-      },
-      {
         type: "board",
         src: "/assets/work/wall/boat.jpg",
         w: 1600, h: 1132,
+        large: { src: "/assets/work/cases/boat-marvel/board.jpg", w: 2400 },
         caption: "The case board",
-      },
-      {
-        type: "credits",
-        items: [
-          { label: "Partner", value: "Marvel" },
-        ],
       },
     ],
   },
@@ -1151,37 +1077,10 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work/cases/croma-ac/hero.jpg",
     blocks: [
       {
-        type: "copy",
-        heading: "Insight",
-        body: "There has always been confusion whether \"AC badhane ka matlab temperature badhana ya ghatana hota hai?\"",
-      },
-      {
-        type: "copy",
-        heading: "Opportunity",
-        body: "To clear the confusion and promote Croma as the destination for AC purchases with an enticing exchange offer.",
-      },
-      {
-        type: "copy",
-        heading: "Creative Solution",
-        body: "To ignite a debate on \"AC badhane ka matlab kya hai?\" and tackle the confusion around adjusting AC settings that drives engagement and provides a solution through a creative approach.",
-      },
-      {
-        type: "copy",
-        heading: "Execution",
-        body: "We kickstarted by prompting the audience to define 'AC badhana'. Influencers then conducted nationwide Vox Pop interviews to gather public opinions. Capitalizing on this buzz, we released a viral rap video to give the ultimate answer.\n\nFurther engaging activities included meme contests and voucher giveaways, solidifying Croma's status as the go-to AC destination. This integrated approach helped us boost engagement and seamlessly integrate our exchange offer communication.",
-      },
-      {
-        type: "stats",
-        items: [
-          { figure: "19.07M", label: "Reach" },
-          { figure: "3.26%", label: "Engagement" },
-          { figure: "5.26M", label: "Rap video views" },
-        ],
-      },
-      {
         type: "board",
         src: "/assets/work/wall/croma.jpg",
         w: 1600, h: 900,
+        large: { src: "/assets/work/cases/croma-ac/board.jpg", w: 2400 },
         caption: "The case board",
       },
     ],
@@ -1197,37 +1096,10 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work/cases/croma-dreams/hero.jpg",
     blocks: [
       {
-        type: "copy",
-        heading: "Insight",
-        body: "When brands banter, the audience loves to grab popcorn and enjoy the entertainment unfold.",
-      },
-      {
-        type: "copy",
-        heading: "Opportunity",
-        body: "Our IP Festival of Dreams, an initiative that turns wishes and dreams into reality by offering unbelievable discounts on tech, was fitting seamlessly when we saw the opportunity to harp on an on-going trend started by Flipkart.",
-      },
-      {
-        type: "copy",
-        heading: "Creative Solution",
-        body: "We capitalized on a moment initiated by Flipkart that was on the brink of trending and created something even bigger in real-time.",
-      },
-      {
-        type: "copy",
-        heading: "Execution",
-        body: "Overnight, we positioned our billboard beside Flipkart's, offering an even bigger opportunity to win a free iPhone. Prompting a contest, we asked people to share their dreams in the comments.\n\nThe responses flooded in, even catching the attention of creators and meme pages. In the end, one lucky winner walked away with an iPhone 14 Pro Max!",
-      },
-      {
-        type: "stats",
-        items: [
-          { figure: "143.7k", label: "Reach" },
-          { figure: "31.38%", label: "Engagement" },
-          { figure: "9K", label: "Follower growth in just 6 days" },
-        ],
-      },
-      {
         type: "board",
         src: "/assets/work/wall/croma-dreams.jpg",
         w: 1600, h: 900,
+        large: { src: "/assets/work/cases/croma-dreams/board.jpg", w: 2400 },
         caption: "The case board",
       },
     ],
@@ -1243,37 +1115,10 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work/cases/bgmi/hero.jpg",
     blocks: [
       {
-        type: "copy",
-        heading: "Insight",
-        body: "Gamers rely on trusted sources for complex game updates. Teaming up with esports celebrities for a fun explainer campaign bypasses unreliable information and delivers clear, engaging content.",
-      },
-      {
-        type: "copy",
-        heading: "Objective",
-        body: "Attract new players and bring back existing ones with fresh content and influencer buzz. Partner with mobile gaming influencers to spread the word and build trust. Grab attention with high-quality visuals and interactive elements.",
-      },
-      {
-        type: "copy",
-        heading: "Challenge & Objective",
-        body: "Young audiences crave short, dynamic content - so the intent was to ditch lengthy podcasts and create snackable updates that are easy to understand.",
-      },
-      {
-        type: "copy",
-        heading: "Creative Execution",
-        body: "No More Boring Updates! Often times, people aren't aware of the gaming updates or how to use them. BGMI started a podcast series in which each update is treated differently, using a creative format, in order to get more people to engage with the game. We made 3 informative videos (high quality, gamer jargon, featuring influencers) to explain these new gaming updates in a fun and rather relatable way, using pop culture references like creating a set that resembled Koffee With Karan's, a commentator box in a cricket stadium, so on and so forth.",
-      },
-      {
-        type: "stats",
-        items: [
-          { figure: "90%", label: "Positive conversations, #trended on YT" },
-          { figure: "900M", label: "Total views on YT & IG" },
-          { figure: "30%", label: "Faster updates observed" },
-        ],
-      },
-      {
         type: "board",
         src: "/assets/work/wall/bgmi.jpg",
         w: 1600, h: 1135,
+        large: { src: "/assets/work/cases/bgmi/board.jpg", w: 2400 },
         caption: "The case board",
       },
     ],
@@ -1288,31 +1133,6 @@ export const CASES: CaseStudy[] = [
       "Advancing breast cancer awareness with 3 simple steps - Wacoal, a premium Japanese lingerie brand, ventured into the second year of the campaign #WacoalKnowsBreast, solidifying itself as an intellectual property for breast cancer awareness.",
     hero: "/assets/work/cases/wacoal/hero.jpg",
     blocks: [
-      {
-        type: "copy",
-        heading: "Insight",
-        body: "Most women either shy away from or don't know how to examine themselves for the early signs of breast cancer.",
-      },
-      {
-        type: "copy",
-        heading: "Goals",
-        body: "Amplifying awareness about breast cancer. Encouraging our audience to prioritise their breast health proactively. Simplifying the self breast-exam.",
-      },
-      {
-        type: "copy",
-        heading: "Creative Approach",
-        body: "Imagine influencers showcasing how to do a breast cancer self-examination through their content? It will most likely get flagged on Instagram as inappropriate content. So instead of that, we built it into a simple 3 finger pose, that simplifies the narrative of the 3 step approach to self examination.\n\nWe started building this visual narrative with our senior leadership across India and Japan, replicating the same with influencers & our users/customers to create a high recall value & encouraged people to take the test. We followed it up with a series of videos & posts serving as reminders throughout the month of October, along with transforming Wacoal stores into spaces that gently reminded women to detect the signs of breast cancer early on.\n\nWe also brought back our Pink Awareness Bra (launched in 1999) and used CGI to make it soar over Gateway of India thus elevating the messaging of our campaign.",
-      },
-      {
-        type: "stats",
-        items: [
-          { figure: "2M+", label: "Reach" },
-          { figure: "15M+", label: "Views" },
-          { figure: "1M+", label: "Engagement" },
-          { figure: "11M+", label: "People got inspired" },
-          { figure: "15M+", label: "Views on our CGI Initiative" },
-        ],
-      },
       {
         type: "board",
         src: "/assets/work/wall/wacoal.jpg",
@@ -1516,6 +1336,17 @@ export const caseHeadings = (blocks: CaseBlock[]) =>
       ? [{ id: `heading-${i}`, label: b.heading }]
       : [],
   );
+
+/* Whether a case has anything to read. The case boards arrive as the
+   whole case study in one picture, and a page of only pictures has no
+   reading column for the rail to sit beside - so the rail becomes a row
+   over the work and the work gets the full width. Derived from the
+   blocks like the contents list is, so a board case that later gets a
+   write-up changes layout by getting one. */
+const TEXT = new Set(["copy", "scope", "steps", "credits", "stats", "quote", "faq"]);
+
+export const caseIsVisual = (blocks: CaseBlock[]) =>
+  !blocks.some((b) => TEXT.has(b.type));
 
 /* The copy hero this page used to open with is gone - the stage is the
    first thing on the page now and the work introduces itself. What was

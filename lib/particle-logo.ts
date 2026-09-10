@@ -46,6 +46,7 @@ import {
 } from "three";
 import { buildCloud, EXTENT } from "./particle-cloud";
 import { acquirePointerField } from "./pointer-field";
+import { isLite, LITE_EVENT, trackRect } from "./perf";
 
 /* ============================================================
    TUNING
@@ -292,11 +293,19 @@ function budget(): number {
   if (typeof navigator === "undefined") return n;
   const coarse = window.matchMedia("(pointer: coarse)").matches;
   if (coarse) return Math.round(n * 0.4);
+  /* a lite machine (lib/perf.ts) has already said it cannot keep up, and
+     the count is the one number here that sets both the CPU step and the
+     fill the GPU has to do */
+  if (isLite()) return Math.round(n * 0.45);
   const cores = navigator.hardwareConcurrency || 4;
   if (cores <= 4) return Math.round(n * 0.6);
   if (cores <= 6) return Math.round(n * 0.8);
   return n;
 }
+
+/* Points are fill-rate: every grain is a quad the GPU blends, so on a
+   lite machine the pixel ratio is where the cost is, and it drops to 1. */
+const pixelRatio = () => Math.min(window.devicePixelRatio || 1, isLite() ? 1 : TUNE.dprCap);
 
 export function initParticleLogo(host: HTMLElement): Stop {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -311,7 +320,7 @@ export function initParticleLogo(host: HTMLElement): Stop {
   if (!renderer.getContext()) { renderer.dispose(); return () => {}; }
 
   renderer.setClearAlpha(0);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, TUNE.dprCap));
+  renderer.setPixelRatio(pixelRatio());
   /* Placement and the overhang past the frame are CSS's business (see
      .plogo canvas in globals.css) - setSize is called with updateStyle
      off throughout so nothing here ever writes over it. */
@@ -374,7 +383,9 @@ export function initParticleLogo(host: HTMLElement): Stop {
   scene.add(points);
 
   /* ---------------------------------------------------- framing */
-  let rect = canvas.getBoundingClientRect();
+  /* the canvas box, read at the start of each frame rather than in the
+     middle of one - see trackRect in lib/perf.ts */
+  const box = trackRect(canvas);
 
   function resize() {
     /* Two boxes, and the difference between them is the whole trick.
@@ -418,7 +429,6 @@ export function initParticleLogo(host: HTMLElement): Stop {
        point sprite's size has to be expressed in */
     material.uniforms.uSizeScale.value = (h * renderer.getPixelRatio()) / (2 * tanCanvas);
 
-    rect = canvas.getBoundingClientRect();
     draw = true;
   }
 
@@ -478,10 +488,12 @@ export function initParticleLogo(host: HTMLElement): Stop {
 
     if (!hasPointer) { handVel.multiplyScalar(Math.exp(-TUNE.velEase * dt)); return; }
 
-    /* Re-read every frame rather than caching on scroll: Lenis moves the
-       page on its own schedule, and a box that is one frame stale puts
-       the hand somewhere the cursor isn't. */
-    rect = canvas.getBoundingClientRect();
+    /* Every frame rather than cached on scroll: Lenis moves the page on its
+       own schedule. Taken from the start of this frame (trackRect) rather
+       than asked for here, where it was a forced layout of the whole page
+       sixty times a second - the box is at most a frame behind the scroll,
+       and the hand is smoothed over several. */
+    const rect = box.read();
     ndc.set(
       ((px - rect.left) / Math.max(1, rect.width)) * 2 - 1,
       -(((py - rect.top) / Math.max(1, rect.height)) * 2 - 1),
@@ -603,11 +615,15 @@ export function initParticleLogo(host: HTMLElement): Stop {
   }
 
   function frame(now: number) {
-    raf = requestAnimationFrame(frame);
-    /* Off-screen or in a background tab it costs one comparison a frame.
-       Resetting `last` on the way past is what stops the object taking a
+    /* Off-screen or in a background tab the loop stops outright rather
+       than keeping a 60Hz appointment to do nothing - wake() starts it
+       again, with `last` cleared so the object does not take a
        three-second step the moment it comes back. */
-    if (!inView || document.hidden) { last = now; return; }
+    if (!inView || document.hidden) { raf = 0; return; }
+    raf = requestAnimationFrame(frame);
+    /* and a lite machine gets thirty frames a second of it; the turn and
+       the float are slow enough that nobody can count them */
+    if (last && isLite() && now - last < 1000 / 30 - 2) return;
 
     const dt = Math.min(0.05, last ? (now - last) / 1000 : 0.016);
     last = now;
@@ -661,20 +677,33 @@ export function initParticleLogo(host: HTMLElement): Stop {
   }
 
   /* ---------------------------------------------------- lifecycle */
+  function wake() {
+    if (raf || !inView || document.hidden) return;
+    last = 0;
+    raf = requestAnimationFrame(frame);
+  }
+  const onVisible = () => wake();
+  document.addEventListener("visibilitychange", onVisible);
+  /* a runtime switch to lite (lib/perf.ts) takes the pixel ratio down on
+     the next frame; the grain count is fixed at build and stays */
+  const onLite = () => { renderer.setPixelRatio(pixelRatio()); resize(); };
+  document.addEventListener(LITE_EVENT, onLite);
+
   const ro = new ResizeObserver(() => resize());
   ro.observe(host);
 
   const io = new IntersectionObserver(
     ([e]) => {
       inView = e.isIntersecting;
+      box.active(inView);
       if (inView) {
         last = 0;
         /* the cursor may have moved half the page while this was away -
            take the hand's position afresh instead of shoving the field
            by the difference */
         primed = false;
-        rect = canvas.getBoundingClientRect();
         host.classList.add("is-live");
+        wake();
       }
     },
     { rootMargin: "120px" },
@@ -693,14 +722,17 @@ export function initParticleLogo(host: HTMLElement): Stop {
     renderer.render(scene, camera);
     host.classList.add("is-live");
   }
-  raf = requestAnimationFrame(frame);
+  wake();
 
   return () => {
     cancelAnimationFrame(raf);
     io.disconnect();
     ro.disconnect();
+    box.release();
     pointer?.release();
     document.removeEventListener("pointerleave", onLeave);
+    document.removeEventListener("visibilitychange", onVisible);
+    document.removeEventListener(LITE_EVENT, onLite);
     canvas.removeEventListener("webglcontextlost", onLost);
     host.classList.remove("is-live");
     geom.dispose();

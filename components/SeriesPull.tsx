@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ART } from "@/lib/series-content";
+import { isLite } from "@/lib/perf";
 
 /* ============================================================
    THE PULL - the picture layer for section 4, the title card.
@@ -208,8 +209,7 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
        a toy that answers the wheel rather than a thing that happened.
        It happens once. After that the section is the deck's frame, and
        the only way to see it again is to load the page again. */
-    const aim = () => {
-      const r = el.getBoundingClientRect();
+    const aim = (r: DOMRect = el.getBoundingClientRect()) => {
       const vh = window.innerHeight || 1;
       const now = clamp01((vh * 0.66 - r.top) / (vh * 1.02));
       if (now > want) want = now;
@@ -234,7 +234,6 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
 
     /* ---- the spray ---------------------------------------------- */
 
-    const CAP = narrow ? 80 : 200;
     const dot = makeDot();
     const motes: Mote[] = [];
 
@@ -243,7 +242,7 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     let ch = 0;
     const size = () => {
       /* below the device's own ratio on purpose - see the note above */
-      dpr = Math.min(window.devicePixelRatio || 1, 1.3);
+      dpr = Math.min(window.devicePixelRatio || 1, isLite() ? 1 : 1.3);
       cw = el.clientWidth;
       ch = el.clientHeight;
       cv.width = Math.round(cw * dpr);
@@ -294,7 +293,14 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       const dt = last ? Math.min((t - last) / 1000, 0.05) : 0.016;
       last = t;
 
-      aim();
+      /* Every read, then every write. write() changes the custom
+         properties the frame's transform is built from, and a box asked
+         for after it is a style recalc forced in the middle of the frame -
+         every frame. Read first, the frame's box is one frame behind its
+         own scale, which moves by thousandths. */
+      const b0 = el.getBoundingClientRect();
+      const f0 = frame.getBoundingClientRect();
+      aim(b0);
       /* the follow. exp() rather than a fixed fraction of the gap, so
          the rate is the same whether the display runs at 60 or at 144 */
       const gap = want - at;
@@ -302,8 +308,6 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       if (Math.abs(gap) < 0.0004) at = want;
       write();
 
-      const b0 = el.getBoundingClientRect();
-      const f0 = frame.getBoundingClientRect();
       /* the frame is translated and scaled, never rotated, so its box
          IS the picture and a percentage of it is a percentage of the
          photograph */
@@ -312,10 +316,13 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       const fw = f0.width;
       const fh = f0.height;
 
-      if (burst > 0.02 && motes.length < CAP) {
-        const rate = burst * burst * (narrow ? 2.6 : 5.5);
+      /* a phone, or a lite machine (lib/perf.ts), gets the thinner spray */
+      const thin = narrow || isLite();
+      const cap = thin ? 80 : 200;
+      if (burst > 0.02 && motes.length < cap) {
+        const rate = burst * burst * (thin ? 2.6 : 5.5);
         let n = Math.floor(rate) + (Math.random() < rate % 1 ? 1 : 0);
-        while (n-- > 0 && motes.length < CAP) spawn();
+        while (n-- > 0 && motes.length < cap) spawn();
       }
 
       show(motes.length > 0);

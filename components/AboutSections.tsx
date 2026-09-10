@@ -246,10 +246,23 @@ export function AboutFounders() {
    The numerals are indices, not labels - the "Why we exist" heading was
    dropped on purpose and is not coming back. They are the same device the
    drivers below use, which is what ties the two sections together. */
+/* one brand solid per driver, in the order the drivers are written. Three
+   that hold their own against cream at the weight the script sets at -
+   sky is the one that does not, so it stays out. */
+const DRIVER_COLORS = ["--tangerine", "--purple", "--pink"] as const;
+
+/* 4 · who we are, and what drives us - one screen.
+
+   These were two sections back to back. They are one argument (a claim,
+   the evidence for it, the values under it), so they share a screen now:
+   the claim, the photograph and the two statements on the left, and the
+   drivers down the right as a short vertical run, strung together by one
+   thread that sways from knot to knot. */
 export function AboutPeople() {
   return (
     <section className="ab-panel ab-people is-light" data-sec="3">
-      <div className="wrap ab-people__body">
+      <div className="wrap ab-who">
+      <div className="ab-people__body">
         {/* The claim across the top, and under it one row: statement,
             photograph, statement.
 
@@ -275,19 +288,6 @@ export function AboutPeople() {
           </h2>
         </header>
 
-        {/* The numerals are indices, not labels - the same device the
-            drivers further down use, which is what makes these read as
-            part of one argument rather than as loose body copy. Written
-            out rather than mapped over an array, because the two are no
-            longer a list: one stands on each side of the photograph.
-
-            DOM order is the reading order of the row - left statement,
-            picture, right statement - so the markup and the layout agree
-            and nothing has to be re-sequenced for a screen reader. */}
-        <p className="ab-people__note ab-people__note--l" data-reveal>
-          {WHY_WE_EXIST}
-        </p>
-
         {/* Cropped at the top and nowhere else. The source is a 4:5
             photograph of the entire company standing on a staircase
             (public/assets/about/people.jpg), and shown whole it makes this
@@ -308,68 +308,50 @@ export function AboutPeople() {
           <img src={ABOUT_IMG.people} alt="The SoCheers team together" />
         </figure>
 
-        <p className="ab-people__note ab-people__note--r" data-reveal>
-          {BELIEF}
-        </p>
+        {/* the two statements, stacked beside the picture */}
+        <div className="ab-people__notes">
+          <p className="ab-people__note" data-reveal>{WHY_WE_EXIST}</p>
+          <p className="ab-people__note" data-reveal>{BELIEF}</p>
+        </div>
       </div>
-    </section>
-  );
-}
 
-/* 5 · nothing special happens at this join. Every section past the opener
-   carries the same off-white (see .ab-panel in about.css) and scrolls into
-   the next one plainly - the old pixel veil was solving a hard
-   black-to-white cut that no longer happens here.
-
-   The card is the site's own card - hairline border, rounded corner,
-   faint panel wash, an index in mono above the name, the same parts in
-   the same order as the featured-work tiles on the home page (.tile in
-   globals.css). What is particular to this section is the name: written
-   in the script, and each one in a brand colour of its own.
-
-   That is not a new idea on this site either - the client marquee on the
-   home page deals the design book's solids out one name at a time (see
-   --brand in components/Sections.tsx). The colour lives in the type here
-   and nowhere else on the card: no tinted washes, no coloured shadows.
-   An earlier pass put all of that in at once, with confetti over the
-   section, and it read as a different website. */
-
-/* one brand solid per card, in the order the drivers are written. Three
-   that hold their own against cream at the weight the script sets at -
-   sky is the one that does not, so it stays out. */
-const DRIVER_COLORS = ["--tangerine", "--purple", "--pink"] as const;
-
-export function AboutDrives() {
-  return (
-    <section className="ab-panel ab-drives is-light" data-sec="4">
-      <div className="wrap ab-drives__inner">
-        {/* The question, and nothing under it. There was a hand-drawn
-            stroke ruled beneath this for a while; the three cards below
-            are already the section's flourish, and a second one directly
-            above them was the page talking over itself. */}
+      {/* What drives us, as a vertical run. Each driver hangs a knot in its
+          own colour, and a length of thread sways from that knot down to
+          the next one. The thread is per driver and stretched to fit
+          (preserveAspectRatio none), so it always lands on the next knot
+          however many lines the copy wraps to. It draws itself down on
+          scroll - see the drivers' thread in lib/about-motion.ts. */}
+      <div className="ab-drives">
         <h2 className="ab-drives__title" data-split>What drives us?</h2>
 
-        <div className="drivers">
+        <ol className="drivers">
           {DRIVERS.map((d, i) => (
-            <article
+            <li
               className="driver"
               key={d.idx}
               data-reveal
               style={{ "--c": `var(${DRIVER_COLORS[i % DRIVER_COLORS.length]})` } as React.CSSProperties}
             >
-              {/* Numeral and name on one line, the numeral first - the
-                  same arrangement the featured-work tiles use on the home
-                  page (.tile__meta in globals.css), where a mono index and
-                  a display name share a baseline. It read as an index
-                  floating above a heading when the two were stacked. */}
+              <span className="driver__knot" aria-hidden="true" />
+              {i < DRIVERS.length - 1 && (
+                <span className="driver__thread" aria-hidden="true">
+                  <svg viewBox="0 0 12 100" preserveAspectRatio="none">
+                    <path
+                      d={i % 2 ? "M6 0C15 30 -3 70 6 100" : "M6 0C-3 30 15 70 6 100"}
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  </svg>
+                </span>
+              )}
               <span className="driver__top">
                 <span className="driver__idx">{d.idx}</span>
                 <span className="driver__head">{d.name}</span>
               </span>
               <p>{d.copy}</p>
-            </article>
+            </li>
           ))}
-        </div>
+        </ol>
+      </div>
       </div>
     </section>
   );
