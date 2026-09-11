@@ -210,8 +210,16 @@ function Handset({ phone }: { phone: Phone }) {
           />
         ) : (
           <>
+            {/* blurred fill behind, whole cover on top - nothing cropped */}
             <img
-              className="st-ph__media"
+              className="st-ph__fill"
+              src={phone.poster}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+            <img
+              className="st-ph__media st-ph__media--fit"
               src={phone.poster}
               alt=""
               loading="lazy"

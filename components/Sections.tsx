@@ -4,6 +4,10 @@ import { AWARDS, BRAND_MARK, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
 import ParticleLogo from "./ParticleLogo";
 import RollText from "./Roll";
 
+/* A reel frame, as the card draws it: the small cut scripts/build-art.mjs
+   writes to /assets/cards. The service pages keep the full-size files. */
+const cardCut = (src: string) => src.replace(/^\/assets\/(?:home|services)\//, "/assets/cards/");
+
 export function Who() {
   /* No wall of its own any more: this section slides up *behind* the pinned
      hero (see .who's negative margin in globals.css) and the hero's own last
@@ -86,20 +90,20 @@ export function What() {
             >
               {/* Ten frames a card, four cards, and exactly four of the
                   forty are ever on screen at once - the rest are the reel
-                  the cycle flips through on hover. The one showing is
-                  fetched with the page; the other nine wait until the card
-                  is near enough to be hovered at all, which is what lazy
-                  means here. They were all eager, and the WHAT WE DO
-                  section was most of the home page's first load for
-                  pictures nobody had asked to see yet. */}
+                  the cycle flips through on hover. All of them are lazy,
+                  the one showing included: the cards are screens below a
+                  pinned hero, and an eager <img> is one React preloads in
+                  the document head, ahead of the opening sequence's own
+                  pictures. Each is the card's small cut (cardCut above),
+                  not the file the service page draws. */}
               <div className="wcard__img">
                 {b.images.map((src, i) => (
                   <img
                     key={src}
-                    src={src}
+                    src={cardCut(src)}
                     alt=""
                     className={i === 0 ? "is-active" : undefined}
-                    loading={i === 0 ? undefined : "lazy"}
+                    loading="lazy"
                     decoding="async"
                   />
                 ))}

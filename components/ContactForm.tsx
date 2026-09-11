@@ -3,7 +3,8 @@
 import { useRef, useState } from "react";
 import ContactBulb from "./ContactBulb";
 import { CONTACT_FORM } from "@/lib/contact-content";
-import { INTENTS, ZOHO_ACTION, ZOHO_HIDDEN, ZOHO_TARGET } from "@/lib/zoho-form";
+import { EMAIL_PATTERN, INTENTS, ZOHO_ACTION, ZOHO_TARGET } from "@/lib/zoho-form";
+import { ZohoHidden, ZohoPhone } from "./ZohoFields";
 
 /* The dedicated page's own form, and now a live one: it posts to the
    client's Zoho form (see lib/zoho-form.ts) rather than handing straight
@@ -92,6 +93,7 @@ export default function ContactForm() {
         action={ZOHO_ACTION}
         method="post"
         encType="multipart/form-data"
+        acceptCharset="UTF-8"
         target={ZOHO_TARGET}
         /* No preventDefault: the browser does the POST itself, into the
            iframe above. All this does is mark that a reply is now ours
@@ -101,10 +103,7 @@ export default function ContactForm() {
           setSending(true);
         }}
       >
-        {Object.entries(ZOHO_HIDDEN).map(([name, value]) => (
-          <input key={name} type="hidden" name={name} value={value} readOnly />
-        ))}
-        <input type="hidden" name="Radio" value={INTENTS[intent]} readOnly />
+        <ZohoHidden />
 
         <fieldset className="ctf__intent">
           <legend className="ctf__intent-legend">I am here to</legend>
@@ -117,8 +116,8 @@ export default function ContactForm() {
               >
                 <input
                   type="radio"
-                  name="intent"
-                  value={o.key}
+                  name="Radio"
+                  value={INTENTS[o.key]}
                   checked={intent === o.key}
                   onChange={() => setIntent(o.key)}
                 />
@@ -202,6 +201,8 @@ export default function ContactForm() {
                 <input
                   type="email"
                   name={partner ? "Email1" : "Email"}
+                  pattern={EMAIL_PATTERN}
+                  maxLength={255}
                   placeholder="myname@companyname.com"
                   autoComplete="email"
                   required
@@ -209,13 +210,7 @@ export default function ContactForm() {
               </label>
               <label className="ctf__field">
                 <span>I&rsquo;d like a call back on</span>
-                <input
-                  type="tel"
-                  name={partner ? "PhoneNumber1" : "PhoneNumber"}
-                  placeholder="+91 98765 43210"
-                  autoComplete="tel"
-                  required
-                />
+                <ZohoPhone prefix={partner ? "PhoneNumber1" : "PhoneNumber"} />
               </label>
             </div>
 

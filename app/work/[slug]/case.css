@@ -213,7 +213,7 @@
 /* A photo keeps its own shape, so a portrait one is held to a height the
    screen can show whole instead of running three screens tall at the
    full width. --ar is the picture's width over its height. */
-.cs-article--visual .cs-shot:not(.cs-shot--bleed){ max-width:min(100%, calc(82svh * var(--ar, 1.5))); }
+.cs-article--visual .cs-shot:not(.cs-shot--bleed){ max-width:min(100%, var(--w, 100%), calc(82svh * var(--ar, 1.5))); }
 
 /* ============================================================
    THE BODY
@@ -236,9 +236,18 @@
    block, so it does not carry a block's worth of space. */
 .cs-body > *:first-child{ margin-top:0; }
 
+/* The case's opening line. It used to be a size up from the copy under it
+   and held to 52ch - and because every block in the column is centred
+   with auto margins, the narrower measure put it in the middle of the
+   column with its left edge well inside everyone else's. It read as a
+   pull quote floating over the page rather than the first sentence of
+   it. Now it takes the column like every other block, at the copy's own
+   size and leading, and leads only by colour: cream against the muted
+   paragraphs below. */
 .cs-lede{
-  font-size:clamp(17px,1.5vw,22px); line-height:1.55; color:var(--cream);
-  max-width:52ch;
+  max-width:var(--col);
+  font-size:clamp(16px,1.25vw,19px); line-height:1.68; color:var(--cream);
+  text-wrap:pretty;
 }
 
 /* The article's own headings. They used to carry the slash mark the
@@ -271,6 +280,17 @@
    thing on the page and still breaks the reading measure, which is the
    whole job. */
 .cs-shot--bleed{ max-width:none; }
+/* A picture keeps its own shape, so a square or portrait one at the full
+   reading column is a screen tall or more - Dhurandhar's launch poster is
+   1:1 and filled the window on its own. Held to a height the screen can
+   show whole, and centred in the column like everything else. --ar is the
+   picture's width over its height, set by the renderer. The board-only
+   layout has its own version of this rule further up.
+
+   --w is the file's own width. A picture smaller than the column -
+   Belgian Waffle's influencer grabs are 540px - is drawn at its size
+   rather than stretched soft across 760. */
+.cs-shot:not(.cs-shot--bleed){ max-width:min(var(--col), var(--w, 100%), calc(82svh * var(--ar, 1.5))); }
 .cs-shot--bleed .cs-shot__in{ border-radius:12px; }
 
 .cs-duo__in{

@@ -6,7 +6,7 @@ import { jumpTo } from "@/lib/motion";
 import Link from "next/link";
 import { pic } from "@/lib/images";
 import {
-  WORK_BROWSE, WORK_CATEGORIES, catLabel, type CategoryId, type WorkAsset,
+  WORK_BROWSE, WORK_CATEGORIES, catLabel, orderWall, type CategoryId, type WorkAsset,
 } from "@/lib/work-content";
 
 /* ============================================================
@@ -132,10 +132,11 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
   /* Filtered here rather than by hiding tiles, so the count under the
      tabs and the tiles on the wall can never disagree - they are the
      same array read twice. */
-  const shown = useMemo(
-    () => (cat === "all" ? assets : assets.filter((a) => a.tags.includes(cat))),
-    [assets, cat],
-  );
+  const shown = useMemo(() => {
+    /* mixed categories up top, not grouped - see WALL_ORDER */
+    const ordered = orderWall(assets);
+    return cat === "all" ? ordered : ordered.filter((a) => a.tags.includes(cat));
+  }, [assets, cat]);
 
   return (
     <section className="wk-browse" id="browse">

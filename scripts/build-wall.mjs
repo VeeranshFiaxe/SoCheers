@@ -61,7 +61,9 @@ const WIDTH = 1600;
 const TILES = [
   /* BFSI */
   { slug: "yes-bank", file: "BFSI/YES BANK/Thumbnail.png" },
-  { slug: "bhim-upi", master: "bhim-upi.src.mp4", at: 8 },
+  /* The client's own thumbnail, not a frame out of the case film - that
+     was a stand-in while the folder held only the film. */
+  { slug: "bhim-upi", file: "BFSI/BHIM UPI/Thumbnail.png" },
   /* Two tiles that used to be pending() in lib/work-content.ts. Both
      campaigns have a film, but the tile is a still either way - the wall
      never plays anything - and both clients sent a key frame, so neither
@@ -73,7 +75,17 @@ const TILES = [
   /* ITC and Havmor used to be pending() placeholders; both folders came in
      the second drop with a thumbnail of their own. */
   { slug: "itc", file: "FMCG/ITC/Thumbnail.png" },
-  { slug: "havmor", file: "FMCG/Havmor/Thumbnail.jpg" },
+  /* Havmor's thumbnail is a 1920x750 banner - wider than every frame the
+     site draws it in (the 16:9 tile, the 4:3 "More work" card, the case
+     banner), so each of them cut the "80" off one side and the family off
+     the other. It is padded to 4:3 with its own paper instead of being
+     cropped: see padded() below. The strip is the blank paper down its
+     left edge, before the "80" starts. */
+  {
+    slug: "havmor",
+    file: "FMCG/Havmor/Thumbnail.jpg",
+    pad: { ratio: 4 / 3, paper: { left: 0, top: 0, width: 190, height: 750 } },
+  },
   /* Entertainment */
   /* Both of these were stand-ins until the second drop - a frame out of the
      case film, and the series thumbnail off the Series page - and both now
@@ -290,6 +302,69 @@ function grab(from, at) {
   return tmp;
 }
 
+/* ------------------------------------------------------------------
+   PADDING A PICTURE OUT RATHER THAN CROPPING IT.
+
+   For a thumbnail whose shape no frame on the site matches. Every frame
+   crops to fill - object-fit: cover - so a picture wider than its frame
+   loses its sides, and on a banner the sides are where the logo and the
+   people are. Making the picture taller instead means the frames only
+   ever crop what was added.
+
+   What is added is the picture's own ground, not a flat colour: these
+   are printed on textured paper, and a flat fill beside real paper
+   reads as a band. `paper` names a blank strip of the picture; it is
+   tiled over a canvas of the new shape, mirrored tile to tile so the
+   joins run into themselves, and the picture goes in the middle with
+   its top and bottom edges faded over 40px so there is no line where
+   the real paper meets the tiled paper.
+   ------------------------------------------------------------------ */
+async function padded(input, { ratio, paper, feather = 40 }) {
+  const { width: w, height: h } = await sharp(input).metadata();
+  const H = Math.round(w / ratio);
+  if (H <= h) return input;
+
+  const tile = await sharp(input).extract(paper).png().toBuffer();
+  const flips = {
+    n: tile,
+    x: await sharp(tile).flop().png().toBuffer(),
+    y: await sharp(tile).flip().png().toBuffer(),
+    xy: await sharp(tile).flip().flop().png().toBuffer(),
+  };
+  const layers = [];
+  for (let r = 0; r * paper.height < H; r++) {
+    for (let c = 0; c * paper.width < w; c++) {
+      const left = c * paper.width;
+      const top = r * paper.height;
+      const cw = Math.min(paper.width, w - left);
+      const ch = Math.min(paper.height, H - top);
+      const piece = flips[(c % 2 ? "x" : "") + (r % 2 ? "y" : "") || "n"];
+      layers.push({
+        input: cw === paper.width && ch === paper.height
+          ? piece
+          : await sharp(piece).extract({ left: 0, top: 0, width: cw, height: ch }).png().toBuffer(),
+        left,
+        top,
+      });
+    }
+  }
+  const sheet = await sharp({ create: { width: w, height: H, channels: 3, background: { r: 236, g: 225, b: 213 } } })
+    .composite(layers)
+    .png()
+    .toBuffer();
+
+  const f = (feather / h).toFixed(4);
+  const mask = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">` +
+    `<stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="${f}" stop-color="#fff" stop-opacity="1"/>` +
+    `<stop offset="${1 - f}" stop-color="#fff" stop-opacity="1"/><stop offset="1" stop-color="#fff" stop-opacity="0"/>` +
+    `</linearGradient></defs><rect width="100%" height="100%" fill="url(#g)"/></svg>`,
+  );
+  const art = await sharp(input).ensureAlpha().composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
+
+  return sharp(sheet).composite([{ input: art, left: 0, top: Math.round((H - h) / 2) }]).png().toBuffer();
+}
+
 /* node scripts/build-wall.mjs itc havmor - only the slugs that start with
    one of the arguments. With none, everything, as before. */
 const ONLY = process.argv.slice(2);
@@ -297,7 +372,7 @@ const wanted = (slug) => !ONLY.length || ONLY.some((p) => slug.startsWith(p));
 
 const dims = [];
 
-for (const { slug, file, master, at } of TILES) {
+for (const { slug, file, master, at, pad } of TILES) {
   if (!wanted(slug)) continue;
   const rel = master ?? file;
   const from = master ? path.join(MASTERS, master) : path.join(SRC, file);
@@ -311,7 +386,7 @@ for (const { slug, file, master, at } of TILES) {
   const isFilm = /\.(mp4|mov|m4v)$/i.test(rel);
   const input = isFilm ? grab(from, at ?? 0) : from;
 
-  const out = await sharp(input)
+  const out = await sharp(pad ? await padded(input, pad) : input)
     .resize({ width: WIDTH, withoutEnlargement: true })
     /* Same encode as the pinned stills (scripts/build-pinned.mjs) -
        mozjpeg 82, progressive - so the two sections of the page are

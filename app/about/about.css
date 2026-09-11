@@ -1281,19 +1281,31 @@
 .ab-who{
   align-self:stretch; width:100%;
   display:grid;
-  grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+  grid-template-columns:minmax(0,2fr) minmax(0,1fr);
   column-gap:clamp(40px,5.5vw,110px);
-  align-items:center;
+  /* Two shared rows, through subgrid on both columns: the heads sit in
+     the first, and the photograph, the statements and the drivers all
+     start together on the second - so the copy on either side of the
+     screen begins on one line instead of each column floating on its
+     own. */
+  grid-template-rows:auto auto;
+  align-items:start;
 }
 
 /* ---- left: claim, photograph, statements ---- */
 .ab-people__body{
+  grid-row:1 / span 2;
   display:grid;
-  grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);
+  /* close to even, so the statements get a measure of about fifty
+     characters and set in three or four lines rather than five or six */
+  grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+  grid-template-rows:subgrid;
   column-gap:clamp(22px,2.4vw,40px);
-  align-items:end;
+  align-items:start;
 }
-.ab-people__head{ grid-column:1 / -1; }
+.ab-people__head{ grid-column:1 / -1; grid-row:1; }
+.ab-people__shot,
+.ab-people__notes{ grid-row:2; }
 .ab-people__title{
   margin-top:clamp(14px,2vh,24px);
   font-size:clamp(28px,3.6vw,54px);
@@ -1315,8 +1327,14 @@
   border-radius:14px;
 }
 
+/* the same drop as the photograph, so the first hairline is level with
+   its top edge. Capped at a measure that sets both statements in four
+   lines. */
 .ab-people__notes{
-  display:flex; flex-direction:column; gap:clamp(18px,2.6vh,30px);
+  margin-top:clamp(22px,3.4vh,40px);
+  max-width:39ch;
+  display:flex; flex-direction:column;
+  gap:clamp(20px,2.8vh,32px);
 }
 .ab-people__note{
   border-top:1px solid var(--line);
@@ -1326,8 +1344,15 @@
 }
 
 /* ---- right: what drives us ---- */
-.ab-drives{ position:relative; }
+/* The question sits on the floor of the head row, level with the foot of
+   the claim, and the list starts on the photograph's line. */
+.ab-drives{
+  position:relative;
+  grid-row:1 / span 2;
+  display:grid; grid-template-rows:subgrid;
+}
 .ab-drives__title{
+  align-self:end;
   font-family:var(--f-display); font-weight:700;
   font-size:clamp(24px,2.4vw,38px); line-height:1.02; letter-spacing:-.03em;
   text-transform:none;
@@ -1341,8 +1366,8 @@
 }
 
 .drivers{
-  --gap:clamp(18px,2.8vh,32px);
-  --name:clamp(22px,1.9vw,30px);
+  --gap:clamp(14px,2vh,24px);
+  --name:clamp(20px,1.7vw,27px);
   --knot:12px;
   /* the knot's centre, level with the middle of the name */
   --knot-y:calc(var(--name) * .56);
@@ -1383,7 +1408,7 @@
 /* numeral and name on one baseline, as .tile__meta sets them */
 .driver__top{
   display:flex; align-items:baseline; gap:.7em;
-  margin-bottom:6px;
+  margin-bottom:4px;
 }
 .driver__idx{
   font-family:var(--f-mono); font-weight:500; font-style:normal;
@@ -1397,8 +1422,7 @@
   color:var(--c);
 }
 .driver p{
-  max-width:42ch;
-  font-size:clamp(13px,.95vw,15px); line-height:1.55; color:var(--muted);
+  font-size:clamp(13px,.95vw,15px); line-height:1.5; color:var(--muted);
   text-wrap:pretty;
 }
 
@@ -1411,10 +1435,16 @@
    little height to pay for them. */
 @media (max-width:1200px){
   .ab-who{ grid-template-columns:minmax(0,1.45fr) minmax(0,1fr); }
-  .ab-people__body{ grid-template-columns:1fr; }
+  /* the notes drop under the photo, so the left column is three rows
+     and no longer fits the shared two - both columns go back to their
+     own flow, the drivers centred against the left */
+  .ab-people__body{ grid-template-columns:1fr; grid-template-rows:none; }
+  .ab-people__shot,
+  .ab-people__notes{ grid-row:auto; }
+  .ab-drives{ display:block; align-self:center; }
   .ab-people__shot img{ max-height:min(38svh, 460px); }
   .ab-people__notes{
-    margin-top:clamp(18px,2.6vh,28px);
+    margin-top:clamp(18px,2.6vh,28px); max-width:none;
     display:grid; grid-template-columns:1fr 1fr; gap:clamp(18px,2vw,28px);
   }
 }
@@ -1424,7 +1454,9 @@
     min-height:0; display:block;
     padding:clamp(72px,9.5vh,120px) 0 clamp(48px,7vh,80px);
   }
-  .ab-who{ grid-template-columns:1fr; row-gap:clamp(56px,8vh,88px); }
+  .ab-who{ grid-template-columns:1fr; grid-template-rows:none; row-gap:clamp(56px,8vh,88px); }
+  .ab-people__body,
+  .ab-drives{ grid-row:auto; }
   .ab-people__shot img{ max-height:none; }
   .ab-drives{ max-width:560px; }
 }

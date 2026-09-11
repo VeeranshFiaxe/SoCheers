@@ -25,6 +25,10 @@ import { IMG, MEANING, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
    Two runs, because the sentence is one line and the picture opens in
    the middle of it. */
 const GREETING = "We are SoCheers";
+const NAME = "SoCheers";
+/* per-letter tilt for the headword rising back up - the same tumble each
+   letter fell with in initHero (lib/motion.ts), so it comes back as it went */
+const SPIN = [-24, 16, -10, 28, -18, 12, -30, 20];
 
 /* ============================================================
    THE HERO  (the home page)
@@ -126,7 +130,22 @@ export default function Hero() {
                   two halves of the line are where they are */}
               <span className="hero__gap" aria-hidden="true" />
               <span className="hero__side hero__side--r">
-                <span className="hero__type" data-test-type={2}>SoCheers</span>
+                {/* Typed in the display face, then re-lettered in the
+                    playful one on top of it (initHero, lib/motion.ts).
+                    The display copy stays in the layout so the line
+                    never changes width under the swap. */}
+                <span className="hero__type hero__type--name" data-test-type={2}>
+                  <span className="hero__name-sans" data-name-sans>
+                    {NAME.split("").map((ch, i) => (
+                      <span className="hero__ch" data-name-sans-ch key={i}>{ch}</span>
+                    ))}
+                  </span>
+                  <span className="hero__name-play" data-name-play>
+                    {NAME.split("").map((ch, i) => (
+                      <span className="hero__ch" data-name-play-ch key={i}>{ch}</span>
+                    ))}
+                  </span>
+                </span>
               </span>
             </span>
 
@@ -181,7 +200,12 @@ export default function Hero() {
               what you watch and the photograph is what you read on. Same
               file and same set the live hero draws, at the same rectangle
               - the aspect matches the film's, so the swap does not move
-              a single edge. */}
+              a single edge.
+
+              Lazy and low priority: it is invisible until the first
+              scroll, and an eager <img> is one React preloads in the
+              document head - which put this in front of the opening
+              sequence's own pictures. */}
           <img
             className="hero__stage-img hero__stage-img--test"
             data-stage-img
@@ -189,6 +213,9 @@ export default function Hero() {
             srcSet={TEAM_SRCSET}
             sizes={TEAM_SIZES}
             alt="The SoCheers team"
+            loading="lazy"
+            fetchPriority="low"
+            decoding="async"
           />
 
           <div className="hero__stage-vignette" data-stage-vignette aria-hidden="true" />
@@ -209,7 +236,13 @@ export default function Hero() {
                 <span className="sr-only">{MEANING.word}</span>
                 <span aria-hidden="true">
                   {MEANING.word.split("").map((ch, i) => (
-                    <span className="mword__ch" data-meaning-char key={i}>{ch}</span>
+                    <span
+                      className="mword__ch"
+                      data-meaning-char
+                      key={i}
+                      /* the tilt each letter rises back up with (app/hero.css) */
+                      style={{ "--spin": `${SPIN[i % SPIN.length]}deg` } as React.CSSProperties}
+                    >{ch}</span>
                   ))}
                   <span className="mword__caret" data-meaning-caret><i /></span>
                 </span>

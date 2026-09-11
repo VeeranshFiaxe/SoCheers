@@ -1703,6 +1703,15 @@
   object-position:50% 38%;
   filter:saturate(1.05) contrast(1.04);
 }
+/* the screen is taller than a 9:16 cover, so the cover is shown whole
+   and a blurred copy of it fills the gap above and below */
+.st-ph__media--fit{ object-fit:contain; object-position:50% 50%; }
+.st-ph__fill{
+  position:absolute; inset:-8%;
+  width:116%; height:116%;
+  object-fit:cover; display:block;
+  filter:blur(14px) brightness(.55) saturate(1.1);
+}
 
 /* the wait. The one thing on this section that says the cut has not
    landed, and it says it by behaving like a screen with nothing playing

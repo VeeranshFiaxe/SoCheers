@@ -48,12 +48,29 @@ export default function ParticleLogo() {
         });
     };
 
-    const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) boot(); },
+    /* Near is not enough on its own. WHO WE ARE sits under the pinned hero
+       from the first frame (html.is-pinned .who in globals.css), so the
+       observer fired on load and Three.js was parsed during the opening
+       sequence anyway. It also waits for the first scroll - the section
+       cannot be seen before one. */
+    let near = false;
+    let scrolled = window.scrollY > 0;
+    const maybeBoot = () => { if (near && scrolled) boot(); };
+    const onScroll = () => {
+      if (window.scrollY <= 0) return;
+      scrolled = true;
+      window.removeEventListener("scroll", onScroll);
+      maybeBoot();
+    };
+    if (!scrolled) window.addEventListener("scroll", onScroll, { passive: true });
+
+    const io = new IntersectionObserver(([e]) => { near = e.isIntersecting; maybeBoot(); },
       { rootMargin: "500px" });
     io.observe(el);
 
     return () => {
       dropped = true;
+      window.removeEventListener("scroll", onScroll);
       io.disconnect();
       stop?.();
       stop = null;

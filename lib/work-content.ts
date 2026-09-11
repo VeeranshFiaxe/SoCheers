@@ -426,7 +426,7 @@ export const WORK_ASSETS: WorkAsset[] = [
   real("belgian-waffle", "The Belgian Waffle Co.", "Everyone Knows", "fmcg", "video", 1600, 1200, "belgian-waffle"),
   pending(5, "Prava", "fmcg"),
   real("itc", "ITC Store", "Naa Ready", "fmcg", "image", 1376, 768, "itc-naa-ready"),
-  real("havmor", "Havmor", "#80YearsOfHappyMemories", "fmcg", "image", 1600, 625, "havmor-80-years"),
+  real("havmor", "Havmor", "#80YearsOfHappyMemories", "fmcg", "image", 1600, 1200, "havmor-80-years"),
   pending(8, "Tata Soulfull", "fmcg"),
   pending(9, "Yippee", "fmcg"),
 
@@ -466,6 +466,56 @@ export const WORK_ASSETS: WorkAsset[] = [
   pending(19, "Cipla Innoventia", "others"),
   pending(22, "Cordelia Cruises", "others"),
 ];
+
+/* ------------------------------------------------------------------
+   THE ORDER THE WALL IS SHOWN IN.
+
+   WORK_ASSETS above is kept grouped by category, because that is how it
+   is maintained. The wall is not shown that way: under All, four BFSI
+   campaigns in a row made the page look like a banking portfolio before
+   anyone scrolled. So the opening rows take one from each category in
+   turn, starting with the client's own picks - Dhurandhar 2, Zurich
+   Kotak, then FMCG (Belgian Waffle) - and every other campaign follows
+   in the same rotation.
+
+   Ids are the tile's own id, the last part of its publicId, so this
+   keeps working when the list comes from Cloudinary instead. Anything
+   not named here keeps its place after the named ones, and placeholder
+   tiles always go last. A single category's tab reads the same list,
+   so its order follows this one too. */
+export const WALL_ORDER = [
+  "dhurandhar-2",     // Entertainment
+  "zurich-kotak",     // BFSI
+  "belgian-waffle",   // FMCG
+  "superdry",         // Fashion / Beauty / Luxury
+  "croma",            // Others
+  "yes-bank",
+  "maa-behen",
+  "havmor",
+  "wacoal",
+  "boat",
+  "bhim-upi",
+  "netflix-mi-srh",
+  "itc",
+  "bgmi",
+  "indusind",
+  "mandala-murders",
+  "croma-dreams",
+  "made-in-titan",
+  "special-ops-2",
+];
+
+export const orderWall = (assets: WorkAsset[]): WorkAsset[] => {
+  const rank = (a: WorkAsset) => {
+    const at = WALL_ORDER.indexOf(a.publicId.split("/").pop() ?? "");
+    return a.pending ? 20000 : at === -1 ? 10000 : at;
+  };
+  /* stable, so the unnamed ones keep the order they came in */
+  return assets
+    .map((a, i) => ({ a, i, r: rank(a) }))
+    .sort((x, y) => x.r - y.r || x.i - y.i)
+    .map((x) => x.a);
+};
 
 /* ------------------------------------------------------------------
    THE CASE TEMPLATE, and the one rule that shaped it.

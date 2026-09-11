@@ -62,7 +62,7 @@ const GAP = 620;
    running away from you, so the way to take time out of the run without
    taking the effect out of it is to lean harder on the part that is
    already leaning. */
-const FALL = [1.25, 0.95, 0.66, 0.48, 0.35, 0.27, 0.22, 0.19, 0.17, 0.16, 0.15, 0.145, 0.14, 0.135];
+const FALL = [1.25, 0.66, 0.46, 0.34, 0.25, 0.19, 0.155, 0.135, 0.12, 0.11, 0.105, 0.1, 0.1, 0.095];
 /* and how much of the previous fall has to finish before the next starts -
    same idea, tightened from the third entry on so the tail overlaps into
    itself harder rather than each wall waiting its turn */

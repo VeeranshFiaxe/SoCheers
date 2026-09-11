@@ -30,7 +30,7 @@
    to paint a photo it will never show more than a few million pixels of.
    On a phone that is the single most expensive thing on the home page.
 
-   So it stays, and it gets company: the same frame at 1920 and 3840, and
+   So it stays, and it gets company: the same frame at 960, 1920 and 3840, and
    a `sizes`/`srcset` on the two <img> that use it (components/Hero.tsx,
    components/ContactModal.tsx) so the browser picks. The 4K laptop still
    gets its 7680; a phone gets a picture it can decode in one frame.
@@ -64,6 +64,11 @@ const ART = {
      OVERTURE_WALLS in lib/content.ts */
   "who-culture": "public/assets/who-culture.jpg",
   "crowd-wall": "public/assets/about/crowd.jpg",
+  /* three more walls, delivered as JPEGs and referenced straight from IMG
+     in lib/content.ts until PageSpeed flagged them */
+  brain: "public/assets/brain-DH7sqVir.jpg",
+  "photoshop-face": "public/assets/photoshop-face-BOtm4GGN.jpg",
+  "boot-phone": "public/assets/boot-phone-BJcXYlVw.jpg",
   /* the four step cards on the Series page (`steps` in
      lib/series-content.ts). Drawn about 400px square and delivered as
      PNGs of up to two megabytes each - re-run this after replacing any
@@ -85,7 +90,7 @@ const MAX_EDGE = 3000;
 const TEAM = {
   src: "public/assets/team-group-uhd.jpg",
   out: "public/assets/art",
-  widths: [1920, 3840],
+  widths: [960, 1920, 3840],
 };
 
 /* ------------------------------------------------------------------
@@ -177,8 +182,11 @@ for (const [name, rel] of Object.entries(ART)) {
   }
   /* 82 rather than the card frames' 78 below: these are drawn large - a
      full-bleed hero, a case study board - where a card frame is 500px
-     wide at 28% opacity behind a gradient. */
-  const { before, info } = await encode(from, path.join(OUT, `${name}.webp`), MAX_EDGE, 82);
+     wide at 28% opacity behind a gradient. The two walls are the
+     exception: they are in the overture's preload, and at 82 they were
+     most of its weight. */
+  const quality = name === "who-culture" || name === "crowd-wall" ? 72 : 82;
+  const { before, info } = await encode(from, path.join(OUT, `${name}.webp`), MAX_EDGE, quality);
   console.log(
     `· ${name.padEnd(20)} ${info.width}x${info.height}  ` +
       `${kb(before)} -> ${kb(info.size)}  (${(100 - (info.size / before) * 100).toFixed(0)}% off)`,
@@ -225,6 +233,30 @@ for (const [set, edge, quality, label] of [
         `${kb(before)} -> ${kb(info.size)}  (${(100 - (info.size / before) * 100).toFixed(0)}% off)`,
     );
   }
+}
+
+/* ---- the WHAT WE DO card frames, cut again for the card ----
+
+   The reels mix frames out of the home folder with the service pages' own
+   pictures (/assets/services), and the service pages draw those large - so
+   the cards get their own copy rather than a smaller file under the same
+   name. A frame is a texture at 28% opacity, 386px wide on a laptop and a
+   column on a phone, so it is cut to cover about 660x990 and no more. Read
+   off the web cuts, not masters: the service pictures have none here.
+   components/Sections.tsx (cardCut) maps a reel's path onto this folder. */
+const CARDS_OUT = path.join(ROOT, "public/assets/cards");
+fs.mkdirSync(CARDS_OUT, { recursive: true });
+const content = fs.readFileSync(path.join(ROOT, "lib/content.ts"), "utf8");
+const buckets = content.slice(content.indexOf("export const BUCKETS"));
+const frames = new Set(
+  buckets.slice(0, buckets.indexOf("\nexport ")).match(/\/assets\/(?:home|services)\/[^"]+\.webp/g) ?? [],
+);
+for (const frame of frames) {
+  const info = await sharp(path.join(ROOT, "public", frame))
+    .resize({ width: 660, height: 990, fit: "outside", withoutEnlargement: true })
+    .webp({ quality: 68, effort: 6 })
+    .toFile(path.join(CARDS_OUT, path.basename(frame)));
+  console.log(`· card ${path.basename(frame).padEnd(28)} ${info.width}x${info.height}  ${kb(info.size)}`);
 }
 
 console.log(`\n${(saved / 1048576).toFixed(1)}MB off the wire.`);

@@ -763,6 +763,63 @@ export function initSite(): () => void {
          canAct below) - the same deal the overture gets, and for the same
          reason: a gesture aimed at an intro must not be banked against
          the sequence waiting behind it. */
+      /* ---- the playful "SoCheers" falling off the greeting, and back ----
+         Not on tl: it has to drop just BEFORE the film starts to grow (on
+         tl it would be covered by the film as it went), so it is its own
+         tween, fired by the opening and by advance(), and undone by
+         retreat() when the reader scrolls back up to the start. */
+      const nameChs = isTest
+        ? Array.from(document.querySelectorAll<HTMLElement>("[data-name-play-ch]"))
+        : [];
+      const TUMBLE = [-24, 16, -10, 28, -18, 12, -30, 20];
+      /* how far ahead of the film's grow the drop starts */
+      const NAME_LEAD = 0.45;
+      /* "We are" goes on the same beat, the other way: a little wind-up to
+         the right and then it shoots off the left edge */
+      const weAre = isTest ? document.querySelector<HTMLElement>('[data-test-type="1"]') : null;
+      let nameDown = false;
+      let nameRise: gsap.core.Tween | null = null;
+      const dropName = () => {
+        nameRise?.kill();
+        nameRise = null;
+        if (!nameChs.length || nameDown) return;
+        nameDown = true;
+        if (weAre) {
+          const off = weAre.getBoundingClientRect().right + 80;
+          gsap.to(weAre, {
+            x: -off, skewX: 14,
+            duration: 0.6, ease: "back.in(2.2)",
+            overwrite: "auto",
+          });
+        }
+        const drop = pin.offsetHeight;
+        gsap.to(nameChs, {
+          y: (i: number) => drop + 40 * (i % 3),
+          rotation: (i: number) => TUMBLE[i % TUMBLE.length],
+          duration: 0.75, ease: "power2.in",
+          stagger: { each: 0.05, from: "random" },
+          overwrite: "auto",
+        });
+      };
+      const raiseName = () => {
+        nameRise = null;
+        if (!nameChs.length || !nameDown) return;
+        nameDown = false;
+        if (weAre) {
+          gsap.to(weAre, {
+            x: 0, skewX: 0,
+            duration: 0.8, ease: "back.out(1.6)",
+            overwrite: "auto",
+          });
+        }
+        gsap.to(nameChs, {
+          y: 0, rotation: 0,
+          duration: 0.9, ease: "power3.out",
+          stagger: { each: 0.05, from: "random" },
+          overwrite: "auto",
+        });
+      };
+
       let introRunning = false;
       const lines = greet?.querySelector<HTMLElement>("[data-test-lines]") ?? null;
       if (isTest && greet && lines) {
@@ -774,6 +831,10 @@ export function initSite(): () => void {
         /* every character of it, which is how many steps the shutter
            takes - "We are" + a space + "SoCheers" */
         const CHARS = 15;
+        /* "SoCheers" in both faces, letter by letter, for the re-lettering */
+        const sansChs = greet.querySelectorAll<HTMLElement>("[data-name-sans-ch]");
+        const playChs = greet.querySelectorAll<HTMLElement>("[data-name-play-ch]");
+        const MORPH = 0.95;
 
         gsap.set(greet, { autoAlpha: 1 });
         /* The line, shut.
@@ -838,6 +899,12 @@ export function initSite(): () => void {
           if (introRunning) return;
           introRunning = true;
           note("opening starts");
+          gsap.set(sansChs, { autoAlpha: 1, yPercent: 0, filter: "blur(0px)" });
+          gsap.set(playChs, { autoAlpha: 0, y: 0, rotation: 0 });
+          if (weAre) gsap.set(weAre, { x: 0, skewX: 0 });
+          nameRise?.kill();
+          nameRise = null;
+          nameDown = false;
           /* On its own clock, and a clock that cannot jump.
 
              The site runs GSAP with lag smoothing off (initLenis - it is
@@ -973,6 +1040,23 @@ export function initSite(): () => void {
             t.add(() => caret.removeAttribute("data-caret-on"), at);
             t.set(caret, { opacity: 0 }, at);
           }
+
+          /* "SoCheers" turns playful: each display letter lifts off and
+             blurs away as its playful twin pops up into its place, the
+             two waves running left to right a beat apart. */
+          if (sansChs.length && playChs.length) {
+            t.to(sansChs, {
+              autoAlpha: 0, yPercent: -35, filter: "blur(6px)",
+              duration: 0.32, stagger: 0.045, ease: "power2.in",
+            }, at);
+            t.fromTo(playChs,
+              { autoAlpha: 0, yPercent: 45, rotation: -14, scale: 0.6 },
+              { autoAlpha: 1, yPercent: 0, rotation: 0, scale: 1,
+                duration: 0.55, stagger: 0.045, ease: "back.out(2.2)" },
+              at + 0.14);
+            at += MORPH;
+          }
+
           t.to(lines, { "--split": 1, duration: PART, ease: "power3.inOut" }, at);
           t.to(stage, { autoAlpha: 1, duration: 0.24, ease: "power1.out" }, at + PART * 0.08);
           t.to(stage, { scaleX: 1, scaleY: 1, duration: PART, ease: "power3.inOut" }, at);
@@ -992,7 +1076,13 @@ export function initSite(): () => void {
              if the reader had done it - which is what lets them scroll
              back up out of it, or on into the definition, with nothing
              the wiser about who started it. */
-          t.add(() => advance(showCue), at + PART + HOLD_OPEN);
+          const expandAt = at + PART + HOLD_OPEN;
+
+          /* "SoCheers" drops just before the film takes the screen (see
+             dropName). It comes back up as the definition's headword. */
+          t.add(dropName, expandAt - NAME_LEAD);
+
+          t.add(() => advance(showCue), expandAt);
         };
 
         /* The room owns the screen until it says otherwise. With no room
@@ -1149,42 +1239,113 @@ export function initSite(): () => void {
       // is what actually reads as typing rather than a staggered fade-in.
       // Fast and punchy on purpose: the whole word is done in a fraction of
       // the budget the old drop-in used.
-      tl.fromTo("[data-meaning-word]", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0 }, E(0.12));
-      tl.fromTo("[data-meaning-char]",
-        { autoAlpha: 0 },
-        { autoAlpha: 1, duration: ENTRY * 0.02, stagger: ENTRY * 0.017, ease: "steps(1)" },
-        E(0.12));
-      tl.fromTo("[data-meaning-caret]",
-        { autoAlpha: 0 },
-        { autoAlpha: 1, duration: ENTRY * 0.02 }, E(0.12));
-      tl.to("[data-meaning-caret]",
-        { autoAlpha: 0, duration: ENTRY * 0.05 },
-        E(0.12) + ENTRY * 0.017 * (MEANING.word.length - 1) + ENTRY * 0.06);
+      /* On the test cut the headword is not typed: "SoCheers" fell off
+         the greeting in the opening, and this is it coming back up - each
+         letter rising from a screen below, tilted, and settling into
+         place. --up and --home are read by app/hero.css. The rest of the
+         entry is set back to make room for it. */
+      const T = isTest
+        ? { say: 0.62, rule: 0.72, sense: 0.8, each: 0.1, note: 1.22 }
+        : { say: 0.34, rule: 0.44, sense: 0.54, each: 0.12, note: 1.1 };
+      if (isTest) {
+        const RISE_AT = AT + ENTRY * 0.04;
+        /* Each headword letter starts where its twin in the greeting fell
+           from - same x, a screen below, at the greeting's size - so the
+           word visibly comes back up out of its own fall. Offsets, not
+           rects: every element involved is mid-transform at some point. */
+        const headChs = Array.from(document.querySelectorAll<HTMLElement>("[data-meaning-char]"));
+        const fellChs = Array.from(document.querySelectorAll<HTMLElement>("[data-name-play-ch]"));
+        const centreIn = (el: HTMLElement) => {
+          let x = el.offsetWidth / 2, y = el.offsetHeight / 2;
+          let n: HTMLElement | null = el;
+          while (n && n !== pin) {
+            x += n.offsetLeft; y += n.offsetTop;
+            n = n.offsetParent as HTMLElement | null;
+          }
+          return { x, y };
+        };
+        const measureRise = () => {
+          headChs.forEach((h, i) => {
+            const f = fellChs[i];
+            if (!f) return;
+            const a = centreIn(f), b = centreIn(h);
+            const fs = parseFloat(getComputedStyle(f).fontSize);
+            const hs = parseFloat(getComputedStyle(h).fontSize);
+            h.style.setProperty("--dx", `${(a.x - b.x).toFixed(1)}px`);
+            h.style.setProperty("--dy", `${(a.y - b.y).toFixed(1)}px`);
+            if (fs && hs) h.style.setProperty("--s0", (fs / hs).toFixed(3));
+          });
+        };
+        measureRise();
+        on(window, "resize", measureRise);
+        ScrollTrigger.addEventListener("refresh", measureRise);
+        cleanups.push(() => ScrollTrigger.removeEventListener("refresh", measureRise));
+        /* hidden and parked a screen down from the start - set here
+           rather than left to the tweens below, which only take hold once
+           the playhead reaches them */
+        gsap.set("[data-meaning-caret]", { autoAlpha: 0 });
+        gsap.set("[data-meaning-word]", { autoAlpha: 1 });
+        gsap.set("[data-meaning-char]", { autoAlpha: 0, "--up": 1, "--home": 1 });
+        tl.fromTo("[data-meaning-char]",
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: 0, immediateRender: false },
+          RISE_AT);
+        tl.fromTo("[data-meaning-char]",
+          /* 1 · back up, one letter at a time in no order, into the spot
+             they fell from - the word re-forms there, untumbling */
+          { "--up": 1 },
+          { "--up": 0, duration: ENTRY * 0.22, ease: "power2.out",
+            stagger: { each: ENTRY * 0.02, from: "random" },
+            immediateRender: false,
+            /* the greeting has long since parted by now, so this is the
+               settled layout to measure against */
+            onStart: measureRise },
+          RISE_AT);
+        /* 2 · a breath, and then the re-formed word glides across into the
+           headword's place as one, growing into it */
+        tl.fromTo("[data-meaning-char]",
+          { "--home": 1 },
+          { "--home": 0, duration: ENTRY * 0.3, ease: "sine.inOut",
+            stagger: ENTRY * 0.006, immediateRender: false },
+          RISE_AT + ENTRY * 0.36);
+      } else {
+        tl.fromTo("[data-meaning-word]", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0 }, E(0.12));
+        tl.fromTo("[data-meaning-char]",
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: ENTRY * 0.02, stagger: ENTRY * 0.017, ease: "steps(1)" },
+          E(0.12));
+        tl.fromTo("[data-meaning-caret]",
+          { autoAlpha: 0 },
+          { autoAlpha: 1, duration: ENTRY * 0.02 }, E(0.12));
+        tl.to("[data-meaning-caret]",
+          { autoAlpha: 0, duration: ENTRY * 0.05 },
+          E(0.12) + ENTRY * 0.017 * (MEANING.word.length - 1) + ENTRY * 0.06);
+      }
       tl.fromTo("[data-meaning-say]",
         { autoAlpha: 0, scale: 0.3 },
-        { autoAlpha: 1, scale: 1, duration: ENTRY * 0.22, ease: "back.out(2.4)" }, E(0.34));
+        { autoAlpha: 1, scale: 1, duration: ENTRY * 0.22, ease: "back.out(2.4)" }, E(T.say));
 
       // phonetics and part of speech
       tl.fromTo("[data-meaning-meta]",
         { autoAlpha: 0, y: 16 },
         { autoAlpha: 1, y: 0, duration: ENTRY * 0.22, stagger: ENTRY * 0.05, ease: "power2.out" },
-        E(0.34));
+        E(T.say));
 
       // the rule draws itself, then the senses land on it one at a time
       tl.fromTo("[data-meaning-rule]",
         { scaleX: 0 },
         { scaleX: 1, transformOrigin: "left center", duration: ENTRY * 0.28, ease: "power3.inOut" },
-        E(0.44));
+        E(T.rule));
       tl.fromTo("[data-meaning-sense]",
         { autoAlpha: 0, x: -34 },
-        { autoAlpha: 1, x: 0, duration: ENTRY * 0.28, stagger: ENTRY * 0.12, ease: "power3.out" },
-        E(0.54));
+        { autoAlpha: 1, x: 0, duration: ENTRY * 0.28, stagger: ENTRY * T.each, ease: "power3.out" },
+        E(T.sense));
 
       // the closing note, once every sense has landed
       tl.fromTo("[data-meaning-note]",
         { autoAlpha: 0, y: 10 },
         { autoAlpha: 1, y: 0, duration: ENTRY * 0.2, ease: "power2.out" },
-        E(1.1));
+        E(T.note));
 
       /* - phase 3 · the frame gives way -
          The whole hero comes apart from the bottom up and WHO WE ARE is
@@ -1224,7 +1385,8 @@ export function initSite(): () => void {
         ? [
             { name: "rest", t: REST, fwd: 0, back: 1.5 },
             { name: "open", t: OPEN, fwd: 2.0, back: 1.3 },
-            { name: "hold", t: HOLD, fwd: 2.2, back: 1.3 },
+            /* 2.8, not 2.2: the headword's two-move return needs the room */
+            { name: "hold", t: HOLD, fwd: 2.8, back: 1.3 },
             { name: "done", t: DONE, fwd: 1.5, back: 0 },
           ]
         : [
@@ -1532,7 +1694,22 @@ export function initSite(): () => void {
         note(`advance ${phase}->${next?.name ?? "-"}${onArrive ? " (auto)" : ""}`);
         if (next) {
           phase = next.name;
-          play(next.t, next.fwd, next.name === "done" ? release : onArrive);
+          const go = () => play(next.t, next.fwd, next.name === "done" ? release : onArrive);
+          /* Leaving the start with "SoCheers" still in the line - the reader
+             scrolled back up to it - so it drops first and the film grows
+             a beat later, same as the opening does it. */
+          if (next.name === "open" && nameChs.length) {
+            /* a rise still waiting to start is simply called off */
+            nameRise?.kill();
+            nameRise = null;
+            if (!nameDown) {
+              dropName();
+              busy = true;
+              gsap.delayedCall(NAME_LEAD, go);
+              return;
+            }
+          }
+          go();
           return;
         }
         // Already crumbled, yet still holding the scroll. Nothing is left to
@@ -1544,7 +1721,16 @@ export function initSite(): () => void {
       };
       const retreat = () => {
         const prev = STOPS[stopAt(phase) - 1];
-        if (prev) { phase = prev.name; play(prev.t, prev.back); }
+        if (prev) {
+          phase = prev.name;
+          play(prev.t, prev.back);
+          /* back at the start: "SoCheers" comes back up into the line once
+             the film has shrunk far enough not to cover it */
+          if (prev.name === "rest" && nameDown) {
+            nameRise?.kill();
+            nameRise = gsap.delayedCall(prev.back * 0.45, raiseName);
+          }
+        }
       };
 
       /* Taking the scroll back as the reader comes up into the pin.

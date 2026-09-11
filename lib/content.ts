@@ -19,10 +19,10 @@ export const IMG = {
      it (components/Hero.tsx, components/ContactModal.tsx). */
   team: "/assets/team-group-uhd.jpg",
   camera: "/assets/arri-camera-DX29MVBW.jpg",
-  brain: "/assets/brain-DH7sqVir.jpg",
+  brain: "/assets/art/brain.webp",
   creativity: "/assets/home/creativity-7.webp",
-  photoshop: "/assets/photoshop-face-BOtm4GGN.jpg",
-  bootPhone: "/assets/boot-phone-BJcXYlVw.jpg",
+  photoshop: "/assets/art/photoshop-face.webp",
+  bootPhone: "/assets/art/boot-phone.webp",
   culture: "/assets/art/culture.webp",
   workBfsi: "/assets/art/work-bfsi.webp",
   workEntertainment: "/assets/art/work-entertainment.webp",
@@ -30,12 +30,12 @@ export const IMG = {
   workB2b: "/assets/art/work-b2b.webp",
 } as const;
 
-/* The team photo's three widths, for the two places it is drawn. Both of
+/* The team photo's four widths, for the two places it is drawn. Both of
    them draw it full-bleed, which is what `sizes` says - so the browser
-   picks on the device's own pixel width and a 4K laptop still ends up on
-   the 7680. */
+   picks on the device's own pixel width, a phone ends up on the 960 and a
+   4K laptop still ends up on the 7680. */
 export const TEAM_SRCSET =
-  "/assets/art/team-1920.jpg 1920w, /assets/art/team-3840.jpg 3840w, /assets/team-group-uhd.jpg 7680w";
+  "/assets/art/team-960.jpg 960w, /assets/art/team-1920.jpg 1920w, /assets/art/team-3840.jpg 3840w, /assets/team-group-uhd.jpg 7680w";
 export const TEAM_SIZES = "100vw";
 
 /* ------------------------------------------------------------------
@@ -163,10 +163,6 @@ export const OVERTURE_WALLS: readonly Wall[] = [
      that is texture anyway. FALL/OVERLAP in lib/overture-motion.ts index
      by position and clamp, so a shorter list just ends sooner. */
   { img: "/assets/home/wall-5.webp", label: "Focus" },
-  /* 9:16 already - the one wall in the run the phone does not have to be
-     given anything for. It is here because it was too tall for a wide
-     screen, which is the same observation from the other end. */
-  { img: IMG.creativity, label: "Creativity" },
   { img: IMG.photoshop, label: "Retouch" },
   /* the horizon is a thin band across the bottom of a wide frame, and a
      column of it is mostly empty sky. "Production 9" keeps the horizon

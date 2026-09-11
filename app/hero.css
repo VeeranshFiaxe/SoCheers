@@ -92,8 +92,8 @@
    line is set in the site's blue and the half in front of the film is
    pulled back to plain cream. The accent lands on the word that is
    actually the point. */
-.hero--test .hero__side--l{ text-align:right; color:var(--cream); }
-.hero--test .hero__side--r{ text-align:left; }
+.hero--test .hero__side--l{ text-align:right; color:var(--cream); padding-right:10px; }
+.hero--test .hero__side--r{ text-align:left; padding-left:5px; }
 .hero--test .hero__gap{
   display:block; height:1px;
   width:calc(.3em + var(--split) * var(--film-w, 0px));
@@ -111,6 +111,40 @@
    A clip on the row instead travels one edge across both of them, left
    to right, and neither box ever changes size. */
 .hero--test .hero__type{ display:inline-block; white-space:nowrap; }
+
+/* "SoCheers", twice: the display face it is typed in, and the playful
+   face it turns into (initHero swaps them letter by letter). The playful
+   copy sits over the start of the display one without a transform, so
+   initHero can find it by offsets alone. */
+.hero--test .hero__type--name{ position:relative; }
+.hero--test .hero__ch{ display:inline-block; }
+.hero--test .hero__name-play{
+  position:absolute; left:0; top:50%;
+  font-family:var(--f-playful); font-weight:700;
+  font-size:1.3em; line-height:.9; letter-spacing:-.01em;
+  margin-top:-.45em;
+}
+.hero--test .hero__name-play .hero__ch{ opacity:0; }
+
+/* The headword's letters, and they come back the way they went, in two
+   moves (initHero walks both 1 to 0):
+     --up    straight back up out of the bottom of the screen into the spot
+             the greeting's letters fell from, untumbling as they come
+             (--spin, components/Hero.tsx) - so "SoCheers" re-forms, small
+             and playful, exactly where it was
+     --home  and then the re-formed word glides from there into the
+             headword's place, growing to its size (--dx/--dy/--s0, measured
+             by initHero)
+   The screen is a vh rather than a measured number so it holds through a
+   resize. */
+.hero--test .mword__ch{
+  transform:
+    translate(
+      calc(var(--home, 0) * var(--dx, 0px)),
+      calc(var(--home, 0) * var(--dy, 0px) + var(--up, 0) * 100vh))
+    rotate(calc(var(--up, 0) * var(--spin, 0deg)))
+    scale(calc(1 + (var(--s0, 1) - 1) * var(--home, 0)));
+}
 
 /* The caret.
 

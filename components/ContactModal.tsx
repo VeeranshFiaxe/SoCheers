@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IMG, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
-import { INTENTS, ZOHO_ACTION, ZOHO_HIDDEN, ZOHO_TARGET_MODAL } from "@/lib/zoho-form";
+import { EMAIL_PATTERN, INTENTS, ZOHO_ACTION, ZOHO_TARGET_MODAL } from "@/lib/zoho-form";
+import { ZohoHidden, ZohoPhone } from "./ZohoFields";
 
 /* The footer's contact popup - the small, fast version of the front door
    at /contact. It posts to the same Zoho form the full page does (see
@@ -123,6 +124,7 @@ export default function ContactModal() {
                 action={ZOHO_ACTION}
                 method="post"
                 encType="multipart/form-data"
+                acceptCharset="UTF-8"
                 target={ZOHO_TARGET_MODAL}
                 /* No preventDefault - the browser posts it into the iframe
                    above and the modal stays open to say so. */
@@ -133,9 +135,7 @@ export default function ContactModal() {
               >
                 <h3 className="cmodal__title">Let&rsquo;s talk.</h3>
 
-                {Object.entries(ZOHO_HIDDEN).map(([name, value]) => (
-                  <input key={name} type="hidden" name={name} value={value} readOnly />
-                ))}
+                <ZohoHidden />
                 <input type="hidden" name="Radio" value={INTENTS.agency} readOnly />
 
                 <label className="cmodal__field">
@@ -148,15 +148,15 @@ export default function ContactModal() {
                 </label>
                 <label className="cmodal__field">
                   <span>Email</span>
-                  <input type="email" name="Email" placeholder="myname@companyname.com" autoComplete="email" required />
+                  <input type="email" name="Email" placeholder="myname@companyname.com" autoComplete="email" pattern={EMAIL_PATTERN} maxLength={255} required />
                 </label>
                 <label className="cmodal__field">
                   <span>Phone</span>
-                  <input type="tel" name="PhoneNumber" placeholder="+91 98765 43210" autoComplete="tel" required />
+                  <ZohoPhone prefix="PhoneNumber" />
                 </label>
                 <label className="cmodal__field">
                   <span>Message</span>
-                  <textarea name="MultiLine" placeholder="Brief us." rows={4} required />
+                  <textarea name="MultiLine" placeholder="Brief us." rows={3} required />
                 </label>
 
                 <button type="submit" className="cmodal__submit" disabled={sending}>

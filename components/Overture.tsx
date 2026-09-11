@@ -499,14 +499,19 @@ export default function Overture() {
                       landscape original this exists to replace. The img
                       has no such rule and is left alone. */}
                   {w.m && <source media={PHONE} data-ovt-src={encodeURI(w.m)} />}
-                  <img className="ovt__face" data-ovt-src={w.img} alt="" />
+                  {/* the first wall is the page's largest paint */}
+                  <img
+                    className="ovt__face"
+                    data-ovt-src={w.img}
+                    alt=""
+                    fetchPriority={i === 0 ? "high" : undefined}
+                  />
                 </picture>
                 {/* the sliver of edge you see as the slab tips toward you -
                     a flat panel with no thickness reads as a projected
                     image, and this is the cheapest way to give it mass */}
                 <span className="ovt__edge" />
                 <span className="ovt__shade" />
-                <span className="ovt__label">{w.label}</span>
               </div>
             </div>
           ))}

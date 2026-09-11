@@ -67,7 +67,10 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
               <figure
                 className={b.bleed ? "cs-shot cs-shot--bleed" : "cs-shot"}
                 key={key}
-                style={{ "--ar": b.w / b.h } as React.CSSProperties}
+                /* --ar and --w let case.css hold the picture to a height
+                   the screen can show and to its own width - a small
+                   screen grab is never stretched across the column */
+                style={{ "--ar": b.w / b.h, "--w": `${b.w}px` } as React.CSSProperties}
                 data-reveal
               >
                 <div className="cs-shot__in" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
