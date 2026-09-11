@@ -93,6 +93,20 @@ export function smoothTo(target: HTMLElement | number, duration = 1.2): void {
   else target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+/* The same, with no travel: the reader is put at `y` as if they had never
+   left it. Used to return to the work wall (lib/work-return.ts), which
+   has to happen after initSite() has booted - it scrolls every page to
+   the top as it starts - so a caller waits a frame or two before asking.
+   Resized and forced for the reasons over smoothTo. */
+export function jumpTo(y: number): void {
+  if (active) {
+    active.resize();
+    active.scrollTo(y, { immediate: true, force: true });
+    return;
+  }
+  window.scrollTo(0, y);
+}
+
 export function initSite(): () => void {
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const canHover = window.matchMedia("(hover:hover)").matches;
@@ -2133,7 +2147,7 @@ export function initSite(): () => void {
         const end = parseFloat(el.getAttribute("data-count") || "0");
         const obj = { v: 0 };
         /* Opt-in, and only where it is wanted: [data-count] is claimed
-           site-wide (see the note in lib/series-motion.ts), and the
+           site-wide, and the
            colour belongs to the WHO WE ARE strip, not to every figure
            that happens to count. */
         const cycle = el.hasAttribute("data-count-hue") && !prefersReduced ? brandHues() : [];

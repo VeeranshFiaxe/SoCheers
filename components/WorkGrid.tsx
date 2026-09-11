@@ -1,7 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { leaveWall, takeWallY } from "@/lib/work-return";
+import { jumpTo } from "@/lib/motion";
 import Link from "next/link";
+import { pic } from "@/lib/images";
 import {
   WORK_BROWSE, WORK_CATEGORIES, catLabel, type CategoryId, type WorkAsset,
 } from "@/lib/work-content";
@@ -51,8 +54,74 @@ import {
    chosen at upload; `c_fill,g_auto` on the Cloudinary thumb URL is
    where that goes when the CDN lands.
    ============================================================ */
+/* ---- the filter survives leaving the page ----
+
+   A reader picks FMCG, opens a case, comes back - and used to find the
+   wall reset to All, because the choice lived in this component's state
+   and the component is thrown away with the page. So it lives outside
+   it: in memory for the life of the tab, and in sessionStorage so a full
+   reload keeps it too.
+
+   Read through useSyncExternalStore rather than set in an effect. Coming
+   back from a case is a client-side navigation, and this way the wall's
+   very first render is already filtered - which is also what lets the
+   browser put the reader back at the scroll position they left, since
+   the tiles above it are the same tiles. On a fresh load the server has
+   no storage to read, so the page arrives on All and switches straight
+   after hydration.
+
+   The in-memory copy is not a nicety: where storage is blocked (private
+   modes, strict settings) it is the only copy, and without it the tabs
+   would do nothing at all. */
+const CAT_KEY = "sc-work-cat";
+let picked: CategoryId | null = null;
+const listeners = new Set<() => void>();
+
+const isCat = (v: unknown): v is CategoryId => WORK_CATEGORIES.some((c) => c.id === v);
+
+const readCat = (): CategoryId => {
+  if (picked) return picked;
+  try {
+    const v = sessionStorage.getItem(CAT_KEY);
+    if (isCat(v)) return (picked = v);
+  } catch {}
+  return "all";
+};
+
+const pickCat = (id: CategoryId) => {
+  picked = id;
+  try { sessionStorage.setItem(CAT_KEY, id); } catch {}
+  listeners.forEach((fn) => fn());
+};
+
+const onCat = (fn: () => void) => {
+  listeners.add(fn);
+  return () => { listeners.delete(fn); };
+};
+
 export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
-  const [cat, setCat] = useState<CategoryId>("all");
+  const cat = useSyncExternalStore(onCat, readCat, () => "all" as CategoryId);
+  const setCat = pickCat;
+
+  /* Back from a case's "All work": put the reader where they left the
+     wall. Two frames late on purpose - WorkMotion's initSite() scrolls
+     every page to the top as it boots, in an effect that runs in this
+     same commit, and this has to land after it. The filter above is
+     already restored by the first render, so the tiles the saved
+     position was measured against are the tiles on the page. See
+     lib/work-return.ts. */
+  useEffect(() => {
+    const y = takeWallY();
+    if (y === null) return;
+    let inner = 0;
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => jumpTo(y));
+    });
+    return () => {
+      cancelAnimationFrame(outer);
+      cancelAnimationFrame(inner);
+    };
+  }, []);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = { all: assets.length };
@@ -73,14 +142,11 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
       <div className="grid-lines grid-lines--mark" aria-hidden="true"><i /><i /><i /><i /></div>
 
       <div className="wrap">
-        {/* No eyebrow and no heading over the wall. The client asked for
-            the copy block gone, and the page is better for it: the
-            stage above has already said what this page is, and a second
-            title under it introduced the same work twice before the
-            reader could touch a filter. The tabs are now the first
-            thing under the stage, which is what they are for - they are
-            a control, and a control the reader reaches immediately is
-            worth more than a sentence about the control. */}
+        {/* One small label over the tabs, at the client's request - the
+            site's own .tag eyebrow, not a title, so the tabs are still
+            the first real thing under the stage. */}
+        <h2 className="tag wk-browse__h" data-reveal>{WORK_BROWSE.heading}</h2>
+
         <div className="wk-filter">
           <div className="wk-tabs" role="tablist" aria-label="Filter work by category">
             {WORK_CATEGORIES.map((c) => (
@@ -117,7 +183,12 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
             const inner = (
               <>
                 <span className="wk-tile__shot">
-                  <img src={a.thumb} alt={`${a.brand} - ${a.title}`} loading="lazy" />
+                  <img
+                    {...pic(a.thumb)}
+                    sizes="(max-width: 760px) 100vw, 50vw"
+                    alt={`${a.brand} - ${a.title}`}
+                    loading="lazy"
+                  />
                 </span>
 
                 <span className="wk-tile__cap">
@@ -148,6 +219,7 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
                 key={a.publicId}
                 href={`/work/${a.slug}`}
                 prefetch
+                onClick={leaveWall}
                 data-cursor="Open"
               >
                 {inner}

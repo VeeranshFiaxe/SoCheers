@@ -103,7 +103,7 @@ export default function Hero() {
             Read out as one line, since a screen reader has no use for
             three boxes and eighteen letter spans. */}
         <div className="hero__intro" data-test-intro>
-          <span className="sr-only">{GREETING}</span>
+          <h1 className="sr-only">{GREETING}</h1>
 
           <div className="hero__lines" data-test-lines aria-hidden="true">
             {/* One line, and the film opens inside it. "We are" is

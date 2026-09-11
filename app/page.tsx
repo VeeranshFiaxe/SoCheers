@@ -3,6 +3,14 @@ import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
 import { Awards, Clients, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
+import { pageMeta } from "@/lib/seo";
+
+export const metadata = pageMeta({
+  title: "SoCheers. Making more happen.",
+  description:
+    "SoCheers is an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",
+  path: "/",
+});
 
 export default function Home() {
   return (

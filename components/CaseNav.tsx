@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CASE_NAV } from "@/lib/work-content";
+import { returnToWall } from "@/lib/work-return";
 import Link from "next/link";
 
 /* ============================================================
@@ -65,7 +66,11 @@ export default function CaseNav({ items }: { items: CaseNavItem[] }) {
   return (
     <aside className="cs-rail" aria-label="Case navigation">
       <div className="cs-rail__in">
-        <Link className="cs-back" href="/work" prefetch data-cursor="Back">
+        {/* Back to the wall where the reader left it, not to its top -
+            the same thing the browser's Back does. `scroll={false}` stops
+            the router jumping to the top first; the wall does the rest.
+            See lib/work-return.ts. */}
+        <Link className="cs-back" href="/work" prefetch scroll={false} onClick={returnToWall} data-cursor="Back">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 6l-6 6 6 6" /></svg>
           {CASE_NAV.back}
         </Link>

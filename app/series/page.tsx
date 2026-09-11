@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./series.css";
 import SeriesSections from "@/components/SeriesSections";
 import SiteMotion from "@/components/SiteMotion";
+import { pageMeta } from "@/lib/seo";
 import {
   ART,
   CONCEPT,
@@ -12,10 +13,11 @@ import {
   TEXTURE,
 } from "@/lib/series-content";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: `${CONCEPT.title} · SoCheers`,
   description: META_DESCRIPTION,
-};
+  path: "/series",
+});
 
 /* ============================================================
    SERIES - the tab.
@@ -41,11 +43,6 @@ export const metadata: Metadata = {
    or lights up until initSite() reaches it, so a route without it is
    not a still version of the site, it is the site with its cursor
    missing. That was the first thing anyone noticed.
-
-   The first pass - fourteen beats, seven stagings, fourteen scroll
-   mechanics, and the deck copy this rewrite replaced - is still in the
-   tree at /series-1 and off the nav. See the note in NAV_LINKS
-   (lib/content.ts) and lib/series-v1.ts.
    ============================================================ */
 
 export default function Series() {

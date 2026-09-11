@@ -16,11 +16,6 @@
    Nothing on this page is a line somebody wrote to fill a slot: every
    word here is the client's.
 
-   The old fourteen-beat story is not deleted: it is in lib/series-v1.ts
-   and still renders at /series-1, which is off the nav. This file
-   re-exports it at the foot so those three components did not have to
-   change their imports.
-
    ---- what the pictures are ----
 
    Two folders, and the difference matters.
@@ -207,9 +202,13 @@ export type Step = {
 export type Phone = {
   id: string;
   /* the brand, spelled the way lib/work-content.ts spells it */
-  label: string;
+  label?: string;
   /* one line under the handset - what the episode is, not what it did */
-  note: string;
+  note?: string;
+  /* the live reel. Set = the handset is a link that opens it. */
+  href?: string;
+  /* a filler handset: no label, no link, dimmed and soft */
+  ghost?: boolean;
   /* what stands in the screen until the cut lands. A still from the
      piece, held under the placeholder's sweep. */
   poster: string;
@@ -443,8 +442,7 @@ const WALL = [
      half of the argument the wall was missing.
 
      series-aisle-full.jpg and series-crowd-phones.jpg stay in the tree,
-     unused, as does the pixelated still. chaos.jpg is off this page but
-     still runs on /series-1 and /series-deck. */
+     unused, as does the pixelated still and chaos.jpg. */
   "tmtw-1.jpg",
   "tmtw-4.jpg",
   "series-feed-grid.jpg",
@@ -544,39 +542,42 @@ const RECEIPTS = [
    Five and not six: an odd count has a middle, and the arc these are
    laid on needs one.
    ------------------------------------------------------------------ */
+/* The three IPs sit in the middle and open their reels; the two outer
+   handsets are unlabelled filler until more IPs land. */
 export const PHONES: Phone[] = [
+  {
+    id: "filler-l",
+    ghost: true,
+    poster: W("wall/special-ops-2.jpg"),
+    clock: "7:56",
+  },
   {
     id: "prava",
     label: "Prava",
     note: "Micro-series IP",
     poster: W("pinned/prava.jpg"),
+    href: "https://www.instagram.com/reel/DaiGcRnICTO/",
     clock: "9:41",
   },
   {
-    id: "netflix-mi",
-    label: "Netflix × MI",
-    note: "Episodic, in season",
-    poster: W("pinned/netflix-mi.jpg"),
+    id: "pantaloons",
+    label: "Pantaloons",
+    note: "Micro-series IP",
+    poster: W("pinned/pantaloons-eoss.jpg"),
+    href: "https://www.instagram.com/reel/DcnvyEdz6Tt/",
     clock: "10:08",
   },
   {
-    id: "special-ops",
-    label: "JioHotstar",
-    note: "Special Ops 2",
-    poster: W("wall/special-ops-2.jpg"),
+    id: "socheers",
+    label: "SoCheers",
+    note: "Micro-series IP",
+    poster: "/assets/art/series-films.webp",
+    href: "https://www.instagram.com/reel/DaKr2hWtFdk/",
     clock: "11:23",
   },
   {
-    id: "boat",
-    label: "boAt × Marvel",
-    note: "Character-led drop",
-    poster: W("wall/boat.jpg"),
-    clock: "7:56",
-  },
-  {
-    id: "croma",
-    label: "Croma",
-    note: "Long-running format",
+    id: "filler-r",
+    ghost: true,
     poster: W("wall/croma-dreams.jpg"),
     clock: "8:30",
   },
@@ -1065,79 +1066,6 @@ export const SECTIONS: Section[] = [
     cta: { label: "Now, let's make yours ?", href: "/contact" },
   },
 ];
-
-/* ------------------------------------------------------------------
-   THE FIRST PASS, re-exported.
-
-   /series-1 is the fourteen-beat cut, off the nav and noindexed, and it
-   reads its story from lib/series-v1.ts now. These names are passed
-   through here so components/SeriesStory.tsx, SeriesCrossers.tsx and
-   lib/series-motion.ts did not have to be touched by a copy rewrite that
-   has nothing to do with them.
-
-   Nothing on /series imports any of it.
-   ------------------------------------------------------------------ */
-export {
-  BEATS,
-  CROSSERS,
-  PLATE_STRIP,
-  type Beat,
-  type Shot,
-  type Crosser,
-  type Pose,
-} from "@/lib/series-v1";
-/* ------------------------------------------------------------------
-   THE FEED - component two.
-
-   Thumbnails that link out, and deliberately not Instagram's own embed.
-   The official embed is a third-party iframe plus embed.js per post: on a
-   rail of eight that is eight iframes, eight scripts and a tracker on a
-   page whose entire argument is that it holds attention for ninety
-   seconds. A thumbnail and an <a> is the same content, one image, and it
-   keeps the page's own scroll.
-
-   ---- what changed here ----
-
-   Every tile used to carry a brand name reading "PENDING - Amul" and a
-   black "PLACEHOLDER" badge in its corner, and the section promised that
-   each frame opens the post on Instagram while every href was "#". Three
-   different ways of showing a reader the page is not finished.
-
-   So: `href` is optional now. A tile without one is not a link, carries
-   no badge, and says nothing it cannot do - it is a frame with an
-   episode number on it, which is true. The line under the heading that
-   promises the link only renders once at least one tile has a real URL.
-
-   Adding the client's list is one line per tile: put the post URL in
-   `href` and the still from that post in `thumb`. Nothing else has to
-   change; the tiles become links, the promise appears under the heading,
-   and `title` is there for the episode's own name when they send them.
-   ------------------------------------------------------------------ */
-export type Reel = {
-  id: string;
-  ep: string;
-  thumb: string;
-  href?: string;
-  title?: string;
-};
-
-export const REELS: Reel[] = [
-  { id: "r1", ep: "EP 01", thumb: "reel-1.jpg" },
-  { id: "r2", ep: "EP 02", thumb: "reel-2.jpg" },
-  { id: "r3", ep: "EP 03", thumb: "reel-3.jpg" },
-  { id: "r4", ep: "EP 04", thumb: "mokai-1.jpg" },
-  { id: "r5", ep: "EP 05", thumb: "mokai-2.jpg" },
-  { id: "r6", ep: "EP 06", thumb: "mokai-3.jpg" },
-  { id: "r7", ep: "EP 07", thumb: "reel-2.jpg" },
-  { id: "r8", ep: "EP 08", thumb: "reel-3.jpg" },
-];
-
-export const FEED = {
-  tag: "Straight from the feed",
-  title: "Every episode, where it actually lives.",
-  /* only rendered once REELS carries a real href - see SeriesFeed.tsx */
-  note: "Each frame opens the post on Instagram.",
-} as const;
 
 /* Two ways out and no third: talk to us, or go and look at the production
    house. Tito Films sits at the foot of the page by the client's own

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import "./about.css";
 import AboutMotion from "@/components/AboutMotion";
 import AboutHero from "@/components/AboutHero";
@@ -7,11 +8,12 @@ import {
   AboutIntro, AboutPeople, AboutSpace,
 } from "@/components/AboutSections";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "About · SoCheers",
   description:
     "One team, many disciplines. The people, the founders and the office behind SoCheers - an independent, integrated creative agency.",
-};
+  path: "/about",
+});
 
 /* One scrolling page, no sub-tabs. No Loader: it belongs to the home page's
    hero sequence. */

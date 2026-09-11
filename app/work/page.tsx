@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import "./work.css";
 import Footer from "@/components/Footer";
 import WorkMotion from "@/components/WorkMotion";
@@ -6,11 +7,12 @@ import WorkPinned from "@/components/WorkPinned";
 import WorkGrid from "@/components/WorkGrid";
 import { getWorkAssets } from "@/lib/work-data";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Work · SoCheers",
   description:
     "Campaigns, films and content from SoCheers - the five we'd lead with, and the rest by category.",
-};
+  path: "/work",
+});
 
 /* ============================================================
    WORK.

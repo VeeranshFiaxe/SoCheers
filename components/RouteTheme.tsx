@@ -41,11 +41,8 @@ const ROUTES: ReadonlyArray<readonly [string, Group]> = [
   ["/insights", "read"],
   /* /series leads with the streaming red it already blocks its accent
      words in, rather than with the site's blue - see the note over
-     --page-series-* in app/globals.css. The two drafts beside it are not
-     that page and stay on the reading group. */
+     --page-series-* in app/globals.css. */
   ["/series", "series"],
-  ["/series-1", "read"],
-  ["/series-deck", "read"],
   ["/contact", "chat"],
 ];
 

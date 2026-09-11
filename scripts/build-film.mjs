@@ -37,6 +37,23 @@
    file this size it is the difference between a play button that works
    and one that appears not to.
 
+   A keyframe every two seconds. x264's default is one every ten, and a
+   browser can only start decoding at a keyframe - so a reader who drags
+   the scrubber, or comes back to a paused film, waited for up to ten
+   seconds of picture to download before anything moved. Two seconds
+   costs a few percent of size and makes seeking feel instant.
+
+   ---- two cuts of every film ----
+
+   Every film is cut twice: the one above, and a phone cut beside it as
+   <name>-sm.mp4 - 960 on the long side, CRF 25 under a 1 Mbps ceiling,
+   96k audio. A phone draws the film about 400px wide, and on a mobile
+   connection the full cut's 1.5-2 Mbps is exactly where playback starts
+   stalling. The page offers both and the browser picks by screen width
+   (components/FilmSources.tsx), so the phone never downloads the big
+   one. Add a film here and it gets both; lib/video.ts keeps the list of
+   films that have a phone cut, and it has to be told.
+
    The two later films - the IndusInd rebrand launch and the Zurich
    Kotak New Year film - arrived already compressed, so this pass buys
    them very little size. It is still worth running: it is what makes
@@ -76,7 +93,31 @@ const FILMS = [
      will not play on somebody's phone. */
   { src: "assets/igi-rebranding.src.mp4", out: "public/assets/work/cases/indusind/rebranding.mp4" },
   { src: "assets/zurich-kotak.src.mp4", out: "public/assets/work/cases/zurich-kotak/new-year.mp4" },
+  /* The BHIM UPI Ask Her Again case video. A 250MB, 15 Mbps broadcast
+     master - the same problem as the Netflix one, at half the length. */
+  /* At the shared settings it came out 79MB at 4.9 Mbps - the picture is
+     busy, and CRF 23 pays for all of it. The case column draws it about
+     1000px wide, so it goes out at 720p with a 2 Mbps ceiling: 26MB. */
+  { src: "assets/bhim-upi.src.mp4", out: "public/assets/work/cases/bhim-upi/film.mp4", long: 1280, maxrate: "2M" },
+  /* The two case videos with no board and no write-up - the film is the
+     whole case page. Same treatment as BHIM, for the same reason. */
+  { src: "assets/made-in-titan.src.mp4", out: "public/assets/work/cases/made-in-titan/film.mp4", long: 1280, maxrate: "2M" },
+  { src: "assets/special-ops-2.src.mp4", out: "public/assets/work/cases/special-ops-2/film.mp4", long: 1280, maxrate: "2M" },
 ];
+
+/* Both cuts of every film. See "two cuts of every film" above. */
+const CUTS = FILMS.flatMap((f) => [
+  { ...f, phone: false },
+  {
+    src: f.src,
+    out: f.out.replace(/\.mp4$/, "-sm.mp4"),
+    long: 960,
+    crf: 25,
+    maxrate: "1M",
+    audio: "96k",
+    phone: true,
+  },
+]);
 
 /* Re-encoding is minutes per film at -preset slow, and the cuts are
    committed - so a cut that is already there is left alone unless you
@@ -85,7 +126,7 @@ const FORCE = process.argv.includes("--force");
 
 const mb = (p) => (statSync(p).size / 1024 / 1024).toFixed(1);
 
-for (const { src, out } of FILMS) {
+for (const { src, out, long = 1920, crf = 23, maxrate, audio = "128k", phone } of CUTS) {
   if (!existsSync(src)) {
     /* The normal state of a fresh clone - the masters are gitignored.
        The cut is committed and still serves. */
@@ -98,7 +139,7 @@ for (const { src, out } of FILMS) {
   }
   await mkdir(path.dirname(out), { recursive: true });
 
-  console.log("cutting", src);
+  console.log("cutting", src, "->", out);
   const run = spawnSync(ffmpeg, [
     "-hide_banner", "-y",
     "-i", src,
@@ -111,15 +152,21 @@ for (const { src, out } of FILMS) {
        "height 1080" quietly threw a fifth of it away. This says the
        thing that was actually meant: nothing on the site is bigger than
        1920 on its long side, and nothing is ever blown up. */
-    "-vf", "scale='min(1920,iw)':'min(1920,ih)':force_original_aspect_ratio=decrease:force_divisible_by=2",
+    "-vf", `scale='min(${long},iw)':'min(${long},ih)':force_original_aspect_ratio=decrease:force_divisible_by=2`,
     "-c:v", "libx264",
-    "-crf", "23",
+    "-crf", String(crf),
+    /* A ceiling on top of constant quality, for a film whose picture is
+       busy enough that CRF alone spends a phone connection's worth on
+       it. Set per film, and on every phone cut. */
+    ...(maxrate ? ["-maxrate", maxrate, "-bufsize", `${parseInt(maxrate, 10) * 2}M`] : []),
+    /* a keyframe every two seconds - see the note above */
+    "-force_key_frames", "expr:gte(t,n_forced*2)",
     "-preset", "slow",
     "-profile:v", "high",
     "-pix_fmt", "yuv420p",
     "-movflags", "+faststart",
     "-c:a", "aac",
-    "-b:a", "128k",
+    "-b:a", audio,
     out,
   ], { stdio: ["ignore", "ignore", "inherit"] });
   if (run.status !== 0) process.exit(run.status ?? 1);
@@ -130,8 +177,10 @@ for (const { src, out } of FILMS) {
      and throws away a generation of quality to do it. When the cut
      comes out bigger than the source, the source was the better file:
      keep its bits and only remux, which still buys the one thing this
-     script is really for on a file like that - faststart. */
-  if (statSync(out).size > statSync(src).size) {
+     script is really for on a file like that - faststart. (Not for a
+     phone cut: that one is smaller by construction, and when it is not,
+     it is still the smaller picture the phone wanted.) */
+  if (!phone && statSync(out).size > statSync(src).size) {
     const remux = spawnSync(ffmpeg, [
       "-hide_banner", "-y", "-i", src,
       "-c", "copy", "-movflags", "+faststart", out,
@@ -142,7 +191,7 @@ for (const { src, out } of FILMS) {
     continue;
   }
 
-  console.log(`${mb(src)}MB master -> ${mb(out)}MB web cut  ${out}
+  console.log(`${mb(src)}MB master -> ${mb(out)}MB ${phone ? "phone" : "web"} cut  ${out}
 `);
 }
 

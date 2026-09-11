@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import "./contact.css";
 import ContactMotion from "@/components/ContactMotion";
 import ContactForm from "@/components/ContactForm";
@@ -8,11 +9,12 @@ import ContactForm from "@/components/ContactForm";
    down, for whatever picks it up next. */
 import { CONTACT_HERO, OFFICES } from "@/lib/contact-content";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Contact · SoCheers",
   description:
     "Got a brief, a partnership, or just want to say hi? Here's every way to reach SoCheers.",
-};
+  path: "/contact",
+});
 
 /* The nav's "Let's chat" used to just pop the footer's modal - now it lands
    here first, a proper front door with its own full-size form (see

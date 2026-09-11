@@ -21,7 +21,7 @@ export const BLOG_HERO = {
 export const TABS = [
   { id: "blogs", label: "Blogs", live: false },
   { id: "whitepapers", label: "White Papers", live: true },
-  { id: "reports", label: "Reports", live: false },
+  { id: "reports", label: "Reports", live: true },
 ] as const;
 
 export type TabId = (typeof TABS)[number]["id"];
@@ -40,7 +40,18 @@ export const SOON_LABEL = "Coming soon";
    to submit, and the visitor reads it without leaving the page. The file
    is the one the old site served at socheers.net/parasocial-marketing-
    whitepaper/, carried over as a plain public asset. */
-export const WHITEPAPERS = [
+export type Paper = {
+  id: string;
+  tag: string;
+  title: string;
+  blurb: string;
+  points: readonly string[];
+  pdf: string;
+  cta: string;
+  file: string;
+};
+
+export const WHITEPAPERS: readonly Paper[] = [
   {
     id: "parasocial-marketing",
     tag: "Featured whitepaper",
@@ -58,7 +69,26 @@ export const WHITEPAPERS = [
        itself doesn't have to hunt through the viewer's own chrome. */
     file: "The-Friendship-Illusion-Whitepaper.pdf",
   },
-] as const;
+];
+
+/* The Reports tab - same shape as a whitepaper, same embedded reader. */
+export const REPORTS: readonly Paper[] = [
+  {
+    id: "metro-myopia",
+    tag: "Featured report",
+    title: "Breaking The Metro Myopia",
+    blurb:
+      "A strategic report and playbook unlocking the new demand drivers of the hinterland.",
+    points: [
+      "How Aadhaar, UPI and Jio built Digital Bharat - and the numbers behind it",
+      "Who India's Next Billion Users are, from Gen Z to Digital Naris",
+      "The Bharat Playbook: what ShareChat, Meesho, HUL, ITC and Coca-Cola got right",
+    ],
+    pdf: "/assets/whitepapers/SoCheers_Reports-Metro_Myopia_2025-26.pdf",
+    cta: "Open the report",
+    file: "SoCheers_Reports-Metro_Myopia_2025-26.pdf",
+  },
+];
 
 /* Pulled from socheers.net's own service list - the actual disciplines the
    team works in, reframed as the topics they write about. */

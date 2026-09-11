@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PINNED, PINNED_DWELL } from "@/lib/work-content";
+import { pic } from "@/lib/images";
 import Link from "next/link";
+import FilmSources from "./FilmSources";
 
 /* ============================================================
    SECTION A - the pinned stage, and it is the whole opening screen.
@@ -188,7 +190,7 @@ export default function WorkPinned() {
           data-on={n === i ? "" : undefined}
           aria-hidden={n === i ? undefined : "true"}
         >
-          <img src={c.hero} alt="" />
+          <img {...pic(c.hero)} sizes="100vw" alt="" fetchPriority={n === 0 ? "high" : undefined} />
         </div>
       ))}
 
@@ -209,13 +211,15 @@ export default function WorkPinned() {
       {rolling && active.link.kind === "film" && (
         <div className="wk-stage__film">
           <video
-            src={active.link.src}
-            poster={active.hero}
+            poster={pic(active.hero).src}
             controls
             autoPlay
             playsInline
             onEnded={() => setRolling(false)}
-          />
+          >
+            {/* the full cut or the phone cut, by screen width */}
+            <FilmSources src={active.link.src} />
+          </video>
           <button
             type="button"
             className="wk-stage__close"
@@ -360,7 +364,7 @@ export default function WorkPinned() {
                 data-cursor={n === i ? (c.link.kind === "film" ? "Play" : "View") : c.brand}
               >
                 <span className="wk-poster__shot">
-                  <img src={c.thumb} alt="" loading="lazy" />
+                  <img {...pic(c.thumb)} sizes="(max-width: 760px) 50vw, 360px" alt="" loading="lazy" />
                   {/* The turn left on this frame. Keyed on `i` so React
                       replaces the node on every change and the animation
                       runs from zero - restarting a CSS animation on a

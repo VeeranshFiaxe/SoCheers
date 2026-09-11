@@ -155,7 +155,7 @@
   transition:color .35s var(--ease);
 }
 @media (hover:none){ .bl-tabs__btn{ cursor:pointer; } }
-.bl-tabs__btn:hover{ color:var(--cream); }
+.bl-tabs__btn:not(.is-soon):hover{ color:var(--cream); }
 .bl-tabs__btn.is-active{ color:var(--accent-ink); }
 
 /* ---------- the dead tabs: present, dimmed, unclickable ----------
@@ -168,7 +168,6 @@
   color:color-mix(in srgb, var(--cream) 26%, transparent);
   cursor:not-allowed;
 }
-.bl-tabs__btn.is-soon:hover{ color:color-mix(in srgb, var(--cream) 34%, transparent); }
 .bl-tabs__btn.is-soon::after{
   content:attr(data-soon);
   position:absolute; left:50%; top:calc(100% + 12px);
@@ -179,8 +178,6 @@
   opacity:0; pointer-events:none;
   transition:opacity .3s var(--ease), transform .3s var(--ease);
 }
-.bl-tabs__btn.is-soon:hover::after,
-.bl-tabs__btn.is-soon:focus-visible::after{ opacity:1; transform:translate(-50%,0); }
 /* A tooltip is a thing you get for hovering, and there is no hovering
    here - so on touch the reason a dead tab is dead has to be on the
    button rather than under it. Same word out of the same data-soon

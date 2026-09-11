@@ -167,7 +167,6 @@ export const OVERTURE_WALLS: readonly Wall[] = [
      given anything for. It is here because it was too tall for a wide
      screen, which is the same observation from the other end. */
   { img: IMG.creativity, label: "Creativity" },
-  { img: "/assets/home/wall-4.webp", label: "Reverie" },
   { img: IMG.photoshop, label: "Retouch" },
   /* the horizon is a thin band across the bottom of a wide frame, and a
      column of it is mostly empty sky. "Production 9" keeps the horizon
@@ -229,19 +228,6 @@ export const NAV_LINKS: { href: string; label: string; soon?: boolean }[] = [
   { href: "/work", label: "Work" },
   { href: "/ai-work", label: "AI Work" },
   { href: "/series", label: "Series" },
-  /* HIDDEN, NOT DELETED - the two earlier passes at this tab are still in
-     the tree and still reachable by URL, they are just off the nav while
-     the picked direction is the one on show.
-
-     /series      what used to be /series-test: the copy staged flat, one
-                  treatment per beat - app/series/.
-     /series-1    the first pass, the rewrite with its fourteen scroll
-                  mechanics - app/series-1/.
-     /series-deck the client's own PowerPoint ported slide for slide, its
-                  words rather than the rewrite's - app/series-deck/.
-
-     Put a line back here to show one again; each page's own header
-     comment lists what goes with it if one is ever deleted instead. */
   { href: "/insights", label: "Insights" },
 ];
 

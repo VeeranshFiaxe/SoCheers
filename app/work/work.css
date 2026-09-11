@@ -349,6 +349,7 @@
    No top margin of its own any more. The space above the tabs is the
    section's own padding, which is one number to change rather than two
    that have to agree. */
+.wk-browse__h{ margin-bottom:clamp(16px,2.4vh,24px); }
 .wk-filter{
   display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
   flex-wrap:wrap;

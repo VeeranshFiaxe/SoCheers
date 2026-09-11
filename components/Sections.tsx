@@ -18,19 +18,11 @@ export function Who() {
             No label over the claim. "WHO WE ARE" used to ride above it in
             small accent mono - the last of the four section tags on this
             page - and it was the heading saying the sentence under it in
-            fewer words. "We are SoCheers - an independent, integrated
-            creative agency" does not need to be introduced. */}
+            fewer words. The claim does not need to be introduced. */}
         <div className="who__grid">
           <div className="who__copy">
             <p className="who__lede" data-split>
-              {/* A hard break, not a non-breaking space: the line splitter
-                  (SplitText, see initSplits in lib/motion.ts) re-wraps this
-                  word by word to measure lines, and an nbsp does not survive
-                  that - a <br /> does. The name and the dash close the first
-                  line; "an" goes down with what it introduces. */}
-              We are <span className="who__brand">SoCheers</span> -{" "}
-              <br />
-              an independent, integrated creative agency.
+              An independent, integrated creative agency.
             </p>
           </div>
 

@@ -6,6 +6,8 @@ import Footer from "@/components/Footer";
 import WorkMotion from "@/components/WorkMotion";
 import CaseBlocks from "@/components/CaseBlocks";
 import CaseNav from "@/components/CaseNav";
+import { pageMeta } from "@/lib/seo";
+import { pic } from "@/lib/images";
 import { CASES, caseBlocks, caseHasFilm, caseHeadings, caseIsVisual, findCase } from "@/lib/work-content";
 
 /* Five known cases, so they prerender. A slug that is not one of them is
@@ -25,10 +27,14 @@ export async function generateMetadata({
   const { slug } = await params;
   const c = findCase(slug);
   if (!c) return { title: "Work · SoCheers" };
-  return {
+  return pageMeta({
     title: `${c.brand} · SoCheers`,
     description: c.intro,
-  };
+    path: `/work/${c.slug}`,
+    /* webp previews are hit and miss across WhatsApp and LinkedIn */
+    image: /\.(jpe?g|png)$/i.test(c.hero) ? c.hero : undefined,
+    noindex: c.pending,
+  });
 }
 
 /* ============================================================
@@ -97,7 +103,8 @@ export default async function Case({
         {/* ---- the frame ---- */}
         <header className="cs-hero">
           <div className="cs-hero__frame">
-            <img src={c.hero} alt="" />
+            {/* the first thing on the page, so it is asked for first */}
+            <img {...pic(c.hero)} sizes="100vw" alt="" fetchPriority="high" />
           </div>
           <span className="cs-hero__scrim" aria-hidden="true" />
 
@@ -155,7 +162,7 @@ export default async function Case({
               {CASES.filter((o) => o.slug !== c.slug).slice(0, 3).map((o) => (
                 <a className="cs-next__card" key={o.slug} href={`/work/${o.slug}`} data-cursor={o.brand}>
                   <span className="cs-next__shot">
-                    <img src={o.hero} alt="" loading="lazy" />
+                    <img {...pic(o.hero)} sizes="(max-width: 760px) 100vw, 33vw" alt="" loading="lazy" />
                   </span>
                   <span className="cs-next__cap">
                     <b>{o.brand}</b>

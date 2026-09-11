@@ -414,19 +414,19 @@ const real = (
 
 export const WORK_ASSETS: WorkAsset[] = [
   /* ---- BFSI ---- */
-  real("yes-bank", "Yes Bank", "Life Ko Banao Rich", "bfsi", "image", 1600, 1131, "yes-bank"),
+  real("yes-bank", "Yes Bank", "Life Ko Banao Rich", "bfsi", "image", 1376, 768, "yes-bank"),
   real("bhim-upi", "BHIM UPI", "Ask Her Again", "bfsi", "video", 1600, 900, "bhim-upi"),
   real("indusind", "IndusInd General Insurance", "Forward Together", "bfsi", "video", 1600, 900, "indusind-general-insurance"),
   real("zurich-kotak", "Zurich Kotak", "Game of Dares", "bfsi", "video", 1376, 768, "zurich-kotak-game-of-dares"),
 
   /* ---- FMCG ----
-     One real tile, and it is the first this tab has had - every folder
-     under FMCG/ in the client's drive used to be empty. The other five
-     brands are still holding their places. */
+     Belgian Waffle, ITC and Havmor are real - every folder under FMCG/ in
+     the client's drive used to be empty. The other three brands are still
+     holding their places. */
   real("belgian-waffle", "The Belgian Waffle Co.", "Everyone Knows", "fmcg", "video", 1600, 1200, "belgian-waffle"),
   pending(5, "Prava", "fmcg"),
-  pending(6, "ITC", "fmcg", "video"),
-  pending(7, "Havmor", "fmcg"),
+  real("itc", "ITC Store", "Naa Ready", "fmcg", "image", 1376, 768, "itc-naa-ready"),
+  real("havmor", "Havmor", "#80YearsOfHappyMemories", "fmcg", "image", 1600, 625, "havmor-80-years"),
   pending(8, "Tata Soulfull", "fmcg"),
   pending(9, "Yippee", "fmcg"),
 
@@ -446,9 +446,10 @@ export const WORK_ASSETS: WorkAsset[] = [
   /* The case that covers both pinned Netflix pieces at once. Its own
      key art, not either of theirs - see the note in build-wall.mjs. */
   real("netflix-mi-srh", "Netflix × MI × SRH", "Chill Like a Champion", "entertainment", "video", 1600, 900, "netflix-mi-srh"),
-  real("dhurandhar-2", "Netflix · Dhurandhar 2", "Two weeks before its original home", "entertainment", "video", 1600, 900),
-  real("special-ops-2", "JioHotstar · Special Ops 2", "Leaked", "entertainment", "video", 1600, 900),
-  real("made-in-titan", "Titan", "Made in India - A Titan Story", "entertainment", "video", 1600, 900),
+  real("dhurandhar-2", "Netflix · Dhurandhar 2", "Two weeks before its original home", "entertainment", "video", 1600, 900, "dhurandhar-2"),
+  real("special-ops-2", "JioHotstar · Special Ops 2", "Leaked", "entertainment", "video", 1600, 900, "special-ops-2"),
+  real("made-in-titan", "Titan", "Made in India - A Titan Story", "entertainment", "video", 1600, 900, "made-in-titan"),
+  real("mandala-murders", "Netflix · Mandala Murders", "The World of Mandala Murders", "entertainment", "image", 960, 540, "mandala-murders"),
   pending(15, "Ab Hoga Hissab", "entertainment"),
   pending(17, "Family Man × Alexa", "entertainment"),
 
@@ -499,6 +500,9 @@ export type CaseBlock =
   | { type: "copy"; heading?: string; body: string }
   | { type: "image"; src: string; w: number; h: number; caption?: string; bleed?: boolean }
   | { type: "duo"; a: string; b: string; caption?: string }
+  /* Phone screen grabs, each in a drawn handset at its own proportions -
+     a feed before and after, a run of stories. */
+  | { type: "phones"; items: { src: string; w: number; h: number; label?: string }[]; caption?: string }
   /* `src` is a file URL *or* a YouTube / Vimeo link - see parseVideo() in
      lib/video.ts. A poster is optional for the hosted providers because
      they have one of their own; for an .mp4 it is worth setting, since
@@ -643,10 +647,9 @@ export const CASES: CaseStudy[] = [
   /* ------------------------------------------------------------------
      THE FIRST REAL CASE.
 
-     The client sent this as a finished case board - the file at
-     Entertainment/Maa Behen/MAA-BEHEN---Case-Study-(NEW).jpg.jpeg - and
-     no write-up. The page shows the board rather than retelling it in
-     paragraphs, with the one photo the board does not already carry.
+     The client's own write-up, verbatim, with the photo from the day
+     and their finished case board - the file at
+     Entertainment/Maa Behen/MAA-BEHEN---Case-Study-(NEW).jpg.jpeg.
 
      The board's headline reads RENAMED for Maa Behen and the campaign
      cover reads RECLAIMED. Both are the client's, so each is kept where
@@ -659,7 +662,7 @@ export const CASES: CaseStudy[] = [
     title: "Reserved for Women. Renamed for Maa Behen.",
     meta: ["Entertainment", "Out of Home · Social", "Delhi Metro"],
     intro:
-      "Delhi Metro has designated compartments exclusively for women. For Netflix's Maa Behen, we turned this everyday piece of public infrastructure into the campaign itself.",
+      "Maa Behen is a film about three women pushing back against society’s rules and judgements.",
     /* The poster in the compartment, shot on the day. It is the hero
        rather than the campaign cover because the cover carries its own
        headline set large, and a page title laid over a headline is two
@@ -667,10 +670,19 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work/cases/maa-behen/transit.jpg",
     blocks: [
       {
-        type: "board",
-        src: "/assets/work/cases/maa-behen/board.jpg",
-        w: 2400, h: 1350,
-        caption: "The case board",
+        type: "copy",
+        heading: "The brief",
+        body: "We wanted to launch it in a space where women were already a defined part of the environment: Delhi Metro’s women-only compartments.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "The Metro already had a language for women: “Ladies Only” and “Reserved for Ladies.”\n\nFor a film called Maa Behen, we could simply change who those signs were talking to.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We renamed the Metro’s existing signage for Maa Behen.\n\n“Ladies Only” → “Entry for Maa Behen Only.”\n\n“Reserved for Ladies” → “Reserved for Maa Behen.”\n\nThe new signage went across the women-only compartments, turning the Metro’s existing infrastructure into the film’s media.",
       },
       {
         type: "image",
@@ -678,67 +690,201 @@ export const CASES: CaseStudy[] = [
         w: 720, h: 1280,
         caption: "Western Railway, Mumbai",
       },
+      {
+        type: "stats",
+        items: [
+          { figure: "17M+", label: "Organic social reach" },
+          { figure: "250K", label: "Earned media" },
+          { figure: "1.3M", label: "Total media reach" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/maa-behen/board.jpg",
+        w: 2400, h: 1350,
+        caption: "The case board",
+      },
     ],
   },
 
   /* ------------------------------------------------------------------
-     THE NETFLIX x IPL CASE - real picture, real film, no write-up yet.
+     NETFLIX · DHURANDHAR 2 - the client's own write-up, verbatim, and
+     their case video on YouTube, which opens the page. Then the pictures
+     from the drive: the teaser billboard, the launch poster, and the
+     airport screen beside the press pickup.
+     ------------------------------------------------------------------ */
+  {
+    slug: "dhurandhar-2",
+    brand: "Netflix · Dhurandhar 2",
+    title: "Ghar Aa Gaya, Jassi.",
+    meta: ["Entertainment", "Out of Home"],
+    intro:
+      "Dhurandhar 1 was a hit in theatres and eventually on Netflix with its characters and lines becoming part of internet pop culture.",
+    hero: "/assets/work/wall/dhurandhar-2.jpg",
+    film: "https://www.youtube.com/watch?v=AT-L7dGUBp0",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "The catch was that the film was releasing on another streaming platform two weeks earlier, so Netflix had no trailer, footage or other launch assets to work with.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "Dhurandhar had already given people plenty to quote. One line in particular had stuck:\n\n“Ghar ki yaad nahi aayi tujhe, Jassi?”\n\nIt was perfect for what we needed. Because once Netflix asked Jassi the question, “ghar” could mean something else too.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We put “Ghar ki yaad nahi aayi tujhe, Jassi?” on billboards across India, with Netflix signing off the line.\n\nThen we left it there for a few days. As the Netflix premiere came closer, the same billboards changed to:\n\n“Ghar aa gaya, Jassi.”\n\nThe question had its answer. And Netflix had its announcement.",
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/dhurandhar-2/teaser.jpg",
+        w: 1448, h: 1086,
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/dhurandhar-2/poster.jpg",
+        w: 1600, h: 1600,
+      },
+      /* Both are 4:5 already, so the duo's cells take them whole. */
+      {
+        type: "duo",
+        a: "/assets/work/cases/dhurandhar-2/launch.jpg",
+        b: "/assets/work/cases/dhurandhar-2/press.jpg",
+      },
+    ],
+  },
 
-     This is a third piece, not a duplicate of either pinned one. Netflix
-     x MI and Netflix x SRH are the two announcements on the stage; this
-     is the case that covers the season across both teams, and the
-     client sent it with its own key art - "Chill like a champion" -
-     which is why the wall tile is a picture nobody has seen upstairs.
-
-     ---- about the film ----
-
-     The file in Entertainment/Netflix x MI x SRH/ was byte for byte the
-     same 487MB master as the pinned film - same md5 - so this page
-     plays the web cut that already exists rather than a second copy of
-     the same thing at a different filename. If the case is meant to run
-     a different edit, that edit has not arrived yet.
-
-     The words have not arrived either, so this is `pending`: the badge
-     is drawn, the picture and the film are real, and the copy below is
-     a placeholder in the same shape the rest of this file uses.
+  /* ------------------------------------------------------------------
+     THE NETFLIX x IPL CASE - the season across both teams, told by its
+     case study film. No board and no write-up came with it; the client
+     attached the film, so the film is the page (see caseIsVisual). It is
+     byte for byte the pinned stage's master, so it plays the web cut that
+     already exists. The intro is only the page description.
      ------------------------------------------------------------------ */
   {
     slug: "netflix-mi-srh",
     brand: "Netflix × MI × SRH",
     title: "Chill Like a Champion",
-    meta: ["PENDING", "Entertainment", "Film · Social"],
-    intro:
-      "PENDING - the opening paragraph for the season across both teams. The picture and the film on this page are the client's; these words are not.",
+    meta: ["Entertainment", "Film · Social"],
+    intro: "Netflix × MI × SRH - Chill Like a Champion.",
     hero: "/assets/work/wall/netflix-mi-srh.jpg",
     film: "/assets/work/pinned/netflix-mi.mp4",
-    pending: true,
+    blocks: [],
+  },
+
+  /* ------------------------------------------------------------------
+     NETFLIX · MANDALA MURDERS - the client's own write-up, verbatim.
+     It is one run of copy with no brief / insight / what-we-did beats, so
+     it has no headings. It is split in two only so each set of pictures
+     sits after the half it belongs to: the 3D room after the digital
+     build, the real one after it leaves the screen.
+
+     The hero is the client's thumbnail, the same picture as the wall
+     tile, so the page opens on what the reader clicked.
+     ------------------------------------------------------------------ */
+  {
+    slug: "mandala-murders",
+    brand: "Netflix · Mandala Murders",
+    title: "The World of Mandala Murders",
+    meta: ["Entertainment", "Digital · 3D · Experiential"],
+    intro: "A murder mystery is only as immersive as the world around it.",
+    hero: "/assets/work/wall/mandala-murders.jpg",
     blocks: [
-      { type: "copy", heading: "The brief", body: LOREM },
       {
-        type: "credits",
-        items: [
-          { label: "Year", value: "PENDING" },
-        ],
+        type: "copy",
+        body: "For Mandala Murders, we spent 150+ working hours building that world piece by piece.\n\nFirst came the characters, brought to life digitally and introduced one by one. Then came 3D, adding the kind of detail you could almost feel through the screen.",
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/mandala-murders/renders.jpg",
+        w: 1600, h: 444,
+        bleed: true,
+      },
+      {
+        type: "copy",
+        body: "And then we took the whole thing out of the screen.\n\nThe Mandala Murders Escape Room brought the world into a real mall, with every detail planned and every corner mapped to make the experience feel like you had stepped inside the show.",
+      },
+      {
+        type: "duo",
+        a: "/assets/work/cases/mandala-murders/entrance.jpg",
+        b: "/assets/work/cases/mandala-murders/props.jpg",
       },
     ],
   },
 
+  /* ------------------------------------------------------------------
+     TITAN and JIOHOTSTAR · SPECIAL OPS 2 - the case study film is the
+     whole case. Neither came with a board or a write-up; the client
+     attached the film, cut for the web by scripts/build-film.mjs. With
+     nothing to read the page lays out as a visual case (caseIsVisual):
+     the film across the full width under the hero. The intros are only
+     the page descriptions.
+     ------------------------------------------------------------------ */
+  {
+    slug: "made-in-titan",
+    brand: "Titan",
+    title: "Made in India - A Titan Story",
+    meta: ["Entertainment", "Film"],
+    intro: "Titan - Made in India, A Titan Story.",
+    hero: "/assets/work/wall/made-in-titan.jpg",
+    film: "/assets/work/cases/made-in-titan/film.mp4",
+    blocks: [],
+  },
+
+  {
+    slug: "special-ops-2",
+    brand: "JioHotstar · Special Ops 2",
+    title: "Leaked",
+    meta: ["Entertainment", "Film"],
+    intro: "JioHotstar · Special Ops 2 - Leaked.",
+    hero: "/assets/work/wall/special-ops-2.jpg",
+    film: "/assets/work/cases/special-ops-2/film.mp4",
+    blocks: [],
+  },
+
+  /* ------------------------------------------------------------------
+     SUPERDRY SPORT - the client's own write-up, verbatim. The brief is a
+     single sentence, so it is the lede and there is no brief block under
+     it. Then the campaign film, the hoarding, and the two Sunday Times
+     front pages side by side (composited by scripts/build-wall.mjs,
+     because the gallery's 4:5 cell would crop the mastheads off).
+     ------------------------------------------------------------------ */
   {
     slug: "superdry",
     brand: "Superdry Sport",
     title: "Chase What Drives You",
-    meta: ["PENDING", "Fashion / Beauty / Luxury", "Film"],
-    intro: LOREM,
+    meta: ["Fashion / Beauty / Luxury", "Film · Social · Outdoor · Print"],
+    intro:
+      "Superdry Sport was launching in India, and the launch needed a communication that could define what the brand stood for in sport and establish the thought that would sit behind it.",
     hero: "/assets/work/wall/superdry.jpg",
-    film: "https://www.youtube.com/watch?v=2VYRKzOfJL0",
-    pending: true,
     blocks: [
-      { type: "copy", heading: "The brief", body: LOREM },
       {
-        type: "credits",
-        items: [
-          { label: "Year", value: "PENDING" },
-        ],
+        type: "copy",
+        heading: "The insight",
+        body: "Performance is what people see. What drives it is what makes it personal.\n\nThe reason someone trains harder, plays longer, gets back on the court or keeps chasing the next level is different for everyone. There’s always something behind the performance. That gave us Chase What Drives You.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We identified Rasha Thadani and Lakshya Suri as the faces of this range and then shot the campaign film with them, bringing their own energy and pursuit into the idea.\n\nFrom there, we built out the launch across social, outdoor and a front-page Sunday Times takeover, and brought the brand into the sporting community through experiences like Sip & Padel, with Lakshya on court alongside fitness creators.",
+      },
+      {
+        type: "video",
+        src: "https://www.youtube.com/watch?v=2VYRKzOfJL0",
+        caption: "Superdry Sport | Lakshya | Rasha Thadani | Chase What Drives You",
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/superdry/hoarding.jpg",
+        w: 1600, h: 1200,
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/superdry/print.jpg",
+        w: 1600, h: 1234,
       },
     ],
   },
@@ -759,9 +905,8 @@ export const CASES: CaseStudy[] = [
      IndusInd launch film and before/after grid, the Belgian Waffle board
      and influencer pickups, and a second set of YES BANK creatives. Every
      hero on them is now the campaign's own key art rather than repo
-     placeholder. The one thing still outstanding is the BHIM case video,
-     which is a 250MB broadcast master nobody has cut for the web; that
-     page runs on the frame already pulled out of it.
+     placeholder. The BHIM case video has since been cut for the web too,
+     by scripts/build-film.mjs.
      ------------------------------------------------------------------ */
   {
     slug: "yes-bank",
@@ -770,7 +915,7 @@ export const CASES: CaseStudy[] = [
     meta: ["BFSI", "Social · Influencer"],
     intro:
       "YES BANK was going through a rebrand, with a new identity and a new thought: Life Ko Banao Rich.",
-    hero: "/assets/work/cases/yes-bank/hero.jpg",
+    hero: "/assets/work/wall/yes-bank.jpg",
     blocks: [
       {
         type: "copy",
@@ -785,7 +930,7 @@ export const CASES: CaseStudy[] = [
       {
         type: "copy",
         heading: "What we did",
-        body: "We turned one of the most recognisable things a bank sends you into something far more personal: a Life Ki Statement from YES BANK.\n\nUsing the format of a real bank statement, we reimagined everyday moments as deposits, withdrawals and balances, with influencers showing what richness meant in their own lives.\n\nThe campaign then extended across social, giving people more ways to see that richness isn't only what sits in your bank account. It's also what fills your life.",
+        body: "We turned one of the most recognisable things a bank sends you into something far more personal: a Life Ki Statement from YES BANK.\n\nUsing the format of a real bank statement, we reimagined everyday moments as deposits, withdrawals and balances, with influencers showing what richness meant in their own lives.\n\nThe campaign then extended across social, giving people more ways to see that richness isn't only what sits in your bank account. It's also what fills your life.\n\nLife Ko Banao Rich became a way for YES BANK to talk about wealth in a much more human way.",
       },
       {
         type: "stats",
@@ -796,10 +941,6 @@ export const CASES: CaseStudy[] = [
           { figure: "3.1M", label: "Organic reach on LinkedIn" },
           { figure: "10%", label: "Follower growth on LinkedIn" },
         ],
-      },
-      {
-        type: "copy",
-        body: "Life Ko Banao Rich became a way for YES BANK to talk about wealth in a much more human way.",
       },
       /* The four social posts, as one picture rather than four blocks or
          a gallery - they are 1:1 and the gallery cell is 4:5, which would
@@ -813,8 +954,9 @@ export const CASES: CaseStudy[] = [
       },
       {
         type: "board",
-        src: "/assets/work/wall/yes-bank.jpg",
+        src: "/assets/work/cases/yes-bank/board.jpg",
         w: 1600, h: 1131,
+        large: { src: "/assets/work/cases/yes-bank/board-large.jpg", w: 2400 },
         caption: "The case board",
       },
     ],
@@ -895,8 +1037,9 @@ export const CASES: CaseStudy[] = [
   /* ------------------------------------------------------------------
      BHIM UPI - the client's own write-up, verbatim.
 
-     PENDING: the case video. The hero is the frame already pulled out
-     of it for the wall tile.
+     The case video is the web cut of their broadcast master, made by
+     scripts/build-film.mjs, and sits under the figures where the
+     write-up puts it.
      ------------------------------------------------------------------ */
   {
     slug: "bhim-upi",
@@ -932,6 +1075,11 @@ export const CASES: CaseStudy[] = [
           { figure: "50%", label: "Increase in gift card feature volume" },
         ],
       },
+      {
+        type: "video",
+        src: "/assets/work/cases/bhim-upi/film.mp4",
+        poster: "/assets/work/wall/bhim-upi.jpg",
+      },
     ],
   },
 
@@ -947,7 +1095,6 @@ export const CASES: CaseStudy[] = [
     intro:
       "Reliance General Insurance was becoming IndusInd General Insurance.",
     hero: "/assets/work/wall/indusind.jpg",
-    film: "/assets/work/cases/indusind/rebranding.mp4",
     blocks: [
       {
         type: "copy",
@@ -964,14 +1111,22 @@ export const CASES: CaseStudy[] = [
         heading: "What we did",
         body: "We took the new IndusInd General Insurance identity through the entire communication journey, starting with the launch film and carrying it into the everyday content that followed.\n\nThe communication began subtly introducing the new identity on social, while the visual language of the feed moved from the old Reliance General world to the new IndusInd General Insurance one.",
       },
-      /* The same account, before and after. One picture rather than a
-         `duo`, because the duo cell is 4:5 and these are 399x864 - a
-         phone-shaped feed grid put through a 4:5 crop is a third of a
-         feed and proves nothing. Composited by scripts/build-wall.mjs. */
+      /* The write-up asks for the case video and then the feed before and
+         after, in that order - so the film is placed here rather than
+         left to `film`, which would put it first. The hero's "watch the
+         film" still finds it. The feed grabs are 399x864 phone screens,
+         drawn in handsets side by side. */
       {
-        type: "image",
-        src: "/assets/work/cases/indusind/feed.jpg",
-        w: 826, h: 864,
+        type: "video",
+        src: "/assets/work/cases/indusind/rebranding.mp4",
+        poster: "/assets/work/wall/indusind.jpg",
+      },
+      {
+        type: "phones",
+        items: [
+          { src: "/assets/work/cases/indusind/before.jpg", w: 399, h: 864, label: "Before" },
+          { src: "/assets/work/cases/indusind/after.jpg", w: 399, h: 864, label: "After" },
+        ],
         caption: "The feed, before and after",
       },
     ],
@@ -989,7 +1144,6 @@ export const CASES: CaseStudy[] = [
     intro:
       "National Waffle Day falls on 19th July, and The Belgian Waffle Co. had already made the date synonymous with waffles.",
     hero: "/assets/work/wall/belgian-waffle.jpg",
-    film: "https://www.youtube.com/watch?v=wv8XtVq8HbA",
     blocks: [
       {
         type: "copy",
@@ -1005,6 +1159,13 @@ export const CASES: CaseStudy[] = [
         type: "copy",
         heading: "What we did",
         body: "We started by putting a fake ₹100 note into every order, with a simple message: “You know what this means, right?”\n\nThat became the first clue to 19th July. Influencers picked it up, employees took their own #EveryoneKnows stories on LinkedIn, and the conversation kept building around what was coming.\n\nThen we took it out of the feed and into the streets, turning the same ₹100 idea into outdoor, with the date and the offer waiting for people across the city.\n\nBy 19th July, the word was out. And so were the queues.",
+      },
+      /* The ₹100 note itself, off the case video - cropped out of a screen
+         grab so the player's own title bar and buttons are not on it. */
+      {
+        type: "image",
+        src: "/assets/work/cases/belgian-waffle/note.jpg",
+        w: 1600, h: 635,
       },
       /* The influencer leg, as it was actually seen: two phone screen
          grabs, drawn at close to their own size rather than blown up
@@ -1028,9 +1189,115 @@ export const CASES: CaseStudy[] = [
         ],
       },
       {
+        type: "video",
+        src: "https://www.youtube.com/watch?v=wv8XtVq8HbA",
+        poster: "/assets/work/wall/belgian-waffle.jpg",
+      },
+      {
         type: "board",
         src: "/assets/work/cases/belgian-waffle/board.jpg",
         w: 1536, h: 864,
+        caption: "The case board",
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     ITC STORE and HAVMOR - the client's own write-ups, verbatim, with the
+     pictures from the second drop where the write-ups ask for them: the
+     creatives after What we did (one picture each - see COMPOSITES in
+     scripts/build-wall.mjs), then the figures, then the case board. The
+     hero is each campaign's own thumbnail.
+     ------------------------------------------------------------------ */
+  {
+    slug: "itc-naa-ready",
+    brand: "ITC Store",
+    title: "Naa Ready",
+    meta: ["FMCG", "Hyperlocal · Social · Influencer"],
+    intro: "ITC products were already popular in Chennai.",
+    hero: "/assets/work/wall/itc.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "The problem was that when people wanted them, they were buying them everywhere else. ITC Store needed to become the place Chennai thought of first when it was time to stock up.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "In Chennai, cinema doesn’t stay on the screen. It becomes a language, a mood, a way of responding to everyday life. And few things captured that better than Thalapathy’s “Naa Ready”.\n\nThe phrase had already become a cultural shorthand for being up for whatever came next. That was exactly the territory ITC Store needed to own.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We turned “Naa Ready” into a hyperlocal campaign for ITC Store, making Chennai the star and its people the “Thalaivas” of their own lives.\n\nThe campaign showed up wherever those everyday challenges and occasions did, from social and influencers to WhatsApp, the ITC Store website and media partnerships with Meta, Criteo and Flipkart. Local festivals, local buying habits and local humour all became part of the communication.\n\nAnd wherever Chennai was ready for something, ITC Store was ready with them.",
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/itc/creatives.jpg",
+        w: 1600, h: 797,
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "47%", label: "Increase in customer retention" },
+          { figure: "179%", label: "Growth in new orders" },
+          { figure: "48%", label: "Increase in revenue" },
+          { figure: "13X", label: "More website visits" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/itc/board.jpg",
+        w: 1600, h: 900,
+        large: { src: "/assets/work/cases/itc/board-large.jpg", w: 2400 },
+        caption: "The case board",
+      },
+    ],
+  },
+
+  {
+    slug: "havmor-80-years",
+    brand: "Havmor",
+    title: "#80YearsOfHappyMemories",
+    meta: ["FMCG", "Packaging · Out of Home · Social"],
+    intro:
+      "Havmor was turning 80. And while an anniversary is usually a chance for a brand to look back at everything it has achieved, we had a much bigger archive to work with: 80 years of Havmor in people’s lives.",
+    hero: "/assets/work/wall/havmor.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "The brief was to celebrate that history through the people who had actually lived it.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "Havmor could tell us when it started. Only its consumers could tell us what those 80 years meant.\n\nThe ice cream had been there for summer holidays, family outings, first dates, midnight cravings and all the little occasions that people remember long after the ice cream is gone.\n\nSo the anniversary wasn't really about collecting 80 years of Havmor history. It was about getting India to open its own memory bank.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We turned #80YearsOfHappyMemories into a nationwide call for stories, using limited-edition packs, OOH, newspapers and social to get people sharing their own Havmor memories.\n\nThose memories became the content. Some were brought to life on social, while the campaign kept giving people reasons to add their own. One story even earned its author a trip to Italy, and selected fans were invited into Havmor's factory to meet the brand behind their memories.",
+      },
+      {
+        type: "image",
+        src: "/assets/work/cases/havmor/creatives.jpg",
+        w: 1600, h: 1600,
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "20,000+", label: "Memories submitted" },
+          { figure: "9 lakh+", label: "Packs sold in under 48 hours" },
+          { figure: "150M+", label: "Views" },
+          { figure: "620K+", label: "Engagements" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/havmor/board.jpg",
+        w: 1280, h: 907,
         caption: "The case board",
       },
     ],
@@ -1067,15 +1334,41 @@ export const CASES: CaseStudy[] = [
     ],
   },
 
+  /* Croma's AC case has had its write-up since this batch was set - the
+     client's own, verbatim - so it reads like the written cases above:
+     copy, the figures, then the board. */
   {
     slug: "croma-ac-badhau-ya-ghatau",
     brand: "Croma",
     title: "Settling the Debate for Once - AC Badhau Ya Ghatau?",
     meta: ["Others", "Social · Influencer"],
     intro:
-      "There has always been confusion whether \"AC badhane ka matlab temperature badhana ya ghatana hota hai?\" - Croma settled it, and made itself the destination for AC purchases along the way.",
+      "There’s one AC instruction that has probably caused more arguments in Indian homes than it deserves: “AC badha do.”",
     hero: "/assets/work/cases/croma-ac/hero.jpg",
     blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "Does that mean increase the temperature? Increase the cooling? Or, depending on who’s saying it, something else entirely? Croma decided it was time to settle the debate.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "The problem was hiding in the language itself.\n\nWe all say “AC badhana” and “AC ghatana”, but rarely stop to think about what we actually mean. Which meant everyone had an answer, and somehow everyone could still be right.\n\nThat gave Croma a rather entertaining question to put to the country:\n\n“AC badhane ka matlab kya hai?”",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We took the question to the streets.\n\nInfluencers conducted Vox Pops across the country, asking people to define what “AC badhana” actually meant. The answers turned a household disagreement into a proper internet debate, which Croma then turned into a viral rap video to finally give the question its moment.\n\nMemes, contests and giveaways kept the debate moving, while Croma's AC exchange offer gave the conversation a very practical ending: if the AC is the problem, maybe it’s time to change the AC.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "19.07M", label: "Reach" },
+          { figure: "3.26%", label: "Engagement" },
+          { figure: "5.26M", label: "Rap video views" },
+        ],
+      },
       {
         type: "board",
         src: "/assets/work/wall/croma.jpg",
@@ -1149,7 +1442,7 @@ export const CASES: CaseStudy[] = [
     meta: ["PENDING", "Entertainment", "Film · Social"],
     intro: LOREM,
     hero: "/assets/art/work-entertainment.webp",
-    film: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
+    film: "/assets/work/cases/placeholder/home-banner-video.mp4",
     pending: true,
     /* The reference page's full section vocabulary, in one case, so
        every block type can be looked at rendered before the real work
@@ -1169,14 +1462,14 @@ export const CASES: CaseStudy[] = [
       ] },
       { type: "image", src: "/assets/art/work-entertainment.webp", w: 1600, h: 900, bleed: true, caption: "PENDING - caption" },
       { type: "copy", heading: "The execution", body: LOREM },
-      { type: "video", src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", caption: "PENDING - the case film" },
+      { type: "video", src: "/assets/work/cases/placeholder/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", caption: "PENDING - the case film" },
       /* PENDING - three of the same file standing in for the cutdowns.
          Real ones are usually YouTube or Vimeo links, which go in the
          same field. */
       { type: "reel", caption: "PENDING - the cutdowns", items: [
-        { src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/kink.jpg", label: "PENDING - 30s" },
-        { src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/binge.jpg", label: "PENDING - 15s" },
-        { src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", label: "PENDING - 6s" },
+        { src: "/assets/work/cases/placeholder/home-banner-video.mp4", poster: "/assets/series/kink.jpg", label: "PENDING - 30s" },
+        { src: "/assets/work/cases/placeholder/home-banner-video.mp4", poster: "/assets/series/binge.jpg", label: "PENDING - 15s" },
+        { src: "/assets/work/cases/placeholder/home-banner-video.mp4", poster: "/assets/series/streaming.jpg", label: "PENDING - 6s" },
       ] },
       { type: "steps", heading: "How it was made", items: [
         { title: "PENDING - discovery", body: LOREM, src: "/assets/series/kink.jpg" },
@@ -1204,28 +1497,6 @@ export const CASES: CaseStudy[] = [
       { type: "faq", heading: "Questions", items: [
         { q: "PENDING - a question a reader asks after seeing this.", a: LOREM },
         { q: "PENDING - the second one.", a: LOREM },
-      ] },
-    ],
-  },
-  {
-    slug: "titan-made-in-india",
-    brand: "Titan",
-    title: "Made in India",
-    meta: ["PENDING", "Others", "Film · Social"],
-    intro: LOREM,
-    hero: "/assets/work-lifestyle.jpg",
-    film: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4",
-    pending: true,
-    blocks: [
-      { type: "copy", heading: "The client", body: LOREM },
-      { type: "copy", heading: "The challenge", body: LOREM },
-      { type: "image", src: "/assets/work-lifestyle.jpg", w: 1600, h: 1000, bleed: true },
-      { type: "copy", heading: "Our approach", body: LOREM },
-      { type: "video", src: "https://www.socheers.net/wp-content/uploads/2024/12/home-banner-video.mp4", poster: "/assets/series/wardrobe.jpg" },
-      { type: "copy", heading: "The outcome", body: LOREM },
-      { type: "stats", items: [
-        { figure: "00M", label: "PENDING - reach" },
-        { figure: "00%", label: "PENDING - engagement" },
       ] },
     ],
   },
@@ -1357,6 +1628,8 @@ export const caseIsVisual = (blocks: CaseBlock[]) =>
    is left, and it is not drawn either: it is the live region a screen
    reader hears when a filter changes. See WorkGrid.tsx. */
 export const WORK_BROWSE = {
+  /* The small label over the tabs. */
+  heading: "Select work pieces",
   /* The count under the filter. It is a live number rather than a
      sentence about how much work there is, which is the one thing a
      filtered wall owes the reader: a tab that returns four things

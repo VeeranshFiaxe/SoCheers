@@ -1231,15 +1231,12 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   font-family:var(--f-display);
   font-size:clamp(22px,2.45vw,36px); line-height:1.16; letter-spacing:-.015em;
 }
+/* Half the words of the pitch, so set larger to fill the same block:
+   three lines here against the pitch's four keeps both sides of the mark
+   about the same height and width. */
 .who__lede{
   font-weight:700; color:var(--cream);
-}
-/* The name, set exactly as the pitch below it is: same face, same italic,
-   same 400. Dropping to 400 against the lede's 700 lets the name sit
-   inside the heavier sentence as a quoted thing rather than as part of
-   the claim, and at that weight the slant is unmistakable. */
-.who__brand{
-  color:var(--accent); font-style:italic; font-weight:400;
+  font-size:clamp(27px,3vw,44px);
 }
 .who__pitch{
   font-weight:400; font-style:italic; color:var(--accent);

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import "./services.css";
 import SiteMotion from "@/components/SiteMotion";
+import { pageMeta } from "@/lib/seo";
 import { BUCKETS } from "@/lib/content";
 import { SERVICE_ASK, SERVICE_COPY } from "@/lib/services-content";
 
@@ -62,11 +63,11 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { service } = await params;
   const found = find(service);
   if (!found) return {};
-  return {
+  return pageMeta({
     title: found.copy.metaTitle,
     description: found.copy.metaDescription,
-    alternates: { canonical: `/services/${service}` },
-  };
+    path: `/services/${service}`,
+  });
 }
 
 export default async function ServicePage({ params }: Params) {

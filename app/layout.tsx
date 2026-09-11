@@ -7,6 +7,7 @@ import Loader from "@/components/Loader";
 import Nav from "@/components/Nav";
 import Overture from "@/components/Overture";
 import RouteTheme from "@/components/RouteTheme";
+import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
 
 /* One face for the whole site. The weight does the talking:
    700 for headings, 500 for accents (the uppercase, letter-spaced
@@ -79,6 +80,15 @@ export const metadata: Metadata = {
      scripts/build-favicons.mjs. This only points at the manifest, which
      has no file convention that fits a hand-written one. */
   manifest: "/site.webmanifest",
+  /* The fallback preview for any route that does not set its own - see
+     pageMeta() in lib/seo.ts, which every page uses. */
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    locale: "en_IN",
+    images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "SoCheers" }],
+  },
+  twitter: { card: "summary_large_image", images: [OG_IMAGE] },
 };
 
 /* The browser chrome around the page - the address bar on Android, the

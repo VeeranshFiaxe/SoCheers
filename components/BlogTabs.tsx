@@ -1,7 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { SOON_LABEL, TABS, WHITEPAPERS, type TabId } from "@/lib/blog-content";
+import { REPORTS, SOON_LABEL, TABS, WHITEPAPERS, type TabId } from "@/lib/blog-content";
 
 /* The three-way split the client asked for: Blogs / White Papers / Reports
    under one section instead of a page that's only ever called "Blogs".
@@ -106,7 +106,7 @@ export default function BlogTabs() {
               reader on the other, so the pitch and the paper are on
               screen together; the link underneath is for anyone who
               wants the PDF in its own tab instead. */}
-          {WHITEPAPERS.map((wp) => (
+          {(active === "reports" ? REPORTS : WHITEPAPERS).map((wp) => (
             <article className="bl-paper__card" key={wp.id}>
               <div className="bl-paper__body">
                 <span className="tag">{wp.tag}</span>

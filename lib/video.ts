@@ -72,6 +72,22 @@ export function parseVideo(src: string, poster?: string): ParsedVideo {
   return { kind: "file", src, poster };
 }
 
+/* The films that have a phone cut (<name>-sm.mp4) beside them - every
+   entry in FILMS in scripts/build-film.mjs, by the path the page uses.
+   A film added there has to be added here, or the page simply offers it
+   without a phone cut. See components/FilmSources.tsx. */
+const PHONE_CUTS = new Set([
+  "/assets/work/pinned/netflix-mi.mp4",
+  "/assets/work/cases/indusind/rebranding.mp4",
+  "/assets/work/cases/zurich-kotak/new-year.mp4",
+  "/assets/work/cases/bhim-upi/film.mp4",
+  "/assets/work/cases/made-in-titan/film.mp4",
+  "/assets/work/cases/special-ops-2/film.mp4",
+]);
+
+export const phoneCut = (src: string) =>
+  PHONE_CUTS.has(src) ? src.replace(/\.mp4$/, "-sm.mp4") : undefined;
+
 /* The named frames, as the numbers a stylesheet wants. Kept here rather
    than in CSS because the reel and the single film both need them and
    neither should be the one that owns the definition. */

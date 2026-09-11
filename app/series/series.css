@@ -1486,7 +1486,16 @@
   width:100%; height:100%;
   object-fit:cover; object-position:50% 40%;
   display:block;
-  filter:saturate(.82);
+  /* one shared grade so the four stills read as one set */
+  filter:saturate(.7) contrast(1.08) brightness(.9) sepia(.12);
+}
+/* warm wash + soft vignette over every still, same on all four */
+.st-step__art::after{
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(120% 100% at 50% 45%, rgba(0,0,0,0) 55%, rgba(0,0,0,.38) 100%),
+    linear-gradient(180deg, rgba(120,60,30,.08), rgba(20,10,10,.16));
+  mix-blend-mode:multiply;
 }
 .st-step__no{
   display:block; margin-top:clamp(12px,1.6vh,18px);
@@ -1601,6 +1610,11 @@
     transform .9s cubic-bezier(.2,.7,.2,1) calc(var(--a) * 110ms + 60ms);
 }
 .st-hs:hover{ --lift:1; z-index:3; }
+.st-hs__link{ display:block; color:inherit; text-decoration:none; cursor:pointer; }
+.st-hs__link:focus-visible{ outline:1px solid var(--accent); outline-offset:6px; }
+/* filler handsets: dimmed, soft, not interactive */
+.st-hs--ghost{ pointer-events:none; }
+.st-hs--ghost .st-ph{ opacity:.42; filter:blur(1.6px) saturate(.6); }
 
 /* ---- the handset ------------------------------------------------
    Three things at once, and they are deliberately separable:
@@ -2291,6 +2305,10 @@
   #section-format .st-beat__words{ max-width:min(88%, 1100px); }
   #section-format .st-beat__line{ max-width:24ch; }
   #section-format .st-beat__copy{ max-width:80ch; }
+
+  /* section 6: bigger frames */
+  #section-receipts .st-strip{ gap:clamp(8px,1.3vh,16px); }
+  #section-receipts .st-band{ height:clamp(120px,21.5vh,250px); }
 }
 
 /* ---- section 6's focal points ----

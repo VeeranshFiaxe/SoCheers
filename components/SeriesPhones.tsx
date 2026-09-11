@@ -127,8 +127,9 @@ export default function SeriesPhones() {
       <ul className="st-rig__arc">
         {PHONES.map((p, i) => (
           <li
-            className="st-hs"
+            className={p.ghost ? "st-hs st-hs--ghost" : "st-hs"}
             key={p.id}
+            aria-hidden={p.ghost || undefined}
             style={
               {
                 "--i": i,
@@ -137,15 +138,37 @@ export default function SeriesPhones() {
               } as React.CSSProperties
             }
           >
-            <Handset phone={p} />
-            <span className="st-hs__cap">
-              <b>{p.label}</b>
-              <i>{p.note}</i>
-            </span>
+            {p.href ? (
+              <a
+                className="st-hs__link"
+                href={p.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cursor="Watch"
+              >
+                <Handset phone={p} />
+                <Caption phone={p} />
+                <span className="sr-only">(opens Instagram in a new tab)</span>
+              </a>
+            ) : (
+              <>
+                <Handset phone={p} />
+                {!p.ghost && <Caption phone={p} />}
+              </>
+            )}
           </li>
         ))}
       </ul>
     </div>
+  );
+}
+
+function Caption({ phone }: { phone: Phone }) {
+  return (
+    <span className="st-hs__cap">
+      <b>{phone.label}</b>
+      <i>{phone.note}</i>
+    </span>
   );
 }
 
@@ -203,10 +226,12 @@ function Handset({ phone }: { phone: Phone }) {
             every one of them has and to no platform's marks: a caption
             block and a progress hairline */}
         <span className="st-ph__ui">
-          <span className="st-ph__cap">
-            <em>{phone.label}</em>
-            <i>{phone.note}</i>
-          </span>
+          {!phone.ghost && (
+            <span className="st-ph__cap">
+              <em>{phone.label}</em>
+              <i>{phone.note}</i>
+            </span>
+          )}
           <span className="st-ph__bar">
             <span />
           </span>

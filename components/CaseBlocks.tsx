@@ -1,4 +1,5 @@
 import type { CaseBlock } from "@/lib/work-content";
+import { pic } from "@/lib/images";
 import CaseVideo from "./CaseVideo";
 
 /* ============================================================
@@ -24,6 +25,11 @@ import CaseVideo from "./CaseVideo";
    completely differently. That is the right trade for a portfolio -
    it is the same reason the reference the client gave
    (cardboard-spaceship.com/portfolio/vyepti) does not look like a form.
+
+   Every picture goes through pic() (lib/images.ts), which serves the
+   WebP and lets a phone take the 800-wide one. The `sizes` on each is
+   roughly how wide that block is drawn - it only has to be close enough
+   for the browser to pick the right file.
    ============================================================ */
 export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
   return (
@@ -65,7 +71,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                 data-reveal
               >
                 <div className="cs-shot__in" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
-                  <img src={b.src} alt={b.caption ?? ""} loading="lazy" />
+                  <img {...pic(b.src)} sizes="(max-width: 980px) 100vw, 1100px" alt={b.caption ?? ""} loading="lazy" />
                 </div>
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
@@ -75,8 +81,8 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
             return (
               <figure className="cs-duo" key={key} data-reveal>
                 <div className="cs-duo__in">
-                  <img src={b.a} alt="" loading="lazy" />
-                  <img src={b.b} alt="" loading="lazy" />
+                  <img {...pic(b.a)} sizes="(max-width: 640px) 100vw, 50vw" alt="" loading="lazy" />
+                  <img {...pic(b.b)} sizes="(max-width: 640px) 100vw, 50vw" alt="" loading="lazy" />
                 </div>
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
@@ -123,6 +129,28 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
               </figure>
             );
 
+          /* Screens as they were seen on a phone - a feed before and
+             after, a set of stories. Each grab sits in a drawn handset at
+             its own proportions, side by side, with its label over it. */
+          case "phones":
+            return (
+              <figure className="cs-phones" key={key} data-reveal>
+                <div className="cs-phones__in">
+                  {b.items.map((it, j) => (
+                    <div className="cs-phone" key={`${it.src}-${j}`}>
+                      {it.label && <span className="cs-phone__label">{it.label}</span>}
+                      <span className="cs-phone__body">
+                        <span className="cs-phone__screen" style={{ aspectRatio: `${it.w} / ${it.h}` }}>
+                          <img {...pic(it.src)} sizes="(max-width: 560px) 50vw, 320px" alt={it.label ?? ""} loading="lazy" />
+                        </span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {b.caption && <figcaption>{b.caption}</figcaption>}
+              </figure>
+            );
+
           /* Any number of stills. The column count is the writer's call
              for the same reason `bleed` is - how many frames read well
              in a row is a judgement about the frames. */
@@ -131,7 +159,13 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
               <figure className="cs-gal" key={key} data-reveal>
                 <div className="cs-gal__in" style={{ "--cols": b.cols ?? 3 } as React.CSSProperties}>
                   {b.items.map((it, j) => (
-                    <img key={`${it.src}-${j}`} src={it.src} alt={it.caption ?? ""} loading="lazy" />
+                    <img
+                      key={`${it.src}-${j}`}
+                      {...pic(it.src)}
+                      sizes="(max-width: 760px) 100vw, 33vw"
+                      alt={it.caption ?? ""}
+                      loading="lazy"
+                    />
                   ))}
                 </div>
                 {b.caption && <figcaption>{b.caption}</figcaption>}
@@ -168,7 +202,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                     <li className="cs-step" key={it.title}>
                       {it.src && (
                         <span className="cs-step__shot">
-                          <img src={it.src} alt="" loading="lazy" />
+                          <img {...pic(it.src)} sizes="(max-width: 760px) 100vw, 33vw" alt="" loading="lazy" />
                         </span>
                       )}
                       <span className="cs-step__no">{String(j + 1).padStart(2, "0")}</span>
@@ -202,9 +236,10 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
              zooming into it, not by glancing at it, so it gets its own
              block rather than being an image with a different caption.
              The frame is a link to the largest cut, opened on its own,
-             where the browser's zoom does the reading. `large` is served
-             to screens that can use it and skipped by the ones that
-             cannot. */
+             where the browser's zoom does the reading - the JPG, so the
+             zoom is never a re-compressed copy. On the page, pic() offers
+             the 800, the board and `large` as WebP, and the screen takes
+             the one it can use. */
           case "board":
             return (
               <figure className="cs-board" key={key} data-reveal>
@@ -218,9 +253,8 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                   data-cursor="Zoom"
                 >
                   <img
-                    src={b.src}
-                    srcSet={b.large ? `${b.src} ${b.w}w, ${b.large.src} ${b.large.w}w` : undefined}
-                    sizes={b.large ? "100vw" : undefined}
+                    {...pic(b.src, b.large)}
+                    sizes="100vw"
                     alt={b.caption ?? "Case board"}
                     loading="lazy"
                   />

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { parseVideo, RATIO, YT_HOST } from "@/lib/video";
+import { pic } from "@/lib/images";
+import FilmSources from "./FilmSources";
 
 /* ============================================================
    ONE MOVING PICTURE, WHEREVER IT LIVES.
@@ -185,7 +187,10 @@ export default function CaseVideo({
   if (v.kind === "file") {
     return (
       <div className="cs-play" style={style} ref={box} onPointerEnter={warm} onTouchStart={warm} onFocus={warm}>
-        <video src={v.src} poster={poster} controls preload={preload} playsInline />
+        {/* the full cut or the phone cut, by screen width - FilmSources */}
+        <video poster={poster && pic(poster).src} controls preload={preload} playsInline>
+          <FilmSources src={v.src} />
+        </video>
       </div>
     );
   }
@@ -221,7 +226,8 @@ export default function CaseVideo({
         >
           {still && (
             <img
-              src={still}
+              {...pic(still)}
+              sizes="(max-width: 980px) 100vw, 1100px"
               alt=""
               loading="lazy"
               onError={() =>

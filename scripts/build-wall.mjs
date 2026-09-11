@@ -60,7 +60,7 @@ const WIDTH = 1600;
    logo sting, so none of these are 0. */
 const TILES = [
   /* BFSI */
-  { slug: "yes-bank", file: "BFSI/YES bank Caseboard.png" },
+  { slug: "yes-bank", file: "BFSI/YES BANK/Thumbnail.png" },
   { slug: "bhim-upi", master: "bhim-upi.src.mp4", at: 8 },
   /* Two tiles that used to be pending() in lib/work-content.ts. Both
      campaigns have a film, but the tile is a still either way - the wall
@@ -70,8 +70,16 @@ const TILES = [
   { slug: "zurich-kotak", file: "BFSI/Zurich Kotak Insurance/THUMBNAIL.png" },
   /* FMCG. The first tile the tab has ever had that is not a placeholder. */
   { slug: "belgian-waffle", file: "FMCG/Belgian Waffle/Thumbnail belgian waffle.jpg" },
+  /* ITC and Havmor used to be pending() placeholders; both folders came in
+     the second drop with a thumbnail of their own. */
+  { slug: "itc", file: "FMCG/ITC/Thumbnail.png" },
+  { slug: "havmor", file: "FMCG/Havmor/Thumbnail.jpg" },
   /* Entertainment */
-  { slug: "dhurandhar-2", master: "dhurandhar-2.src.mp4", at: 24 },
+  /* Both of these were stand-ins until the second drop - a frame out of the
+     case film, and the series thumbnail off the Series page - and both now
+     have the client's own thumbnail. */
+  { slug: "dhurandhar-2", file: "Entertainment/Dhurandhar 2/Thumbnail.png" },
+  { slug: "mandala-murders", file: "Entertainment/Mandala Murders/Thumbnail.png" },
   { slug: "maa-behen", file: "Entertainment/Maa Behen/Maa Behen cover.jpeg" },
   /* The Netflix x MI x SRH case study has its own key art - "Chill like
      a champion" - and it is deliberately not either of the two pinned
@@ -131,6 +139,13 @@ const CASE_SHOTS = [
   { slug: "zurich-kotak/deck-fan", file: "BFSI/Zurich Kotak Insurance/13.jpg" },
   /* Belgian Waffle's board, same shape and same reasoning. */
   { slug: "belgian-waffle/board", file: "FMCG/Belgian Waffle/Case Study.png" },
+  /* YES BANK's board. Its tile used to be the board itself, so the page
+     drew the board from wall/yes-bank.jpg - until the client's thumbnail
+     replaced the tile, and the board block quietly started showing the
+     thumbnail. The board now has files of its own, at the same 1600 /
+     2400 pair as the other dense boards. */
+  { slug: "yes-bank/board", file: "BFSI/YES BANK/YES bank Caseboard (1).png" },
+  { slug: "yes-bank/board-large", file: "BFSI/YES BANK/YES bank Caseboard (1).png", width: 2400 },
   /* The cases that are only a board. The page draws the board across the
      full width and links it out to be zoomed, so each gets a 2400 cut
      beside its 1600 tile - the page serves whichever the screen needs.
@@ -139,6 +154,36 @@ const CASE_SHOTS = [
   { slug: "croma-ac/board", file: "B2B + Others/Croma.jpg", width: 2400 },
   { slug: "croma-dreams/board", file: "B2B + Others/FLIPKART-MOODBOARD-4.jpg", width: 2400 },
   { slug: "bgmi/board", file: "B2B + Others/_BGMI UPDATE PODCAST_Case Study.jpg", width: 2400 },
+  /* Superdry Sport's hoarding, and IndusInd's before and after feed
+     grabs as two files - the page draws each in its own phone frame
+     now, so they are no longer composited into one picture. */
+  { slug: "superdry/hoarding", file: "Fashion-Beauty-Luxury/SuperDry-Superdry Sport/Hoarding.jpg" },
+  { slug: "indusind/before", file: "BFSI/IGI/RGI before.png" },
+  { slug: "indusind/after", file: "BFSI/IGI/IGI after.png" },
+  /* A screen grab off the Belgian Waffle case video, taken with the
+     YouTube player's own title bar and buttons on it. `extract` keeps
+     the note and the bag and leaves the player's furniture behind. */
+  {
+    slug: "belgian-waffle/note",
+    file: "FMCG/Belgian Waffle/Screenshot 2026-09-09 120724.png",
+    extract: { left: 150, top: 240, width: 1650, height: 655 },
+  },
+  /* The second drop. ITC's board is a dense 16:9 slide, so it gets the
+     1600 / 2400 pair the board-only cases have; Havmor's is 1280 wide and
+     goes up at its own size. Dhurandhar 2's are the teaser billboard, the
+     launch poster, the airport screen and the press pickup. */
+  { slug: "itc/board", file: "FMCG/ITC/Caseboard.jpg" },
+  { slug: "itc/board-large", file: "FMCG/ITC/Caseboard.jpg", width: 2400 },
+  { slug: "havmor/board", file: "FMCG/Havmor/Caseboard.jpg" },
+  { slug: "dhurandhar-2/teaser", file: "Entertainment/Dhurandhar 2/Teaser 1.png" },
+  { slug: "dhurandhar-2/poster", file: "Entertainment/Dhurandhar 2/add (1).png" },
+  { slug: "dhurandhar-2/launch", file: "Entertainment/Dhurandhar 2/Lauch 2.png" },
+  {
+    slug: "dhurandhar-2/press",
+    file: "Entertainment/Dhurandhar 2/Jassi Is Returning Home. The Wait Is Finally Over.The wait is almost over as Dhurandhar The Rev.png",
+  },
+  { slug: "mandala-murders/entrance", file: "Entertainment/Mandala Murders/MM.png" },
+  { slug: "mandala-murders/props", file: "Entertainment/Mandala Murders/MM(1).png" },
 ];
 
 /* ------------------------------------------------------------------
@@ -164,13 +209,17 @@ const GROUND = { r: 11, g: 11, b: 12 };
 const GAP = 28;
 
 const COMPOSITES = [
-  /* IndusInd's rebrand, which is a before and an after and is not
-     legible as either one alone. Left is the Reliance General feed, right
-     is the same account after the change - the client's own pair. */
+  /* Superdry Sport's two Sunday Times front pages, side by side. The
+     gallery's 4:5 cell would crop the mastheads off both. (IndusInd's
+     before and after used to be composited here; the page draws those
+     in phone frames now - see CASE_SHOTS.) */
   {
-    slug: "indusind/feed",
+    slug: "superdry/print",
     cols: 2,
-    files: ["BFSI/IGI/RGI before.png", "BFSI/IGI/IGI after.png"],
+    files: [
+      "Fashion-Beauty-Luxury/SuperDry-Superdry Sport/Newspaper(1).jpg",
+      "Fashion-Beauty-Luxury/SuperDry-Superdry Sport/Newspaper.jpg",
+    ],
   },
   /* The four YES BANK social posts, as the 2x2 the case board itself
      lays them out in. Square, so a 4:5 cell would cut the logo off. */
@@ -196,6 +245,33 @@ const COMPOSITES = [
       "FMCG/Belgian Waffle/Screenshot 2026-09-09 120630.png",
     ],
   },
+  /* ITC's two Naa Ready creatives and Havmor's four AI memory posts. Square
+     posts again, so the 4:5 gallery cell would crop their headlines. */
+  {
+    slug: "itc/creatives",
+    cols: 2,
+    files: ["FMCG/ITC/Copy of na reddy-01.jpg", "FMCG/ITC/Copy of na reddy-02.jpg"],
+  },
+  {
+    slug: "havmor/creatives",
+    cols: 2,
+    files: [
+      "FMCG/Havmor/80 years AI creative.webp",
+      "FMCG/Havmor/80 years AI creatives.webp",
+      "FMCG/Havmor/Havmor 80 years AI story 2.jpg",
+      "FMCG/Havmor/Havmor 80 years AI story 5.png",
+    ],
+  },
+  /* Mandala Murders' escape room as it was planned: the 3D room and the
+     props board, both 16:9, side by side. */
+  {
+    slug: "mandala-murders/renders",
+    cols: 2,
+    files: [
+      "Entertainment/Mandala Murders/Mandala Murders x SoCheers _ Escape Room (2).png",
+      "Entertainment/Mandala Murders/Mandala Murders x SoCheers _ Escape Room.jpg",
+    ],
+  },
 ];
 
 await mkdir(OUT, { recursive: true });
@@ -214,9 +290,15 @@ function grab(from, at) {
   return tmp;
 }
 
+/* node scripts/build-wall.mjs itc havmor - only the slugs that start with
+   one of the arguments. With none, everything, as before. */
+const ONLY = process.argv.slice(2);
+const wanted = (slug) => !ONLY.length || ONLY.some((p) => slug.startsWith(p));
+
 const dims = [];
 
 for (const { slug, file, master, at } of TILES) {
+  if (!wanted(slug)) continue;
   const rel = master ?? file;
   const from = master ? path.join(MASTERS, master) : path.join(SRC, file);
   if (!existsSync(from)) {
@@ -243,7 +325,8 @@ for (const { slug, file, master, at } of TILES) {
   console.log(`${slug.padEnd(14)} ${out.width}x${out.height}  ${(out.size / 1024).toFixed(0)}KB  <- ${rel}`);
 }
 
-for (const { slug, file, master, width } of CASE_SHOTS) {
+for (const { slug, file, master, width, extract, at } of CASE_SHOTS) {
+  if (!wanted(slug)) continue;
   const rel = master ?? file;
   const from = master ? path.join(MASTERS, master) : path.join(SRC, file);
   if (!existsSync(from)) {
@@ -251,7 +334,12 @@ for (const { slug, file, master, width } of CASE_SHOTS) {
     continue;
   }
   await mkdir(path.join(CASES_OUT, path.dirname(slug)), { recursive: true });
-  const out = await sharp(from)
+  const isFilm = /\.(mp4|mov|m4v)$/i.test(rel);
+  const input = isFilm ? await sharp(grab(from, at ?? 0)).png().toBuffer() : from;
+  if (isFilm) await rm(path.join(OUT, ".frame.png"), { force: true });
+  let pipe = sharp(input);
+  if (extract) pipe = pipe.extract(extract);
+  const out = await pipe
     .resize({ width: width ?? WIDTH, withoutEnlargement: true })
     .jpeg({ quality: 82, progressive: true, mozjpeg: true })
     .toFile(path.join(CASES_OUT, `${slug}.jpg`));
@@ -261,6 +349,7 @@ for (const { slug, file, master, width } of CASE_SHOTS) {
 }
 
 for (const { slug, cols, files, width } of COMPOSITES) {
+  if (!wanted(slug)) continue;
   const froms = files.map((f) => path.join(SRC, f));
   const missing = froms.filter((f) => !existsSync(f));
   if (missing.length) {

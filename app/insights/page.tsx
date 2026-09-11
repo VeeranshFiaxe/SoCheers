@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import "./blog.css";
 import BlogMotion from "@/components/BlogMotion";
 import BlogTabs from "@/components/BlogTabs";
 import { BLOG_HERO, TOPICS } from "@/lib/blog-content";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Insights · SoCheers",
   description:
     "Blogs, white papers and reports from the SoCheers team - starting with the Parasocial Marketing whitepaper.",
-};
+  path: "/insights",
+});
 
 export default function Blog() {
   return (
