@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { OVERTURE_WALLS } from "@/lib/content";
+import { OVERTURE_HELD, OVERTURE_WALLS } from "@/lib/content";
 import { cueOverture, shouldRunOverture } from "@/lib/overture";
 import SoCheersLockup from "./SoCheersLockup";
 
@@ -38,7 +38,8 @@ import SoCheersLockup from "./SoCheersLockup";
 function assets() {
   const phone =
     typeof window !== "undefined" && window.matchMedia("(max-width:700px)").matches;
-  return OVERTURE_WALLS.map((w) => (phone && w.m) || w.img);
+  /* only the walls the room opens on - see OVERTURE_HELD */
+  return OVERTURE_WALLS.slice(0, OVERTURE_HELD).map((w) => (phone && w.m) || w.img);
 }
 
 const MIN = 1150;   // ms - the floor, so the count reads as a count

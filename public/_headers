@@ -1,0 +1,8 @@
+# Cloudflare static-asset headers.
+#
+# Everything under /_next/static is named by a hash of its contents (the JS
+# chunks, the CSS, the fonts), so a changed file is a new URL and the old
+# one can be kept forever. Without this Cloudflare sends max-age=0 and every
+# visit re-asks for all of it. `next start` already does the same on its own.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable

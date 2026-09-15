@@ -397,6 +397,15 @@ export default function Overture() {
      builds a clean one. */
   const [run, setRun] = useState(0);
 
+  /* The opening is over: let the page fetch what it held back under it
+     (html.sc-intro - see app/layout.tsx and globals.css). Subscribed
+     before the effect below, which can hand back on the same tick. */
+  useEffect(() => {
+    const open = () => document.documentElement.classList.remove("sc-intro");
+    document.addEventListener(OVERTURE_DONE, open);
+    return () => document.removeEventListener(OVERTURE_DONE, open);
+  }, []);
+
   useEffect(() => {
     const root = document.querySelector<HTMLElement>('[data-overture]');
     if (!root) return;

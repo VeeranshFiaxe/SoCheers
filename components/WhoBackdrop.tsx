@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { trackRect } from "@/lib/perf";
+import { OVERTURE_DONE } from "@/lib/overture";
 
 /* The team photo behind the bulb, kept on exactly the rectangle the hero's
    own photo occupies. The hero pin dissolves off the top of WHO WE ARE, so
@@ -49,8 +50,18 @@ export default function WhoBackdrop() {
       ctx.drawImage(src, 0, 0, w, h);
       img.current.src = c.toDataURL("image/png");
     };
-    src.src = "/assets/art/team-960.jpg";
-    return () => { src.onload = null; };
+    const load = () => { src.src = "/assets/art/team-960.jpg"; };
+    /* not while the opening is playing over it - see html.sc-intro in
+       globals.css */
+    if (document.documentElement.classList.contains("sc-intro")) {
+      document.addEventListener(OVERTURE_DONE, load, { once: true });
+    } else {
+      load();
+    }
+    return () => {
+      src.onload = null;
+      document.removeEventListener(OVERTURE_DONE, load);
+    };
   }, []);
 
   useEffect(() => {

@@ -67,7 +67,7 @@ function linkPreview(res, url) {
    both kinds) is left alone. If there is no .txt the HTML goes back as
    before, which Next treats as "load this page normally". */
 async function flight(request, env, url) {
-  if (/\.[a-z0-9]+$/i.test(url.pathname)) return env.ASSETS.fetch(request);
+  if (/\.[a-z0-9]+$/i.test(url.pathname)) return withoutImageHints(await env.ASSETS.fetch(request));
 
   const file = new URL(url);
   file.pathname = url.pathname === "/" ? "/index.txt" : `${url.pathname.replace(/\/$/, "")}.txt`;
@@ -77,7 +77,25 @@ async function flight(request, env, url) {
   const headers = new Headers(res.headers);
   headers.set("content-type", "text/x-component");
   headers.set("vary", "RSC, Next-Router-State-Tree, Next-Router-Prefetch");
-  return new Response(res.body, { status: res.status, headers });
+  return withoutImageHints(new Response(res.body, { status: res.status, headers }));
+}
+
+/* A page's data carries preload hints for that page's pictures (the
+   ':HL[..., "image"]' rows), and the router acts on them the moment the
+   data arrives - which for a prefetch is while you are still on another
+   page. The nav prefetches every tab, so the home page was downloading
+   About's and Series' photographs (well over a megabyte) during its own
+   opening. The rows are dropped here; the pictures still load the normal
+   way when the page they belong to is actually shown. A hint row has no
+   id and nothing refers to it, so removing one changes nothing else. */
+const IMAGE_HINT = /^:HL\["[^"\n]*","image"[^\n]*(?:\n|$)/gm;
+
+async function withoutImageHints(res) {
+  if (res.status !== 200) return res;
+  const text = await res.text();
+  const headers = new Headers(res.headers);
+  headers.delete("content-length");
+  return new Response(text.replace(IMAGE_HINT, ""), { status: 200, headers });
 }
 
 async function media(request, env, url) {

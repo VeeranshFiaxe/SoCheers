@@ -42,7 +42,7 @@ import {
   markOvertureSeen,
 } from "./overture";
 import { ROPE, ropePath } from "./logo-paths";
-import { OVERTURE_SFX } from "./content";
+import { OVERTURE_HELD, OVERTURE_SFX } from "./content";
 
 /* The gap between one wall and the next, and therefore how far away the
    standing wall always is. Against the 1400px perspective on .ovt__stage
@@ -316,18 +316,24 @@ export function initOverture(
          resolves against whatever sources are present at the moment the
          img gets a src, so setting them the other way round would pick
          the landscape original on a phone and then swap. */
-      qq<HTMLElement>("[data-ovt-src]").forEach((el) => {
-        const url = el.dataset.ovtSrc;
-        if (!url) return;
-        if (el instanceof HTMLSourceElement) el.srcset = url;
-        else if (el instanceof HTMLImageElement) el.src = url;
-      });
+      const attach = (from: number, to: number) => {
+        walls.slice(from, to).forEach((wall) => {
+          wall.querySelectorAll<HTMLElement>("[data-ovt-src]").forEach((el) => {
+            const url = el.dataset.ovtSrc;
+            if (!url) return;
+            if (el instanceof HTMLSourceElement) el.srcset = url;
+            else if (el instanceof HTMLImageElement) el.src = url;
+          });
+        });
+      };
 
-      const urls = qq<HTMLImageElement>("img.ovt__face")
-        .map((img) => img.currentSrc || img.src)
+      /* Only the walls the room opens on (OVERTURE_HELD, lib/content.ts)
+         are waited for - the loader has already fetched exactly these. */
+      attach(0, OVERTURE_HELD);
+      const urls = walls.slice(0, OVERTURE_HELD)
+        .map((wall) => wall.querySelector<HTMLImageElement>("img.ovt__face"))
+        .map((img) => (img ? img.currentSrc || img.src : ""))
         .filter(Boolean);
-
-      if (!urls.length) { next(); return; }
 
       let loaded = 0;
       let done = false;
@@ -337,8 +343,16 @@ export function initOverture(
            build belong to a sequence that no longer exists */
         if (done || ac.signal.aborted) return;
         done = true;
+        /* The fast tail, two frames on - after the room has painted, so
+           those downloads are not standing in front of its first picture.
+           Several seconds pass before the first of them can be seen. */
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (!ac.signal.aborted) attach(OVERTURE_HELD, walls.length);
+        }));
         next();
       };
+
+      if (!urls.length) { finish(); return; }
       urls.forEach((url) => {
         const im = new Image();
         const tick = () => {

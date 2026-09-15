@@ -172,6 +172,16 @@ export const OVERTURE_WALLS: readonly Wall[] = [
   },
 ];
 
+/* How many walls, from the front, have to be here before the room is shown:
+   the loader counts these (components/Loader.tsx) and boot() in
+   lib/overture-motion.ts waits on them. They are the three slow falls, the
+   ones that are looked at. The rest are the fast tail and are fetched the
+   frame after the room first paints - several seconds before the first of
+   them can be on screen, since the rope has to be pulled and three walls
+   have to go over first. Waiting on all of them held the first picture back
+   behind about 700KB it did not need. */
+export const OVERTURE_HELD = 3;
+
 
 /* the three cues, one per beat: the rope going over, the filament
    catching, a wall meeting the floor. See sfx() in lib/overture-motion.ts

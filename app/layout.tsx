@@ -140,14 +140,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             see lib/perf.ts, which also owns the runtime half of it and
             LITE_KEY). Decided here for the same reason - a header that
             paints with its glass blur and loses it after hydration is a
-            flicker, not an optimisation. */}
+            flicker, not an optimisation.
+
+            The door's other answer is html.sc-intro: the opening is going
+            to play, so the pictures underneath it (the hero's team photo,
+            the service cards, the client marks) wait until it is over -
+            see the rule under .loader in globals.css. Overture.tsx takes
+            it off at OVERTURE_DONE. */}
         <script
           dangerouslySetInnerHTML={{
             __html:
               "try{var d=document.documentElement,n=navigator,c=n.connection||{};" +
               "if(sessionStorage.getItem('sc-overture-seen')==='1'||" +
               "matchMedia('(prefers-reduced-motion: reduce)').matches)" +
-              "d.classList.add('sc-seen');" +
+              "d.classList.add('sc-seen');else d.classList.add('sc-intro');" +
               "if(sessionStorage.getItem('sc-lite')==='1'||c.saveData||" +
               "(n.hardwareConcurrency||8)<=4||(n.deviceMemory||8)<=4)" +
               "d.classList.add('sc-lite')}catch(e){}",
