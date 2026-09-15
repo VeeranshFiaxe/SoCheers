@@ -848,6 +848,8 @@ export function initSite(): () => void {
         const row = greet.querySelector<HTMLElement>(".hero__line--split");
         /* the blinking bar that arrives before the writing does */
         const caret = greet.querySelector<HTMLElement>("[data-test-caret]");
+        /* the black block the sentence is typed out from under */
+        const shutter = greet.querySelector<HTMLElement>("[data-test-shutter]");
         /* every character of it, which is how many steps the shutter
            takes - "We are" + a space + "SoCheers" */
         const CHARS = 15;
@@ -873,8 +875,14 @@ export function initSite(): () => void {
            across the word space, across "SoCheers", in one pass. The
            row is shrink-to-fit and centred, so the clip's own box is
            exactly the sentence and the sweep starts on the first glyph
-           rather than at the edge of the screen. */
-        if (row) gsap.set(row, { clipPath: "inset(0 100% 0 0)" });
+           rather than at the edge of the screen.
+
+           The clip has since become a shutter over the row rather than a
+           clip on it (.hero__shutter, app/hero.css, for why) - same single
+           edge, same direction, moved by transform. It covers the line
+           from the CSS, so there is nothing to shut here; this only makes
+           sure nothing has left it hidden. */
+        if (shutter) gsap.set(shutter, { autoAlpha: 1, x: 0 });
         if (caret) {
           caret.removeAttribute("data-caret-on");
           caret.removeAttribute("data-typing");
@@ -964,13 +972,12 @@ export function initSite(): () => void {
 
           /* The caret first, and on the same frame the room lets go.
 
-             It is placed by measurement rather than by layout: the row
-             wears the typing clip, so a caret living inside it would be
-             cut off by the edge it is supposed to be riding, and it sits
-             outside the row instead - which means its x is something to
-             be computed. Both ends come off the same boxes the clip is
-             measured from below, so the bar starts exactly on the first
-             glyph and finishes exactly on the last. */
+             It is placed by measurement rather than by layout: it sits
+             outside the row, over the shutter that hides it, which means
+             its x is something to be computed. Both ends come off the
+             same boxes the shutter is placed from below, so the bar
+             starts exactly on the first glyph and finishes exactly on
+             the last. */
           const runs = row
             ? Array.from(row.querySelectorAll<HTMLElement>("[data-test-type]"))
             : [];
@@ -1016,33 +1023,37 @@ export function initSite(): () => void {
              like any other character. There is no pause in the middle of
              the line, because it is one line. */
           const TYPE = CHARS * CH;
-          if (row) {
-            /* Where the sentence actually starts inside the row, as a
-               percentage of it.
-
-               Not zero: the grid's two outer columns are always the same
-               width (that is what keeps the gap centred on screen), so
-               the shorter half - "We are" - is right-aligned in a column
-               cut for the longer one, and the row begins with a hundred
-               or so pixels of nothing. Starting the clip at the row's
-               own left edge spent the first eighth of the typing
-               sweeping across that. Measured instead, so the first step
-               lands on the first letter. */
-            const rr = row.getBoundingClientRect();
-            const first = row.querySelector<HTMLElement>("[data-test-type]");
-            const lead = first && rr.width
-              ? ((first.getBoundingClientRect().left - rr.left) / rr.width) * 100
-              : 0;
-            t.fromTo(row,
-              { clipPath: `inset(0 ${(100 - lead).toFixed(2)}% 0 0)` },
-              { clipPath: "inset(0 0% 0 0)", duration: TYPE, ease: `steps(${CHARS})`,
-                /* and the clip comes off entirely once it has nothing
-                   left to hide: the row is about to grow to three times
-                   this width as the line parts, and a clip box that has
-                   to keep up with that is a clip box that can catch it
-                   out on a slow frame. */
-                onComplete: () => gsap.set(row, { clipPath: "none" }) },
-              at);
+          if (shutter) {
+            if (firstBox && lastBox && rowBox && lineBox.width) {
+              /* Its left edge starts on the first glyph and walks to the
+                 end of the last, on exactly the caret's clock - the two
+                 are one edge. Not from the row's own left: "We are" is
+                 right-aligned in a column cut for "SoCheers", so the row
+                 begins with a hundred or so pixels of nothing, and
+                 sweeping across that spent the first eighth of the typing
+                 on it. A couple of pixels of bleed on the left for a
+                 glyph that overhangs its box, and a third of the row's
+                 height above and below for the ones that overhang the
+                 line. */
+              const from = firstBox.left - lineBox.left;
+              const to = lastBox.right - lineBox.left;
+              const pad = rowBox.height * 0.3;
+              gsap.set(shutter, {
+                autoAlpha: 1, x: 0,
+                left: from - 2, top: rowBox.top - lineBox.top - pad,
+                width: lineBox.width - from + 2, height: rowBox.height + pad * 2,
+              });
+              t.to(shutter, {
+                x: to - from, duration: TYPE, ease: `steps(${CHARS})`,
+                /* and gone once there is nothing left under it: the line
+                   is about to part and grow three times this wide */
+                onComplete: () => gsap.set(shutter, { autoAlpha: 0 }),
+              }, at);
+            } else {
+              /* nothing to measure against - show the sentence rather
+                 than leave it under a black box */
+              gsap.set(shutter, { autoAlpha: 0 });
+            }
           }
           at += TYPE;
 

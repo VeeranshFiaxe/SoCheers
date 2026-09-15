@@ -187,6 +187,25 @@
   .hero--test .hero__caret[data-caret-on]{ animation:none; opacity:1; }
 }
 
+/* The shutter: what the sentence is typed out from under.
+
+   It used to be a clip-path stepped across the row. That repaints the
+   type on every step, and on a first visit - a hundred pictures still
+   downloading and decoding on the same raster threads - those repaints
+   were starved: the caret (a plain bar on its own layer) walked the
+   line while the words stayed hidden, and they all arrived at the end.
+
+   A block of the pin's black moved by transform needs no repaint at
+   all. The type is drawn once, under it, while the overture is still
+   up, and each step only moves a layer. Until initHero measures the
+   row it simply covers the whole line box. */
+.hero--test .hero__shutter{
+  position:absolute; inset:-.3em 0;
+  background:#000;
+  will-change:transform;
+  pointer-events:none;
+}
+
 /* The film. cover rather than contain: the box is the film's own aspect
    at rest, so the two are identical there and the whole picture is on
    screen, and cover is what carries it the rest of the way once the box

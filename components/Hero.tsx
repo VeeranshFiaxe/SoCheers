@@ -149,6 +149,12 @@ export default function Hero() {
               </span>
             </span>
 
+            {/* What hides the sentence until it is typed: a block of the
+                pin's own black over the row, slid off it by initHero one
+                character at a time. Before the caret, so the caret draws
+                over its edge. */}
+            <span className="hero__shutter" data-test-shutter aria-hidden="true" />
+
             {/* The caret, and it is on screen before anything else is.
 
                 The room hands over on black, and for a fifth of a second
@@ -158,9 +164,9 @@ export default function Hero() {
                 something: it is the oldest "type is coming" signal there
                 is, and it turns the pause into an intake of breath.
 
-                A sibling of the row rather than a child of it, because
-                the row wears the typing clip - a caret inside it would be
-                cut off by the very edge it is meant to be riding. It is
+                A sibling of the row rather than a child of it, and after
+                the shutter, so it draws over the very edge it is meant to
+                be riding rather than under it. It is
                 placed and moved from initHero (lib/motion.ts), which is
                 where the sweep's own clock lives. */}
             <span className="hero__caret" data-test-caret aria-hidden="true" />
