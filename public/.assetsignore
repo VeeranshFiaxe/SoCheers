@@ -1,0 +1,6 @@
+# Read by wrangler when it uploads out/. These two folders are served
+# from R2 (worker/index.js), so they are left out of the static upload.
+# Anchored with a leading slash: an unanchored media/ would also drop
+# _next/static/media/, which is where the fonts are.
+/assets/
+/media/

@@ -3,6 +3,9 @@ import { BUCKETS } from "@/lib/content";
 import { SITE_URL } from "@/lib/seo";
 import { CASES } from "@/lib/work-content";
 
+/* written to a file at build time - the site is a static export */
+export const dynamic = "force-static";
+
 /* Every public route. Pending cases stay out until their copy lands -
    they are noindexed too (app/work/[slug]/page.tsx). */
 export default function sitemap(): MetadataRoute.Sitemap {

@@ -2,6 +2,13 @@
 const nextConfig = {
   reactStrictMode: false,
 
+  /* Every page is built to plain HTML in out/, which Cloudflare serves as
+     static files (see wrangler.jsonc). Nothing on the site needs a server.
+     Because of that, the redirect and cache rules below only apply in
+     `next dev` - on Cloudflare the redirect lives in public/_redirects and
+     the cache rule in worker/index.js. Change one, change both. */
+  output: "export",
+
   /* The dev server is reached from other devices on the LAN (phones, a
      second laptop) through the Windows hotspot address, so Next has to
      be told that origin is expected - otherwise it refuses the

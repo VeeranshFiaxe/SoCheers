@@ -5,6 +5,10 @@ next-env.d.ts
 *.tsbuildinfo
 .DS_Store
 .env*.local
+.wrangler/
+.dev.vars
+# scripts/upload-r2.mjs's record of what this machine has uploaded
+.r2-manifest.json
 # Video masters. These live outside public/ so they are never served;
 # assets/*.src.* is the convention (see also assets/about-3d-man.src.glb).
 # The Netflix master is a 476MB broadcast delivery - too large for GitHub,

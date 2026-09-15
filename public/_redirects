@@ -1,0 +1,3 @@
+# Cloudflare redirects. Mirrors redirects() in next.config.mjs, which
+# only runs under `next dev` now that the site is a static export.
+/blogs /insights 301

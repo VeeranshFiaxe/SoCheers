@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "globe": "node scripts/build-globe.mjs",
-    "model": "node scripts/build-about-man.mjs"
+    "model": "node scripts/build-about-man.mjs",
+    "media": "node scripts/upload-r2.mjs",
+    "deploy": "next build && wrangler deploy"
   },
   "dependencies": {
     "@types/three": "^0.185.4",
@@ -28,6 +30,7 @@
     "meshoptimizer": "^1.1.1",
     "topojson-client": "^3.1.0",
     "typescript": "^5.7.0",
-    "world-atlas": "^2.0.2"
+    "world-atlas": "^2.0.2",
+    "wrangler": "^4.131.2"
   }
 }
