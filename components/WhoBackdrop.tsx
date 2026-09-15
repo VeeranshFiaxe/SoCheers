@@ -12,9 +12,33 @@ import { useEffect, useRef } from "react";
    every frame the section is anywhere near the screen - relative to the
    section, so once the pin lets go both simply scroll together. With no
    pin (no script, reduced motion) the CSS default - one screen at the top
-   of the section - is left alone. */
+   of the section - is left alone. See .who-bg in app/globals.css. */
 export default function WhoBackdrop() {
   const ref = useRef<HTMLDivElement>(null);
+  const img = useRef<HTMLImageElement>(null);
+
+  /* The pixelation: the photo is shrunk once to a thumbnail and that is
+     what the <img> shows, scaled back up blocky (image-rendering in
+     globals.css). One small draw at load, nothing per frame. The aspect is
+     kept, so object-fit:cover still crops it exactly like the hero's. */
+  useEffect(() => {
+    const src = new Image();
+    src.decoding = "async";
+    src.onload = () => {
+      const w = 160;
+      const h = Math.max(1, Math.round((w * src.naturalHeight) / src.naturalWidth));
+      const c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const ctx = c.getContext("2d");
+      if (!ctx || !img.current) return;
+      ctx.imageSmoothingQuality = "high";
+      ctx.drawImage(src, 0, 0, w, h);
+      img.current.src = c.toDataURL("image/png");
+    };
+    src.src = "/assets/art/team-960.jpg";
+    return () => { src.onload = null; };
+  }, []);
 
   useEffect(() => {
     const el = ref.current;
@@ -51,7 +75,7 @@ export default function WhoBackdrop() {
 
   return (
     <div className="who-bg" ref={ref} aria-hidden="true">
-      <img src="/assets/art/team-960.jpg" alt="" loading="lazy" decoding="async" />
+      <img ref={img} src="/assets/art/team-960.jpg" alt="" loading="lazy" decoding="async" />
     </div>
   );
 }

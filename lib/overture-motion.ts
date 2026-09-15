@@ -88,7 +88,7 @@ const DARK = 0.16;
 
    The nudge first, then the sequence pulls the rope itself: nobody should
    ever be left standing in a dark room wondering whose move it is. */
-const GUIDE_AT = 6;
+const GUIDE_AT = 1;
 const AUTO_PULL = 10;
 
 /* How large the docked mark ends up, and where. Read off the site's own

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { BARS, BAR_STROKE, MARK, RING } from "@/lib/logo-paths";
+import type { ParticleOpts } from "@/lib/particle-logo";
 
 /* The mark as suspended matter - see lib/particle-logo.ts for the thing
    itself. React's only jobs here are to hand the engine a box, to keep
@@ -18,7 +19,7 @@ import { BARS, BAR_STROKE, MARK, RING } from "@/lib/logo-paths";
    stays if WebGL never arrives. It is drawn from the same geometry the
    particles are sampled from, at the same framing, so the handover
    reads as the logo condensing into powder rather than a swap. */
-export default function ParticleLogo() {
+export default function ParticleLogo({ density, size, alpha }: ParticleOpts = {}) {
   const host = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function ParticleLogo() {
       import("@/lib/particle-logo")
         .then(({ initParticleLogo }) => {
           if (dropped) return;
-          stop = initParticleLogo(el);
+          stop = initParticleLogo(el, { density, size, alpha });
         })
         .catch((err) => {
           /* No engine, no canvas - the still below is the whole visual,

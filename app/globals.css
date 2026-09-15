@@ -497,7 +497,7 @@ html.sc-seen .loader{ display:none; }
   transition:transform .62s var(--ease), opacity .38s var(--ease);
   --nav-ink:var(--cream);
   /* the capsule the links sit in - see .nav__links */
-  --nav-island:rgba(12,12,14,.72);
+  --nav-island:rgba(12,12,14,.6);
   --nav-island-line:rgba(241,236,225,.15);
   --nav-island-hover:rgba(241,236,225,.09);
 }
@@ -507,7 +507,7 @@ html.sc-seen .loader{ display:none; }
    inside them - so it has to name the colour itself. */
 .nav.is-on-light{
   --nav-ink:#0b0b0c;
-  --nav-island:rgba(255,255,255,.66);
+  --nav-island:rgba(255,255,255,.54);
   --nav-island-line:rgba(11,11,12,.12);
   --nav-island-hover:rgba(11,11,12,.06);
 }
@@ -1185,7 +1185,47 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    the fold is the same as them not arriving. The top is the one measure
    that cannot come down much further: the nav is fixed and about 90px
    tall, and this section's first line has to clear it. */
-.who{ position:relative; z-index:0; padding:clamp(100px,12vh,140px) 0 clamp(64px,9vh,110px); }
+.who{ position:relative; z-index:0; isolation:isolate; padding:clamp(100px,12vh,140px) 0 clamp(64px,9vh,110px); }
+/* Explicit layers inside the section: the photo on 0, everything else on 1. */
+.who > .wrap{ position:relative; z-index:1; }
+
+/* ---- the room behind the bulb ----
+   The hero's team photo, blurred and faintly pixelated. Box and position
+   are written every frame by components/WhoBackdrop.tsx to sit exactly on
+   the hero's stage, so the dissolve reads as the type lifting off and the
+   photo going soft. The values here are only the no-pin fallback: one
+   screen at the top of the section. */
+.who-bg{
+  position:absolute; top:0; left:0; z-index:0;
+  width:100%; height:var(--screen);
+  overflow:hidden; pointer-events:none;
+  will-change:transform;
+  /* the only fade: out at the bottom, into the next section */
+  -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
+          mask-image:linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
+}
+/* Same fill as .hero__stage-img--test (cover, full box). The <img> shows a
+   160px-wide thumbnail (WhoBackdrop.tsx) blown up blocky, then softened
+   so the blocks are a hint, not a mosaic. */
+.who-bg img{
+  width:100%; height:100%; object-fit:cover; display:block;
+  image-rendering:pixelated;
+  filter:blur(14px) brightness(.34) saturate(.7);
+}
+/* the stage's own edge shading (.hero__stage-vignette), repeated */
+.who-bg::after{
+  content:""; position:absolute; inset:0; z-index:2;
+  background:
+    linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%),
+    radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%);
+}
+/* Lite mode drops the blur filter - the thumbnail scaled up smooth is
+   already a blur, for free. */
+html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.6); }
+
+/* No hairline between this and the next section - the photo fades out
+   into it instead. */
+.who + .what{ border-top:none; }
 
 .who__grid{ margin-top:clamp(18px,2.4vh,30px); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) minmax(0,1fr); gap:clamp(20px,2.4vw,44px); align-items:center; }
 /* Both side columns are held at the middle of the row so the claim and
@@ -1217,33 +1257,26 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    faces the page's own margin. */
 .who__copy,
 .who__say{ position:relative; display:flex; flex-direction:column; align-self:center; }
-.who__copy{ align-items:flex-end; text-align:right; }
-.who__say{ align-items:flex-start; text-align:left; }
+/* Both centred in their columns now. */
+.who__copy,
+.who__say{ align-items:center; text-align:center; }
 /* Full track, both sides. This is the measure itself, not a cosmetic
    width: the claim was shrink-to-fit and the pitch was not, and the
    paragraph is also what SplitText measures its line breaks against. */
 .who__lede,
 .who__pitch{ width:100%; }
 
-/* Lede + pitch share one type size so they read as one statement that
-   flips register mid-sentence: roman cream, then italic accent. */
+/* Lede + pitch share one type size, weight and colour - one statement
+   either side of the mark. */
 .who__lede,
 .who__pitch{
   font-family:var(--f-display);
   font-size:clamp(22px,2.45vw,36px); line-height:1.16; letter-spacing:-.015em;
 }
-/* Half the words of the pitch, so a touch larger and looser: three lines
-   at 1.42 leading land on the same top and bottom edge as the pitch's four
-   at 1.16. Medium, not bold, so it weighs about what the italic does. */
-.who__lede{
-  font-weight:500; color:var(--cream);
-  font-size:clamp(24px,2.64vw,39px); line-height:1.42;
-}
+.who__lede,
 .who__pitch{
-  font-weight:400; font-style:italic; color:var(--accent);
-  /* No lead-in gap any more: it is not sitting under the claim, it is
-     sitting beside the mark in its own column. */
-  margin-top:0;
+  font-weight:400; font-style:normal; color:var(--cream);
+  line-height:1.3; margin-top:0;
 }
 .who__share{
   text-decoration:none;
@@ -1268,10 +1301,10 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    unrelated figures rather than one set of counts. */
 .stat{ --stat-accent:var(--accent); }
 .stat:hover{ transform:translateY(-4px); }
-.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,3.3vw,50px); line-height:.88; letter-spacing:-.02em; color:#fff; transition:color .4s; }
+.stat__num{ font-family:var(--f-display); font-weight:700; font-size:clamp(34px,3.3vw,50px); line-height:.88; letter-spacing:-.02em; color:var(--accent); transition:color .4s; }
 .stat:hover .stat__num{ color:var(--stat-accent, var(--accent)); }
 .stat__num [data-count]{ transition:color .22s linear; }
-.stat__num i{ color:#fff; font-style:normal; transition:color .22s linear; }
+.stat__num i{ color:var(--accent); font-style:normal; transition:color .22s linear; }
 .stat:hover .stat__num i{ color:var(--stat-accent, var(--accent)); }
 .stat__label{ font-family:var(--f-mono); font-weight:500; font-size:12px; letter-spacing:.2em; color:var(--muted); margin-top:8px; }
 
@@ -1344,11 +1377,11 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    one is a lamp in a section that is already lit. */
 .plogo::before{
   content:""; position:absolute; left:50%; top:41%;
-  height:205%; aspect-ratio:1; transform:translate(-50%, -50%);
+  height:270%; aspect-ratio:1; transform:translate(-50%, -50%);
   background:radial-gradient(circle closest-side,
-    rgba(var(--bulb), .23) 0%, rgba(var(--bulb), .135) 24%,
-    rgba(var(--bulb), .06) 44%, rgba(var(--bulb), .018) 62%,
-    rgba(var(--bulb), 0) 80%);
+    rgba(var(--bulb), .55) 0%, rgba(var(--bulb), .32) 22%,
+    rgba(var(--bulb), .15) 42%, rgba(var(--bulb), .05) 62%,
+    rgba(var(--bulb), 0) 84%);
   mix-blend-mode:screen; pointer-events:none;
   animation:plogo-breathe 8.5s var(--ease) infinite;
 }
@@ -1365,10 +1398,10 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
    pair never quite repeats and the light breathes rather than pulses. */
 .plogo::after{
   content:""; position:absolute; left:50%; top:41%;
-  height:78%; aspect-ratio:1; transform:translate(-50%, -50%);
+  height:95%; aspect-ratio:1; transform:translate(-50%, -50%);
   background:radial-gradient(circle closest-side,
-    rgba(var(--bulb), .30) 0%, rgba(var(--bulb), .155) 32%,
-    rgba(var(--bulb), .05) 58%, rgba(var(--bulb), 0) 80%);
+    rgba(var(--bulb), .7) 0%, rgba(var(--bulb), .36) 30%,
+    rgba(var(--bulb), .12) 58%, rgba(var(--bulb), 0) 80%);
   filter:blur(10px);
   mix-blend-mode:screen; pointer-events:none;
   animation:plogo-breathe 5.9s var(--ease) infinite;
@@ -3007,3 +3040,4 @@ html.sc-lite .cmodal{ backdrop-filter:none; -webkit-backdrop-filter:none; backgr
    breathing - a blurred, blended layer re-composited every frame */
 html.sc-lite .plogo::before,
 html.sc-lite .plogo::after{ animation:none; }
+html.sc-lite .plogo::after{ filter:none; }

@@ -20,6 +20,7 @@ import { keepPlaying } from "./autoplay";
 import { MEANING, WCARD_SFX } from "./content";
 import { acquirePointerField } from "./pointer-field";
 import { isLite, slowNetwork, watchFrames } from "./perf";
+import { doneRestoring, installScrollMemory, reloadY } from "./scroll-memory";
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -140,6 +141,10 @@ export function initSite(): () => void {
      the screen until it says otherwise, and its camera move *is* the
      intro. */
   const overture = shouldRunOverture();
+  /* Where a plain reload left the reader, if it did - see
+     lib/scroll-memory.ts. Never while the overture has the screen. */
+  installScrollMemory();
+  const restoreY = overture ? null : reloadY();
 
   const ac = new AbortController();
   const on = <K extends keyof WindowEventMap>(
@@ -205,6 +210,12 @@ export function initSite(): () => void {
        own (place() in initHero), so the settle is handed to it as a
        multiplier instead. Null until initHero sets it, and on the test cut. */
     let heroSettle: ((k: number) => void) | null = null;
+
+    /* A reload restoring the reader below the home hero: settles the hero
+       as already played and hands the scroll back. Returns false when `y`
+       is inside the pin, where the hero at rest is already the right frame.
+       Null off the home page. */
+    let heroSkip: ((y: number) => boolean) | null = null;
 
     /* -------------------------------------------------- Lenis */
     function initLenis() {
@@ -312,7 +323,8 @@ export function initSite(): () => void {
          too: the stat counters and the reveals are built with their
          triggers already scrolled past, so they never run - which is why a
          plain reload used to show dead numbers where a hard reload
-         (which lands at the top) showed them counting. */
+         (which lands at the top) showed them counting. A plain reload is
+         put back where it was once everything is built (end of boot). */
       if ("scrollRestoration" in history) history.scrollRestoration = "manual";
       window.scrollTo(0, 0);
       if (overture) lock();
@@ -1609,7 +1621,10 @@ export function initSite(): () => void {
          leave that to the remeasure, the state we know to be true is
          re-asserted on the far side of every refresh. */
       const reassert = () => {
+        /* only if the refresh left the reader inside the pin - one further
+           down (a restored reload, a resize mid-page) stays where they are */
         if (phase === "done" && !locked) {
+          if (window.scrollY >= st.end + 2) return;
           handoff = performance.now() + 300;
           lenis?.scrollTo(st.end + 2, { immediate: true, force: true });
           lenis?.start();
@@ -1620,6 +1635,25 @@ export function initSite(): () => void {
       };
       ScrollTrigger.addEventListener("refresh", reassert);
       cleanups.push(() => ScrollTrigger.removeEventListener("refresh", reassert));
+
+      /* the same end state onLeave settles on, without release()'s seat at
+         the pin's end - the caller is about to put the reader further down */
+      heroSkip = (y) => {
+        if (y < st.end + 2) return false;
+        if (!locked) return true;
+        note("reload restore -> done");
+        gsap.killTweensOf(tl);
+        tl.time(DONE);
+        phase = "done";
+        busy = false;
+        locked = false;
+        handoff = performance.now() + 300;
+        hero.classList.add("is-spent");
+        spacer()?.style.setProperty("pointer-events", "none");
+        lenis?.start();
+        return true;
+      };
+      cleanups.push(() => { heroSkip = null; });
 
       /* And the geometry is the other half of it. `grow` carries the stage's
          rectangle as function-based values, which GSAP evaluates once and
@@ -3812,6 +3846,36 @@ export function initSite(): () => void {
         });
     }, 4000);
     cleanups.push(() => window.clearTimeout(watchdog));
+
+    /* Back to where a plain reload left the reader. Once as soon as the
+       page is built, so the top is barely seen, and again after images and
+       fonts have settled the page's height - unless the reader has already
+       started moving by then. */
+    if (restoreY !== null) {
+      let touched = false;
+      ["wheel", "touchstart", "keydown", "pointerdown"].forEach((t) =>
+        on(window, t, () => { touched = true; }));
+      const seat = () => {
+        if (ac.signal.aborted || touched) return;
+        if (heroSkip && !heroSkip(restoreY)) return;
+        jumpTo(restoreY);
+        ScrollTrigger.update();
+      };
+      let r1 = 0, r2 = 0;
+      r1 = requestAnimationFrame(() => { r2 = requestAnimationFrame(seat); });
+      cleanups.push(() => { cancelAnimationFrame(r1); cancelAnimationFrame(r2); });
+      const loaded = document.readyState === "complete"
+        ? Promise.resolve()
+        : new Promise<void>((res) => on(window, "load", () => res()));
+      Promise.all([loaded, document.fonts?.ready]).then(() => {
+        requestAnimationFrame(() => {
+          if (ac.signal.aborted) return;
+          ScrollTrigger.refresh();
+          seat();
+          doneRestoring();
+        });
+      });
+    }
 
     on(window, "load", () => ScrollTrigger.refresh());
     if (document.fonts && document.fonts.ready) {

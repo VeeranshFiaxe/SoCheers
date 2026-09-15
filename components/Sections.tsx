@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CSSProperties, Fragment } from "react";
 import { AWARDS, BRAND_MARK, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
 import ParticleLogo from "./ParticleLogo";
+import WhoBackdrop from "./WhoBackdrop";
 import RollText from "./Roll";
 
 /* A reel frame, as the card draws it: the small cut scripts/build-art.mjs
@@ -14,6 +15,10 @@ export function Who() {
      frame dissolves off it - see dissolve() in lib/motion.ts. */
   return (
     <section className="sec who no-border" id="who" data-section data-sec="1">
+      {/* The hero's photo, blurred, on the same rectangle - so the dissolve
+          reads as the type lifting off and the picture going soft. */}
+      <WhoBackdrop />
+
       <div className="wrap">
         {/* Three columns, the way the mock reads it: the claim on the
             left, the mark in the middle, the pitch on the right, and the
@@ -35,7 +40,9 @@ export function Who() {
               pointer behaviour, so no data-tilt here: the cursor is
               supposed to go *through* it, not lean it. */}
           <div className="who__photo">
-            <ParticleLogo />
+            {/* thicker than stock so it holds up over the photo - the
+                count still scales per device in budget(), lib/particle-logo.ts */}
+            <ParticleLogo density={1.4} size={1.225} alpha={1.175} />
           </div>
 
           <div className="who__say">
@@ -50,8 +57,8 @@ export function Who() {
           {STATS.map((s) => (
             <div className="stat" key={s.label} data-reveal>
               <div className="stat__num">
-                {/* No data-count-hue: the count runs up white and stays
-                    white - the colour only arrives on hover. */}
+                {/* No data-count-hue: the count runs up in the accent
+                    (.stat__num in globals.css) and stays there. */}
                 <span data-count={s.count}>0</span>
                 <i>+</i>
               </div>

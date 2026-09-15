@@ -119,7 +119,7 @@ export const HERO = {
      red, one viewer and a wall of content - darker and more dystopian
      than the popcorn-and-3D-glasses still it replaces, which stays in
      the tree for the Work tab. */
-  still: "series-hero-red.jpg",
+  still: "The Re-Wiring. .jpg",
 } as const;
 
 /* The <meta> description. Not on the screen anywhere, so it is written
@@ -1062,7 +1062,7 @@ export const SECTIONS: Section[] = [
        anything. series-end-exit.jpg (Unsplash qR7XWhuTag0) is a red EXIT
        sign alone in the dark with two red eyes watching over it - the
        way out, in the page's own grade. ending.jpg stays in the tree. */
-    frames: ["series-end-exit.jpg"],
+    frames: ["Rewiring last frame.png"],
     cta: { label: "Now, let's make yours ?", href: "/contact" },
   },
 ];

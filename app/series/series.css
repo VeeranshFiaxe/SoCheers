@@ -2317,7 +2317,19 @@
 
   /* section 6: bigger frames */
   #section-receipts .st-strip{ gap:clamp(8px,1.3vh,16px); }
-  #section-receipts .st-band{ height:clamp(120px,21.5vh,250px); }
+  /* wider rather than taller, so the column reaches in toward the
+     sentence. The overscan comes off so the wider window crops no more of
+     each still than the 21:9 band did. */
+  #section-receipts .st-band{ height:clamp(120px,21.5vh,250px); aspect-ratio:2.5; }
+  #section-receipts .st-band img{ left:0; width:100%; }
+  /* nudged in off the gutter, with a deeper stagger on the inset bands.
+     The last term is the width the 2.7 -> 2.5 cut took off (0.2 x band
+     height), added back on the right so the left edges stay put. */
+  #section-receipts .st-strip{ right:calc(var(--pad) + clamp(20px,2.8vw,52px) + clamp(24px,4.3vh,50px)); }
+  #section-receipts .st-band:nth-child(even){ --off:clamp(20px,3.6vw,64px); }
+  /* the paragraphs run wider toward the middle; type size unchanged */
+  #section-receipts .st-beat__words{ max-width:min(50%, 760px); }
+  #section-receipts .st-beat__copy{ max-width:52ch; text-wrap:pretty; }
 }
 
 /* ---- section 6's focal points ----

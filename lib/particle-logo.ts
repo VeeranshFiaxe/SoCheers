@@ -288,15 +288,26 @@ const FRAG = /* glsl */ `
    ============================================================ */
 export type Stop = () => void;
 
-function budget(): number {
-  const n = TUNE.count;
-  if (typeof navigator === "undefined") return n;
+/* Per-mount overrides, all multipliers on TUNE - 1 is the stock look. */
+export type ParticleOpts = {
+  density?: number;   // grain count
+  size?: number;      // grain radius
+  alpha?: number;     // grain opacity
+};
+
+function budget(density = 1): number {
+  const n = TUNE.count * density;
+  /* Phones and lite machines only ever get a little of the extra: the
+     count is the CPU step and the GPU fill both, so on those the look is
+     thickened by grain size (nearly free at dpr 1) instead. */
+  const weak = TUNE.count * Math.min(density, 1.15);
+  if (typeof navigator === "undefined") return Math.round(n);
   const coarse = window.matchMedia("(pointer: coarse)").matches;
-  if (coarse) return Math.round(n * 0.4);
+  if (coarse) return Math.round(weak * 0.4);
   /* a lite machine (lib/perf.ts) has already said it cannot keep up, and
      the count is the one number here that sets both the CPU step and the
      fill the GPU has to do */
-  if (isLite()) return Math.round(n * 0.45);
+  if (isLite()) return Math.round(weak * 0.45);
   const cores = navigator.hardwareConcurrency || 4;
   if (cores <= 4) return Math.round(n * 0.6);
   if (cores <= 6) return Math.round(n * 0.8);
@@ -307,7 +318,8 @@ function budget(): number {
    lite machine the pixel ratio is where the cost is, and it drops to 1. */
 const pixelRatio = () => Math.min(window.devicePixelRatio || 1, isLite() ? 1 : TUNE.dprCap);
 
-export function initParticleLogo(host: HTMLElement): Stop {
+export function initParticleLogo(host: HTMLElement, opts: ParticleOpts = {}): Stop {
+  const sizeGain = opts.size ?? 1;
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const pointer = reduced ? null : acquirePointerField();
 
@@ -331,7 +343,7 @@ export function initParticleLogo(host: HTMLElement): Stop {
   const camera = new PerspectiveCamera(TUNE.fov, 1, 1, 4000);
 
   /* ---------------------------------------------------- geometry */
-  const cloud = buildCloud(budget());
+  const cloud = buildCloud(budget(opts.density));
   const n = cloud.count;
   const pos = new Float32Array(cloud.home);          // live positions
   const vel = new Float32Array(n * 3);
@@ -366,8 +378,8 @@ export function initParticleLogo(host: HTMLElement): Stop {
       uDepthDim: { value: TUNE.depthDim },
       uDepthFade: { value: TUNE.depthFade },
       uKeyFloor: { value: TUNE.keyFloor },
-      uAlpha: { value: TUNE.alpha },
-      uAlphaHot: { value: TUNE.alphaHot },
+      uAlpha: { value: Math.min(1, TUNE.alpha * (opts.alpha ?? 1)) },
+      uAlphaHot: { value: Math.min(1, TUNE.alphaHot * (opts.alpha ?? 1)) },
       uHotMix: { value: TUNE.hotMix },
       uHotGain: { value: TUNE.hotGain },
       uSoft: { value: TUNE.softness },
@@ -427,7 +439,7 @@ export function initParticleLogo(host: HTMLElement): Stop {
     material.uniforms.uFar.value = dist + 130;
     /* pixels per world unit at the object's own depth, which is what a
        point sprite's size has to be expressed in */
-    material.uniforms.uSizeScale.value = (h * renderer.getPixelRatio()) / (2 * tanCanvas);
+    material.uniforms.uSizeScale.value = (h * renderer.getPixelRatio() * sizeGain) / (2 * tanCanvas);
 
     draw = true;
   }
