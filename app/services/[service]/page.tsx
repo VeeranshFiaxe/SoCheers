@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import "./services.css";
+import JsonLd from "@/components/JsonLd";
 import SiteMotion from "@/components/SiteMotion";
+import { ORG_ID, absoluteUrl, pageGraph } from "@/lib/schema";
 import { pageMeta } from "@/lib/seo";
 import { BUCKETS } from "@/lib/content";
 import { SERVICE_ASK, SERVICE_COPY } from "@/lib/services-content";
@@ -89,53 +91,49 @@ export default async function ServicePage({ params }: Params) {
      only version of this that is worth having, since a page whose
      structured data says something its copy does not is worse than a
      page with none. */
-  const ld = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Service",
-        name: `${copy.headline} - SoCheers`,
-        serviceType: copy.headline,
-        description: copy.lede,
-        provider: {
-          "@type": "Organization",
-          name: "SoCheers",
-          url: "https://socheers.net",
-          description:
-            "An independent, integrated creative agency in Mumbai, India.",
-          address: {
-            "@type": "PostalAddress",
-            addressLocality: "Mumbai",
-            addressCountry: "IN",
-          },
-        },
-        areaServed: { "@type": "Country", name: "India" },
-        hasOfferCatalog: {
-          "@type": "OfferCatalog",
-          name: copy.headline,
-          itemListElement: bucket.items.map((it) => ({
-            "@type": "Offer",
-            itemOffered: { "@type": "Service", name: it.label },
-          })),
-        },
-      },
-      {
-        "@type": "FAQPage",
+  const path = `/services/${bucket.slug}`;
+  const serviceId = `${absoluteUrl(path)}#service`;
+  const ld = pageGraph(
+    {
+      path,
+      name: copy.metaTitle,
+      description: copy.metaDescription,
+      type: "FAQPage",
+      crumbs: [{ name: copy.headline, path }],
+      extra: {
+        about: { "@id": serviceId },
         mainEntity: copy.faq.map((f) => ({
           "@type": "Question",
           name: f.q,
           acceptedAnswer: { "@type": "Answer", text: f.a },
         })),
       },
-    ],
-  };
+    },
+    {
+      "@type": "Service",
+      "@id": serviceId,
+      name: `${copy.headline} - SoCheers`,
+      serviceType: copy.headline,
+      description: copy.lede,
+      url: absoluteUrl(path),
+      image: absoluteUrl(bucket.img),
+      /* the full organisation is in the layout's block - see lib/schema.ts */
+      provider: { "@id": ORG_ID },
+      areaServed: { "@type": "Country", name: "India" },
+      hasOfferCatalog: {
+        "@type": "OfferCatalog",
+        name: copy.headline,
+        itemListElement: bucket.items.map((it) => ({
+          "@type": "Offer",
+          itemOffered: { "@type": "Service", name: it.label },
+        })),
+      },
+    },
+  );
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(ld) }}
-      />
+      <JsonLd data={ld} />
 
       <main id="top" className="sv-page">
         {/* ---- the top ------------------------------------------------

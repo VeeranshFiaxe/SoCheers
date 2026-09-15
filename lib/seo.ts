@@ -43,7 +43,13 @@ export function pageMeta({
       url: path,
       title,
       description,
-      images: [{ url: image, alt: title }],
+      /* the size lets WhatsApp and Facebook draw the large card on the
+         first share, before they have downloaded the image */
+      images: [
+        image === OG_IMAGE
+          ? { url: image, width: 1200, height: 630, alt: title }
+          : { url: image, alt: title },
+      ],
     },
     twitter: {
       card: "summary_large_image",

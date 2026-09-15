@@ -33,9 +33,34 @@ export default {
     const url = new URL(request.url);
     if (MEDIA.test(url.pathname)) return media(request, env, url);
     if (url.searchParams.has("_rsc")) return flight(request, env, url);
-    return env.ASSETS.fetch(request);
+    return linkPreview(await env.ASSETS.fetch(request), url);
   },
 };
+
+/* The share preview. The build bakes https://socheers.net into og:image,
+   og:url and twitter:image (metadataBase in app/layout.tsx), and until
+   the domain points here that host is the old site - so WhatsApp,
+   LinkedIn and the rest fetched an image that is not there and fell back
+   to a bare link. Swapped to whatever host the page was asked on, so the
+   preview works on workers.dev today and on socheers.net once it moves.
+   The canonical is left alone: that one should name the real domain. */
+const BUILT_ORIGIN = "https://socheers.net";
+
+function linkPreview(res, url) {
+  if (url.origin === BUILT_ORIGIN) return res;
+  if (!(res.headers.get("content-type") || "").includes("text/html")) return res;
+  const swap = {
+    element(el) {
+      const v = el.getAttribute("content");
+      if (v && v.startsWith(BUILT_ORIGIN)) el.setAttribute("content", url.origin + v.slice(BUILT_ORIGIN.length));
+    },
+  };
+  return new HTMLRewriter()
+    .on('meta[property="og:image"]', swap)
+    .on('meta[property="og:url"]', swap)
+    .on('meta[name="twitter:image"]', swap)
+    .transform(res);
+}
 
 /* /about?_rsc=... -> /about.txt, / -> /index.txt. A path that already
    names a file (about.txt, about/__next._tree.txt - the router asks for

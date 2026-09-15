@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { ORG_ID, pageGraph } from "@/lib/schema";
 import "./contact.css";
 import ContactMotion from "@/components/ContactMotion";
 import ContactForm from "@/components/ContactForm";
@@ -24,6 +26,17 @@ export const metadata: Metadata = pageMeta({
 export default function Contact() {
   return (
     <>
+      <JsonLd
+        data={pageGraph({
+          path: "/contact",
+          name: "Contact · SoCheers",
+          description:
+            "Got a brief, a partnership, or just want to say hi? Here's every way to reach SoCheers.",
+          type: "ContactPage",
+          crumbs: [{ name: "Contact", path: "/contact" }],
+          extra: { mainEntity: { "@id": ORG_ID } },
+        })}
+      />
       {/* Light throughout, the same way /insights is - see .ct-page in
           contact.css. This page used to be the site's dark theme with a
           dark form panel on it, which made it the one page you arrived at

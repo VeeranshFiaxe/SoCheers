@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import "../work.css";
 import "./case.css";
 import Footer from "@/components/Footer";
+import JsonLd from "@/components/JsonLd";
+import { ORG_ID, absoluteUrl, pageGraph } from "@/lib/schema";
 import WorkMotion from "@/components/WorkMotion";
 import CaseBlocks from "@/components/CaseBlocks";
 import CaseNav from "@/components/CaseNav";
@@ -87,8 +89,34 @@ export default async function Case({
      reading column to sit a rail beside. See .cs-article--visual. */
   const visual = caseIsVisual(blocks);
 
+  const path = `/work/${c.slug}`;
+  const ld = pageGraph(
+    {
+      path,
+      name: `${c.brand} · SoCheers`,
+      description: c.intro,
+      crumbs: [
+        { name: "Work", path: "/work" },
+        { name: c.brand, path },
+      ],
+      extra: { mainEntity: { "@id": `${absoluteUrl(path)}#work` } },
+    },
+    {
+      "@type": "CreativeWork",
+      "@id": `${absoluteUrl(path)}#work`,
+      name: c.title,
+      headline: c.title,
+      description: c.intro,
+      image: absoluteUrl(c.hero),
+      url: absoluteUrl(path),
+      creator: { "@id": ORG_ID },
+      ...(c.meta.length ? { keywords: c.meta.join(", ") } : {}),
+    },
+  );
+
   return (
     <>
+      <JsonLd data={ld} />
       {/* The room under the page. Same three parts the home page needs and
           in the same upside-down order - the footer has to come first so
           it is underneath, and .foot-run is one screen of nothing for the

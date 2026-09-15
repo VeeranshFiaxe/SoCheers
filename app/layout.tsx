@@ -7,6 +7,8 @@ import Loader from "@/components/Loader";
 import Nav from "@/components/Nav";
 import Overture from "@/components/Overture";
 import RouteTheme from "@/components/RouteTheme";
+import JsonLd from "@/components/JsonLd";
+import { SITE_GRAPH } from "@/lib/schema";
 import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
 
 /* One face for the whole site. The weight does the talking:
@@ -155,6 +157,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <noscript>
           <style>{".loader{display:none}"}</style>
         </noscript>
+        {/* who SoCheers is, on every page - see lib/schema.ts. In the head
+            so it cannot become a sibling the body's order depends on. */}
+        <JsonLd data={SITE_GRAPH} />
       </head>
       <body>
         {/* The shell, and it is outside the route on purpose.

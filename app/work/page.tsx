@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { absoluteUrl, pageGraph } from "@/lib/schema";
+import { CASES } from "@/lib/work-content";
 import "./work.css";
 import Footer from "@/components/Footer";
 import WorkMotion from "@/components/WorkMotion";
@@ -42,6 +45,28 @@ export default async function Work() {
 
   return (
     <>
+      <JsonLd
+        data={pageGraph({
+          path: "/work",
+          name: "Work · SoCheers",
+          description:
+            "Campaigns, films and content from SoCheers - the five we'd lead with, and the rest by category.",
+          type: "CollectionPage",
+          crumbs: [{ name: "Work", path: "/work" }],
+          /* the case pages, the same ones the sitemap lists */
+          extra: {
+            mainEntity: {
+              "@type": "ItemList",
+              itemListElement: CASES.filter((c) => !c.pending).map((c, i) => ({
+                "@type": "ListItem",
+                position: i + 1,
+                name: c.brand,
+                url: absoluteUrl(`/work/${c.slug}`),
+              })),
+            },
+          },
+        })}
+      />
       {/* The room under the page. Same three parts the home page needs and
           in the same upside-down order - the footer has to come first so
           it is underneath, and .foot-run is one screen of nothing for the

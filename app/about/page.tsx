@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { ORG_ID, pageGraph } from "@/lib/schema";
 import "./about.css";
 import AboutMotion from "@/components/AboutMotion";
 import AboutHero from "@/components/AboutHero";
@@ -20,6 +22,17 @@ export const metadata: Metadata = pageMeta({
 export default function About() {
   return (
     <>
+      <JsonLd
+        data={pageGraph({
+          path: "/about",
+          name: "About · SoCheers",
+          description:
+            "One team, many disciplines. The people, the founders and the office behind SoCheers - an independent, integrated creative agency.",
+          type: "AboutPage",
+          crumbs: [{ name: "About", path: "/about" }],
+          extra: { mainEntity: { "@id": ORG_ID } },
+        })}
+      />
       <main id="top">
         <AboutHero />
 

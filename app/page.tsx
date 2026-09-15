@@ -5,6 +5,8 @@ import Hero from "@/components/Hero";
 import { Awards, Clients, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
 import { OVERTURE_WALLS } from "@/lib/content";
+import JsonLd from "@/components/JsonLd";
+import { ORG_ID, pageGraph } from "@/lib/schema";
 import { pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
@@ -23,6 +25,15 @@ export default function Home() {
 
   return (
     <>
+      <JsonLd
+        data={pageGraph({
+          path: "/",
+          name: "SoCheers. Making more happen.",
+          description:
+            "SoCheers is an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",
+          extra: { about: { "@id": ORG_ID } },
+        })}
+      />
       {/* The footer is behind the page, not below it: it is a fixed room
           the height of the viewport that <main> is sitting on top of, and
           the last screen of scroll lifts the page off it. Which means the

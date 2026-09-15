@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { pageGraph } from "@/lib/schema";
 import "./blog.css";
 import BlogMotion from "@/components/BlogMotion";
 import BlogTabs from "@/components/BlogTabs";
@@ -15,6 +17,16 @@ export const metadata: Metadata = pageMeta({
 export default function Blog() {
   return (
     <>
+      <JsonLd
+        data={pageGraph({
+          path: "/insights",
+          name: "Insights · SoCheers",
+          description:
+            "Blogs, white papers and reports from the SoCheers team - starting with the Parasocial Marketing whitepaper.",
+          type: "CollectionPage",
+          crumbs: [{ name: "Insights", path: "/insights" }],
+        })}
+      />
       {/* data-nav-light: cream ground from the first frame, so the fixed
           header has to draw itself in black ink over it - see readGround()
           in lib/motion.ts. */}

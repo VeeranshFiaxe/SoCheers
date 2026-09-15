@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
+import JsonLd from "@/components/JsonLd";
+import { pageGraph } from "@/lib/schema";
 import "./ai.css";
 import AiMotion from "@/components/AiMotion";
 import AiThoughts from "@/components/AiThoughts";
@@ -30,6 +32,16 @@ export const metadata: Metadata = pageMeta({
 export default function AiWork() {
   return (
     <>
+      <JsonLd
+        data={pageGraph({
+          path: "/ai-work",
+          name: "AI Work · SoCheers",
+          description:
+            "Films, statics and CGI made with AI at SoCheers - and the argument for why the strategy in front of the tool is still the part that decides anything.",
+          type: "CollectionPage",
+          crumbs: [{ name: "AI Work", path: "/ai-work" }],
+        })}
+      />
       <main id="top" className="ai-page">
         <section className="ai-hero">
           <div className="grid-lines" aria-hidden="true"><i /><i /><i /><i /></div>

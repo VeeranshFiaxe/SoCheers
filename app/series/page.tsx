@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./series.css";
 import SeriesSections from "@/components/SeriesSections";
 import SiteMotion from "@/components/SiteMotion";
+import JsonLd from "@/components/JsonLd";
+import { pageGraph } from "@/lib/schema";
 import { pageMeta } from "@/lib/seo";
 import {
   ART,
@@ -48,6 +50,14 @@ export const metadata: Metadata = pageMeta({
 export default function Series() {
   return (
     <>
+      <JsonLd
+        data={pageGraph({
+          path: "/series",
+          name: `${CONCEPT.title} · SoCheers`,
+          description: META_DESCRIPTION,
+          crumbs: [{ name: CONCEPT.title, path: "/series" }],
+        })}
+      />
       <main id="top" className="st-page">
         {/* ---- SECTION 1, the title card ------------------------------
             The client's first section is one sentence and nothing else,
