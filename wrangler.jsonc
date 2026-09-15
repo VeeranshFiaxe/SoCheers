@@ -2,16 +2,26 @@
    Worker in worker/index.js serves /assets and /media from R2 and hands
    everything else to the static files. */
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "socheers",
-  "main": "worker/index.js",
-  "compatibility_date": "2026-06-01",
-  "assets": {
-    "directory": "./out",
-    "binding": "ASSETS",
-    "not_found_handling": "404-page",
-    "run_worker_first": ["/assets/*", "/media/*"]
-  },
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "socheers-media" }],
-  "observability": { "enabled": true }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "socheers",
+	"main": "worker/index.js",
+	"compatibility_date": "2026-06-01",
+	"assets": {
+		"directory": "./out",
+		"binding": "ASSETS",
+		"not_found_handling": "404-page",
+		"run_worker_first": [
+			"/assets/*",
+			"/media/*"
+		]
+	},
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "socheers-media"
+		}
+	],
+	"observability": {
+		"enabled": true
+	}
 }
