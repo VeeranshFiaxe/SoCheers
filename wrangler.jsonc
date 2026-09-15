@@ -1,6 +1,8 @@
 /* Cloudflare deploy config. The build writes the site to out/; the
-   Worker in worker/index.js serves /assets and /media from R2 and hands
-   everything else to the static files. */
+   Worker in worker/index.js serves /assets and /media from R2, answers
+   Next's page-data requests (?_rsc) with the .txt files, and hands
+   everything else to the static files. /_next is skipped past it -
+   those are plain hashed files and the bulk of every page load. */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "socheers",
@@ -11,8 +13,8 @@
 		"binding": "ASSETS",
 		"not_found_handling": "404-page",
 		"run_worker_first": [
-			"/assets/*",
-			"/media/*"
+			"/*",
+			"!/_next/*"
 		]
 	},
 	"r2_buckets": [
