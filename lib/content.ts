@@ -8,15 +8,11 @@
    on the end of it. Re-run that script if a master is replaced. */
 export const IMG = {
   frame: "/assets/art/socheers-frame.webp",
-  /* 7680x4320. The hero blows this up past 1.7x the viewport width, so the
-     3840 cut went soft on any hi-dpi screen; same framing, twice the pixels,
-     which is what keeps the sand wall's crop of it lining up.
-
-     Which is a good reason for the file to exist and not a reason to send
-     it to a phone: 33 megapixels is about 130MB of bitmap to decode for a
-     picture that will be drawn at two. So this is the top of a set rather
-     than the only one - see TEAM_SRCSET below and the two <img> that use
-     it (components/Hero.tsx, components/ContactModal.tsx). */
+  /* 7680x4320, and only the fallback `src` now. It was cut for an older
+     hero that blew a crop of it up past 1.7x the viewport width. The hero
+     today draws it no bigger than the screen, and 33 megapixels is about
+     130MB of bitmap to decode for that - so the set below stops at the
+     3840 (components/Hero.tsx, components/ContactModal.tsx). */
   team: "/assets/team-group-uhd.jpg",
   camera: "/assets/arri-camera-DX29MVBW.jpg",
   brain: "/assets/art/brain.webp",
@@ -30,12 +26,14 @@ export const IMG = {
   workB2b: "/assets/art/work-b2b.webp",
 } as const;
 
-/* The team photo's four widths, for the two places it is drawn. Both of
-   them draw it full-bleed, which is what `sizes` says - so the browser
-   picks on the device's own pixel width, a phone ends up on the 960 and a
-   4K laptop still ends up on the 7680. */
+/* The team photo's widths, for the two places it is drawn. Both of them
+   draw it full-bleed, which is what `sizes` says - so the browser picks on
+   the device's own pixel width, and a phone ends up on the 960. It stops
+   at 3840 on purpose: the 7680 was 130MB of decoded bitmap on any screen
+   wider than 3840 device pixels, for a sharpness nobody could see under
+   the scrim the definition is written on. */
 export const TEAM_SRCSET =
-  "/assets/art/team-960.jpg 960w, /assets/art/team-1920.jpg 1920w, /assets/art/team-3840.jpg 3840w, /assets/team-group-uhd.jpg 7680w";
+  "/assets/art/team-960.jpg 960w, /assets/art/team-1920.jpg 1920w, /assets/art/team-3840.jpg 3840w";
 export const TEAM_SIZES = "100vw";
 
 /* ------------------------------------------------------------------

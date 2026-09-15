@@ -720,6 +720,12 @@ export function initSite(): () => void {
          from the room's own pictures. Waits for the hand-off, and stops
          whenever the hero is not the screen so a paused-in-a-corner
          <video> is not decoding frames nobody is looking at. */
+      /* Whether the film should be running is two questions: is the hero
+         on screen, and is the film still showing in it. The second is only
+         answerable once tl exists - see FILM_OUT, further down. */
+      let heroOnScreen = false;
+      let filmShown = () => true;
+      let syncFilm = () => {};
       if (isTest && film) {
         const src = film.dataset.testFilm;
         const fetchFilm = () => {
@@ -741,8 +747,10 @@ export function initSite(): () => void {
            relent on the reader's first gesture. */
         const keeper = keepPlaying(film);
         cleanups.push(() => keeper.destroy());
+        syncFilm = () => keeper.want(heroOnScreen && filmShown());
         const transport = new IntersectionObserver((entries) => {
-          for (const e of entries) keeper.want(e.isIntersecting);
+          for (const e of entries) heroOnScreen = e.isIntersecting;
+          syncFilm();
         }, { rootMargin: "10% 0px", threshold: 0 });
         transport.observe(hero);
         observers.push(transport);
@@ -1244,6 +1252,17 @@ export function initSite(): () => void {
         tl.fromTo(photo,
           { autoAlpha: 0 },
           { autoAlpha: 1, duration: ENTRY * 0.34, ease: "power1.inOut" }, AT);
+
+        /* FILM_OUT. Once the film has faded out, it stops. The transport
+           above only asks whether the hero is on screen, and the hero is on
+           screen for the whole of the definition and the first screen of
+           WHO WE ARE - which kept a 1600x900 film decoding behind a
+           photograph, and then behind nothing, for as long as anybody read.
+           Whether it is still showing is a question of where tl is, so tl
+           answers it on every render, in both directions. */
+        const FILM_OUT = AT + ENTRY * 0.34;
+        filmShown = () => tl.time() < FILM_OUT;
+        tl.eventCallback("onUpdate", syncFilm);
       }
 
       // the headword types itself in, one letter at a time - steps(1) so
@@ -2073,12 +2092,13 @@ export function initSite(): () => void {
        to be reproduced in a second renderer to keep the handover
        seamless. There is no handover.
 
-       The mask lives in the stylesheet and is on .hero__pin at all
-       times, parked fully opaque, which is why nothing switches on here:
-       a mask that arrives at the moment it starts moving is a pop on the
-       first frame. See .hero__pin in app/globals.css for the geometry -
-       the gradient is twice the pin's height, black over the top half,
-       fading out across the next quarter.
+       The mask lives in the stylesheet, on .hero__pin[data-dissolve], and
+       place() below switches the attribute on as the edge leaves 0 and off
+       as it comes back. Parked opaque on the pin at all times, it had the
+       whole pin - film and all - drawn offscreen and masked by nothing on
+       every frame of the opening. See .hero__pin in app/globals.css for the
+       geometry - the gradient is twice the pin's height, black over the top
+       half, fading out across the next quarter.
 
        All this animates is where that mask sits. One style write a
        frame, on a property the compositor already owns, against ~1300
@@ -2106,7 +2126,12 @@ export function initSite(): () => void {
          the viewport, and then to a plausible screen. Over-travelling
          costs nothing: past ~1.5 the pin is already fully clear. */
       const height = () => pin.offsetHeight || window.innerHeight || 900;
+      let masked = false;
       const place = (p: number) => {
+        if ((p > 0) !== masked) {
+          masked = p > 0;
+          pin.toggleAttribute("data-dissolve", masked);
+        }
         const y = -(height() * TRAVEL * p);
         const pos = `0px ${y.toFixed(1)}px`;
         pin.style.webkitMaskPosition = pos;
@@ -2305,10 +2330,13 @@ export function initSite(): () => void {
          whole picture on every frame of the settle - so a lite machine
          (lib/perf.ts) gets the fade, the lift and the scale without it. */
       const soft = !isLite();
+      /* and the filter comes off once it has landed: blur(0px) is not "no
+         filter" to a browser, and left inline it kept every one of these
+         pictures on a filter surface of its own for the rest of the visit */
       document.querySelectorAll<HTMLElement>("[data-clip]").forEach((el, i) => {
         gsap.fromTo(el,
           { autoAlpha: 0, y: 22, scale: 1.04, ...(soft ? { filter: "blur(6px)" } : {}) },
-          { autoAlpha: 1, y: 0, scale: 1, ...(soft ? { filter: "blur(0px)" } : {}),
+          { autoAlpha: 1, y: 0, scale: 1, ...(soft ? { filter: "blur(0px)", clearProps: "filter" } : {}),
             duration: 1.2, ease: "power2.out", delay: (i % 3) * 0.08,
             scrollTrigger: { trigger: el, start: "top 86%" } });
       });
@@ -2431,61 +2459,36 @@ export function initSite(): () => void {
        parallax - and these two are lists of names, which are the one
        thing on the page you have to be able to actually read while they
        move. They run at their own rate now, and only at that. */
-    let reflow = () => {};
     function initMarquees() {
-      const items: {
-        track: HTMLElement; dir: number; half: number;
-        current: number; base: number; onScreen: boolean;
-      }[] = [];
-      /* A strip that is not on screen is still a strip being written to:
-         the same transform every frame, the same layer recomposited, for
-         a row of client names four screens down the page.
+      /* On the compositor, not on the ticker.
 
-         The arithmetic below still runs for every row - it is a multiply
-         and a modulo, and stopping it would mean a row that had been
-         scrolled past came back parked where it was left rather than
-         where its own clock says it should be. What stops is the write. */
+         The rows used to be moved from here: a multiply and a modulo per
+         row per frame, and a transform written from the main thread into a
+         track of thirty-odd masked wordmarks - which, with nothing telling
+         the browser that track moves, was a repaint of the whole row on
+         every frame it was on screen. They are a CSS animation now
+         (sc-marquee in globals.css): the track travels half its own width
+         in `base` seconds, which is exactly the pass this used to integrate
+         by hand, on the compositor and with the main thread out of it. The
+         track's trailing padding makes half its width one whole copy to the
+         pixel, so the wrap is a seam nobody can find - the old wrap, on
+         half of scrollWidth, was half a gap out.
+
+         What is left here is the base, read off the markup, and the pause:
+         a row that is not on screen is parked rather than composited for
+         nobody. */
       const seen = new IntersectionObserver(
         (entries) => entries.forEach((e) => {
-          const it = items.find((s) => s.track === e.target);
-          if (it) it.onScreen = e.isIntersecting;
+          e.target.classList.toggle("is-idle", !e.isIntersecting);
         }),
         { rootMargin: "20%" },
       );
       observers.push(seen);
       document.querySelectorAll<HTMLElement>("[data-marquee]").forEach((track) => {
-        const dir = track.getAttribute("data-marquee") === "right" ? 1 : -1;
         const base = Number(track.dataset.marqueeBase);
-        const state = {
-          track, dir, half: track.scrollWidth / 2, current: 0,
-          base: Number.isFinite(base) && base > 0 ? base : 30,
-          onScreen: false,
-        };
-        items.push(state);
+        track.style.setProperty("--marquee-dur", `${Number.isFinite(base) && base > 0 ? base : 30}s`);
         seen.observe(track);
       });
-      let last = performance.now();
-      addTicker(() => {
-        const now = performance.now();
-        const dt = Math.min(0.05, (now - last) / 1000); last = now;
-        items.forEach((s) => {
-          if (!s.half) return;
-          s.current += (s.half / s.base) * s.dir * dt;
-          /* Wrapped by modulo rather than by a pair of one-step tests.
-             The track is the same content twice, so any two offsets a
-             half apart are the same picture and this can never be seen -
-             but it holds for *any* offset, which the two tests did not.
-             They only ever subtracted one half, in one direction each, so
-             an offset that had got past the end of the content the wrap
-             was guarding left the strip running out mid-viewport, dead
-             stopping and jumping back. */
-          const t = ((s.current % s.half) + s.half) % s.half;
-          s.current = t - s.half;
-          if (s.onScreen) gsap.set(s.track, { x: s.current });
-        });
-      });
-      reflow = () => items.forEach((s) => { s.half = s.track.scrollWidth / 2; });
-      on(window, "resize", () => reflow());
     }
 
     /* -------------------------------------------------- cursor (dot + ring) */
@@ -2500,10 +2503,14 @@ export function initSite(): () => void {
       const ryTo = ring && gsap.quickTo(ring, "y", { duration: 0.75, ease: "power3" });
 
       let mx = 0, my = 0;
+      let shown = false;
       on(window, "mousemove", ((e: MouseEvent) => {
         mx = e.clientX; my = e.clientY;
         xTo(mx); yTo(my);
         if (rxTo && ryTo) { rxTo(mx); ryTo(my); }
+        /* once - not a class write on every move of the mouse */
+        if (shown) return;
+        shown = true;
         cursor.classList.add("is-visible");
         ring?.classList.add("is-visible");
       }) as EventListener);
@@ -2565,25 +2572,16 @@ export function initSite(): () => void {
          version of this effect that means anything without a cursor. A
          glow parked in the middle of a phone screen is not a highlight;
          it is a tint on the whole page that never moves, which is to say
-         it is invisible except as a cost.
-
-         And it is a real cost. This is a viewport-sized fixed layer with
-         mix-blend-mode:screen on it, which forces the whole page under it
-         through a blended composite on every frame it changes - the sort
-         of thing a mid-range Android pays for in scroll smoothness. So
-         off is the resting state (is-lit is dropped, the element goes to
-         opacity 0, and nothing composites), the ticker does no work while
-         it is off, and the light exists for exactly as long as there is a
-         finger on the glass to justify it. */
-      /* Which is also the argument for the last line here. The chase is a
-         lerp, so it never formally arrives - cx creeps at the mouse for
-         ever in ninths, and every one of those creeps used to be two
-         custom property writes on the layer described above, which is a
-         full-screen blended composite for a light that has not visibly
-         moved in half a second. Below a tenth of a pixel it has stopped,
-         so the write stops with it and the compositor has nothing to do
-         until the reader moves again. */
+         it is invisible except as a cost. So off is the resting state
+         (is-lit is dropped and the element goes to opacity 0), the ticker
+         does no work while it is off, and the light exists for exactly as
+         long as there is a finger on the glass to justify it. */
+      /* The chase is a lerp, so it never formally arrives - cx creeps at
+         the mouse for ever in ninths. Below a tenth of a pixel it has
+         stopped, so the write stops with it and the compositor has nothing
+         to do until the reader moves again. */
       let px = NaN, py = NaN;
+      const root = document.documentElement;
       addTicker(() => {
         // hidden by the stylesheet on a lite machine too - html.sc-lite in globals.css
         if (isLite()) return;
@@ -2594,10 +2592,14 @@ export function initSite(): () => void {
           if (!p.engaged) return;
         }
         cx += (p.x - cx) * 0.09; cy += (p.y - cy) * 0.09;
+        /* nothing to move while a light ground has it switched off - it
+           picks up from wherever the pointer is when it comes back */
+        if (root.classList.contains("sc-on-light") || root.classList.contains("is-foot")) return;
         if (Math.abs(cx - px) < 0.1 && Math.abs(cy - py) < 0.1) return;
         px = cx; py = cy;
-        spot.style.setProperty("--mx", cx + "px");
-        spot.style.setProperty("--my", cy + "px");
+        /* a transform on a box the size of the light (.spotlight in
+           globals.css), not a gradient moved about inside a screen-sized one */
+        spot.style.transform = `translate3d(${cx.toFixed(1)}px, ${cy.toFixed(1)}px, 0)`;
       });
     }
 
@@ -2784,10 +2786,20 @@ export function initSite(): () => void {
          bandwidth the pictures need */
       const wcardClips: HTMLAudioElement[] = touch ? [] : WCARD_SFX.map((src) => {
         const a = new Audio(src);
-        a.preload = slowNetwork() ? "none" : "auto";
+        /* nothing fetched until a pointer first comes onto a card (warm,
+           below) - most visits never point at one */
+        a.preload = "none";
         a.volume = 0.5;
         return a;
       });
+      /* and never up front on a slow line: a clip that has not arrived
+         simply fetches itself when it is first asked to play */
+      let warmed = slowNetwork();
+      const warm = () => {
+        if (warmed) return;
+        warmed = true;
+        wcardClips.forEach((a) => { a.preload = "auto"; a.load(); });
+      };
       const playWCardSfx = () => {
         if (!wcardClips.length) return;
         const clip = wcardClips[Math.floor(Math.random() * wcardClips.length)];
@@ -2851,7 +2863,7 @@ export function initSite(): () => void {
           io.observe(card);
           observers.push(io);
         } else {
-          on(card, "mouseenter", run);
+          on(card, "mouseenter", () => { warm(); run(); });
           on(card, "mouseleave", settle);
         }
 
@@ -2951,7 +2963,7 @@ export function initSite(): () => void {
         const trigger = photo?.querySelector<HTMLElement>("[data-clip]") || el.parentElement || el;
         gsap.fromTo(el,
           { autoAlpha: 0, scale: 0.92, ...(soft ? { filter: "blur(18px)" } : {}) },
-          { autoAlpha: 1, scale: 1, ...(soft ? { filter: "blur(0px)" } : {}),
+          { autoAlpha: 1, scale: 1, ...(soft ? { filter: "blur(0px)", clearProps: "filter" } : {}),
             duration: 1.3, ease: "power3.out",
             scrollTrigger: { trigger, start: "top 86%" } });
       });
@@ -3143,6 +3155,14 @@ export function initSite(): () => void {
          any of them is under the header's own midline. One class, and the
          stylesheet does the rest (see --nav-ink in globals.css). */
       const lights = gsap.utils.toArray<HTMLElement>("[data-nav-light], .is-light");
+      /* One answer, two readers: the header's ink, and - on <html> - the
+         spotlight, which is switched off over a light ground rather than
+         left to tint it (.spotlight in globals.css). */
+      const root = document.documentElement;
+      const ground = (light: boolean) => {
+        nav?.classList.toggle("is-on-light", light);
+        root.classList.toggle("sc-on-light", light);
+      };
       const readGround = () => {
         if (!nav) return;
         /* A route with no light grounds at all is an answer - "dark" - not
@@ -3151,7 +3171,7 @@ export function initSite(): () => void {
            previous page's class on it: Insights turned the ink black and
            every dark page after it kept it, until something happened to
            land on a page that had lights of its own to say otherwise. */
-        if (!lights.length) { nav.classList.remove("is-on-light"); return; }
+        if (!lights.length) { ground(false); return; }
         const r = nav.getBoundingClientRect();
         /* the logo's own middle, not the header's bottom edge: the header
            is padded well past its ink, and the corner the mark sits in is
@@ -3161,7 +3181,7 @@ export function initSite(): () => void {
           const b = el.getBoundingClientRect();
           return b.top <= y && b.bottom >= y && b.width > 0;
         });
-        nav.classList.toggle("is-on-light", light);
+        ground(light);
       };
       /* pages that are cream from the top have to be right on the first
          frame, before anything has scrolled. Same reasoning for the hide:
@@ -3199,7 +3219,7 @@ export function initSite(): () => void {
             if (e.isIntersecting) under.add(e.target);
             else under.delete(e.target);
           }
-          bar.classList.toggle("is-on-light", under.size > 0);
+          ground(under.size > 0);
         }, { rootMargin: `${-y}px 0px ${-Math.max(0, vh - y - 1)}px 0px` });
         lights.forEach((el) => groundIO?.observe(el));
       };
@@ -3634,6 +3654,18 @@ export function initSite(): () => void {
       };
       hang();
 
+      /* --- parked ---
+         The room is fixed behind <main> from the first frame of the page,
+         and every layer of it - a full-screen white, a multiply bloom
+         170vmax across, the pendant - was composited under the page on
+         every scroll frame, for a room that is only ever seen on the last
+         screen. So it is not drawn until the page's bottom edge starts to
+         lift (gate b below), and it goes again if the reader scrolls back
+         up past that. */
+      const park = (on: boolean) => foot.toggleAttribute("data-parked", on);
+      park(true);
+      cleanups.push(() => park(false));
+
       /* --- and it dangles the whole time ---
          A slow, shallow drift about the ceiling rose - a couple of degrees,
          four seconds a pass - so the fixture is alive while you scroll
@@ -3722,8 +3754,8 @@ export function initSite(): () => void {
       ScrollTrigger.create({
         trigger: run,
         start: "top bottom",
-        onEnter: () => idle.play(),
-        onLeaveBack: () => idle.pause(),
+        onEnter: () => { park(false); idle.play(); },
+        onLeaveBack: () => { idle.pause(); park(true); },
       });
 
       /* c · the sequence, and it waits.
@@ -3765,6 +3797,7 @@ export function initSite(): () => void {
          Idempotent: on a normal load from the top every test is false and
          the gates above do the work. */
       const at = run.getBoundingClientRect().top;
+      if (at <= window.innerHeight) park(false);
       if (at <= window.innerHeight * 0.75) html.classList.add("is-foot");
       if (at <= window.innerHeight * 0.04) tl.play();
       else if (at <= window.innerHeight) idle.play();
@@ -3877,11 +3910,12 @@ export function initSite(): () => void {
       });
     }
 
-    on(window, "load", () => ScrollTrigger.refresh());
+    /* No refresh of our own on window load: ScrollTrigger already takes one
+       on that event (its autoRefreshEvents), and a second on top of it
+       re-measured every trigger and pin on the page twice over. */
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => {
         if (ac.signal.aborted) return;
-        reflow();
         ScrollTrigger.refresh();
       });
     }
@@ -3909,6 +3943,7 @@ export function initSite(): () => void {
     document.documentElement.style.removeProperty("--hero-cx");
     document.documentElement.classList.remove("is-foot");
     document.documentElement.classList.remove("is-pinned");
+    document.documentElement.classList.remove("sc-on-light");
     document.documentElement.classList.add("no-js");
   };
 }

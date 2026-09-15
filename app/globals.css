@@ -347,32 +347,52 @@ em{ font-style:italic; }
    sit on top of the fixed footer room (see the FOOTER block at the end of
    this file), and the glow has to stay over the page rather than under
    it. Everything else in the overlay stack is already in the 9000s. */
+/* One pool of light the size of the pool, moved on the compositor.
+
+   It used to be a full-screen layer with the gradient positioned inside it
+   off --mx/--my, blended with mix-blend-mode:screen - and each of those was
+   a cost on every frame. A moved pointer repainted a viewport-sized
+   gradient, and a screen blend over the whole page is a read-back of
+   everything under it on every scroll frame, whether the light had moved
+   or not. On the site's black, screen and plain alpha are the same picture
+   - a few percent of accent over near-black - so the blend is gone, and
+   the gradient is drawn once into a box exactly its own size and carried
+   by transform (initSpotlight, lib/motion.ts). The one ground where screen
+   did something different is cream, where it was invisible; there the
+   light is simply switched off (below). */
 .spotlight{
-  position:fixed; inset:0; z-index:2; pointer-events:none;
-  background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),
+  position:fixed; top:0; left:0; z-index:2; pointer-events:none;
+  width:840px; height:840px; margin:-420px 0 0 -420px;
+  background:radial-gradient(circle closest-side,
     color-mix(in srgb, var(--accent) 13%, transparent), transparent 70%);
-  opacity:.55; mix-blend-mode:screen;
+  opacity:.55;
+  transform:translate3d(50vw, 50vh, 0);
+  will-change:transform;
+  transition:opacity .5s var(--ease), visibility 0s;
 }
-/* It is not hidden on touch any more - lib/motion.ts drives it off the
-   shared pointer field, so it rests near the middle of the screen and
-   comes to a finger laid on the page. It is dimmed and tightened there:
-   a 420px pool of light is a fifth of a desktop window and half a phone,
-   which stops reading as a highlight and starts reading as a wash. */
 /* Touch: dark until a finger lands, and it follows that finger. See
-   initSpotlight in lib/motion.ts for why it is not simply left on - the
-   short version is that a full-screen blended layer is not free, and a
-   light that never moves is not worth paying for. Tighter and dimmer
-   than the desktop pool as well: 420px is a fifth of a laptop window and
-   half a phone, at which size it stops reading as a highlight and starts
-   reading as a wash over the page. */
+   initSpotlight in lib/motion.ts for why it is not simply left on - a light
+   that never moves is not worth paying for. Tighter and dimmer than the
+   desktop pool as well: 420px is a fifth of a laptop window and half a
+   phone, at which size it stops reading as a highlight and starts reading
+   as a wash over the page. */
 @media (hover:none){
   .spotlight{
-    background:radial-gradient(200px circle at var(--mx,50%) var(--my,50%),
+    width:400px; height:400px; margin:-200px 0 0 -200px;
+    background:radial-gradient(circle closest-side,
       color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
     opacity:0;
-    transition:opacity .5s var(--ease);
   }
   .spotlight.is-lit{ opacity:.5; }
+}
+/* Out over a light panel (/ai-work, /series) and the white footer room.
+   sc-on-light is written by initNav (lib/motion.ts) off the same observer
+   that turns the header's ink dark; routes that are cream throughout never
+   draw it at all (components/RouteTheme.tsx). */
+html.sc-on-light .spotlight,
+html.is-foot .spotlight{
+  opacity:0; visibility:hidden;
+  transition:opacity .5s var(--ease), visibility 0s .5s;
 }
 
 .cursor{
@@ -381,6 +401,10 @@ em{ font-style:italic; }
   mix-blend-mode:difference; transform:translate(-50%,-50%);
   opacity:0;
   transition:opacity .3s;
+  /* moved on every pointer move (initCursor, lib/motion.ts) - a layer of
+     its own, so that is a composite rather than a repaint of whatever
+     the dot is passing over */
+  will-change:transform;
 }
 /* stays invisible at its default (0,0) resting spot until the first
    mousemove proves the pointer is actually there - otherwise it just
@@ -883,6 +907,15 @@ html.sc-seen .loader{ display:none; }
    and a rule on the parent alone does not reach them. */
 .hero.is-spent,
 .hero.is-spent *{ pointer-events:none; }
+/* ...and stops being drawn at all. By then the dissolve has masked the pin
+   down to nothing, so this changes no pixel - but a pin that is merely
+   transparent is still a screen-sized layer, with its loops (the caret, the
+   scroll cue) still ticking, sitting over WHO WE ARE for as long as that
+   section is on screen. */
+.hero.is-spent .hero__pin{ visibility:hidden; }
+.hero.is-spent *,
+.hero.is-spent *::before,
+.hero.is-spent *::after{ animation-play-state:paused; }
 /* The pin, and the mask that takes it off the screen.
 
    This is what replaced the crumble - the grid of grains that used to be
@@ -907,15 +940,21 @@ html.sc-seen .loader{ display:none; }
    somewhere across it. dissolve() in lib/motion.ts writes nothing but
    mask-position.
 
-   It is declared here rather than switched on when the dissolve starts
-   because a mask that arrives at the moment it begins moving is a pop on
-   its first frame - parked opaque it is invisible, and the only cost is
-   one compositor layer on an element that already had one.
+   It is switched on only while there is something for it to do:
+   dissolve() puts data-dissolve on the pin the moment the edge leaves 0
+   and takes it off when it comes back. It used to sit here at all times,
+   parked opaque - and a mask on this box means the whole pin, the film
+   playing in it included, is drawn to an offscreen surface and masked on
+   every frame, which for the whole of the opening was masking by
+   nothing. Switching it on is not a pop: on its first frame the soft
+   edge has only just begun to reach the bottom few pixels of the screen.
 
    Both spellings: Safari still wants the prefix, and a mask that does
    not apply is not subtle here - it is the hero refusing to leave. */
 .hero__pin{
   position:relative; height:var(--screen); width:100%; overflow:hidden; background:#000;
+}
+.hero__pin[data-dissolve]{
   -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 50%, rgba(0,0,0,0) 78%);
           mask-image:linear-gradient(to bottom, #000 0%, #000 50%, rgba(0,0,0,0) 78%);
   -webkit-mask-size:100% 200%;   mask-size:100% 200%;
@@ -970,12 +1009,14 @@ html.sc-seen .loader{ display:none; }
   /* transform, not width/height: the stage is laid out once at its full
      size and the grow is a scale on the compositor (place() in
      lib/motion.ts). will-change on a layout property promises nothing. */
-  will-change:transform,filter;
-  /* An explicit identity filter, not `none`. GSAP reads the components it is
-     about to animate off the computed value, and every one missing from
-     `none` reads as 0 - which would flash the photo to black at the start of
-     the dim in phase 2. */
-  filter:brightness(1) saturate(1);
+  will-change:transform;
+  /* No filter at rest. This was an explicit identity - brightness(1)
+     saturate(1) - so that GSAP would not read `none` as zeros at the start
+     of the phase 2 dim; but that tween is a fromTo carrying its own starting
+     filter, so it reads nothing. And an identity filter is not free: it
+     kept the stage, with the film playing in it, on a filter surface of its
+     own for every frame of the opening. */
+  filter:none;
 }
 /* Laid out once at the size it has when the stage is full (lay() in
    lib/motion.ts) and only ever scaled DOWN from there, so its own layer is
@@ -1199,10 +1240,9 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   position:absolute; top:0; left:0; z-index:0;
   width:100%; height:var(--screen);
   overflow:hidden; pointer-events:none;
+  /* WhoBackdrop carries the stage's scale as a scale, from this corner */
+  transform-origin:0 0;
   will-change:transform;
-  /* the only fade: out at the bottom, into the next section */
-  -webkit-mask-image:linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
-          mask-image:linear-gradient(to bottom, #000 0%, #000 68%, transparent 100%);
 }
 /* Same fill as .hero__stage-img--test (cover, full box). The <img> shows a
    160px-wide thumbnail (WhoBackdrop.tsx) blown up blocky, then softened
@@ -1212,10 +1252,15 @@ html.is-pinned .who{ margin-top:calc(var(--screen) * -1); }
   image-rendering:pixelated;
   filter:blur(14px) brightness(.34) saturate(.7);
 }
-/* the stage's own edge shading (.hero__stage-vignette), repeated */
+/* the stage's own edge shading (.hero__stage-vignette), repeated - and on
+   top of it the only fade: out at the bottom, into the next section. That
+   one was a mask, which is an offscreen surface redrawn on every frame the
+   bulb's canvas moves above it; a ramp into the section's own ground is the
+   same picture, drawn once. */
 .who-bg::after{
   content:""; position:absolute; inset:0; z-index:2;
   background:
+    linear-gradient(to bottom, transparent 68%, var(--bg) 100%),
     linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%),
     radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%);
 }
@@ -1402,7 +1447,10 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
   background:radial-gradient(circle closest-side,
     rgba(var(--bulb), .7) 0%, rgba(var(--bulb), .36) 30%,
     rgba(var(--bulb), .12) 58%, rgba(var(--bulb), 0) 80%);
-  filter:blur(10px);
+  /* No blur on it. It had a 10px one, so it would have no edge of its own -
+     but it is a radial gradient already fading out over a couple of hundred
+     pixels, which a 10px blur does not visibly change, and a blur on a
+     layer whose opacity is animating is re-run on every frame. */
   mix-blend-mode:screen; pointer-events:none;
   animation:plogo-breathe 5.9s var(--ease) infinite;
 }
@@ -1416,6 +1464,11 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
 @media (prefers-reduced-motion:reduce){
   .plogo::before, .plogo::after{ animation:none; }
 }
+/* and held while the section is off screen (is-awake, lib/particle-logo.ts)
+   - WHO WE ARE sits under the pinned hero from the first frame, so these
+   two used to breathe behind it for the whole of the opening */
+.plogo:not(.is-awake)::before,
+.plogo:not(.is-awake)::after{ animation-play-state:paused; }
 /* Deliberately taller than the element it sits in, and sized in width and
    height rather than by insets: a canvas is a replaced element, so a
    left/right/top/bottom box with auto dimensions does not stretch it - it
@@ -1714,6 +1767,9 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
 .cmarquee__track{
   --bw-size:clamp(17px,2.05vw,31px);
   display:flex; align-items:center; gap:24px; width:max-content; white-space:nowrap;
+  /* one gap's worth after the last name, so that half the track is exactly
+     one copy and the loop (sc-marquee, below) wraps on a whole pass */
+  padding-right:24px;
 }
 .cmarquee__track span{
   font-family:var(--f-display); font-weight:700; font-size:var(--bw-size);
@@ -1852,7 +1908,27 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
   border-top:1px solid var(--line);
   border-bottom:1px solid var(--line);
 }
-.amarquee__track{ display:flex; align-items:center; gap:clamp(26px,3vw,46px); width:max-content; white-space:nowrap; }
+.amarquee__track{ display:flex; align-items:center; gap:clamp(26px,3vw,46px); width:max-content; white-space:nowrap; padding-right:clamp(26px,3vw,46px); }
+
+/* ---- the rows, moving ----
+   Both marquees - the client wall and this one. Half the track's width in
+   --marquee-dur seconds (data-marquee-base, set by initMarquees in
+   lib/motion.ts), on the compositor. Each track is its content two or four
+   times over with a gap's padding after it, so -50% is a whole number of
+   copies and the wrap cannot be seen. is-idle parks a row that is off
+   screen. */
+.cmarquee__track,
+.amarquee__track{
+  animation:sc-marquee var(--marquee-dur, 30s) linear infinite;
+  will-change:transform;
+}
+[data-marquee="right"]{ animation-direction:reverse; }
+.cmarquee__track.is-idle,
+.amarquee__track.is-idle{ animation-play-state:paused; }
+@keyframes sc-marquee{
+  from{ transform:translate3d(0,0,0); }
+  to  { transform:translate3d(-50%,0,0); }
+}
 
 /* One line, not a stack. This was a column-reverse pair holding the year
    above the name; the year is gone from the row, so the wrapper is back to
@@ -1933,7 +2009,7 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
 
 @media (max-width:560px){
   .amarquee{ padding:16px 0; }
-  .amarquee__track{ gap:22px; }
+  .amarquee__track{ gap:22px; padding-right:22px; }
 }
 
 /* ============================================================
@@ -2205,6 +2281,9 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
    home, present on every page - instead of the tail end of the sequence.
    !important because the rig's opacity is an inline style gsap wrote. */
 .overture.is-done{ pointer-events:none; background:transparent !important; }
+/* and out of the page once the docked rig has faded - see gone() in
+   handOff, lib/overture-motion.ts */
+.overture.is-gone{ display:none; }
 .overture.is-done .ovt__rig{
   opacity:0 !important; pointer-events:none;
   transition:opacity .45s var(--ease);
@@ -2549,6 +2628,10 @@ main[data-foot-lift]{
 html.is-foot .nav,
 html.is-foot .progress{ opacity:0; pointer-events:none; }
 
+/* not drawn until the page starts to lift off it - see park() in
+   initFooter, lib/motion.ts */
+.foot[data-parked]{ visibility:hidden; }
+.foot[data-parked] .foot__ping{ animation-play-state:paused; }
 .foot{
   position:fixed; inset:0; z-index:0;
   height:100dvh; overflow:hidden;
@@ -3030,14 +3113,13 @@ html.sc-lite .nav__menu{ backdrop-filter:none; -webkit-backdrop-filter:none; }
 html.sc-lite .nav{ --nav-island:rgba(12,12,14,.9); }
 html.sc-lite .nav.is-on-light{ --nav-island:rgba(255,255,255,.9); }
 
-/* the page-wide glow: a screen blend over the whole viewport on every
-   scroll frame, for a tint of a few percent */
+/* the glow that follows the pointer: a tint of a few percent, on a layer a
+   third of the screen across, composited on every frame it moves */
 html.sc-lite .spotlight{ display:none; }
 
 html.sc-lite .cmodal{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(6,6,7,.9); }
 
 /* the halo behind the particle mark holds its light rather than
-   breathing - a blurred, blended layer re-composited every frame */
+   breathing - a blended layer re-composited every frame */
 html.sc-lite .plogo::before,
 html.sc-lite .plogo::after{ animation:none; }
-html.sc-lite .plogo::after{ filter:none; }

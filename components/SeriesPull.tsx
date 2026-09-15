@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ART } from "@/lib/series-content";
-import { isLite } from "@/lib/perf";
+import { isLite, trackRect } from "@/lib/perf";
 
 /* ============================================================
    THE PULL - the picture layer for section 4, the title card.
@@ -232,6 +232,10 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     aim();
     write();
 
+    /* the two boxes the loop reads, taken at the start of each frame */
+    const elBox = trackRect(el);
+    const frameBox = trackRect(frame);
+
     /* ---- the spray ---------------------------------------------- */
 
     const dot = makeDot();
@@ -296,10 +300,14 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       /* Every read, then every write. write() changes the custom
          properties the frame's transform is built from, and a box asked
          for after it is a style recalc forced in the middle of the frame -
-         every frame. Read first, the frame's box is one frame behind its
-         own scale, which moves by thousandths. */
-      const b0 = el.getBoundingClientRect();
-      const f0 = frame.getBoundingClientRect();
+         every frame. Nor are the reads asked for here: this loop runs
+         after GSAP has written its own styles for the frame, so even
+         reading first was a forced layout. Both come off the start-of-
+         frame read (trackRect, lib/perf.ts), a frame behind the scroll
+         and behind the frame's own scale, both of which move by
+         thousandths. */
+      const b0 = elBox.read();
+      const f0 = frameBox.read();
       aim(b0);
       /* the follow. exp() rather than a fixed fraction of the gap, so
          the rate is the same whether the display runs at 60 or at 144 */
@@ -435,6 +443,8 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
         for (const e of entries) {
           const was = seen;
           seen = e.isIntersecting;
+          elBox.active(seen);
+          frameBox.active(seen);
           if (seen && !was) {
             aim();
             at = want;
@@ -447,19 +457,14 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     );
     io.observe(el);
 
-    /* when the loop is down the scroll still has to move the plates -
-       the room goes on handing over long after the last mote */
-    let idle = 0;
+    /* When the loop is down the scroll still has to move the plates - the
+       room goes on handing over long after the last mote - so a scroll
+       wakes it. Only while the section is on screen: this used to measure
+       the section and restyle its six plates on every scroll frame of the
+       whole page, and off screen there is nothing to see it - the entry
+       above puts the picture where the scroll is the moment it is back. */
     const onScroll = () => {
-      wake();
-      if (raf || idle) return;
-      idle = requestAnimationFrame(() => {
-        idle = 0;
-        if (raf) return;
-        aim();
-        at = want;
-        write();
-      });
+      if (seen) wake();
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
@@ -467,8 +472,9 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     return () => {
       io.disconnect();
       ro.disconnect();
+      elBox.release();
+      frameBox.release();
       if (raf) cancelAnimationFrame(raf);
-      if (idle) cancelAnimationFrame(idle);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };

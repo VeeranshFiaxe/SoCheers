@@ -47,6 +47,9 @@ export type Paper = {
   blurb: string;
   points: readonly string[];
   pdf: string;
+  /* Page count of the pre-rendered page images the reader shows, at
+     /assets/whitepapers/<id>/p01.jpg ... Re-render them when the PDF changes. */
+  pages: number;
   cta: string;
   file: string;
 };
@@ -64,6 +67,7 @@ export const WHITEPAPERS: readonly Paper[] = [
       "Building influencer partnerships that outlast a single campaign",
     ],
     pdf: "/assets/whitepapers/parasocial-marketing.pdf",
+    pages: 35,
     cta: "Open the paper",
     /* Shown under the embedded reader, so a visitor who wants the file
        itself doesn't have to hunt through the viewer's own chrome. */
@@ -85,6 +89,7 @@ export const REPORTS: readonly Paper[] = [
       "The Bharat Playbook: what ShareChat, Meesho, HUL, ITC and Coca-Cola got right",
     ],
     pdf: "/assets/whitepapers/SoCheers_Reports-Metro_Myopia_2025-26.pdf",
+    pages: 73,
     cta: "Open the report",
     file: "SoCheers_Reports-Metro_Myopia_2025-26.pdf",
   },

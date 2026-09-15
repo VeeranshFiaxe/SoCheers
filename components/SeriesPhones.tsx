@@ -51,7 +51,28 @@ export default function SeriesPhones() {
   useEffect(() => {
     const el = rig.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    /* Off screen, nothing here moves. The sweep and the playheads are CSS
+       loops (st-wait, st-play in series.css) that otherwise run for as
+       long as the page is open, and the scroll handler below measured the
+       rig on every scroll frame of a ten-screen page - both for a section
+       a reader spends one screen on. `near` gates the measuring and
+       `is-away` parks the loops. */
+    let near = false;
+    let wake = () => {};
+    const away = new IntersectionObserver(
+      ([e]) => {
+        near = e.isIntersecting;
+        el.classList.toggle("is-away", !near);
+        if (near) wake();
+      },
+      { rootMargin: "25% 0px" },
+    );
+    away.observe(el);
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return () => away.disconnect();
+    }
 
     /* The rig renders ARRIVED - --e is 1 in the stylesheet - and this
        is what puts it back to 0 so the entrance has somewhere to come
@@ -90,8 +111,10 @@ export default function SeriesPhones() {
       el.style.setProperty("--c", (p * 2 - 1).toFixed(4));
     };
     const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(measure);
+      if (near && !frame) frame = requestAnimationFrame(measure);
     };
+    /* coming back into range is measured at once, not on the next scroll */
+    wake = onScroll;
 
     measure();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -111,6 +134,7 @@ export default function SeriesPhones() {
     }
 
     return () => {
+      away.disconnect();
       io.disconnect();
       if (frame) cancelAnimationFrame(frame);
       window.removeEventListener("scroll", onScroll);

@@ -19,6 +19,8 @@ export default function BlogTabs() {
   const [fullscreenId, setFullscreenId] = useState<string | null>(null);
   const docRefs = useRef(new Map<string, HTMLDivElement>());
 
+  const sectionRef = useRef<HTMLElement>(null);
+
   useLayoutEffect(() => {
     const onChange = () => {
       const el = document.fullscreenElement;
@@ -60,7 +62,7 @@ export default function BlogTabs() {
   }, [active]);
 
   return (
-    <section className="bl-tabs" data-reveal>
+    <section className="bl-tabs" data-reveal ref={sectionRef}>
       <div className="wrap">
         <div className="bl-tabs__bar" role="tablist" aria-label="Insights sections" ref={barRef}>
           <span
@@ -130,31 +132,6 @@ export default function BlogTabs() {
                 </a>
               </div>
 
-              {/* ---- the reader ----
-
-                  The viewer is the browser's own, and it arrives with a
-                  toolbar on it: a page counter, zoom steps, a rotate, a
-                  fit-to-page. That is somebody else's interface sitting
-                  on top of our paper, in their type, with their icons,
-                  and it is the first thing the eye lands on in a card
-                  that is otherwise entirely ours. So the fragment turns
-                  it off and leaves the pages:
-
-                    toolbar=0   the bar itself
-                    navpanes=0  the thumbnail/bookmark rail
-                    scrollbar=0 the viewer's own scrollbar
-                    view=FitH   the page lands at full width rather
-                                than at whatever zoom was last used
-
-                  Honoured by the Chromium viewer (Chrome, Edge, Brave),
-                  which is what this is drawn for. Firefox's pdf.js and
-                  Safari's PDFKit ignore the first three and will still
-                  draw their own bar - hiding it there would mean
-                  shipping a PDF renderer of our own, which is half a
-                  megabyte of JavaScript to remove a strip of grey.
-
-                  The <a> inside is the fallback for anything that will
-                  not render a PDF inline - phones, mostly. */}
               <div className="bl-paper__doc">
                 <div
                   className="bl-paper__frameWrap"
@@ -163,42 +140,26 @@ export default function BlogTabs() {
                     else docRefs.current.delete(wp.id);
                   }}
                 >
-                  <object
-                    className="bl-paper__frame"
-                    data={`${wp.pdf}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                    type="application/pdf"
-                    aria-label={wp.title}
-                  >
-                    <div className="bl-paper__fallback">
-                      <p>Your browser can&rsquo;t show the paper inline.</p>
-                      <a href={wp.pdf} target="_blank" rel="noopener">Open the PDF</a>
-                    </div>
-                  </object>
-                  {/* ---- the one control ----
-
-                      The whole frame is the button, and it carries no
-                      ink of its own - the same transport the film on
-                      the home page uses (.reel__toggle in globals.css),
-                      for the same reason: on a page where the cursor
-                      announces every actionable thing, a chrome button
-                      floating over the paper is a second vocabulary.
-
-                      It is also what puts the site's cursor back. An
-                      <object> is a document of its own, so the pointer
-                      crossing into it left our disc behind and the
-                      operating system's arrow came back - the one place
-                      on the site where that happened. The pointer never
-                      reaches the plugin now; it is on this button, on
-                      our page, where cursor:none and data-cursor apply.
-
-                      The word flips with the state, and the cursor
-                      relabels while you are standing still on it - see
-                      the MutationObserver in initCursor (lib/motion.ts).
-
-                      Full screen shrinks it to the corner (see the
-                      stylesheet). Expanded, the reader is here to
-                      scroll fourteen pages, and a button over all of
-                      them is a wheel that goes nowhere. */}
+                  {/* Page images, not the browser's PDF plugin: a plugin is
+                      its own document, so it swallowed our cursor and could
+                      not be scrolled under a covering button. These are on
+                      our page, scroll with the wheel, and load lazily. */}
+                  <div className="bl-paper__frame" tabIndex={0} aria-label={wp.title} data-lenis-prevent>
+                    {Array.from({ length: wp.pages }, (_, i) => (
+                      <img
+                        key={i}
+                        className="bl-paper__page"
+                        src={`/assets/whitepapers/${wp.id}/p${String(i + 1).padStart(2, "0")}.jpg`}
+                        alt={i === 0 ? `${wp.title}, page 1` : ""}
+                        width={1240}
+                        height={1754}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
+                  {/* The one control, always visible so a reader can see the
+                      paper opens full screen. */}
                   <button
                     type="button"
                     className="bl-paper__toggle"
@@ -208,33 +169,17 @@ export default function BlogTabs() {
                         ? `Collapse ${wp.title}`
                         : `Expand ${wp.title} to full screen`
                     }
-                    data-cursor={fullscreenId === wp.id ? "Collapse" : "Expand"}
                   >
-                    {/* The mark. Not the affordance on a pointer - the
-                        cursor is - but it is the whole affordance on
-                        touch, where there is no hover and no disc, and
-                        it is what a keyboard lands on. */}
-                    {/* The pair everyone already knows: arrows out of
-                        the corners, arrows back into them. What was
-                        here before was four bare corner brackets - the
-                        crop marks off a viewfinder, which read as a
-                        frame rather than as a thing that does
-                        something, and read as very nearly the same
-                        drawing in both states. */}
-                    <span className="bl-paper__mark" aria-hidden="true">
-                      {fullscreenId === wp.id ? (
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M10 20v-6H4M20 10h-6V4M14 10l7-7M3 21l7-7" />
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                        </svg>
-                      )}
-                    </span>
-                    <span className="bl-paper__hint" aria-hidden="true">
-                      {fullscreenId === wp.id ? "Collapse" : "Expand"}
-                    </span>
+                    {fullscreenId === wp.id ? (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M10 20v-6H4M20 10h-6V4M14 10l7-7M3 21l7-7" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                      </svg>
+                    )}
+                    <span>{fullscreenId === wp.id ? "Collapse" : "Expand"}</span>
                   </button>
                 </div>
                 <a className="bl-paper__file" href={wp.pdf} download={wp.file}>

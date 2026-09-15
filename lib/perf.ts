@@ -14,10 +14,11 @@
      · before the first paint, by the head script in app/layout.tsx,
        off the hardware hints (few cores, little memory, Save-Data);
      · at runtime, by watchFrames() below, when the page is visibly not
-       keeping up. The hints are advisory and missing on half the
-       browsers, so the frame clock is the ground truth - and the answer
-       is remembered for the tab, so the next page starts lite instead
-       of finding out all over again.
+       keeping up, or the browser turns out to have no GPU to give it.
+       The hints are advisory and missing on half the browsers, so the
+       frame clock is the ground truth - and the answer is remembered for
+       the tab, so the next page starts lite instead of finding out all
+       over again.
 
    It only ever goes one way. A machine that could not hold the frame
    rate a minute ago has not got faster.
@@ -67,19 +68,49 @@ function goLite() {
 /* ---------------------------------------------------- the frame clock
    A rolling average over WINDOW frames, not a single long frame: image
    decodes, a font landing and the first WebGL compile all cost one bad
-   frame on any machine. Ninety frames averaging worse than SLOW_MS is
-   three seconds of the page running under ~33fps, which is not a hitch,
-   it is the machine. The first GRACE_MS after boot are not counted at
-   all - that is the page loading, not the page running. */
+   frame on any machine. Ninety frames averaging worse than SLOW_MS is a
+   couple of seconds of the page running under 40fps, which is not a
+   hitch, it is the machine. It was 30ms (~33fps), and that let a laptop
+   sit in the high thirties - visibly laggy, never quite slow enough to be
+   told - for a whole visit. The first GRACE_MS after boot are not counted
+   at all - that is the page loading, not the page running. */
 const WINDOW = 90;
-const SLOW_MS = 30;
+const SLOW_MS = 25;
 const GRACE_MS = 3000;
 let watching = false;
+
+/* A GPU the browser will not use. When Chrome has blocklisted the driver -
+   old laptops, virtual machines, remote desktops - every layer on the page
+   is composited on the CPU, and the frame clock takes seconds of stutter
+   to notice. failIfMajorPerformanceCaveat asks the question outright: a
+   context that could only exist in software is refused, and so is one
+   where WebGL is off altogether. Either way the expressive layer is not
+   affordable. The probe's context is handed straight back. */
+function softwareOnly(): boolean {
+  try {
+    const c = document.createElement("canvas");
+    const gl = c.getContext("webgl", { failIfMajorPerformanceCaveat: true }) as WebGLRenderingContext | null;
+    if (!gl) return true;
+    gl.getExtension("WEBGL_lose_context")?.loseContext();
+    return false;
+  } catch {
+    return false;
+  }
+}
 
 export function watchFrames(): void {
   if (watching || typeof window === "undefined" || isLite()) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   watching = true;
+
+  /* asked once the page is quiet: a context is a few milliseconds the
+     first paint should not be paying for */
+  const idle = (window as Window & {
+    requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+  }).requestIdleCallback;
+  const probe = () => { if (!isLite() && softwareOnly()) goLite(); };
+  if (idle) idle(probe, { timeout: 3000 });
+  else window.setTimeout(probe, 1500);
 
   const start = performance.now();
   const ring = new Float32Array(WINDOW);

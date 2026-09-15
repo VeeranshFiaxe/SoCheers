@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { AI_HERO, AI_THOUGHTS } from "@/lib/ai-content";
 import { acquirePointerField, prefersReducedMotion } from "@/lib/pointer-field";
+import { trackRect } from "@/lib/perf";
 
 /* ============================================================
    THE HERO'S NOISE - a figure, and everything being shouted at him.
@@ -62,11 +63,19 @@ export default function AiThoughts() {
     if (prefersReducedMotion()) return;
 
     const pointer = acquirePointerField();
+    /* The stage's box as of the start of the frame (lib/perf.ts). Asked
+       for inside this loop it was a forced layout every frame, because
+       GSAP has already written that frame's styles by the time it runs. */
+    const box = trackRect(el);
 
     /* where the pointer is, and where the field has caught up to - the
        gap between them is the only easing this needs */
     let x = 0;
     let y = 0;
+    /* and what was last written, so a field that has caught up stops
+       restyling every bubble on every frame to move them nowhere */
+    let wx = Infinity;
+    let wy = Infinity;
     let raf = 0;
 
     /* The loop runs only while the hero is actually on screen. It has to
@@ -75,21 +84,29 @@ export default function AiThoughts() {
        permanent rAF for a decoration two pages down is exactly the sort
        of thing that shows up as a flat battery. */
     const tick = () => {
-      const r = el.getBoundingClientRect();
+      const r = box.read();
       const p = pointer.read();
       if (p.live && r.width && r.height) {
         const tx = (p.x - r.left) / r.width - 0.5;
         const ty = (p.y - r.top) / r.height - 0.5;
         x += (tx - x) * 0.08;
         y += (ty - y) * 0.08;
-        el.style.setProperty("--mx", x.toFixed(4));
-        el.style.setProperty("--my", y.toFixed(4));
+        if (Math.abs(x - wx) > 0.0005 || Math.abs(y - wy) > 0.0005) {
+          wx = x;
+          wy = y;
+          el.style.setProperty("--mx", x.toFixed(4));
+          el.style.setProperty("--my", y.toFixed(4));
+        }
       }
       raf = requestAnimationFrame(tick);
     };
 
     const io = new IntersectionObserver((entries) => {
       const on = entries.some((e) => e.isIntersecting);
+      box.active(on);
+      /* and the drift (ai-drift in ai.css) holds still while nobody can
+         see it */
+      el.classList.toggle("is-away", !on);
       if (on && !raf) raf = requestAnimationFrame(tick);
       if (!on && raf) { cancelAnimationFrame(raf); raf = 0; }
     }, { rootMargin: "10%" });
@@ -98,6 +115,7 @@ export default function AiThoughts() {
     return () => {
       io.disconnect();
       pointer.release();
+      box.release();
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);

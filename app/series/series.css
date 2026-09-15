@@ -1875,6 +1875,11 @@
   color:var(--muted);
 }
 
+/* Parked while the rig is off screen (is-away, components/SeriesPhones.tsx):
+   ten loops for a section a reader spends one screen of ten on. */
+.st-rig.is-away .st-ph__wait,
+.st-rig.is-away .st-ph__bar > span{ animation-play-state:paused; }
+
 @media (prefers-reduced-motion:reduce){
   /* the script never starts, so the vars are already at rest; these
      two are the only things here that move on their own */

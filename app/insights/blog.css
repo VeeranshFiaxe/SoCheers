@@ -300,107 +300,35 @@
    the pointer is standing still on the frame - initCursor's
    MutationObserver watches data-cursor for exactly this.
    -------------------------------------------------------------------- */
+/* The paper is our own page images now, not the browser's PDF plugin, so
+   the wheel scrolls it and the site cursor stays on it. */
+.bl-paper__frame{ overflow-y:auto; overscroll-behavior:contain; cursor:none; }
+.bl-paper__page{ display:block; width:100%; height:auto; aspect-ratio:1240 / 1754; background:#fff; }
+.bl-paper__page + .bl-paper__page{ border-top:1px solid var(--line); }
+@media (hover:none){ .bl-paper__frame{ cursor:auto; } }
+
+/* The one control: a visible pill in the top-right corner, in both states. */
 .bl-paper__toggle{
-  position:absolute; inset:0; z-index:1;
-  display:block; padding:0; border:0; background:none;
-  cursor:none;
-  border-radius:14px;
+  position:absolute; top:14px; right:14px; z-index:1;
+  display:inline-flex; align-items:center; gap:8px;
+  padding:9px 14px 9px 12px; border-radius:999px;
+  background:rgba(255,255,255,.94);
+  border:1px solid rgba(0,0,0,.1);
+  box-shadow:0 2px 10px rgba(0,0,0,.1);
+  color:#111; cursor:none;
+  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+  transition:background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
 }
-.bl-paper__toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:-6px; }
+.bl-paper__toggle:hover{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+.bl-paper__toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+.bl-paper__toggle svg{ width:14px; height:14px; }
 
-/* ---- the mark -----------------------------------------------------
-
-   The chip in the top-right corner, in both states and at all times.
-
-   It used to be a hover reveal at 34px in a translucent wash, on the
-   reasoning that the cursor is the affordance and the chip is only a
-   second voice. That is true on the paper in the card, where the disc
-   is lit and reading "Expand" - and it is false the moment the thing
-   goes full screen, which is exactly where the control matters most and
-   where the disc cannot be drawn at all (see the note under `expanded`
-   below). A control you have to go looking for is not a control.
-
-   So: solid ground rather than a wash, a hairline so it holds its edge
-   over a white page as well as over a dark one, and no fade - it is
-   there when the paper is. Hover fills it with the accent.
-   -------------------------------------------------------------------- */
-.bl-paper__mark{
-  position:absolute; top:14px; right:14px;
-  display:flex; align-items:center; justify-content:center;
-  width:44px; height:44px; border-radius:11px;
-  background:color-mix(in srgb, var(--bg) 92%, transparent);
-  border:1px solid color-mix(in srgb, var(--cream) 34%, transparent);
-  color:var(--cream);
-  backdrop-filter:blur(6px);
-  box-shadow:0 10px 26px rgba(0,0,0,.4);
-  transition:background .3s var(--ease), color .3s var(--ease),
-             border-color .3s var(--ease), transform .3s var(--ease);
-}
-.bl-paper__toggle:hover .bl-paper__mark,
-.bl-paper__toggle:focus-visible .bl-paper__mark{
-  background:var(--accent);
-  border-color:var(--accent);
-  color:var(--accent-ink);
-  transform:scale(1.06);
-}
-
-/* the word, spelled out. The disc says it to a mouse; this says it to a
-   keyboard, which cannot see the disc. Same pair as .reel__hint. */
-.bl-paper__hint{
-  position:absolute; left:50%; bottom:18px; transform:translate(-50%,8px);
-  font-family:var(--f-mono); font-weight:500; font-size:11px; letter-spacing:.2em; text-transform:uppercase;
-  color:var(--accent-ink); background:var(--accent); border-radius:999px; padding:8px 18px;
-  opacity:0; transition:opacity .25s, transform .25s var(--ease);
-  pointer-events:none;
-}
-.bl-paper__toggle:focus-visible .bl-paper__hint{ opacity:1; transform:translate(-50%,0); }
-
-/* ---- expanded ----
-   The button comes off the paper and sits in the corner - top right,
-   where it was in the card, so the thing does not move out from under
-   the hand that just pressed it. Full screen is where the reader
-   actually reads, fourteen pages of scrolling, and a button over all of
-   them is a wheel that goes nowhere. The corner is generous rather than
-   icon-sized so the pointer picks the control up well before the chip.
-   Escape still works, as it always does. */
-.bl-paper__frameWrap:fullscreen .bl-paper__toggle{
-  inset:0 0 auto auto;
-  width:clamp(150px,16vw,260px); height:clamp(96px,12vh,160px);
-  border-radius:0;
-}
-
-/* and the disc gives way to the arrow, only here. A fullscreen element
-   is promoted to the browser's top layer, above every other thing on
-   the page - including .cursor and .cursor-ring, which are children of
-   <body> and therefore now painted underneath it. cursor:none in that
-   state is not "our cursor instead of theirs", it is no cursor at all.
-   So the native pointer comes back for the length of the expansion, and
-   the word the disc would have said is set beside the chip and left
-   standing there, rather than waiting for a hover the reader has no
-   reason to try. */
+.bl-paper__frameWrap:fullscreen .bl-paper__page{ max-width:min(100%, 1100px); margin-inline:auto; }
+.bl-paper__frameWrap:fullscreen .bl-paper__toggle{ top:20px; right:24px; }
+/* Full screen sits in the browser's top layer, above the site's cursor, so
+   the native pointer has to come back here or there is no cursor at all. */
+.bl-paper__frameWrap:fullscreen .bl-paper__frame{ cursor:auto; }
 .bl-paper__frameWrap:fullscreen .bl-paper__toggle{ cursor:pointer; }
-.bl-paper__frameWrap:fullscreen .bl-paper__mark{
-  top:18px; right:18px;
-  width:52px; height:52px;
-}
-.bl-paper__frameWrap:fullscreen .bl-paper__hint{
-  left:auto; right:80px; bottom:auto; top:31px;
-  transform:translateY(-50%);
-  opacity:1;
-}
-
-/* ---- touch ----
-   No hover, no disc, and the tap that would expand the paper is the
-   same tap that would scroll it. So the button is the chip and nothing
-   more, and the rest of the frame belongs to the viewer - including the
-   fallback link, which is what a phone shows here more often than not. */
-@media (hover:none){
-  .bl-paper__toggle{
-    inset:0 0 auto auto;
-    width:72px; height:72px;
-    cursor:pointer;
-  }
-}
 
 .bl-paper__fallback{
   height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;

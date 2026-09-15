@@ -37,7 +37,11 @@ export function initAbout(): () => void {
   let watch: IntersectionObserver | null = null;
   if (opener && projector) {
     watch = new IntersectionObserver((entries) => {
-      for (const e of entries) projector.want(e.isIntersecting);
+      for (const e of entries) {
+        projector.want(e.isIntersecting);
+        /* and the scroll cue's loop (abCue, about.css) parks with it */
+        e.target.classList.toggle("is-away", !e.isIntersecting);
+      }
     }, { rootMargin: "10% 0px", threshold: 0 });
     watch.observe(opener.closest("section") ?? opener);
   }
@@ -150,6 +154,12 @@ export function initAbout(): () => void {
               return { el, dx: (cx - (r.left + r.width / 2)) * 1.04 };
             });
 
+            /* The layers this needs, promised for the length of the move
+               rather than by the stylesheet: "We are" is the largest type
+               on the site, and a standing will-change held two
+               screen-wide layers of it for the whole visit. The set at
+               the end hands them back. */
+            gsap.set([...halves, ...meta], { willChange: "transform, opacity, filter" });
             const tl = gsap.timeline();
             tl.fromTo(seeded.map((h) => h.el),
               {
@@ -174,7 +184,7 @@ export function initAbout(): () => void {
 
             /* nothing on this panel is left holding a compositor layer for
                an animation that finished */
-            tl.set([...halves, ...meta], { clearProps: "transform,filter" });
+            tl.set([...halves, ...meta], { clearProps: "transform,filter", willChange: "auto" });
           };
 
           ScrollTrigger.create({

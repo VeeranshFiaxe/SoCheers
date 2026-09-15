@@ -54,13 +54,22 @@ function groupFor(pathname: string): Group {
   );
 }
 
+/* The pointer's glow is a few percent of accent that only ever showed on
+   the dark pages: it was screen-blended, which on cream is invisible. It is
+   plain alpha now (.spotlight in globals.css) and on cream that would be a
+   tint, so the routes that are cream from the top do not draw it at all.
+   Routes with only some light panels (/ai-work, /series) switch it off
+   panel by panel instead - sc-on-light, initNav in lib/motion.ts. */
+const NO_SPOTLIGHT: ReadonlySet<Group> = new Set<Group>(["about", "read", "chat"]);
+
 export default function RouteTheme() {
   const g = groupFor(usePathname());
   return (
     <style>{
       `:root{--accent:var(--page-${g}-accent);` +
       `--accent-deep:var(--page-${g}-deep);` +
-      `--accent-ink:var(--page-${g}-ink);}`
+      `--accent-ink:var(--page-${g}-ink);}` +
+      (NO_SPOTLIGHT.has(g) ? ".spotlight{display:none}" : "")
     }</style>
   );
 }

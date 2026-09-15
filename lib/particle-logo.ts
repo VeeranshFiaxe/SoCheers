@@ -61,8 +61,10 @@ const TUNE = {
      point where the silhouette is solid buys nothing and costs a frame. */
   count: 30000,
   /* Device pixel ratio ceiling. Points are fill-rate hungry and the
-     grains are ~2px - past 1.75 nobody can tell and the GPU can. */
-  dprCap: 1.75,
+     grains are soft ~2px sprites - past 1.5 nobody can tell and the GPU
+     can. On a 2x laptop that is a quarter fewer pixels than 1.75 was, on
+     a canvas that hangs a third past the frame on every side. */
+  dprCap: 1.5,
 
   /* ---- grain ---- */
   softness: 0.34,        // where the sprite starts falling off (0..1 of its radius)
@@ -708,6 +710,9 @@ export function initParticleLogo(host: HTMLElement, opts: ParticleOpts = {}): St
     ([e]) => {
       inView = e.isIntersecting;
       box.active(inView);
+      /* the halo's breathing (.plogo::before/::after in globals.css) runs
+         only while there is somebody to see it */
+      host.classList.toggle("is-awake", inView);
       if (inView) {
         last = 0;
         /* the cursor may have moved half the page while this was away -
@@ -746,7 +751,7 @@ export function initParticleLogo(host: HTMLElement, opts: ParticleOpts = {}): St
     document.removeEventListener("visibilitychange", onVisible);
     document.removeEventListener(LITE_EVENT, onLite);
     canvas.removeEventListener("webglcontextlost", onLost);
-    host.classList.remove("is-live");
+    host.classList.remove("is-live", "is-awake");
     geom.dispose();
     material.dispose();
     renderer.dispose();

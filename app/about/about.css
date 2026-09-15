@@ -198,6 +198,8 @@
   0%,100%{ transform:scaleX(.3); opacity:.4 }
   50%    { transform:scaleX(1);  opacity:1 }
 }
+/* held once the opener is scrolled away (is-away, lib/about-motion.ts) */
+.ab-open.is-away .ab-open__cue-line{ animation-play-state:paused; }
 
 /* ============================================================
    THE PANELS
@@ -685,8 +687,10 @@
      running its own value */
   letter-spacing:-.02em; text-transform:uppercase;
   white-space:nowrap; color:var(--cream);
-  /* each half is pushed out from behind his head by lib/about-motion.ts */
-  will-change:transform, opacity;
+  /* each half is pushed out from behind his head by lib/about-motion.ts,
+     which promotes it for that move and hands the layer back after - a
+     standing will-change here held two screen-wide layers of the largest
+     type on the site for the whole visit */
 }
 /* The gap his head stands in, and it is deliberately narrower than the
    head is. The monitor is 27.6% of --fig across (measured off the baked
@@ -738,7 +742,7 @@
      pair still reads as the fine print under the claim. */
   color:color-mix(in srgb, var(--cream) 82%, transparent);
   text-shadow:0 1px 2px rgba(244,242,236,.9);
-  will-change:transform, opacity;
+  /* no standing will-change - see .ab-intro__word */
 }
 .ab-intro__cred::before{
   content:""; position:absolute; z-index:-1;

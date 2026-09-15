@@ -142,18 +142,25 @@ export function initOverture(
      AUTO_PULL is the case that can actually hit this), and a sound effect
      failing to play is not a reason to break the sequence, so the
      rejection is swallowed rather than surfaced. */
-  const clips = {
-    pull: new Audio(OVERTURE_SFX.pull),
-    on: new Audio(OVERTURE_SFX.on),
-    fall: new Audio(OVERTURE_SFX.fall),
-    expand: new Audio(OVERTURE_SFX.expand),
-  };
-  Object.values(clips).forEach((a) => { a.preload = "auto"; a.volume = 0.85; });
+  /* Not made at all for an `instant` run - the one every page load after
+     the first gets, where nothing is ever played. That was four preloading
+     media elements, each with a decoder behind it, held for the whole
+     visit to sound a sequence that had already happened. */
+  type Cue = "pull" | "on" | "fall" | "expand";
+  const clips: Record<Cue, HTMLAudioElement> | null = opts.instant
+    ? null
+    : {
+        pull: new Audio(OVERTURE_SFX.pull),
+        on: new Audio(OVERTURE_SFX.on),
+        fall: new Audio(OVERTURE_SFX.fall),
+        expand: new Audio(OVERTURE_SFX.expand),
+      };
+  if (clips) Object.values(clips).forEach((a) => { a.preload = "auto"; a.volume = 0.85; });
   /* a plain <audio> element's volume tops out at 1 - the expand cue asked
      to run twice as loud needs a real gain stage past that ceiling, so it
      alone is routed through a WebAudio gain node instead of el.volume. */
   let actx: AudioContext | null = null;
-  const GAIN: Partial<Record<keyof typeof clips, number>> = { expand: 2 };
+  const GAIN: Partial<Record<Cue, number>> = { expand: 2 };
 
   /* Every clip currently sounding, held on purpose until it says it is
      done - and, for the boosted ones, its audio graph held with it.
@@ -168,7 +175,8 @@ export function initOverture(
      cue was replaced with a longer recording. */
   const sounding = new Map<HTMLAudioElement, AudioNode[]>();
 
-  const sfx = (name: keyof typeof clips) => {
+  const sfx = (name: Cue) => {
+    if (!clips) return;
     const el = clips[name].cloneNode(true) as HTMLAudioElement;
     const boost = GAIN[name];
     const chain: AudioNode[] = [];
@@ -248,7 +256,7 @@ export function initOverture(
     /* Reset to a known first frame. This runs again on every replay, so it
        has to put back everything the previous run moved rather than assume
        a fresh DOM. */
-    root.classList.remove("is-done");
+    root.classList.remove("is-done", "is-gone");
     gsap.set(root, { "--lit": 0, "--guide": 0, "--pilot": 0.35, backgroundColor: "#000" });
     gsap.set([stage, vignette], { autoAlpha: 1 });
     gsap.set(flash, { autoAlpha: 1, opacity: 0 });
@@ -738,22 +746,43 @@ export function initOverture(
         document.dispatchEvent(new CustomEvent(OVERTURE_DONE));
       };
 
+      /* And then the room is taken out of the page altogether. It lives in
+         the layout, so it outlives every navigation of the visit - and left
+         at is-done it stayed a fixed, full-screen layer over the whole site
+         holding a dozen viewport-sized 3D walls and their decoded pictures,
+         none of it visible. display:none (.is-gone, globals.css), and the
+         pictures' srcs taken back so the bitmaps can go: a replay puts both
+         back first thing (the reset at the top, and boot()). The rope's
+         ticker goes too - it has nothing left to draw. */
+      const gone = () => {
+        root.classList.add("is-gone");
+        qq<HTMLElement>("[data-ovt-src]").forEach((el) => {
+          if (el instanceof HTMLSourceElement) el.removeAttribute("srcset");
+          else if (el instanceof HTMLImageElement) el.removeAttribute("src");
+        });
+        tickers.forEach((fn) => gsap.ticker.remove(fn));
+        tickers.length = 0;
+      };
+
       if (instant) {
         /* nothing to fade from - a tween here would be a black flash on
            every repeat visit, not a transition */
         gsap.set([stage, vignette, flash], { autoAlpha: 0 });
         gsap.set(root, { backgroundColor: "rgba(0,0,0,0)" });
         finish();
+        gone();
         return;
       }
 
       /* finish() on the first frame: both halves are black, and finish()
          is what makes the page visible (.is-done), so delaying it would
-         only be a wait. The short tween is for the room's leftovers. */
+         only be a wait. The short tween is for the room's leftovers, and
+         gone() waits out both it and the docked rig's .45s fade. */
       const tl = line();
       tl.to([stage, vignette, flash], { autoAlpha: 0, duration: 0.35, ease: "power2.inOut" }, 0);
       tl.to(root, { backgroundColor: "rgba(0,0,0,0)", duration: 0.35, ease: "power2.inOut" }, 0);
       tl.add(finish, 0);
+      tl.add(gone, 0.6);
     }
 
     /* ---------------------------------------------------- skipping out

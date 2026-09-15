@@ -195,6 +195,11 @@
   from{ transform:translate3d(0,4px,0); }
   to{ transform:translate3d(0,-10px,0); }
 }
+/* Parked while the hero is off screen (is-away, components/AiThoughts.tsx).
+   A field of infinite loops is a field of layers the browser composites on
+   every frame for as long as the page is open, most of it spent scrolled
+   past them. */
+.ai-stage.is-away .ai-bubble{ animation-play-state:paused; }
 
 @media (max-width:900px){
   .ai-hero{ min-height:92svh; padding-top:clamp(130px,20vh,180px); }
