@@ -31,6 +31,17 @@ const sans = localFont({
   ],
   variable: "--font-sans",
   display: "swap",
+  /* Not preloaded, and for the same reason the playful face is not: a
+     preload link is emitted for every cut in the family at the highest
+     priority the browser has, which here is six files and 150KB in front
+     of the opening on every page - and three of them are italics, which
+     nothing in a first screen is set in. The stylesheet is inlined into
+     the document now (experimental.inlineCss), so the faces are still
+     discovered the moment the HTML is parsed; the browser then fetches
+     the two or three cuts the page actually sets type in rather than all
+     six. display:swap already covers the gap, and next/font keeps the
+     fallback metrics that stop it shifting. */
+  preload: false,
 });
 
 /* The exception, and it is spent in exactly two places, both of them
@@ -58,7 +69,11 @@ const sans = localFont({
    nothing. display:swap already covers the gap. */
 const playful = Caveat({
   subsets: ["latin"],
-  weight: ["600", "700"],
+  /* One weight, and it is the only one the site sets: every rule that
+     reaches for this face asks for 700 (the headword, the About numerals,
+     the hero's own name). The 600 was 36KB of a second cut nothing chose,
+     fetched on the home page because the hero writes the name in this. */
+  weight: ["700"],
   variable: "--font-playful",
   display: "swap",
   preload: false,

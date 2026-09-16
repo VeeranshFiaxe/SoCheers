@@ -731,6 +731,9 @@ export function initSite(): () => void {
         const fetchFilm = () => {
           if (ac.signal.aborted || !src || film.src) return;
           note("film src set");
+          /* the poster comes with it - see data-test-poster in
+             components/Hero.tsx for why it is not written in the markup */
+          if (film.dataset.testPoster) film.poster = film.dataset.testPoster;
           film.src = src;
           /* an explicit load(): setting .src on an element parsed with
              preload="none" does not always start the fetch on its own */

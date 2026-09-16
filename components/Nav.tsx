@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NAV_LINKS } from "@/lib/content";
@@ -172,7 +172,6 @@ export default function Nav() {
             <Link
               key={l.href}
               href={l.href}
-              prefetch
               aria-current={l.href === active ? "page" : undefined}
               data-nav-current={l.href === active ? "" : undefined}
             >
@@ -182,7 +181,7 @@ export default function Nav() {
         )}
       </nav>
 
-      <Link href="/contact" prefetch className="nav__cta" data-cursor="Say hi">
+      <Link href="/contact" className="nav__cta" data-cursor="Say hi">
         <span>Let&rsquo;s chat</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M5 12h14M13 6l6 6-6 6" />
@@ -222,7 +221,6 @@ export default function Nav() {
               <Link
                 key={l.href}
                 href={l.href}
-                prefetch
                 aria-current={l.href === active ? "page" : undefined}
                 onClick={() => setOpen(false)}
               >
@@ -238,7 +236,7 @@ export default function Nav() {
         {/* The one thing the header keeps at every width is also the last
             thing in here, spelled out rather than abbreviated to a pill:
             in a sheet there is room to say what it is. */}
-        <Link href="/contact" prefetch className="nav__sheet-cta" onClick={() => setOpen(false)}>
+        <Link href="/contact" className="nav__sheet-cta" onClick={() => setOpen(false)}>
           <span>Let&rsquo;s chat</span>
           <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M5 12h14M13 6l6 6-6 6" />

@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: false,
 
+  /* The two stylesheets are the only thing between the HTML arriving and
+     the first paint, and on a phone that round trip was ~450ms of the
+     opening. Inlined into the document instead. */
+  experimental: { inlineCss: true },
+
   /* Every page is built to plain HTML in out/, which Cloudflare serves as
      static files (see wrangler.jsonc). Nothing on the site needs a server.
      Because of that, the redirect and cache rules below only apply in

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PINNED, PINNED_DWELL } from "@/lib/work-content";
 import { pic } from "@/lib/images";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import FilmSources from "./FilmSources";
 
 /* ============================================================
@@ -303,7 +303,7 @@ export default function WorkPinned() {
           )}
 
           {active.link.kind === "case" && (
-            <Link className="wk-lede__go" href={`/work/${active.link.slug}`} prefetch data-magnetic data-cursor="Open">
+            <Link className="wk-lede__go" href={`/work/${active.link.slug}`} data-magnetic data-cursor="Open">
               <span className="wk-lede__play" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
               </span>

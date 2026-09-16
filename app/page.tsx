@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
 import { Awards, Clients, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
-import { OVERTURE_WALLS } from "@/lib/content";
+import { OVERTURE_HELD, OVERTURE_WALLS } from "@/lib/content";
 import JsonLd from "@/components/JsonLd";
 import { ORG_ID, pageGraph } from "@/lib/schema";
 import { pageMeta } from "@/lib/seo";
@@ -21,7 +21,9 @@ export default function Home() {
      only attached by script once the loader lets go (boot() in
      lib/overture-motion.ts). Named in the head as well, so the bytes are
      already here by then rather than requested at that moment. */
-  preload(OVERTURE_WALLS[0].img, { as: "image", fetchPriority: "high" });
+  OVERTURE_WALLS.slice(0, OVERTURE_HELD).forEach((w, i) => {
+    preload(w.img, i === 0 ? { as: "image", fetchPriority: "high" } : { as: "image" });
+  });
 
   return (
     <>

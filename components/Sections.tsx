@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { CSSProperties, Fragment } from "react";
 import { AWARDS, BRAND_MARK, BUCKETS, CLIENT_ROWS, STATS } from "@/lib/content";
 import ParticleLogo from "./ParticleLogo";
@@ -91,7 +91,6 @@ export function What() {
               className="wcard"
               key={b.idx}
               href={`/services/${b.slug}`}
-              prefetch
               data-clip
               data-tilt
             >

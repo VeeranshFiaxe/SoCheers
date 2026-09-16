@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { notFound } from "next/navigation";
 import "./services.css";
 import JsonLd from "@/components/JsonLd";
@@ -144,7 +144,7 @@ export default async function ServicePage({ params }: Params) {
             <img src={bucket.img} alt="" fetchPriority="high" decoding="async" />
           </div>
           <div className="wrap">
-            <Link className="sv-back" href="/#what" prefetch>
+            <Link className="sv-back" href="/#what">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M19 12H5M11 18l-6-6 6-6" />
               </svg>
@@ -198,7 +198,7 @@ export default async function ServicePage({ params }: Params) {
           <div className="wrap">
             <div className="sv-next__grid">
               {others.map((o) => (
-                <Link className="sv-next__card" key={o.slug} href={`/services/${o.slug}`} prefetch>
+                <Link className="sv-next__card" key={o.slug} href={`/services/${o.slug}`}>
                   <div className="sv-next__img">
                     <img src={o.img} alt="" loading="lazy" decoding="async" />
                   </div>
@@ -212,7 +212,7 @@ export default async function ServicePage({ params }: Params) {
 
             <div className="sv-ask" data-reveal>
               <p className="sv-ask__line">{SERVICE_ASK}</p>
-              <Link href="/contact" prefetch className="nav__cta" data-cursor="Say hi">
+              <Link href="/contact" className="nav__cta" data-cursor="Say hi">
                 <span>Let&rsquo;s chat</span>
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h14M13 6l6 6-6 6" />

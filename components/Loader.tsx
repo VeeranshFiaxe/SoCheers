@@ -42,7 +42,12 @@ function assets() {
   return OVERTURE_WALLS.slice(0, OVERTURE_HELD).map((w) => (phone && w.m) || w.img);
 }
 
-const MIN = 1150;   // ms - the floor, so the count reads as a count
+/* The floor, so the count reads as a count rather than flashing past.
+   It was 1150, which on a phone was most of a second of black held after
+   the pictures had already landed - the room's first picture cannot paint
+   until this lets go, and that wait was the single largest part of it.
+   800 is still four or five readable steps. */
+const MIN = 800;
 const MAX = 6000;   // ms - the ceiling, past which the door opens regardless
 
 export default function Loader() {
@@ -113,7 +118,7 @@ export default function Loader() {
         ? 100
         : Math.min(loaded / total, elapsed / MIN) * 100;
 
-      state.v += (target - state.v) * 0.12;
+      state.v += (target - state.v) * 0.17;
       if (countEl) countEl.textContent = String(Math.round(state.v));
       if (target >= 100 && state.v > 99.3) finish();
     };

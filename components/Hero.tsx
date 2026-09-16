@@ -192,7 +192,12 @@ export default function Hero() {
           <video
             className="hero__film"
             data-test-film="/media/vibe-video.mp4"
-            poster="/media/vibe-video-poster.jpg"
+            /* The poster is attached with the film rather than written
+               here: a <video> fetches its poster the moment it is parsed,
+               preload="none" or not, and 98KB of a frame nobody sees until
+               the hero opens was being pulled through the opening
+               sequence. initHero sets both (lib/motion.ts). */
+            data-test-poster="/media/vibe-video-poster.jpg"
             muted
             loop
             playsInline

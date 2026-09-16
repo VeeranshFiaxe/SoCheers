@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { CASE_NAV } from "@/lib/work-content";
 import { returnToWall } from "@/lib/work-return";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 
 /* ============================================================
    THE RAIL BESIDE A CASE.
@@ -70,7 +70,7 @@ export default function CaseNav({ items }: { items: CaseNavItem[] }) {
             the same thing the browser's Back does. `scroll={false}` stops
             the router jumping to the top first; the wall does the rest.
             See lib/work-return.ts. */}
-        <Link className="cs-back" href="/work" prefetch scroll={false} onClick={returnToWall} data-cursor="Back">
+        <Link className="cs-back" href="/work" scroll={false} onClick={returnToWall} data-cursor="Back">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 6l-6 6 6 6" /></svg>
           {CASE_NAV.back}
         </Link>
@@ -98,7 +98,7 @@ export default function CaseNav({ items }: { items: CaseNavItem[] }) {
           </nav>
         )}
 
-        <Link className="cs-rail__cta" href="/contact" prefetch data-magnetic data-cursor="Say hi">
+        <Link className="cs-rail__cta" href="/contact" data-magnetic data-cursor="Say hi">
           {CASE_NAV.cta}
         </Link>
       </div>

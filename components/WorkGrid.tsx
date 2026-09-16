@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { leaveWall, takeWallY } from "@/lib/work-return";
 import { jumpTo } from "@/lib/motion";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import { pic } from "@/lib/images";
 import {
   WORK_BROWSE, WORK_CATEGORIES, catLabel, orderWall, type CategoryId, type WorkAsset,
@@ -219,7 +219,6 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
                 className={a.pending ? "wk-tile is-pending" : "wk-tile"}
                 key={a.publicId}
                 href={`/work/${a.slug}`}
-                prefetch
                 onClick={leaveWall}
                 data-cursor="Open"
               >

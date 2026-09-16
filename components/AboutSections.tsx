@@ -2,7 +2,7 @@ import AboutBulbs from "./AboutBulbs";
 import AboutMan from "./AboutMan";
 import AboutSplash from "./AboutSplash";
 import AboutStage from "./AboutStage";
-import Link from "next/link";
+import Link from "@/components/IntentLink";
 import {
   ABOUT_IMG, ABOUT_INTRO, BELIEF, DRIVERS,
   FOUNDERS, SPACE_COPY, SPACE_SHOTS, WHY_WE_EXIST,
@@ -414,13 +414,13 @@ export function AboutCrowd() {
 export function AboutEnd() {
   return (
     <div className="ab-end is-light">
-      <Link href="/" prefetch className="ab-end__back" data-cursor="Home">
+      <Link href="/" className="ab-end__back" data-cursor="Home">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M19 12H5M11 18l-6-6 6-6" />
         </svg>
         <span>Back to home</span>
       </Link>
-      <Link href="/#contact" prefetch className="nav__cta" data-magnetic data-cursor="Say hi">
+      <Link href="/#contact" className="nav__cta" data-magnetic data-cursor="Say hi">
         <span>Start a project</span>
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M5 12h14M13 6l6 6-6 6" />

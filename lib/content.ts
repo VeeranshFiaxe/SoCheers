@@ -48,9 +48,11 @@ export const TEAM_SIZES = "100vw";
    rather than as pictures, which is why the loudest, highest-contrast
    images are deliberately at the back.
 
-   Every file here is preloaded, silently, before the flicker is allowed
-   to catch (see boot() in lib/overture-motion.ts) - so keep this list
-   small and keep the files light, nothing here is above ~450KB.
+   The first OVERTURE_HELD of them are fetched before the flicker is
+   allowed to catch and the rest the frame after the room paints (see
+   boot() in lib/overture-motion.ts) - so keep this list small and keep
+   the files light, nothing here is above ~450KB, and the two at the front
+   are the two a phone waits on before it sees anything at all.
 
    THE PHONE'S COLUMN.  A wall is a viewport-sized plane, so on a phone
    every one of these is being asked to fill a box about 0.46 wide where
@@ -174,13 +176,16 @@ export const OVERTURE_WALLS: readonly Wall[] = [
 
 /* How many walls, from the front, have to be here before the room is shown:
    the loader counts these (components/Loader.tsx) and boot() in
-   lib/overture-motion.ts waits on them. They are the three slow falls, the
-   ones that are looked at. The rest are the fast tail and are fetched the
-   frame after the room first paints - several seconds before the first of
-   them can be on screen, since the rope has to be pulled and three walls
-   have to go over first. Waiting on all of them held the first picture back
-   behind about 700KB it did not need. */
-export const OVERTURE_HELD = 3;
+   lib/overture-motion.ts waits on them. Two - the wall the room opens on
+   and the one behind it, which cannot be seen until the first has been
+   pulled down and has taken its 1.25s getting there. Everything else is
+   fetched the frame after the room paints, with seconds in hand.
+
+   It is this low because nothing paints until it is met: the first
+   picture of the site is on the far side of this wait, so every file
+   added to it is added to the wait. It was the whole list (~700KB), then
+   three. */
+export const OVERTURE_HELD = 2;
 
 
 /* the three cues, one per beat: the rope going over, the filament

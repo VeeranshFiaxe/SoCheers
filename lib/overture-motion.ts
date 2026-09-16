@@ -147,15 +147,31 @@ export function initOverture(
      media elements, each with a decoder behind it, held for the whole
      visit to sound a sequence that had already happened. */
   type Cue = "pull" | "on" | "fall" | "expand";
+  /* Made silent and empty-handed. A src on an <audio> is a download, and
+     the four cues together are a quarter of a megabyte - fetched, before
+     this, while the room's own pictures were still on their way. Nothing
+     in here can sound until the rope goes over, which is a second and
+     more after the room is up, so they are warmed from boot() once it has
+     painted instead. */
+  const cue = (src: string) => {
+    const a = new Audio();
+    a.preload = "none";
+    a.src = src;
+    a.volume = 0.85;
+    return a;
+  };
   const clips: Record<Cue, HTMLAudioElement> | null = opts.instant
     ? null
     : {
-        pull: new Audio(OVERTURE_SFX.pull),
-        on: new Audio(OVERTURE_SFX.on),
-        fall: new Audio(OVERTURE_SFX.fall),
-        expand: new Audio(OVERTURE_SFX.expand),
+        pull: cue(OVERTURE_SFX.pull),
+        on: cue(OVERTURE_SFX.on),
+        fall: cue(OVERTURE_SFX.fall),
+        expand: cue(OVERTURE_SFX.expand),
       };
-  if (clips) Object.values(clips).forEach((a) => { a.preload = "auto"; a.volume = 0.85; });
+  const warmClips = () => {
+    if (!clips) return;
+    Object.values(clips).forEach((a) => { a.preload = "auto"; a.load(); });
+  };
   /* a plain <audio> element's volume tops out at 1 - the expand cue asked
      to run twice as loud needs a real gain stage past that ceiling, so it
      alone is routed through a WebAudio gain node instead of el.volume. */
@@ -347,7 +363,9 @@ export function initOverture(
            those downloads are not standing in front of its first picture.
            Several seconds pass before the first of them can be seen. */
         requestAnimationFrame(() => requestAnimationFrame(() => {
-          if (!ac.signal.aborted) attach(OVERTURE_HELD, walls.length);
+          if (ac.signal.aborted) return;
+          attach(OVERTURE_HELD, walls.length);
+          warmClips();
         }));
         next();
       };
