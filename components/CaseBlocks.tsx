@@ -69,8 +69,11 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                 key={key}
                 /* --ar and --w let case.css hold the picture to a height
                    the screen can show and to its own width - a small
-                   screen grab is never stretched across the column */
-                style={{ "--ar": b.w / b.h, "--w": `${b.w}px` } as React.CSSProperties}
+                   screen grab is never stretched across the column. Only a
+                   portrait picture gets --ar: a square one capped to the
+                   screen came out a few pixels narrower than the text
+                   column, close enough to look like a mistake. */
+                style={{ ...(b.w / b.h < 0.9 && { "--ar": b.w / b.h }), "--w": `${b.w}px` } as React.CSSProperties}
                 data-reveal
               >
                 <div className="cs-shot__in" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
@@ -153,6 +156,35 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
             );
+
+          /* Mixed shapes in rows. Each picture grows by its own width over
+             height, so every picture in a row lands at the same height and
+             none is cropped. */
+          case "collage": {
+            const counts = b.rows ?? [b.items.length];
+            let at = 0;
+            return (
+              <figure className="cs-collage" key={key} data-reveal>
+                {counts.map((n, r) => {
+                  const row = b.items.slice(at, (at += n));
+                  return (
+                    <div className="cs-collage__row" key={r}>
+                      {row.map((it) => (
+                        <div
+                          className="cs-collage__cell"
+                          key={it.src}
+                          style={{ flexGrow: it.w / it.h, aspectRatio: `${it.w} / ${it.h}` }}
+                        >
+                          <img {...pic(it.src)} sizes={`(max-width: 760px) ${Math.round(100 / row.length)}vw, ${Math.round(66 / row.length)}vw`} alt="" loading="lazy" />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+                {b.caption && <figcaption>{b.caption}</figcaption>}
+              </figure>
+            );
+          }
 
           /* Any number of stills. The column count is the writer's call
              for the same reason `bleed` is - how many frames read well

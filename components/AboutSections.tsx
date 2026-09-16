@@ -322,8 +322,6 @@ export function AboutPeople() {
           however many lines the copy wraps to. It draws itself down on
           scroll - see the drivers' thread in lib/about-motion.ts. */}
       <div className="ab-drives">
-        <h2 className="ab-drives__title" data-split>What drives us?</h2>
-
         <ol className="drivers">
           {DRIVERS.map((d, i) => (
             <li

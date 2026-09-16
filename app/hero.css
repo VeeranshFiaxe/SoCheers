@@ -242,7 +242,26 @@
    a 390px screen is three things sharing one line, and the film is 40%
    of it before the type gets a say. Small type, then - it is that or the
    line breaks, and a line that breaks has nowhere to put the picture. */
+/* Not any more: on a phone the sentence stacks instead - "We are" over
+   the film, "SoCheers" under it - so each half gets the whole width and
+   can be set big. The gap opens downwards by the film's height rather
+   than sideways by its width. initHero types the two lines one after the
+   other (the second shutter below). */
+.hero--test .hero__shutter--2{ display:none; }
 @media (max-width:700px){
-  .hero--test .hero__lines{ font-size:clamp(16px,4.4vw,30px); letter-spacing:-.02em; }
-  .hero--test .hero__gap{ width:calc(.26em + var(--split) * var(--film-w, 0px)); }
+  .hero--test .hero__lines{ font-size:clamp(40px,13.5vw,76px); letter-spacing:-.02em; }
+  .hero--test .hero__line--split{
+    grid-template-columns:auto; justify-items:center;
+    min-height:0;
+  }
+  .hero--test .hero__side--l,
+  .hero--test .hero__side--r{ text-align:center; padding:0; }
+  .hero--test .hero__gap{
+    width:1px;
+    height:calc(.12em + var(--split) * (var(--film-h, 0px) + .3em));
+  }
+  .hero--test .hero__shutter--2{ display:block; }
+  /* the film fits the width when it takes the screen, rather than
+     cropping a 16:9 picture down to a tall sliver of its middle */
+  .hero--test .hero__film{ object-fit:contain; }
 }

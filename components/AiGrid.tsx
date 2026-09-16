@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AI_SEGMENTS, AI_WORK, type AiAsset, type SegmentId } from "@/lib/ai-content";
 
 /* ============================================================
@@ -75,6 +76,21 @@ import { AI_SEGMENTS, AI_WORK, type AiAsset, type SegmentId } from "@/lib/ai-con
 export default function AiGrid() {
   const [seg, setSeg] = useState<SegmentId>("all");
 
+  /* On touch there is no hover to play a film in place, and a tap that
+     played and stopped it in the tile threw the reader back to 0:00 every
+     time. So a tap on any tile - film or still - opens it whole, in a
+     viewer: stills full size, films with the native controls (scrubber,
+     time, pause that stays where it was). Desktop keeps hover. */
+  const [touch, setTouch] = useState(false);
+  const [open, setOpen] = useState<AiAsset | null>(null);
+  useEffect(() => {
+    const q = window.matchMedia("(hover: none)");
+    const read = () => setTouch(q.matches);
+    read();
+    q.addEventListener("change", read);
+    return () => q.removeEventListener("change", read);
+  }, []);
+
   /* The tabs used to carry a count each. They do not any more, and that
      is a content decision rather than a layout one: the wall is meant to
      read as a body of work, and a number beside the label turns it into
@@ -104,17 +120,84 @@ export default function AiGrid() {
 
         <div className="ai-grid">
           {AI_WORK.map((a) => (
-            <Tile key={a.id} asset={a} shown={seg === "all" || a.tags.includes(seg)} />
+            <Tile
+              key={a.id}
+              asset={a}
+              shown={seg === "all" || a.tags.includes(seg)}
+              onOpen={touch ? setOpen : undefined}
+            />
           ))}
         </div>
       </div>
+
+      {open && <Viewer asset={open} onClose={() => setOpen(null)} />}
     </section>
+  );
+}
+
+function Viewer({ asset: a, onClose }: { asset: AiAsset; onClose: () => void }) {
+  const isFilm = a.kind !== "static";
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [onClose]);
+
+  /* portalled: an ancestor with a transform would otherwise be what
+     position:fixed resolves against */
+  return createPortal(
+    <div
+      className="ai-view"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${a.brand ? `${a.brand}, ` : ""}${a.title}`}
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      {isFilm ? (
+        <video
+          className="ai-view__media"
+          src={a.src}
+          poster={a.poster}
+          controls
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+        />
+      ) : (
+        <img className="ai-view__media" src={a.src} alt={a.title} />
+      )}
+      <div className="ai-view__cap">
+        {a.brand && <b>{a.brand}</b>}
+        <span>{a.title}</span>
+      </div>
+      <button type="button" className="ai-view__close" onClick={onClose} aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    </div>,
+    document.body,
   );
 }
 
 const KIND_LABEL: Record<string, string> = { video: "Film", cgi: "CGI", static: "Still" };
 
-function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
+function Tile({
+  asset: a,
+  shown,
+  onOpen,
+}: {
+  asset: AiAsset;
+  shown: boolean;
+  onOpen?: (a: AiAsset) => void;
+}) {
   const isFilm = a.kind !== "static";
   const box = useRef<HTMLElement>(null);
   const vid = useRef<HTMLVideoElement>(null);
@@ -250,9 +333,9 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
           <button
             type="button"
             className="ai-tile__card"
-            onMouseEnter={play}
-            onMouseLeave={stop}
-            onClick={() => (playing ? stop() : play())}
+            onMouseEnter={onOpen ? undefined : play}
+            onMouseLeave={onOpen ? undefined : stop}
+            onClick={() => (onOpen ? onOpen(a) : playing ? stop() : play())}
             data-cursor={playing ? "Stop" : "Play"}
             aria-label={`${playing ? "Stop" : "Play"} ${a.brand ? `${a.brand}, ` : ""}${a.title}`}
           >
@@ -271,6 +354,14 @@ function Tile({ asset: a, shown }: { asset: AiAsset; shown: boolean }) {
       ) : (
         <>
           <img src={a.src} alt={a.title} loading="lazy" decoding="async" width={a.w} height={a.h} />
+          {onOpen && (
+            <button
+              type="button"
+              className="ai-tile__open"
+              onClick={() => onOpen(a)}
+              aria-label={`Open ${a.brand ? `${a.brand}, ` : ""}${a.title}`}
+            />
+          )}
           <figcaption className="ai-tile__cap">
             {a.brand && <b>{a.brand}</b>}
             <span>{a.title}</span>

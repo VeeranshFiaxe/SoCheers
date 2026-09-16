@@ -266,11 +266,21 @@
   /* still one line at phone width, so the size is cut off the viewport
      rather than off a measure - 3.6vw × 32 characters is the whole
      sentence inside a 375px screen with its gutters intact. */
+  /* at 3.2vw the one-line setting came out at 12px on a phone - a
+     label, not a card. Here the line is allowed to break, larger, into
+     two balanced lines. The focus-pull blur comes off too: animating a
+     filter on type is the part that stutters on phone hardware. */
   .st-hero__title{
-    max-width:none;
-    font-size:clamp(11px,3.2vw,19px);
-    letter-spacing:-.01em;
+    max-width:15ch;
+    white-space:normal; text-wrap:balance;
+    font-size:clamp(26px,7.4vw,38px); line-height:1.14;
+    letter-spacing:-.015em;
   }
+  @keyframes st-hero-title-m{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:none; }
+  }
+  .st-hero__title{ animation-name:st-hero-title-m; animation-duration:1.2s; animation-delay:.5s; }
   .st-hero__scrim{
     background:
       radial-gradient(90% 50% at 50% 50%, rgba(11,11,12,.66), rgba(11,11,12,.4) 62%, rgba(11,11,12,.24) 100%),
@@ -2057,101 +2067,108 @@
    that cannot be read.
    ============================================================ */
 @media (max-width:900px){
-  .st-beat{ min-height:132svh; align-items:flex-start; }
-  .st-beat__type{ padding-top:clamp(20px,5vh,60px); }
-  .st-beat__words{ max-width:none; }
+  /* ---- the frame goes back into the flow ----
+     Pictures placed absolutely at the foot of a fixed-height screen
+     collide with the type the moment a paragraph runs long, and at phone
+     width most of them do. So the beat becomes a plain column: the stage
+     wrapper drops out of the box tree, the plate, scrim, grain and gate
+     stay absolute behind everything, and the picture layer is laid out
+     under the type in normal flow. Nothing can overlap because nothing
+     is guessing at heights. The end card is the exception - one line
+     and a button over one picture - and keeps its full-bleed poster. */
+  .st-beat,
+  .st-beat[data-stage="title"],
+  .st-beat[data-stage="end"]{
+    min-height:0;
+    flex-direction:column; align-items:stretch; justify-content:flex-start;
+    gap:clamp(28px,5vh,44px);
+    padding:clamp(76px,11vh,110px) 0;
+  }
+  .st-beat__stage{ display:contents; }
+  .st-beat__type{ order:1; padding:0 var(--pad); }
+  .st-beat__words,
+  .st-beat[data-stage] .st-beat__words,
+  .st-beat[data-stage="strip"] .st-beat__words:has(.st-beat__lead){ max-width:none; }
+  .st-beat[data-stage="steps"] .st-beat__line{ max-width:none; }
   .st-beat__lead,
   .st-beat__line,
   .st-beat__mark,
   .st-beat__copy,
   .st-step__body{ max-width:none; }
-
-  /* the side flip comes off. There is only one column at this width, so
-     a side to be on is the one thing the layout no longer has. */
   .st-beat[data-side="left"] .st-beat__words{ margin-left:0; }
-  .st-beat[data-side="left"] .st-scrim{
-    background:linear-gradient(to right, rgba(11,11,12,.93), rgba(11,11,12,.5) 60%, rgba(11,11,12,.66));
+
+  .st-strip,
+  .st-wall,
+  .st-reelrow,
+  .st-pull,
+  .st-beat:not([data-stage="end"]) .st-poster{
+    order:2;
+    position:relative; z-index:3;
+    inset:auto; top:auto; right:auto; bottom:auto; left:auto;
+    transform:none;
   }
 
-  /* ---- the strip ---- full width, below the type. A 21:9 frame at
-     phone width is about 170px tall - still a frame, and still four. */
+  /* one ground for every flowing stage: the type and the pictures are
+     never on top of each other here, so the scrim only has to hold the
+     plate down evenly */
+  .st-scrim,
+  .st-beat[data-side="left"] .st-scrim,
+  .st-beat[data-stage="wall"] .st-scrim,
+  .st-beat[data-stage="reel"] .st-scrim,
+  .st-beat[data-stage="title"] .st-scrim,
+  #section-kink .st-scrim{
+    background:linear-gradient(to bottom, rgba(11,11,12,.92), rgba(11,11,12,.78) 50%, rgba(11,11,12,.9));
+  }
+
+  /* ---- the type ---- the display line at 18px was body size on a
+     phone. It takes the width back instead. */
+  .st-beat__line{ font-size:clamp(24px,6.6vw,34px); line-height:1.14; margin-top:0; }
+  .st-beat__lead + .st-beat__line{ margin-top:clamp(20px,3vh,28px); }
+  .st-beat__lead,
+  .st-beat__copy{ font-size:16px; line-height:1.6; }
+  .st-cues{ gap:8px; }
+  .st-cues li{ font-size:10px; padding:7px 10px; letter-spacing:.12em; }
+  .st-beat[data-stage="reel"] .st-cues li{ font-size:14px; padding:8px 12px 8px 11px; }
+
+  /* ---- the strip ---- four frames stacked, gutter to gutter */
   .st-strip,
   .st-beat[data-side="left"] .st-strip{
-    top:auto; bottom:clamp(60px,11vh,120px);
-    left:var(--pad); right:var(--pad);
-    transform:none;
-    align-items:stretch;
-    gap:5px;
+    margin:0 var(--pad);
+    display:flex; flex-direction:column; align-items:stretch;
+    gap:6px;
   }
   .st-band,
   .st-beat[data-side="left"] .st-band{
     width:100%; height:auto;
-    margin-left:0; margin-right:0;
+    aspect-ratio:21/9;
+    margin:0;
+    box-shadow:0 18px 40px rgba(0,0,0,.5);
   }
 
-  /* section 5 keeps its 2x2 here too. Four 21:9 bands across a 350px
-     screen are 150px tall each - 600px of stacked letterbox showing a
-     fifth of four portraits - where two columns of two are 172px wide
-     at a 4:5 crop, which is both less of the screen and far more of
-     each picture. The strip goes back to the full gutter width because
-     at this size there is no second column of type to leave room for. */
+  /* section 5 keeps its 2x2 - portraits in a 21:9 band show a fifth of
+     themselves */
   #section-job .st-strip{
-    width:auto;
-    gap:6px;
+    display:grid; grid-template-columns:repeat(2,1fr);
+    width:auto; gap:6px;
   }
-  #section-job .st-band{
-    height:auto;
-    aspect-ratio:4/5;
-  }
+  #section-job .st-band{ height:auto; aspect-ratio:4/5; }
 
-  /* ---- the wall ---- three columns of four. Twelve tiles four across
-     at 390px is a 90px window, which is a thumbnail and not a frame. */
+  /* ---- the wall ---- three across, even tiles */
   .st-wall{
     grid-template-columns:repeat(3,1fr);
-    grid-template-rows:repeat(4,1fr);
-    padding-top:38vh;
+    grid-template-rows:none;
+    grid-auto-rows:auto;
+    gap:6px;
+    padding:0 var(--pad);
   }
-  .st-tile:nth-child(4n+2),
-  .st-tile:nth-child(4n+3),
-  .st-tile:nth-child(4n+4){ transform:none; }
-  .st-tile:nth-child(3n+2){ transform:translateY(-6%); }
-  .st-beat[data-stage="wall"] .st-beat__words{ max-width:none; }
-  .st-beat[data-stage="wall"] .st-scrim{
-    background:linear-gradient(to bottom, rgba(11,11,12,.95), rgba(11,11,12,.74) 34%, rgba(11,11,12,.55));
-  }
+  .st-tile{ aspect-ratio:3/4; }
+  .st-tile:nth-child(n){ transform:none; }
 
-  /* ---- the poster ---- the triptych goes back to a stack. Three
-     panels across a 390px screen are 130px wide, which is not a
-     portrait crop, it is a sliver - and at this width the type is at the
-     top of the screen and the picture has the whole bottom of it, so
-     three bands one under the other are three frames again rather than
-     three 6:1 slices.
-
-     The mark is also the one piece of type on this page sized off the
-     viewport rather than off its measure, so it is the one that has to
-     be re-sized here rather than just re-wrapped. */
-  .st-poster{ flex-direction:column; }
-
-  /* ---- the pull ---- the one stage that cannot just be re-stacked.
-
-     Its whole effect is aimed at two points inside the photograph - the
-     phone at 39.5% across it, the band of light at 47% - and a frame
-     sized to COVER a 390x1050 stage with a 2.39:1 picture shows about a
-     seventh of that picture's width before the 2x blow-up and a
-     fifteenth after it. Both of those points are outside that slice, so
-     what a phone would get is a correctly-built effect happening off
-     the side of the screen.
-
-     So at this width the frame is sized off the WIDTH instead: a little
-     under twice the screen, which puts the middle half of the
-     photograph on it - the phone, the light and the whole head - and
-     the section keeps it as a band across the middle rather than as a
-     full bleed. The type already has the top of the screen here.
-
-     The blurs come down with it. They are full-frame blurs under blend
-     modes over a frame that is now a fifth of the height it was, and
-     this is the hardware least able to pay for them. The spray thins
-     out too, in components/SeriesPull.tsx. */
+  /* ---- the pull ---- a band under the type, sized off the width so
+     the phone and the face stay on screen. The frame is a little under
+     twice the screen wide, which puts the middle of the photograph in
+     view; the box is as tall as that frame. */
+  .st-pull{ width:100%; height:80vw; }
   .st-pull__frame{
     width:calc(100cqw * 1.9);
     height:calc(100cqw * 1.9 / 2.3913);
@@ -2159,74 +2176,76 @@
   }
   .st-pull__smear{ filter:blur(3px) brightness(1.12); }
   .st-pull__wisp{ filter:blur(7px) brightness(1.45) saturate(.8); }
+
+  /* a poster that is not the end card, if one is ever staged */
+  .st-beat:not([data-stage="end"]) .st-poster{
+    flex-direction:column; aspect-ratio:4/5; margin:0 var(--pad);
+  }
   .st-poster__band + .st-poster__band{
     border-left:0;
     border-top:clamp(3px,.4vw,7px) solid var(--film);
   }
+
+  /* ---- the title card (section 4) ---- */
+  .st-beat[data-stage="title"]{ padding-bottom:clamp(76px,11vh,110px); }
   .st-beat[data-stage="title"] .st-beat__words{ display:block; }
   .st-beat[data-stage="title"] .st-beat__line{
-    padding-bottom:0;
+    font-size:16px; line-height:1.55; padding-bottom:0;
   }
-  .st-beat[data-stage="title"] .st-beat__mark{ margin-top:clamp(6px,1vh,10px); }
-  /* the end card keeps its centring at this width - it is one frame and
-     one block here too, and the reason the other stages give up the
-     middle of the screen (a picture behind a paragraph) does not apply
-     to a screen with a single button on it */
-  .st-beat[data-stage="end"]{ align-items:center; }
-  .st-beat[data-stage="end"] .st-beat__type{ padding-top:0; }
-  .st-beat[data-stage="end"] .st-beat__words{ text-align:center; }
-  .st-beat[data-stage="title"] .st-beat__body{ padding-top:0; }
-  /* the type is at the top of the screen at this width, so the ground
-     under it has to be too - the desktop scrim is weighted to the
-     bottom, where the type no longer is */
-  /* #section-kink is named here so its desktop-only bottom-weighted
-     ground does not outrank this on specificity */
-  .st-beat[data-stage="title"] .st-scrim,
-  .st-beat[data-stage="end"] .st-scrim,
-  #section-kink .st-scrim{
-    background:linear-gradient(
-      to bottom,
-      rgba(11,11,12,.94),
-      rgba(11,11,12,.78) 38%,
-      rgba(11,11,12,.42) 62%,
-      rgba(11,11,12,.72)
-    );
+  .st-beat[data-stage="title"] .st-beat__mark{
+    margin-top:10px;
+    font-size:clamp(30px,9vw,44px); line-height:1.05;
   }
-  .st-beat[data-stage="title"] .st-beat__line,
-  .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(15px,3.6vw,20px); }
-  /* same handoff at this width - the setup line stays at copy size */
-  .st-beat[data-stage="title"] .st-beat__line{ font-size:clamp(15px,3.9vw,18px); }
-  .st-beat[data-stage="title"] .st-beat__mark,
-  .st-beat[data-stage="end"] .st-beat__mark{ font-size:clamp(22px,6.03vw,36px); }
+  .st-beat[data-stage="title"] .st-beat__body{ padding-top:clamp(14px,2vh,20px); }
   .st-beat[data-stage="title"] .st-beat__copy{ max-width:none; }
 
-  /* ---- the reel ---- four episodes, not eight. Eight verticals across
-     a phone is eight 40px slivers. */
+  /* ---- the end card ---- still one centred block over one picture */
+  .st-beat[data-stage="end"]{
+    min-height:100svh;
+    justify-content:center;
+    padding:clamp(90px,14vh,140px) 0;
+  }
+  .st-beat[data-stage="end"] .st-beat__words{ text-align:center; }
+  .st-beat[data-stage="end"] .st-beat__line{ font-size:clamp(16px,4.4vw,20px); line-height:1.4; }
+  .st-beat[data-stage="end"] .st-beat__mark{
+    margin-top:14px;
+    font-size:clamp(28px,8.4vw,42px); line-height:1.08;
+  }
+  .st-beat[data-stage="end"] .st-scrim{
+    background:
+      radial-gradient(90% 40% at 50% 50%, rgba(11,11,12,.7), rgba(11,11,12,.35) 70%, rgba(11,11,12,0)),
+      linear-gradient(to bottom, var(--film), rgba(11,11,12,.4) 20%, rgba(11,11,12,.4) 80%, rgba(11,11,12,.9));
+  }
+
+  /* ---- the reel ---- four episodes in a row under the type */
+  .st-beat[data-stage="reel"]{ padding:clamp(76px,11vh,110px) 0; }
+  .st-beat[data-stage="reel"] .st-beat__type{ padding-bottom:0; }
+  .st-reelrow{
+    padding:0 var(--pad);
+    align-items:stretch;
+    gap:6px;
+  }
+  .st-vert{ flex:1 1 0; min-width:0; height:auto; aspect-ratio:9/16; }
   .st-vert:nth-child(n+5){ display:none; }
   .st-vert:nth-child(odd){ transform:none; }
-  .st-beat[data-stage="reel"] .st-beat__type{ padding-bottom:0; }
-  .st-beat[data-stage="reel"] .st-beat__words{ max-width:none; }
-  .st-reelrow{ bottom:clamp(56px,10vh,110px); }
+  .st-vert:nth-child(even){ transform:translateY(10px); }
 
-  /* ---- the sideblocks ---- two by two. Four across a phone is four
-     columns of one word each. */
-  .st-steps{ grid-template-columns:repeat(2,minmax(0,1fr)); gap:clamp(16px,4vw,28px); }
-  .st-beat[data-stage="steps"]{ min-height:100svh; }
-  .st-beat[data-stage="steps"] .st-beat__line{ max-width:none; }
+  /* ---- the sideblocks ---- two by two */
+  .st-steps{
+    margin-top:clamp(24px,4vh,36px);
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:24px 14px;
+  }
+  .st-step__title{ font-size:15px; }
+  .st-step__body{ font-size:14px; }
 
-  /* ---- the showcase ---- five handsets fanned on an arc is a shape
-     that needs width. On a phone the arc is unwound into a rail the
-     reader swipes, one handset to a screen, snapped - which is the
-     same object handled the way a phone is handled. The scroll drift
-     and the fan come off; the entrance, the sweep and the playhead
-     stay, because those are what say the screens are live. */
-  .st-beat[data-stage="showcase"]{ min-height:100svh; align-items:center; }
-  .st-beat[data-stage="showcase"] .st-beat__words{ max-width:none; }
-
-  .st-rig{ perspective:none; }
+  /* ---- the showcase ---- the arc unwinds into a swiped rail, one
+     handset to a screen, snapped */
+  .st-beat[data-stage="showcase"]{ gap:0; }
+  .st-rig{ order:2; perspective:none; }
   .st-rig__arc{
     justify-content:flex-start;
-    padding:clamp(18px,4vh,32px) 12vw 18px;
+    padding:clamp(18px,4vh,32px) 21vw 18px;
     gap:clamp(16px,5vw,30px);
     overflow-x:auto;
     scroll-snap-type:x mandatory;
@@ -2245,6 +2264,9 @@
     padding:clamp(4px,1.1vw,6px);
   }
   .st-ph__screen{ border-radius:clamp(18px,6vw,28px); }
+  .st-ph__cap em{ font-size:11px; }
+  .st-ph__cap i{ font-size:9px; }
+  .st-ph__status{ font-size:9px; }
   .st-hs__cap{ margin-top:clamp(12px,2.4vw,18px); opacity:1; }
 }
 
@@ -2461,3 +2483,46 @@
 html.sc-lite .st-pull__smear{ filter:blur(3px) brightness(1.12); }
 html.sc-lite .st-pull__wisp{ filter:blur(7px) brightness(1.45) saturate(.8); }
 html.sc-lite .st-cues li{ backdrop-filter:none; -webkit-backdrop-filter:none; }
+
+/* section 5 on a phone. Written here rather than in NARROW because the
+   2x2 rules above are unscoped and sit later in the file, so they would
+   otherwise win back the desktop width and vh-sized tiles. */
+@media (max-width:900px){
+  #section-job .st-strip{ width:auto; gap:6px; }
+  #section-job .st-band{ height:auto; aspect-ratio:4/5; }
+}
+
+/* ---- phone: the pictures on one grid ----
+   Every picture group sits on the same gutters, with the same corner and
+   the same gap, and nothing is nudged off its row - so the frames line
+   up down the page instead of each section having its own edges. */
+@media (max-width:900px){
+  .st-strip,
+  .st-beat[data-side="left"] .st-strip,
+  .st-pull,
+  .st-beat:not([data-stage="end"]) .st-poster{ margin-left:var(--pad); margin-right:var(--pad); }
+  .st-wall,
+  .st-reelrow{ padding-left:var(--pad); padding-right:var(--pad); }
+  .st-pull{ width:auto; }
+
+  .st-strip,
+  #section-job .st-strip,
+  .st-wall,
+  .st-reelrow{ gap:8px; }
+
+  .st-band,
+  .st-tile,
+  .st-vert,
+  .st-pull,
+  .st-step__art{ border-radius:8px; }
+
+  .st-vert:nth-child(n),
+  .st-vert:nth-child(even){ transform:none; }
+  .st-reelrow{ align-items:stretch; }
+
+  .st-beat__type{ width:100%; }
+  .st-steps{ gap:28px 12px; align-items:start; }
+  .st-step__title{ font-size:17px; }
+  .st-step__body{ font-size:15px; }
+  .st-cues li{ font-size:11px; }
+}

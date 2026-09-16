@@ -154,6 +154,8 @@ export default function Hero() {
                 character at a time. Before the caret, so the caret draws
                 over its edge. */}
             <span className="hero__shutter" data-test-shutter aria-hidden="true" />
+            {/* the phone's second line has its own - see app/hero.css */}
+            <span className="hero__shutter hero__shutter--2" data-test-shutter-2 aria-hidden="true" />
 
             {/* The caret, and it is on screen before anything else is.
 

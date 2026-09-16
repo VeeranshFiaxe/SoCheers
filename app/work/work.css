@@ -513,3 +513,53 @@
 @media (prefers-reduced-motion:reduce){
   .wk-stage__grid, .wk-stage.is-rolling .wk-stage__grid{ transition:none; }
 }
+
+/* ============================================================
+   PHONE
+   The stage holds one height whatever the headline, so changing piece
+   no longer moves the page; the pinned wall is one swiped row; the copy
+   sits on a real scrim; the column lines behind the grid go.
+   ============================================================ */
+@media (max-width:700px){
+  .wk-page{ --muted:rgba(241,236,225,.8); --dim:rgba(241,236,225,.82); }
+  .wk-stage{
+    min-height:100svh;
+    padding-top:96px;
+  }
+  /* the title block grows upward from a fixed floor, and reserves room
+     for the longest headline so the wall under it never shifts */
+  .wk-stage__grid{ align-content:end; }
+  .wk-lede{
+    min-height:clamp(250px,40svh,330px);
+    display:flex; flex-direction:column; justify-content:flex-end; align-items:flex-start;
+  }
+  .wk-stage__scrim{
+    background:
+      linear-gradient(to bottom, rgba(4,4,5,.6), transparent 22%),
+      linear-gradient(to top, rgba(4,4,5,.94) 0%, rgba(4,4,5,.82) 45%, rgba(4,4,5,.35) 72%, transparent 88%);
+  }
+  .wk-lede__tags{ font-size:12px; letter-spacing:.16em; row-gap:6px; }
+  .wk-lede__head{ font-size:clamp(21px,5.8vw,26px); line-height:1.2; }
+  .wk-lede__line{ font-size:16px; line-height:1.6; color:rgba(241,236,225,.94); }
+  .wk-lede__go{ font-size:16px; }
+
+  /* one row, swiped */
+  .wk-also__label{ font-size:12px; }
+  .wk-also__nav button{ width:40px; height:40px; }
+  .wk-also__track{
+    grid-auto-flow:column; grid-template-columns:none;
+    grid-auto-columns:42%;
+    gap:10px;
+    scroll-snap-type:x proximity;
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .wk-poster{ scroll-snap-align:start; }
+  .wk-poster__name{ font-size:13px; color:var(--cream); }
+
+  .wk-browse .grid-lines{ display:none; }
+  .wk-tab{ font-size:15px; }
+  .wk-count{ font-size:12px; }
+  .wk-tile__cap b{ font-size:19px; }
+  .wk-tile__cats{ font-size:11px; color:rgba(241,236,225,.9); }
+}

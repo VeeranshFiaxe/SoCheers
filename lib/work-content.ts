@@ -569,6 +569,10 @@ export type CaseBlock =
   /* Any number of stills as a grid. `duo` stays because a considered
      pair is its own composition; this is for the six frames from the
      shoot that are a gallery and not a layout. */
+  /* Stills of mixed shapes, uncropped, in rows whose heights line up.
+     `rows` is how many pictures go in each row, in order - [2, 2] is two
+     pairs. Left off, every picture shares one row. */
+  | { type: "collage"; items: { src: string; w: number; h: number }[]; rows?: number[]; caption?: string }
   | { type: "gallery"; items: { src: string; caption?: string }[]; cols?: 2 | 3 | 4; caption?: string }
   /* The reference's numbered service grid, read as scope: what was
      actually made. Numbered by position, so reordering does not mean
@@ -664,6 +668,7 @@ const LOREM =
      { type: "copy",   heading: "The challenge", body: "..." }
      { type: "image",  src, w, h, caption?, bleed? }        one still
      { type: "duo",    a, b, caption? }                     a considered pair
+     { type: "collage",items: [{ src, w, h }], rows?: [2, 2] }   mixed shapes, uncropped
      { type: "gallery",items: [{ src, caption? }], cols?: 2|3|4 }
      { type: "video",  src, poster?, ratio?, caption? }     file / YouTube / Vimeo
      { type: "reel",   items: [{ src, poster?, label? }], ratio? }   the cutdowns
@@ -788,21 +793,17 @@ export const CASES: CaseStudy[] = [
         heading: "What we did",
         body: "We put “Ghar ki yaad nahi aayi tujhe, Jassi?” on billboards across India, with Netflix signing off the line.\n\nThen we left it there for a few days. As the Netflix premiere came closer, the same billboards changed to:\n\n“Ghar aa gaya, Jassi.”\n\nThe question had its answer. And Netflix had its announcement.",
       },
+      /* One collage, paired so the two rows come out close in height:
+         the billboard beside the launch shot, the poster beside the press. */
       {
-        type: "image",
-        src: "/assets/work/cases/dhurandhar-2/teaser.jpg",
-        w: 1448, h: 1086,
-      },
-      {
-        type: "image",
-        src: "/assets/work/cases/dhurandhar-2/poster.jpg",
-        w: 1600, h: 1600,
-      },
-      /* Both are 4:5 already, so the duo's cells take them whole. */
-      {
-        type: "duo",
-        a: "/assets/work/cases/dhurandhar-2/launch.jpg",
-        b: "/assets/work/cases/dhurandhar-2/press.jpg",
+        type: "collage",
+        rows: [2, 2],
+        items: [
+          { src: "/assets/work/cases/dhurandhar-2/teaser.jpg", w: 1448, h: 1086 },
+          { src: "/assets/work/cases/dhurandhar-2/launch.jpg", w: 634, h: 793 },
+          { src: "/assets/work/cases/dhurandhar-2/poster.jpg", w: 1600, h: 1600 },
+          { src: "/assets/work/cases/dhurandhar-2/press.jpg", w: 553, h: 692 },
+        ],
       },
     ],
   },
@@ -927,14 +928,11 @@ export const CASES: CaseStudy[] = [
         caption: "Superdry Sport | Lakshya | Rasha Thadani | Chase What Drives You",
       },
       {
-        type: "image",
-        src: "/assets/work/cases/superdry/hoarding.jpg",
-        w: 1600, h: 1200,
-      },
-      {
-        type: "image",
-        src: "/assets/work/cases/superdry/print.jpg",
-        w: 1600, h: 1234,
+        type: "collage",
+        items: [
+          { src: "/assets/work/cases/superdry/hoarding.jpg", w: 1600, h: 1200 },
+          { src: "/assets/work/cases/superdry/print.jpg", w: 1600, h: 1234 },
+        ],
       },
     ],
   },
@@ -1040,17 +1038,6 @@ export const CASES: CaseStudy[] = [
         type: "copy",
         heading: "What we did",
         body: "We brought them together with Game of Dares, a card game that folded insurance into the kind of playful challenges people were already looking for on New Year's Eve.\n\nThe game was then distributed through Zepto, reaching people at the very moment they were ordering for their celebrations.\n\nSo instead of asking people to engage with an insurance campaign, we gave them something they could actually bring to the party.",
-      },
-      /* The film is cut 4:5 for a feed, so it is placed here rather than
-         left to `film` - the automatic block runs 16:9 and would draw a
-         portrait film in a letterbox twice its width. The hero's "watch
-         the film" still finds it; see caseBlocks(). */
-      {
-        type: "video",
-        src: "/assets/work/cases/zurich-kotak/new-year.mp4",
-        poster: "/assets/work/wall/zurich-kotak.jpg",
-        ratio: "four-five",
-        caption: "The New Year film",
       },
       /* The deck itself: two studio renders and two photographs of the
          printed cards, which is the point of putting them in one row -

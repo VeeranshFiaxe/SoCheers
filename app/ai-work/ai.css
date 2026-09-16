@@ -367,3 +367,46 @@
   .ai-tile img, .ai-tile__film{ transition:none; }
   .ai-tile:hover img, .ai-tile[data-thumb]:hover .ai-tile__film{ transform:none; }
 }
+
+/* ---------- the viewer (touch) ----------
+   A tap on a tile opens it whole - see AiGrid.tsx. */
+.ai-tile__open{
+  position:absolute; inset:0; z-index:3;
+  background:none; border:0; padding:0; cursor:pointer;
+}
+.ai-view{
+  position:fixed; inset:0; z-index:1000;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  padding:max(64px, env(safe-area-inset-top)) 12px max(24px, env(safe-area-inset-bottom));
+  background:rgba(4,4,5,.96);
+  animation:ai-view-in .3s var(--ease) both;
+}
+@keyframes ai-view-in{ from{ opacity:0; } to{ opacity:1; } }
+.ai-view__media{
+  display:block; width:auto; height:auto;
+  max-width:100%; max-height:calc(100% - 60px);
+  object-fit:contain; border-radius:10px; background:#000;
+}
+.ai-view__cap{
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  text-align:center; color:var(--cream);
+}
+.ai-view__cap b{ font-family:var(--f-display); font-weight:700; font-size:18px; letter-spacing:-.01em; }
+.ai-view__cap span{ font-size:14px; color:rgba(241,236,225,.78); }
+.ai-view__close{
+  position:absolute; top:max(14px, env(safe-area-inset-top)); right:14px;
+  width:44px; height:44px; display:grid; place-items:center;
+  border-radius:50%; border:1px solid rgba(241,236,225,.3);
+  background:rgba(4,4,5,.6); color:var(--cream); cursor:pointer;
+}
+@media (prefers-reduced-motion:reduce){ .ai-view{ animation:none; } }
+
+/* ---------- phone type ---------- */
+@media (max-width:700px){
+  .ai-tab{ font-size:15px; }
+  .ai-tile__kind{ font-size:11px; }
+  .ai-tile__name b{ font-size:19px; }
+  .ai-tile__name span{ font-size:15px; }
+  .ai-tile__cap b{ font-size:17px; }
+  .ai-tile__cap span{ font-size:11px; }
+}

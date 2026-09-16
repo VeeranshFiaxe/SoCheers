@@ -1313,7 +1313,7 @@
 .ab-people__title{
   margin-top:clamp(14px,2vh,24px);
   font-size:clamp(28px,3.6vw,54px);
-  max-width:22ch; text-wrap:balance;
+  white-space:nowrap;
 }
 .ab-people__title em{
   color:var(--accent); font-weight:400; font-style:italic;
@@ -1355,19 +1355,8 @@
   grid-row:1 / span 2;
   display:grid; grid-template-rows:subgrid;
 }
-.ab-drives__title{
-  align-self:end;
-  font-family:var(--f-display); font-weight:700;
-  font-size:clamp(24px,2.4vw,38px); line-height:1.02; letter-spacing:-.03em;
-  text-transform:none;
-}
-/* every line of a [data-split] heading is clipped to its line box, and at
-   this leading the sans overshoots it at the ascenders - padded out and
-   taken straight back so nothing moves */
-.ab-drives__title .line-mask{
-  padding:.12em .06em;
-  margin:-.12em -.06em;
-}
+/* no heading any more - the list keeps the second row, beside the picture */
+.ab-drives > .drivers{ grid-row:2; }
 
 .drivers{
   --gap:clamp(14px,2vh,24px);
@@ -1465,7 +1454,7 @@
   .ab-drives{ max-width:560px; }
 }
 @media (max-width:860px){
-  .ab-people__title{ max-width:none; }
+  .ab-people__title{ white-space:normal; text-wrap:balance; }
   .ab-people__notes{ grid-template-columns:1fr; }
   /* on a phone nothing competes for the height, so the crop opens back
      out towards the source */
@@ -2164,4 +2153,49 @@
   /* nothing opposite it now, so it comes in off the foot of the screen
      rather than sitting on a line with a gap where the cue was */
   .ab-open__eyebrow{ bottom:clamp(34px,6vh,56px); }
+}
+
+/* ============================================================
+   PHONE
+   Bigger type, justified founder write-ups, and the drivers set as a
+   block of their own rather than a thin run under the notes.
+   ============================================================ */
+@media (max-width:700px){
+  .ab-open__sub span{ font-size:13px; }
+  .ab-intro__cred{ font-size:14px; }
+  .ab-intro__payoff{ font-size:clamp(20px,5.6vw,26px); }
+
+  .founder__name{ font-size:clamp(26px,7vw,32px); }
+  .founder__role{ font-size:12px; }
+  .founder__bio{
+    font-size:16px; line-height:1.7;
+    text-align:justify; text-justify:inter-word;
+    hyphens:auto; -webkit-hyphens:auto;
+  }
+
+  .ab-people__note{ font-size:16px; line-height:1.65; }
+  .ab-space__copy{ font-size:16px; }
+
+  /* what drives us */
+  .ab-drives{ max-width:none; }
+  .drivers{
+    --gap:28px;
+    --name:clamp(30px,8.4vw,36px);
+    --knot:14px;
+    margin-top:0;
+    padding:28px 22px 30px;
+    border-radius:18px;
+    background:rgba(11,11,12,.04);
+    border:1px solid var(--line);
+  }
+  .driver{ padding-left:calc(var(--knot) + 18px); }
+  .driver__top{ align-items:center; margin-bottom:8px; }
+  /* filled with the panel's own tone so the thread still ends under it */
+  .driver__knot{ background:#eae8e3; }
+  .driver__idx{ font-size:12px; }
+  .driver p{ font-size:16px; line-height:1.6; }
+
+  .stage__meta.stage__meta{ font-size:12px; letter-spacing:.12em; }
+  /* the frame follows a finger sideways - see AboutStage.tsx */
+  .stage__frame{ touch-action:pan-y; }
 }

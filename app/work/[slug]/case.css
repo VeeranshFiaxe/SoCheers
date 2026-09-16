@@ -213,7 +213,7 @@
 /* A photo keeps its own shape, so a portrait one is held to a height the
    screen can show whole instead of running three screens tall at the
    full width. --ar is the picture's width over its height. */
-.cs-article--visual .cs-shot:not(.cs-shot--bleed){ max-width:min(100%, var(--w, 100%), calc(82svh * var(--ar, 1.5))); }
+.cs-article--visual .cs-shot:not(.cs-shot--bleed){ max-width:min(100%, var(--w, 100%), calc(82svh * var(--ar, 9))); }
 
 /* ============================================================
    THE BODY
@@ -290,7 +290,7 @@
    --w is the file's own width. A picture smaller than the column -
    Belgian Waffle's influencer grabs are 540px - is drawn at its size
    rather than stretched soft across 760. */
-.cs-shot:not(.cs-shot--bleed){ max-width:min(var(--col), var(--w, 100%), calc(82svh * var(--ar, 1.5))); }
+.cs-shot:not(.cs-shot--bleed){ max-width:min(var(--col), var(--w, 100%), calc(82svh * var(--ar, 9))); }
 .cs-shot--bleed .cs-shot__in{ border-radius:12px; }
 
 .cs-duo__in{
@@ -635,14 +635,23 @@
   .cs-phone{ flex:1 1 0; }
 }
 
+/* ---- the collage ----
+   flex-basis 0 and a grow of width/height gives every cell in a row the
+   same height; the gap is the only thing that nudges it, by a pixel or two */
+.cs-collage{ max-width:none; }
+.cs-collage__row{ display:flex; gap:clamp(10px,1.2vw,18px); }
+.cs-collage__row + .cs-collage__row{ margin-top:clamp(10px,1.2vw,18px); }
+.cs-collage__cell{ flex-basis:0; min-width:0; overflow:hidden; border-radius:12px; background:var(--panel); }
+.cs-collage__cell img{ display:block; width:100%; height:100%; object-fit:cover; }
+
 /* ---- the gallery ----
    `--cols` is set inline off the block. Below the breakpoint it is a
-   request rather than an instruction: four columns drops to what fits
-   instead of to four unreadable slivers. */
+   request rather than an instruction: four columns drops to two rather
+   than to four unreadable slivers or four full-screen stills. */
 .cs-gal{ max-width:none; }
 .cs-gal__in{
   display:grid; gap:clamp(10px,1.2vw,18px);
-  grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));
+  grid-template-columns:repeat(2,1fr);
 }
 @media (min-width:760px){
   .cs-gal__in{ grid-template-columns:repeat(var(--cols,3),1fr); }
@@ -779,4 +788,32 @@
 .cs-faq__row p{
   padding:0 0 22px; max-width:64ch;
   font-size:16px; line-height:1.68; color:var(--muted);
+}
+
+/* ============================================================
+   PHONE
+   Body copy was half-strength cream, which on a small bright screen
+   outdoors is too faint to read. Muted text is lifted and the small
+   print goes up a size.
+   ============================================================ */
+@media (max-width:700px){
+  .cs-page{ --muted:rgba(241,236,225,.8); --dim:rgba(241,236,225,.82); }
+  .cs-copy__p,
+  .cs-scope__p,
+  .cs-step__p,
+  .cs-faq__row p{ font-size:17px; line-height:1.66; }
+  .cs-hero__brand,
+  .cs-hero__tags,
+  .cs-back,
+  .cs-reel__label,
+  .cs-phone__label,
+  .cs-scope__no,
+  .cs-step__no{ font-size:12px; letter-spacing:.16em; }
+  .cs-toc__h,
+  .cs-body figcaption,
+  .cs-stat span,
+  .cs-quote cite,
+  .cs-next__cap span,
+  .cs-credit dt{ font-size:11.5px; letter-spacing:.14em; }
+  .cs-toc__link{ font-size:15px; }
 }

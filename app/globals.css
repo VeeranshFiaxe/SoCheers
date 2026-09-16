@@ -1747,8 +1747,11 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
 .wcard:hover .wcard__list li{ color:var(--cream); }
 .wcard__list li:hover{ padding-left:12px; color:var(--accent); }
 @media (max-width:860px){
+  /* every section title one size on a phone - these two were cut down to
+     hold one line and sat smaller than the rest. They wrap instead. */
+  .sec__title,
   .what .sec__title,
-  .clients .sec__title{ font-size:clamp(20px,5.4vw,40px); }
+  .clients .sec__title{ font-size:clamp(30px,8.4vw,44px); text-wrap:balance; }
   .wcards{ grid-template-columns:1fr; }
   .wcard{ min-height:340px; }
 }
@@ -3137,3 +3140,33 @@ html.sc-lite .cmodal{ backdrop-filter:none; -webkit-backdrop-filter:none; backgr
    breathing - a blended layer re-composited every frame */
 html.sc-lite .plogo::before,
 html.sc-lite .plogo::after{ animation:none; }
+
+/* ============================================================
+   PHONE TYPE
+   The desktop sizes bottom out too small on a phone held at reading
+   distance. Everything the home page and the shared chrome set at
+   label or body size goes up a step here; headings are handled where
+   they are declared. Phone only - nothing above 700px changes.
+   ============================================================ */
+@media (max-width:700px){
+  .tag{ font-size:12px; letter-spacing:.24em; }
+  .who__lede,
+  .who__pitch{ font-size:clamp(24px,6.6vw,30px); }
+  .stat__num{ font-size:clamp(40px,11vw,50px); }
+  .stat__label{ font-size:13px; letter-spacing:.14em; }
+  .wcard__name{ font-size:clamp(30px,8.4vw,38px); }
+  .wcard__list{ --li-fs:17px; }
+  .meaning__phon{ font-size:15px; }
+  .meaning__pos{ font-size:18px; }
+  .meaning__text{ font-size:clamp(30px,8.6vw,40px); }
+  .meaning__num{ font-size:22px; }
+  .meaning__note{ font-size:15px; }
+  .amarquee__cat{ font-size:11px; }
+  .foot__mail-label{ font-size:12px; }
+  .foot__place b{ font-size:13px; }
+  .foot__place i{ font-size:12px; }
+  .foot__ends{ font-size:12px; }
+  .foot__legal.foot__legal{ font-size:11px; letter-spacing:.1em; }
+  .nav__sheet-mail{ font-size:14px; }
+  .cmodal__done-note{ font-size:16px; }
+}

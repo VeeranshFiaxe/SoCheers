@@ -499,7 +499,9 @@ export function initSite(): () => void {
         const bw = pin.offsetWidth, bh = pin.offsetHeight;
         /* Wider on a phone, where the words either side of it are already
            as small as they can reasonably be asked to get. */
-        let w = phone.matches ? bw * 0.40 : Math.min(bw * 0.34, 560);
+        /* On a phone the words are above and below it rather than either
+           side (app/hero.css), so it can take nearly the whole width. */
+        let w = phone.matches ? bw * 0.86 : Math.min(bw * 0.34, 560);
         let h = w / FILM_AR;
         /* and never so tall that the two lines it pushes apart are pushed
            off the top and bottom of the screen */
@@ -857,6 +859,8 @@ export function initSite(): () => void {
         const caret = greet.querySelector<HTMLElement>("[data-test-caret]");
         /* the black block the sentence is typed out from under */
         const shutter = greet.querySelector<HTMLElement>("[data-test-shutter]");
+        /* and the phone's second one, for the line under the film */
+        const shutter2 = greet.querySelector<HTMLElement>("[data-test-shutter-2]");
         /* every character of it, which is how many steps the shutter
            takes - "We are" + a space + "SoCheers" */
         const CHARS = 15;
@@ -993,7 +997,29 @@ export function initSite(): () => void {
           const lastBox = runs[runs.length - 1]?.getBoundingClientRect() ?? null;
           const rowBox = row?.getBoundingClientRect() ?? null;
 
-          if (caret && firstBox && lastBox && rowBox && lineBox.width) {
+          /* On a phone the two runs are stacked (app/hero.css), and a
+             single left-to-right edge would uncover both lines at once.
+             So there the caret and a shutter each walk "We are" first,
+             then drop to "SoCheers" and walk that. */
+          const stacked = !!(firstBox && lastBox && runs.length > 1 && lastBox.top >= firstBox.bottom - 1);
+          const N1 = 7;                           // "We are" and the space after it
+
+          if (stacked && caret && firstBox && lastBox && lineBox.width) {
+            const mid = (b: DOMRect) => `${b.top - lineBox.top + b.height / 2}px`;
+            caret.style.top = mid(firstBox);
+            gsap.set(caret, { x: firstBox.left - lineBox.left, yPercent: -50, clearProps: "opacity" });
+            t.add(() => caret.setAttribute("data-caret-on", ""), 0);
+            t.add(() => caret.setAttribute("data-typing", ""), at);
+            t.to(caret, { x: firstBox.right - lineBox.left, duration: N1 * CH, ease: `steps(${N1})` }, at);
+            t.add(() => { caret.style.top = mid(lastBox); }, at + N1 * CH);
+            t.set(caret, { x: lastBox.left - lineBox.left }, at + N1 * CH);
+            t.to(caret, {
+              x: lastBox.right - lineBox.left,
+              duration: (CHARS - N1) * CH,
+              ease: `steps(${CHARS - N1})`,
+              onComplete: () => caret.removeAttribute("data-typing"),
+            }, at + N1 * CH);
+          } else if (caret && firstBox && lastBox && rowBox && lineBox.width) {
             const from = firstBox.left - lineBox.left;
             const to = lastBox.right - lineBox.left;
             /* centred on the row's own middle, which at --split 0 is the
@@ -1030,7 +1056,25 @@ export function initSite(): () => void {
              like any other character. There is no pause in the middle of
              the line, because it is one line. */
           const TYPE = CHARS * CH;
-          if (shutter) {
+          if (shutter2 && !stacked) gsap.set(shutter2, { autoAlpha: 0 });
+          if (shutter && stacked && firstBox && lastBox && lineBox.width) {
+            /* one shutter per line, each moved off its own line in turn */
+            const cover = (el: HTMLElement, b: DOMRect, steps: number, start: number) => {
+              const pad = b.height * 0.12;
+              gsap.set(el, {
+                autoAlpha: 1, x: 0,
+                left: b.left - lineBox.left - 2, right: "auto", bottom: "auto",
+                top: b.top - lineBox.top - pad,
+                width: b.width + 4, height: b.height + pad * 2,
+              });
+              t.to(el, {
+                x: b.width + 4, duration: steps * CH, ease: `steps(${steps})`,
+                onComplete: () => gsap.set(el, { autoAlpha: 0 }),
+              }, start);
+            };
+            cover(shutter, firstBox, N1, at);
+            if (shutter2) cover(shutter2, lastBox, CHARS - N1, at + N1 * CH);
+          } else if (shutter) {
             if (firstBox && lastBox && rowBox && lineBox.width) {
               /* Its left edge starts on the first glyph and walks to the
                  end of the last, on exactly the caret's clock - the two

@@ -149,6 +149,36 @@ export default function AboutStage({
     tabRefs.current[i]?.focus();
   }, [i]);
 
+  /* On a phone the rail scrolls (about.css), so keep the current thumb in
+     view as the frame changes. The rail's own scroll only, never the
+     page's. */
+  useEffect(() => {
+    const btn = tabRefs.current[i];
+    const rail = btn?.parentElement;
+    if (!btn || !rail || rail.scrollWidth <= rail.clientWidth) return;
+    const left = btn.offsetLeft - (rail.clientWidth - btn.offsetWidth) / 2;
+    rail.scrollTo({ left: Math.max(0, left), behavior: reduced ? "auto" : "smooth" });
+  }, [i, reduced]);
+
+  /* Swipe. A finger dragged sideways across the frame moves one frame
+     that way; a mostly vertical drag is the page scrolling and is left
+     alone (touch-action:pan-y on the frame, about.css). */
+  const swipe = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    swipe.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const s = swipe.current;
+    swipe.current = null;
+    const t = e.changedTouches[0];
+    if (!s || !t) return;
+    const dx = t.clientX - s.x;
+    const dy = t.clientY - s.y;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+    setI((n) => (dx < 0 ? (n + 1) % count : (n - 1 + count) % count));
+  };
+
   /* The frame's photograph - and the one the symbol field behind it
      resolves from, so the grid is always made out of the picture that is
      actually up. */
@@ -190,6 +220,8 @@ export default function AboutStage({
         role="tabpanel"
         aria-labelledby={tabId(i)}
         data-clip
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
       >
         {shots.map((s, n) => (
           <img

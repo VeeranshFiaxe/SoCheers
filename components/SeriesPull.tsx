@@ -211,7 +211,11 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
        the only way to see it again is to load the page again. */
     const aim = (r: DOMRect = el.getBoundingClientRect()) => {
       const vh = window.innerHeight || 1;
-      const now = clamp01((vh * 0.66 - r.top) / (vh * 1.02));
+      /* on a phone the pull is a short band under the type rather than
+         a full screen, so it has to play while that band is in view */
+      const now = narrow
+        ? clamp01((vh * 0.85 - r.top) / (vh * 0.6))
+        : clamp01((vh * 0.66 - r.top) / (vh * 1.02));
       if (now > want) want = now;
     };
 

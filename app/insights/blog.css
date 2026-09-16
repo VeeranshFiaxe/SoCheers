@@ -400,3 +400,35 @@
      max-content would defeat the wrap it just got back */
   .bl-hero__title{ text-wrap:balance; white-space:normal; width:auto; max-width:14ch; }
 }
+
+/* Expand, where the Fullscreen API is not there (iPhone): the reader is
+   pinned over the viewport instead - see BlogTabs.tsx. */
+.bl-paper__frameWrap.is-full{
+  position:fixed; inset:0; z-index:1000;
+  display:flex; background:#000;
+}
+.bl-paper__frameWrap.is-full .bl-paper__frame{
+  aspect-ratio:auto; max-height:none; width:100%; height:100%;
+  border:none; border-radius:0; cursor:auto;
+}
+.bl-paper__frameWrap.is-full .bl-paper__toggle{
+  position:fixed; top:max(14px, env(safe-area-inset-top)); right:14px; cursor:pointer;
+}
+
+/* ---------- phone ---------- */
+@media (max-width:700px){
+  /* the tab that is not open yet goes to the end of the bar. `order`
+     moves offsetLeft with it, so the pill still lands on the right tab. */
+  .bl-tabs__btn.is-soon{ order:1; }
+  .bl-tabs__btn{ font-size:12px; }
+  .bl-hero__lede{ font-size:17px; }
+  .bl-paper__blurb{ font-size:16px; }
+  .bl-paper__points li{ font-size:16px; }
+  .bl-paper__open,
+  .bl-paper__file,
+  .bl-paper__toggle{ font-size:12px; }
+  .bl-paper__toggle{ padding:11px 16px 11px 14px; }
+  .bl-topic__idx{ font-size:12px; }
+  .bl-topic p{ font-size:16px; }
+  .bl-end__back{ font-size:13px; }
+}

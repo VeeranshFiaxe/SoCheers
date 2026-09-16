@@ -31,13 +31,41 @@ export default function BlogTabs() {
     return () => document.removeEventListener("fullscreenchange", onChange);
   }, []);
 
+  /* iPhone Safari has no Fullscreen API for anything but a <video>, so
+     Expand did nothing there. Where the real call is missing or refused,
+     the wrapper is pinned over the viewport by CSS instead
+     (.bl-paper__frameWrap.is-full, blog.css). */
+  const [pseudoId, setPseudoId] = useState<string | null>(null);
+
+  useLayoutEffect(() => {
+    if (!pseudoId) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setPseudoId(null);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    /* the section's reveal leaves a transform on it, and a transformed
+       ancestor is what position:fixed resolves against */
+    const sec = sectionRef.current;
+    const was = sec?.style.transform ?? "";
+    if (sec) sec.style.transform = "none";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+      if (sec) sec.style.transform = was;
+    };
+  }, [pseudoId]);
+
   const toggleFullscreen = (id: string) => {
     const node = docRefs.current.get(id);
     if (!node) return;
+    if (pseudoId === id) { setPseudoId(null); return; }
     if (document.fullscreenElement === node) {
       document.exitFullscreen();
+      return;
+    }
+    if (typeof node.requestFullscreen === "function") {
+      node.requestFullscreen().catch(() => setPseudoId(id));
     } else {
-      node.requestFullscreen();
+      setPseudoId(id);
     }
   };
 
@@ -134,7 +162,7 @@ export default function BlogTabs() {
 
               <div className="bl-paper__doc">
                 <div
-                  className="bl-paper__frameWrap"
+                  className={pseudoId === wp.id ? "bl-paper__frameWrap is-full" : "bl-paper__frameWrap"}
                   ref={(el) => {
                     if (el) docRefs.current.set(wp.id, el);
                     else docRefs.current.delete(wp.id);
@@ -165,12 +193,12 @@ export default function BlogTabs() {
                     className="bl-paper__toggle"
                     onClick={() => toggleFullscreen(wp.id)}
                     aria-label={
-                      fullscreenId === wp.id
+                      (fullscreenId === wp.id || pseudoId === wp.id)
                         ? `Collapse ${wp.title}`
                         : `Expand ${wp.title} to full screen`
                     }
                   >
-                    {fullscreenId === wp.id ? (
+                    {(fullscreenId === wp.id || pseudoId === wp.id) ? (
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                         <path d="M10 20v-6H4M20 10h-6V4M14 10l7-7M3 21l7-7" />
                       </svg>
@@ -179,7 +207,7 @@ export default function BlogTabs() {
                         <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
                       </svg>
                     )}
-                    <span>{fullscreenId === wp.id ? "Collapse" : "Expand"}</span>
+                    <span>{(fullscreenId === wp.id || pseudoId === wp.id) ? "Collapse" : "Expand"}</span>
                   </button>
                 </div>
                 <a className="bl-paper__file" href={wp.pdf} download={wp.file}>
