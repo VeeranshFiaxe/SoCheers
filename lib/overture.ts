@@ -54,6 +54,7 @@ export function cueHero(at: HeroCue["at"], run = 0) {
 }
 
 const SEEN = "sc-overture-seen";
+export const QUIET = "sc-quiet";
 
 /* Once per tab, not once per page view. Coming back from /about should not
    replay the whole opening - but a genuinely new visit should always get it,
@@ -61,6 +62,10 @@ const SEEN = "sc-overture-seen";
 export function shouldRunOverture(): boolean {
   if (typeof window === "undefined") return false;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+  /* a page that opts out for itself - the 404 (app/not-found.tsx). Not
+     written to storage: the tab has not seen the show, so the home page
+     should still get it. */
+  if (document.documentElement.classList.contains(QUIET)) return false;
   try {
     return sessionStorage.getItem(SEEN) !== "1";
   } catch {

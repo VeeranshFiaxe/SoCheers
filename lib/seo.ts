@@ -17,7 +17,7 @@ export const SITE_URL = "https://socheers.net";
 export const SITE_NAME = "SoCheers";
 
 /* 1200x630, cut from public/assets/socheers-frame-n-T4ylIx.jpg */
-export const OG_IMAGE = "/og-v2.jpg";
+export const OG_IMAGE = "/og-v3.jpg";
 
 export function pageMeta({
   title,

@@ -10,9 +10,11 @@
   --lit:0;
   --bulb-off:#2a2519;
   position:relative; isolation:isolate;
+  /* one screen, no scroll: everything below is sized off the height as
+     well as the width, so the ways out are always in view */
   min-height:100svh;
   display:grid; place-items:center;
-  padding:120px 16px 72px;
+  padding:clamp(84px, 12svh, 110px) 16px clamp(16px, 4svh, 40px);
   background:var(--bg); color:var(--cream);
   overflow:hidden;
 }
@@ -42,7 +44,7 @@
   display:flex; align-items:center; justify-content:center; gap:.04em;
   margin:0;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(132px, 30vw, 320px); line-height:1; letter-spacing:-.04em;
+  font-size:clamp(96px, min(28vw, 30svh), 280px); line-height:.95; letter-spacing:-.04em;
   color:rgba(241,236,225,.22);
   transition:color .25s ease-out, text-shadow .25s ease-out;
 }
@@ -134,21 +136,21 @@
 
 /* ---- the words ---- */
 .nf__line{
-  min-height:1.5em; margin:28px 0 0;
-  font-size:clamp(17px, 2.2vw, 20px); font-weight:500;
+  min-height:1.5em; margin:clamp(8px, 2svh, 20px) 0 0;
+  font-size:clamp(15px, 2vw, 18px); font-weight:500;
   color:var(--yellow);
   animation:nf-line .45s var(--ease);
 }
 @keyframes nf-line{ from{ opacity:0; translate:0 8px; } }
 
 .nf__head{
-  margin:40px 0 0;
+  margin:clamp(10px, 2.6svh, 26px) 0 0;
   font-family:var(--f-display); font-weight:700;
-  font-size:clamp(30px, 5vw, 48px); line-height:1.05; letter-spacing:-.02em;
+  font-size:clamp(24px, min(4vw, 5svh), 40px); line-height:1.05; letter-spacing:-.02em;
 }
 .nf__body{
-  max-width:34em; margin:14px 0 0;
-  font-size:16px; line-height:1.6; color:var(--muted);
+  max-width:36em; margin:8px 0 0;
+  font-size:15px; line-height:1.6; color:var(--muted);
 }
 .nf__path{
   font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -159,11 +161,11 @@
 
 .nf__ways{
   display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
-  margin-top:32px;
+  margin-top:clamp(14px, 3svh, 26px);
 }
 .nf__way{
   display:inline-flex; align-items:center; gap:10px;
-  padding:13px 22px; border-radius:999px;
+  padding:11px 20px; border-radius:999px;
   border:1px solid var(--line);
   color:var(--cream); text-decoration:none;
   font-size:14px; font-weight:500; letter-spacing:.04em;
@@ -175,7 +177,9 @@
 .nf__way:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
 
 @media (max-width:700px){
-  .nf{ padding-top:104px; }
+  .nf{ padding-top:88px; }
+  .nf__body{ font-size:14px; line-height:1.5; }
+  .nf__way{ padding:10px 16px; font-size:13px; }
   .nf__cord{ bottom:12%; }
   .nf__rope{ width:2px; }
 }

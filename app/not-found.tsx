@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import NotFound from "@/components/NotFound";
+import SiteMotion from "@/components/SiteMotion";
 import "./not-found.css";
 
 /* ============================================================
@@ -20,5 +21,23 @@ export const metadata: Metadata = {
 };
 
 export default function NotFoundPage() {
-  return <NotFound />;
+  return (
+    <>
+      {/* No opening here. A dead link is not a front door: the loader,
+          the room and the walls are for arriving at the site, not for
+          arriving at nothing. Run inline, during parsing, so the loader
+          is gone before the first paint and every engine that asks
+          shouldRunOverture() (lib/overture.ts) is told no. */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html:
+            "var d=document.documentElement;d.classList.add('sc-quiet','sc-seen');d.classList.remove('sc-intro')",
+        }}
+      />
+      <NotFound />
+      {/* the shared engine: the cursor, the spotlight and the header's
+          hand-off with the overture all live in initSite() */}
+      <SiteMotion />
+    </>
+  );
 }

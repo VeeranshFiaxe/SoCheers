@@ -444,7 +444,7 @@ html.is-foot .spotlight{
    answer arrives a full screen of black too late. The class is set by an
    inline script in the document head (app/layout.tsx) off the same
    sessionStorage key lib/overture.ts owns. */
-html.sc-seen .loader{ display:none; }
+html.sc-seen .loader, html:has(.nf) .loader{ display:none; }
 
 /* And on the visit that does get it, nothing under the opening is fetched
    until it has handed back (html.sc-intro - set by the same head script,
