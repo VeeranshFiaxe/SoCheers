@@ -4,7 +4,7 @@ import Link from "@/components/IntentLink";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NAV_LINKS } from "@/lib/content";
-import { OVERTURE_REPLAY } from "@/lib/overture";
+import { replayFromTheTop } from "@/lib/overture";
 import SoCheersLockup from "./SoCheersLockup";
 
 /* ============================================================
@@ -124,24 +124,34 @@ export default function Nav() {
     return () => window.removeEventListener("resize", again);
   }, [measure]);
 
-  /* The bulb is the switch, everywhere. It used to be a second link home
-     sitting next to the one in the row; the row's Home tab is the way home
-     now, and the mark does the only thing the mark has ever done. */
-  const relight = () => {
-    document.dispatchEvent(new CustomEvent(OVERTURE_REPLAY));
+  /* The bulb is the switch, everywhere - and from any page, not just the
+     front one. It used to replay the room in place, which on /about meant
+     a sequence that ends by handing over to a hero that is not on the
+     screen. It goes home and starts the site over instead: door, room,
+     the hero writing itself, the film taking the screen - the whole
+     opening, off the cache. See replayFromTheTop in lib/overture.ts. */
+  const relight = (e: React.MouseEvent) => {
+    /* a deliberate new tab / new window is a plain trip home */
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    replayFromTheTop();
   };
 
   return (
     <header className="nav" id="nav">
-      <button
-        type="button"
+      {/* An anchor and not a button: it goes to "/" - middle-click it,
+          open it in a new tab, see where it lands on hover. The click
+          handler only takes over the plain left click, which is the one
+          that gets the opening rather than the page. */}
+      <a
+        href="/"
         className="nav__logo"
         onClick={relight}
         data-cursor="Light it"
-        aria-label="Play the opening sequence"
+        aria-label="SoCheers - home, from the top"
       >
         <SoCheersLockup className="nav__logo-mark" />
-      </button>
+      </a>
 
       {/* The row is a pill - one floating capsule of links rather than
           bare labels lying on the page, the same treatment the Series

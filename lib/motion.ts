@@ -267,7 +267,11 @@ export function initSite(): () => void {
         on(el, "click", (e) => { e.preventDefault(); toTop(); });
       });
 
-      document.querySelectorAll<HTMLAnchorElement>('a[href="/"]').forEach((a) => {
+      /* The header's mark is an a[href="/"] too and it is not one of
+         these: it reloads the site into its opening (see relight in
+         components/Nav.tsx), which from the home page is the one place a
+         link home is not a scroll to the top. */
+      document.querySelectorAll<HTMLAnchorElement>('a[href="/"]:not(.nav__logo)').forEach((a) => {
         on(a, "click", ((e: MouseEvent) => {
           // a real navigation home, or a deliberate new tab / new window
           if (window.location.pathname !== "/") return;

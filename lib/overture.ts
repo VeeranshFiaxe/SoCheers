@@ -69,6 +69,30 @@ export function shouldRunOverture(): boolean {
   }
 }
 
+/* The mark in the corner is the way back to the top of the site, and
+   "the top" means the opening - not the home page with the room already
+   fallen. So it forgets the tab has seen it and then *loads* "/" rather
+   than routing to it: the loader, the overture, the hero writing itself
+   and the film taking the screen are four engines that each decided at
+   boot whether this was a first visit, and the only honest way to tell
+   all four it is one again is to boot them again. Nothing is refetched
+   that matters - the walls, the artwork and the film are in the browser's
+   cache by definition, which is what makes this a replay and not a second
+   download. */
+export function replayFromTheTop() {
+  forgetOverture();
+  window.location.assign("/");
+}
+
+/* Un-see it: the next boot gets the door, the room and the intro. */
+export function forgetOverture() {
+  try {
+    sessionStorage.removeItem(SEEN);
+  } catch {
+    /* storage disabled - shouldRunOverture() already says yes */
+  }
+}
+
 /* Called at the hand-off, never at the start: a run that is interrupted
    halfway (reload mid-sequence) should still get another go. */
 export function markOvertureSeen() {
