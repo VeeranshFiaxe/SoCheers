@@ -42,7 +42,8 @@ export default {
    the domain points here that host is the old site - so WhatsApp,
    LinkedIn and the rest fetched an image that is not there and fell back
    to a bare link. Swapped to whatever host the page was asked on, so the
-   preview works on workers.dev today and on socheers.net once it moves.
+   preview works on socheers.fiaxe.in today and on socheers.net once it
+   moves.
    The canonical is left alone: that one should name the real domain. */
 const BUILT_ORIGIN = "https://socheers.net";
 

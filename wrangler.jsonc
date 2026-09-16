@@ -8,6 +8,13 @@
 	"name": "socheers",
 	"main": "worker/index.js",
 	"compatibility_date": "2026-06-01",
+	"workers_dev": false,
+	"routes": [
+		{
+			"pattern": "socheers.fiaxe.in",
+			"custom_domain": true
+		}
+	],
 	"assets": {
 		"directory": "./out",
 		"binding": "ASSETS",

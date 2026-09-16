@@ -1,0 +1,187 @@
+/* ============================================================
+   THE 404 - see components/NotFound.tsx.
+
+   One variable does the lighting: --lit, 0 in the dark and 1 with the
+   cord pulled. The glow behind the page and the digits both read it, so
+   "the light came on" is one state change rather than several.
+   ============================================================ */
+
+.nf{
+  --lit:0;
+  --bulb-off:#2a2519;
+  position:relative; isolation:isolate;
+  min-height:100svh;
+  display:grid; place-items:center;
+  padding:120px 16px 72px;
+  background:var(--bg); color:var(--cream);
+  overflow:hidden;
+}
+.nf[data-lamp="on"]{ --lit:1; }
+
+/* the room, lit from the bulb - behind everything */
+.nf__glow{
+  position:absolute; inset:0; z-index:-1; pointer-events:none;
+  background:radial-gradient(circle at 50% 36%, rgba(255,203,12,.26), rgba(255,203,12,.06) 30%, transparent 62%);
+  opacity:var(--lit);
+  transition:opacity .25s ease-out;
+}
+
+.nf__stage{
+  width:100%; max-width:760px;
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+}
+
+.nf__eyebrow{
+  font-size:12px; font-weight:500; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--muted); margin:0 0 8px;
+}
+
+/* ---- 4 [bulb] 4 ---- */
+.nf__digits{ position:relative; }
+.nf__num{
+  display:flex; align-items:center; justify-content:center; gap:.04em;
+  margin:0;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(132px, 30vw, 320px); line-height:1; letter-spacing:-.04em;
+  color:rgba(241,236,225,.22);
+  transition:color .25s ease-out, text-shadow .25s ease-out;
+}
+.nf[data-lamp="on"] .nf__num{ color:var(--cream); text-shadow:0 0 60px rgba(255,203,12,.25); }
+
+.nf__zero{ display:inline-flex; margin:0 .02em; }
+.nf__bulb{ height:.82em; width:auto; overflow:visible; }
+.nf__disc{ fill:var(--bulb-off); transition:fill .2s ease-out, filter .2s ease-out; }
+.nf[data-lamp="on"] .nf__disc{
+  fill:var(--yellow);
+  filter:drop-shadow(0 0 18px rgba(255,203,12,.8)) drop-shadow(0 0 60px rgba(255,203,12,.45));
+}
+.nf__ink{ fill:none; stroke:currentColor; stroke-linecap:round; }
+
+/* the dead bulb still twitches now and then, so it reads as broken and
+   not as a drawing */
+.nf[data-lamp="off"] .nf__disc{ animation:nf-twitch 7s steps(1) infinite 2.5s; }
+@keyframes nf-twitch{
+  0%, 91%, 93%, 95%, 100%{ fill:var(--bulb-off); }
+  92%, 94%{ fill:#6b5a1c; }
+}
+
+/* going out: a couple of stutters, then gone */
+.nf[data-lamp="dying"] .nf__disc{ animation:nf-die .7s steps(1) forwards; }
+.nf[data-lamp="dying"] .nf__glow{ animation:nf-die-glow .7s steps(1) forwards; }
+@keyframes nf-die{
+  0%, 30%, 55%{ fill:var(--yellow); filter:drop-shadow(0 0 18px rgba(255,203,12,.8)); }
+  15%, 42%, 70%, 100%{ fill:var(--bulb-off); filter:none; }
+}
+@keyframes nf-die-glow{
+  0%, 30%, 55%{ opacity:1; }
+  15%, 42%, 70%, 100%{ opacity:0; }
+}
+
+/* ---- the cord ----
+   Hangs from well above the screen to just past the bulb's middle, to the
+   right of it. --drag is how far the knob is being held down. */
+.nf__cord{
+  --drag:0px;
+  position:absolute;
+  left:calc(50% + clamp(78px, 17vw, 186px));
+  bottom:18%;
+  width:0;
+  display:flex; flex-direction:column; align-items:center;
+  transform-origin:50% -100vh;
+  translate:0 var(--drag);
+  z-index:2;
+}
+.nf__cord[data-swing="a"]{ animation:nf-swing-a 1.4s cubic-bezier(.3,.6,.4,1); }
+.nf__cord[data-swing="b"]{ animation:nf-swing-b 1.4s cubic-bezier(.3,.6,.4,1); }
+@keyframes nf-swing-a{
+  0%{ rotate:0deg; }
+  20%{ rotate:.35deg; }
+  45%{ rotate:-.25deg; }
+  70%{ rotate:.12deg; }
+  100%{ rotate:0deg; }
+}
+@keyframes nf-swing-b{
+  0%{ rotate:0deg; }
+  20%{ rotate:.35deg; }
+  45%{ rotate:-.25deg; }
+  70%{ rotate:.12deg; }
+  100%{ rotate:0deg; }
+}
+.nf__rope{
+  display:block; flex:none; width:3px; height:100vh;
+  background:repeating-linear-gradient(to bottom, #7b6a4e 0 7px, #5a4c36 7px 12px);
+  border-radius:2px;
+}
+.nf__knob{
+  flex:none; width:22px; height:36px; margin-top:-2px;
+  border:0; padding:0;
+  border-radius:11px 11px 12px 12px / 10px 10px 26px 26px;
+  background:radial-gradient(circle at 35% 30%, #c9a861, #7a6038 60%, #4a3a22);
+  box-shadow:0 6px 14px rgba(0,0,0,.5);
+  touch-action:none;
+  transition:scale .2s var(--ease);
+}
+.nf__knob:hover{ scale:1.12; }
+.nf__knob:focus-visible{ outline:2px solid var(--accent); outline-offset:5px; }
+/* a hint, until someone has pulled it */
+.nf:not([data-ever]) .nf__knob{ animation:nf-nudge 2.6s ease-in-out infinite 1.2s; }
+@keyframes nf-nudge{
+  0%, 70%, 100%{ translate:0 0; }
+  78%{ translate:0 10px; }
+  86%{ translate:0 0; }
+  92%{ translate:0 5px; }
+}
+
+/* ---- the words ---- */
+.nf__line{
+  min-height:1.5em; margin:28px 0 0;
+  font-size:clamp(17px, 2.2vw, 20px); font-weight:500;
+  color:var(--yellow);
+  animation:nf-line .45s var(--ease);
+}
+@keyframes nf-line{ from{ opacity:0; translate:0 8px; } }
+
+.nf__head{
+  margin:40px 0 0;
+  font-family:var(--f-display); font-weight:700;
+  font-size:clamp(30px, 5vw, 48px); line-height:1.05; letter-spacing:-.02em;
+}
+.nf__body{
+  max-width:34em; margin:14px 0 0;
+  font-size:16px; line-height:1.6; color:var(--muted);
+}
+.nf__path{
+  font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size:.92em; color:var(--cream);
+  background:var(--faint); padding:2px 8px; border-radius:6px;
+  overflow-wrap:anywhere;
+}
+
+.nf__ways{
+  display:flex; flex-wrap:wrap; justify-content:center; gap:10px;
+  margin-top:32px;
+}
+.nf__way{
+  display:inline-flex; align-items:center; gap:10px;
+  padding:13px 22px; border-radius:999px;
+  border:1px solid var(--line);
+  color:var(--cream); text-decoration:none;
+  font-size:14px; font-weight:500; letter-spacing:.04em;
+  transition:background .3s var(--ease), border-color .3s var(--ease), color .3s var(--ease);
+}
+.nf__way:hover{ border-color:var(--cream); }
+.nf__way--main{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+.nf__way--main:hover{ background:var(--cream); border-color:var(--cream); color:var(--bg); }
+.nf__way:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+
+@media (max-width:700px){
+  .nf{ padding-top:104px; }
+  .nf__cord{ bottom:12%; }
+  .nf__rope{ width:2px; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  .nf__disc, .nf__glow, .nf__knob, .nf__cord, .nf__line{ animation:none !important; }
+  .nf[data-lamp="dying"] .nf__disc{ fill:var(--bulb-off); filter:none; }
+  .nf[data-lamp="dying"] .nf__glow{ opacity:0; }
+}
