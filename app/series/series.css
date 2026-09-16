@@ -2492,33 +2492,79 @@ html.sc-lite .st-cues li{ backdrop-filter:none; -webkit-backdrop-filter:none; }
   #section-job .st-band{ height:auto; aspect-ratio:4/5; }
 }
 
-/* ---- phone: the pictures on one grid ----
-   Every picture group sits on the same gutters, with the same corner and
-   the same gap, and nothing is nudged off its row - so the frames line
-   up down the page instead of each section having its own edges. */
+/* ---- phone: rhythm, rows and the showcase ----
+   Measured off the live page at 390px: every beat carried ~110px of
+   padding top and bottom, so each join was a quarter-screen of black;
+   the four-frame strips stacked into a column a screen and a half tall
+   of near-identical pictures; and the showcase opened on a blurred
+   ghost handset with the real one cut off the edge. */
 @media (max-width:900px){
-  .st-strip,
-  .st-beat[data-side="left"] .st-strip,
+  .st-beat,
+  .st-beat[data-stage="title"],
+  .st-beat[data-stage="reel"]{
+    padding:clamp(52px,8vh,72px) 0;
+    gap:24px;
+  }
+  .st-beat[data-stage="title"]{ padding-bottom:clamp(52px,8vh,72px); }
+
+  /* one gutter, one corner, one gap for every picture group */
   .st-pull,
   .st-beat:not([data-stage="end"]) .st-poster{ margin-left:var(--pad); margin-right:var(--pad); }
+  .st-pull{ width:auto; height:72vw; }
   .st-wall,
-  .st-reelrow{ padding-left:var(--pad); padding-right:var(--pad); }
-  .st-pull{ width:auto; }
-
-  .st-strip,
-  #section-job .st-strip,
-  .st-wall,
-  .st-reelrow{ gap:8px; }
-
+  .st-reelrow{ padding-left:var(--pad); padding-right:var(--pad); gap:8px; }
   .st-band,
   .st-tile,
   .st-vert,
   .st-pull,
   .st-step__art{ border-radius:8px; }
-
-  .st-vert:nth-child(n),
-  .st-vert:nth-child(even){ transform:none; }
+  .st-tile:nth-child(n),
+  .st-vert:nth-child(n){ transform:none; }
   .st-reelrow{ align-items:stretch; }
+
+  /* the strips: one swiped row, a frame and a bit to a screen, rather
+     than four frames stacked */
+  .st-strip,
+  .st-beat[data-side="left"] .st-strip{
+    margin:0; left:auto; right:auto;
+    display:flex; flex-direction:row; align-items:stretch;
+    gap:10px;
+    padding:4px var(--pad) 18px;
+    overflow-x:auto; overflow-y:hidden;
+    scroll-snap-type:x mandatory;
+    scroll-padding-inline:var(--pad);
+    overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .st-strip::-webkit-scrollbar{ display:none; }
+  .st-band,
+  .st-beat[data-side="left"] .st-band{
+    --off:0px;
+    flex:0 0 80%;
+    width:auto; height:auto; margin:0;
+    aspect-ratio:16/10;
+    scroll-snap-align:start;
+    box-shadow:0 12px 30px rgba(0,0,0,.45);
+  }
+
+  /* the campaign posters are 16:9 with their titles set to the edges */
+  #section-receipts .st-band{ aspect-ratio:16/9; }
+
+  /* section 5 stays a 2x2 of equal tiles */
+  #section-job .st-strip{
+    display:grid; grid-template-columns:repeat(2,1fr);
+    width:auto; gap:8px;
+    padding:0 var(--pad);
+    overflow:visible; scroll-snap-type:none;
+  }
+  #section-job .st-band{ flex:none; height:auto; aspect-ratio:4/5; }
+
+  /* the showcase: the real handsets only, the first one centred, no
+     empty floor under them */
+  .st-hs--ghost{ display:none; }
+  .st-rig__arc{ padding:8px 21vw 4px; }
+  .st-hs{ opacity:1; transform:none; }
 
   .st-beat__type{ width:100%; }
   .st-steps{ gap:28px 12px; align-items:start; }
