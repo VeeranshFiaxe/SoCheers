@@ -178,41 +178,27 @@
   opacity:0; pointer-events:none;
   transition:opacity .3s var(--ease), transform .3s var(--ease);
 }
-/* A tooltip is a thing you get for hovering, and there is no hovering
-   here - so on touch the reason a dead tab is dead has to be on the
-   button rather than under it. Same word out of the same data-soon
-   attribute, demoted from a floating tip to a badge inside the pill,
-   which is the only version of it that can be read without a pointer. */
+/* No hover on touch, so the tip is shown on tap instead (.is-told, set
+   for a moment by components/BlogTabs.tsx) - above the tab rather than
+   under it, where a thumb would be covering it. */
+.bl-tabs__btn.is-soon.is-told::after{ opacity:1; transform:translate(-50%,0); }
 @media (hover:none){
-  .bl-tabs__btn.is-soon{ display:inline-flex; align-items:center; gap:8px; }
-  .bl-tabs__btn.is-soon::after{
-    position:static; transform:none; opacity:1;
-    padding:4px 8px; font-size:9px; letter-spacing:.12em;
-    background:transparent; color:inherit;
-    border:1px solid color-mix(in srgb, var(--cream) 22%, transparent);
-  }
+  /* anchored to the tab's right edge: on a phone it is the last tab, and
+     centred the tip would hang off the screen */
+  .bl-tabs__btn.is-soon::after{ top:auto; bottom:calc(100% + 10px); left:auto; right:0; transform:translateY(4px); }
+  .bl-tabs__btn.is-soon.is-told::after{ transform:none; }
 }
 
 /* ---------- the phone ----------
    The bar is an inline-flex pill with no wrap in it, which is right: the
    indicator behind the labels is absolutely positioned and measured in
    JS off each button's offsetLeft (components/BlogTabs.tsx), so a bar
-   that wrapped would leave it on the wrong row. Three uppercase tabs do
-   not fit across a phone, so the bar scrolls sideways instead - the pill
-   is inside the scrolling box and travels with it, and the tabs keep
-   their full targets rather than being squeezed to fit. */
+   that wrapped would leave it on the wrong row. The tabs are tightened
+   until all three fit across a phone, and the bar stays unclipped so the
+   coming-soon tip can show above it. */
 @media (max-width:560px){
-  .bl-tabs__bar{
-    display:flex; max-width:100%;
-    overflow-x:auto; overscroll-behavior-x:contain;
-    scrollbar-width:none; -webkit-overflow-scrolling:touch;
-  }
-  .bl-tabs__bar::-webkit-scrollbar{ display:none; }
-  .bl-tabs__btn{ flex:0 0 auto; padding:11px 15px; font-size:11px; letter-spacing:.07em; }
-  /* The soon-badge doubles a tab's width, which is what tips the row over
-     from "scrolls a little" to "scrolls a lot". It keeps the word and
-     loses the box. */
-  .bl-tabs__btn.is-soon::after{ padding:0; border:none; opacity:.62; }
+  .bl-tabs__bar{ display:flex; max-width:100%; gap:2px; }
+  .bl-tabs__btn{ flex:1 1 auto; padding:11px 10px; letter-spacing:.05em; white-space:nowrap; }
 }
 
 .bl-tabs__panel{ margin-top:clamp(28px,4vh,44px); }

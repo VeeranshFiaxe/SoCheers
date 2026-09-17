@@ -175,7 +175,7 @@ function Viewer({ asset: a, onClose }: { asset: AiAsset; onClose: () => void }) 
       )}
       <div className="ai-view__cap">
         {a.brand && <b>{a.brand}</b>}
-        <span>{a.title}</span>
+        {titleOf(a) && <span>{titleOf(a)}</span>}
       </div>
       <button type="button" className="ai-view__close" onClick={onClose} aria-label="Close">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
@@ -186,6 +186,11 @@ function Viewer({ asset: a, onClose }: { asset: AiAsset; onClose: () => void }) 
     document.body,
   );
 }
+
+/* The build script names anything it could not read a title out of
+   "Untitled film" / "Untitled still". That is a placeholder, not a title,
+   so it is never printed over the work. */
+const titleOf = (a: AiAsset) => (/^untitled\b/i.test(a.title) ? "" : a.title);
 
 const KIND_LABEL: Record<string, string> = { video: "Film", cgi: "CGI", static: "Still" };
 
@@ -201,6 +206,7 @@ function Tile({
   const isFilm = a.kind !== "static";
   const box = useRef<HTMLElement>(null);
   const vid = useRef<HTMLVideoElement>(null);
+  const posterImg = useRef<HTMLImageElement>(null);
   /* `near` is the <video> being in the tree at all. A film with a poster
      does not need one until it is asked to play, so this stays false
      through the whole page for every tile nobody touches - which is what
@@ -238,6 +244,14 @@ function Tile({
     io.observe(el);
     return () => io.disconnect();
   }, [isFilm, a.poster, near, shown]);
+
+  /* A poster already in the cache can finish loading before React has
+     attached onLoad, and then the event is simply missed - the tile kept
+     its opaque card over a picture that was there all along. */
+  useEffect(() => {
+    const i = posterImg.current;
+    if (i && i.complete && i.naturalWidth > 0) setReady(true);
+  }, []);
 
   const play = () => {
     setNear(true);
@@ -298,6 +312,7 @@ function Tile({
               one that never moved. */}
           {a.poster && (
             <img
+              ref={posterImg}
               className="ai-tile__film"
               src={a.poster}
               alt=""
@@ -342,7 +357,7 @@ function Tile({
             <span className="ai-tile__kind">{KIND_LABEL[a.kind]}</span>
             <span className="ai-tile__name">
               {a.brand && <b>{a.brand}</b>}
-              <span>{a.title}</span>
+              {titleOf(a) && <span>{titleOf(a)}</span>}
             </span>
             <span className="ai-tile__play" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
@@ -364,7 +379,7 @@ function Tile({
           )}
           <figcaption className="ai-tile__cap">
             {a.brand && <b>{a.brand}</b>}
-            <span>{a.title}</span>
+            {titleOf(a) && <span>{titleOf(a)}</span>}
           </figcaption>
         </>
       )}

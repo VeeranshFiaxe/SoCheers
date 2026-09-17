@@ -1513,6 +1513,20 @@ export function initSite(): () => void {
          the state being reversed out of), so the two have to be tracked
          separately or the reverse gesture has nothing listening for it. */
       let locked = true;
+      /* On touch the lock also takes the page's own scrolling away.
+         A phone flick keeps moving the page after the finger lifts, and
+         nothing can cancel that momentum - so coming back up into the pin,
+         the clamp in onScroll put the page back on its anchor every frame
+         while the fling kept dragging it off again: the rubber-banding.
+         overflow:hidden on the root stops a fling dead in both iOS Safari
+         and Android Chrome, so the snap happens once. Programmatic scrolls
+         (the anchor, the bar mapping) still work under it, and while locked
+         every touchmove is already being refused, so nothing is lost. */
+      const freeze = (on: boolean) => {
+        if (touch) document.documentElement.style.overflow = on ? "hidden" : "";
+      };
+      freeze(true);
+      cleanups.push(() => freeze(false));
       /* A short grace window opened the moment scrolling is handed back to
          the page. Nothing may claim the gesture again until it lapses.
          Without it the handover was a coin toss: Lenis is still carrying
@@ -1568,7 +1582,7 @@ export function initSite(): () => void {
       let wired = false;
       const st = ScrollTrigger.create({
         trigger: hero, start: "top top", end: "+=100%", pin: true,
-        onEnter: () => { if (!wired || refreshing()) return; locked = true; hold(); lenis?.stop(); },
+        onEnter: () => { if (!wired || refreshing()) return; locked = true; freeze(true); hold(); lenis?.stop(); },
         onEnterBack: () => { if (!wired || refreshing()) return; reclaim(); },
         /* Forward out of the pin while we still think we own the scroll.
            With the clamp below in place this should be unreachable, but if
@@ -1671,6 +1685,7 @@ export function initSite(): () => void {
       // being pulled back inside.
       const release = () => {
         locked = false;
+        freeze(false);
         handoff = performance.now() + 700;
         /* And the hero stops taking the pointer.
 
@@ -1741,6 +1756,7 @@ export function initSite(): () => void {
         phase = "done";
         busy = false;
         locked = false;
+        freeze(false);
         handoff = performance.now() + 300;
         hero.classList.add("is-spent");
         spacer()?.style.setProperty("pointer-events", "none");
@@ -1873,6 +1889,7 @@ export function initSite(): () => void {
       const reclaim = () => {
         if (locked || settling()) return;
         locked = true;
+        freeze(true);
         /* the hero owns the screen again, so it takes the pointer back -
            see release() for what this is and why */
         hero.classList.remove("is-spent");

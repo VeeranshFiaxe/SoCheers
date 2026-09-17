@@ -410,3 +410,27 @@
   .ai-tile__cap b{ font-size:17px; }
   .ai-tile__cap span{ font-size:11px; }
 }
+
+/* ---------- the phone wall ----------
+   One column of eighty-nine full-width tiles was some fifty screens of
+   scrolling. On a phone the wall goes to two tight columns instead - the
+   same column packing, so every tile still keeps its own shape - and the
+   words come off the tiles: at half a phone's width a title over a
+   picture only covers the picture, and a tap opens the viewer, which
+   carries the brand and title anyway. Films keep a small play mark so
+   they read as films. */
+@media (max-width:600px){
+  .ai-grid{ column-count:2; column-gap:8px; }
+  .ai-tile{ margin-bottom:8px; border-radius:10px; }
+  .ai-tile__cap,
+  .ai-tile__name,
+  .ai-tile__kind{ display:none; }
+  .ai-tile[data-thumb] .ai-tile__card{
+    background:linear-gradient(180deg, transparent 60%, rgba(6,6,7,.45) 100%);
+  }
+  .ai-tile__play{
+    top:auto; bottom:8px; right:8px; width:26px; height:26px;
+    background:rgba(6,6,7,.55); border-color:rgba(241,236,225,.35);
+  }
+  .ai-tile__play svg{ width:11px; height:11px; }
+}

@@ -12,6 +12,17 @@ import { REPORTS, SOON_LABEL, TABS, WHITEPAPERS, type TabId } from "@/lib/blog-c
 export default function BlogTabs() {
   const [active, setActive] = useState<TabId>("whitepapers");
 
+  /* A phone has no hover to carry the "coming soon" tip, so tapping a dead
+     tab shows it above the button for a moment instead. */
+  const [told, setTold] = useState<TabId | null>(null);
+  const toldTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const tell = (id: TabId) => {
+    clearTimeout(toldTimer.current);
+    setTold(id);
+    toldTimer.current = setTimeout(() => setTold(null), 1600);
+  };
+  useLayoutEffect(() => () => clearTimeout(toldTimer.current), []);
+
   /* Fullscreen toggle for the embedded PDF - one native Fullscreen API
      call on the frame's own wrapper, not the whole page, so the reader
      expands without taking the tab bar and copy with it. Tracked per
@@ -114,7 +125,7 @@ export default function BlogTabs() {
               data-soon={t.live ? undefined : SOON_LABEL}
               className={
                 !t.live
-                  ? "bl-tabs__btn is-soon"
+                  ? told === t.id ? "bl-tabs__btn is-soon is-told" : "bl-tabs__btn is-soon"
                   : active === t.id
                     ? "bl-tabs__btn is-active"
                     : "bl-tabs__btn"
@@ -123,7 +134,7 @@ export default function BlogTabs() {
                 if (el) btnRefs.current.set(t.id, el);
                 else btnRefs.current.delete(t.id);
               }}
-              onClick={t.live ? () => setActive(t.id) : undefined}
+              onClick={t.live ? () => setActive(t.id) : () => tell(t.id)}
             >
               {t.label}
             </button>
