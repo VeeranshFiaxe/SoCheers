@@ -2153,16 +2153,36 @@
   }
   #section-job .st-band{ height:auto; aspect-ratio:4/5; }
 
-  /* ---- the wall ---- three across, even tiles */
-  .st-wall{
-    grid-template-columns:repeat(3,1fr);
-    grid-template-rows:none;
-    grid-auto-rows:auto;
-    gap:6px;
-    padding:0 var(--pad);
+  /* ---- the wall ---- stays behind the copy, as on desktop: a full
+     screen of windows the words sit on. Only the grid is tidied - three
+     even columns, no stagger - and the scrim is darkest in the middle
+     band where the type is, so the copy reads and the tiles still show
+     at the top and bottom of the screen. */
+  .st-beat[data-stage="wall"]{
+    min-height:100svh;
+    justify-content:center;
   }
-  .st-tile{ aspect-ratio:3/4; }
+  .st-beat[data-stage="wall"] .st-wall{
+    position:absolute; inset:0; z-index:1;
+    grid-template-columns:repeat(3,1fr);
+    grid-template-rows:repeat(4,1fr);
+    gap:5px;
+    padding:clamp(36px,6vh,60px) 5px;
+  }
+  .st-tile{ box-shadow:0 0 0 1px rgba(11,11,12,.85); }
   .st-tile:nth-child(n){ transform:none; }
+  .st-beat[data-stage="wall"] .st-scrim{
+    background:
+      linear-gradient(to bottom,
+        rgba(11,11,12,.55) 0%,
+        rgba(11,11,12,.86) 26%,
+        rgba(11,11,12,.9) 50%,
+        rgba(11,11,12,.86) 74%,
+        rgba(11,11,12,.55) 100%);
+  }
+  .st-beat[data-stage="wall"] .st-beat__line,
+  .st-beat[data-stage="wall"] .st-beat__copy{ text-shadow:0 2px 18px rgba(11,11,12,.95); }
+  .st-beat[data-stage="wall"] .st-beat__copy{ color:rgba(241,236,225,.86); }
 
   /* ---- the pull ---- a band under the type, sized off the width so
      the phone and the face stay on screen. The frame is a little under
@@ -2571,4 +2591,110 @@ html.sc-lite .st-cues li{ backdrop-filter:none; -webkit-backdrop-filter:none; }
   .st-step__title{ font-size:17px; }
   .st-step__body{ font-size:15px; }
   .st-cues li{ font-size:11px; }
+}
+
+/* ---- the strip rail: desktop never shows it ---- */
+.st-strip__rail{ display:none; }
+
+/* ============================================================
+   PHONE - the two strips as a sequence, and the held pull.
+
+   The swiped row read as a gallery parked under the copy. Here the four
+   frames share one window and advance on their own, in order, the way a
+   player moves to the next episode: sections 3 and 6 each get one large
+   frame directly under the words. Section 3 - four points in one night -
+   runs its rail as an up-next row of thumbnails; section 6 - the shows -
+   runs it as the progress bars of a streaming banner.
+   ============================================================ */
+@keyframes st-seq{
+  0%{ opacity:0; }
+  4%, 25%{ opacity:1; }
+  30%, 100%{ opacity:0; }
+}
+@keyframes st-seq-tick{
+  0%{ opacity:.4; box-shadow:0 0 0 0 transparent; }
+  4%, 25%{ opacity:1; box-shadow:0 0 0 2px var(--accent); }
+  30%, 100%{ opacity:.4; box-shadow:0 0 0 0 transparent; }
+}
+@keyframes st-seq-bar{
+  0%{ transform:scaleX(0); }
+  27%{ transform:scaleX(1); }
+  30%, 100%{ transform:scaleX(0); }
+}
+
+@media (max-width:900px){
+  .st-beat[data-stage="strip"]:not(#section-job) .st-strip{
+    display:grid; grid-template-columns:1fr;
+    gap:10px;
+    margin:0 var(--pad); padding:0;
+    overflow:visible; scroll-snap-type:none;
+  }
+  .st-beat[data-stage="strip"]:not(#section-job) .st-band{
+    grid-area:1 / 1;
+    width:100%; height:auto; margin:0;
+    aspect-ratio:16/10;
+    border-radius:8px;
+    opacity:0;
+    animation:st-seq 12s linear infinite both;
+    animation-delay:calc(var(--i) * 3s);
+  }
+  .st-beat[data-stage="strip"]:not(#section-job) .st-band img{ left:0; width:100%; }
+
+  .st-beat[data-stage="strip"]:not(#section-job) .st-strip__rail{
+    grid-row:2;
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:8px;
+  }
+  .st-strip__tick{
+    position:relative; display:block; overflow:hidden;
+    aspect-ratio:16/10;
+    border-radius:4px;
+    background:var(--panel);
+    opacity:.4;
+    animation:st-seq-tick 12s linear infinite both;
+    animation-delay:calc(var(--i) * 3s);
+  }
+  .st-strip__tick > img{
+    position:absolute; inset:0;
+    width:100%; height:100%; object-fit:cover;
+  }
+
+  /* section 6: the rail is progress bars, and the frame is 16:9 so the
+     titles set to the poster edges are not cut */
+  #section-receipts.st-beat .st-strip .st-band{ aspect-ratio:16/9; }
+  #section-receipts.st-beat .st-strip .st-strip__rail{ gap:6px; }
+  #section-receipts .st-strip__tick{
+    aspect-ratio:auto; height:3px; border-radius:2px;
+    background:rgba(241,236,225,.22);
+    opacity:1; animation:none;
+  }
+  #section-receipts .st-strip__tick > img{ display:none; }
+  #section-receipts .st-strip__tick::after{
+    content:""; position:absolute; inset:0;
+    background:var(--accent);
+    transform-origin:0 50%;
+    transform:scaleX(0);
+    animation:st-seq-bar 12s linear infinite both;
+    animation-delay:calc(var(--i) * 3s);
+  }
+
+  /* a tighter join between the copy and the frame on these two */
+  #section-next,
+  #section-receipts{ gap:18px; }
+
+  /* ---- below the pull ----
+     The black between the picture and section 5 was two full paddings;
+     it is one small one now. */
+  #section-kink{ padding-bottom:12px; }
+  #section-job{ padding-top:clamp(36px,6vh,52px); }
+}
+
+@media (max-width:900px) and (prefers-reduced-motion:reduce){
+  .st-beat[data-stage="strip"]:not(#section-job) .st-band,
+  .st-strip__tick,
+  #section-receipts .st-strip__tick::after{ animation:none; }
+  .st-beat[data-stage="strip"]:not(#section-job) .st-band:first-child,
+  .st-strip__tick:first-child{ opacity:1; }
+  .st-strip__tick:first-child{ box-shadow:0 0 0 2px var(--accent); }
+  #section-receipts .st-strip__tick:first-child::after{ transform:none; }
 }

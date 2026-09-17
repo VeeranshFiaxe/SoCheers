@@ -249,7 +249,7 @@
 }
 @media (max-width:560px){
   .ctf__row{ grid-template-columns:1fr; }
-  .ctf__row + .ctf__row{ margin-top:0; }
+  .ctf__row + .ctf__row{ margin-top:16px; }
 }
 
 /* ---------- the phone ----------

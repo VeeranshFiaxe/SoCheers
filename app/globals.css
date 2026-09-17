@@ -1063,8 +1063,10 @@ html.sc-intro .cmarquee__track .bmark{ -webkit-mask:none; mask:none; }
 .hero__stage-vignette{
   position:absolute; inset:0; z-index:1; pointer-events:none;
   visibility:hidden;
+  /* solid black for the last few pixels either side: a ramp that only
+     reaches #000 on its final pixel left the film's edge column showing */
   background:
-    linear-gradient(to right, #000 0%, transparent 20%, transparent 80%, #000 100%),
+    linear-gradient(to right, #000 0, #000 6px, transparent 20%, transparent 80%, #000 calc(100% - 6px), #000 100%),
     radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%);
 }
 
@@ -2539,7 +2541,10 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
   text-shadow:none;
 }
 @media (max-width:700px){
-  .ovt__guide{ left:calc(50% + 36vw); top:calc(44vh + 78px); }
+  /* the knob sits at 86vw, too near the edge to centre the words on it:
+     pin the words to the gutter and move the tick back over to the knob */
+  .ovt__guide{ left:auto; right:16px; transform:none; align-items:flex-end; top:calc(44vh + 78px); }
+  .ovt__guide i{ margin-right:calc(14vw - 16px); }
 }
 /* a tick pointing back up at the knob, so the words have a referent */
 .ovt__guide i{
@@ -3153,6 +3158,9 @@ html.sc-lite .plogo::after{ animation:none; }
   .who__lede,
   .who__pitch{ font-size:clamp(24px,6.6vw,30px); }
   .stat__num{ font-size:clamp(40px,11vw,50px); }
+  /* "200+" at this size is wider than a third of the row less 20px a
+     side, so it ran into the rules between the counts */
+  .stat{ padding-left:8px; padding-right:8px; }
   .stat__label{ font-size:13px; letter-spacing:.14em; }
   .wcard__name{ font-size:clamp(30px,8.4vw,38px); }
   .wcard__list{ --li-fs:17px; }

@@ -210,10 +210,19 @@ function Strip({ frames }: { frames: string[] }) {
   return (
     <div className="st-strip">
       {frames.map((f, i) => (
-        <span className="st-band" key={`${f}-${i}`}>
+        <span className="st-band" key={`${f}-${i}`} style={{ "--i": i } as React.CSSProperties}>
           <Frame file={f} />
         </span>
       ))}
+      {/* phone only: the strip plays as one frame advancing through the
+          four, and this rail is what shows where it is in the run */}
+      <span className="st-strip__rail" aria-hidden="true">
+        {frames.map((f, i) => (
+          <span className="st-strip__tick" key={`${f}-${i}`} style={{ "--i": i } as React.CSSProperties}>
+            {!isFilm(f) && <img src={ART(f)} alt="" loading="lazy" decoding="async" />}
+          </span>
+        ))}
+      </span>
     </div>
   );
 }

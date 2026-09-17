@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ART } from "@/lib/series-content";
 import { isLite, trackRect } from "@/lib/perf";
+import { holdScroll, jumpTo } from "@/lib/motion";
 
 /* ============================================================
    THE PULL - the picture layer for section 4, the title card.
@@ -111,10 +112,9 @@ import { isLite, trackRect } from "@/lib/perf";
 
    ---- the numbers the scroll writes ----
 
-     --p   the approach, damped and LATCHED. 0 while the section's top
-           edge is two thirds of the way down the window, 1 once it has
-           gone a third of the way past the top of it - and it never
-           goes back. Scrolling up does not put him together again.
+     --p   how far the pull has played, on a clock rather than on the
+           scroll - see the hold below. It plays once and never goes
+           back. Scrolling up does not put him together again.
      --s   his face going into the phone
      --fa  how much of it you can still see, which holds high and then
            drops - a face that fades as fast as it travels has gone
@@ -128,12 +128,6 @@ import { isLite, trackRect } from "@/lib/perf";
    looked at before the picture in it changes: run any earlier and the
    whole thing happens in the corner of the reader's eye on the way up
    the screen, which is what the first pass of this did.
-
-   And --p is not the scroll position. It CHASES it, on a frame-rate
-   independent follow, so a trackpad's steps and a wheel's notches
-   arrive as one continuous move rather than as the sum of their jumps.
-   That is the other half of why this is smoother than the pass before
-   it.
 
    They rest FINISHED in the stylesheet - --p, --s and --g at 1, --fa
    and --b at 0 - so a reader whose JavaScript never runs, and one who
@@ -198,30 +192,12 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
 
     /* ---- the numbers -------------------------------------------- */
 
-    let want = 0; /* where the scroll says the section is */
-    let at = 0; /* where the picture actually is */
+    let at = 0; /* how far the pull has played, 0 .. 1 */
     let burst = 0;
 
-    /* THE LATCH. It only ever goes forward.
-
-       Scrolling back up used to put him back together, and then the
-       next pass down took him apart again - which makes the whole thing
-       a toy that answers the wheel rather than a thing that happened.
-       It happens once. After that the section is the deck's frame, and
-       the only way to see it again is to load the page again. */
-    const aim = (r: DOMRect = el.getBoundingClientRect()) => {
-      const vh = window.innerHeight || 1;
-      /* on a phone the pull is a short band under the type rather than
-         a full screen, so it has to play while that band is in view */
-      const now = narrow
-        ? clamp01((vh * 0.85 - r.top) / (vh * 0.6))
-        : clamp01((vh * 0.66 - r.top) / (vh * 1.02));
-      if (now > want) want = now;
-    };
-
     const write = () => {
-      /* in order: his face goes into the phone, and the rest of the
-         room hands over well behind it */
+      /* the face goes first and fastest; the rest of the room hands over
+         well behind it */
       const s = ease(clamp01((at - 0.2) / 0.42));
       const g = ease(clamp01((at - 0.52) / 0.42));
       burst = Math.sin(Math.PI * clamp01((at - 0.16) / 0.58));
@@ -232,13 +208,98 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       st.setProperty("--g", g.toFixed(4));
       st.setProperty("--b", burst.toFixed(4));
     };
-
-    aim();
     write();
 
-    /* the two boxes the loop reads, taken at the start of each frame */
     const elBox = trackRect(el);
     const frameBox = trackRect(frame);
+
+    /* ---- the hold -----------------------------------------------
+
+       The pull PLAYS - on a clock, at the same speed however the reader
+       scrolls - and the page is held still while it does. It used to be
+       driven by the scroll, and a fast scroll tore through it.
+
+       When the section reaches the screen (a section taller than the
+       screen with its bottom at the screen's bottom), the scroll is put
+       exactly there and locked: Lenis is stopped, wheel, touch and
+       scroll keys are swallowed, and anything that still moves the page
+       (a fling already in flight, the scrollbar) is put straight back.
+       The lock lifts the moment the pull has finished and is never set
+       again - no spacer, no sticky, nothing left in the page to catch
+       the scroll on the way back up.
+
+       A reader who lands below the section (a restored scroll) never
+       sees it play; the picture is simply the finished frame. */
+    const DUR = 2600;
+    const FROM = 0.12; /* nothing happens in the first stretch of `at` */
+    const sec = el.closest<HTMLElement>(".st-beat") ?? el;
+
+    let start = 0;
+    let done = false;
+    let locked = false;
+    let lockY = 0;
+    let unlockT = 0;
+    let prev: number | null = null;
+
+    const KEYS = new Set([" ", "PageDown", "PageUp", "ArrowDown", "ArrowUp", "Home", "End"]);
+    const swallow = (e: Event) => {
+      if (locked && e.cancelable) e.preventDefault();
+    };
+    const swallowKey = (e: KeyboardEvent) => {
+      if (locked && KEYS.has(e.key)) e.preventDefault();
+    };
+
+    const unlock = () => {
+      window.clearTimeout(unlockT);
+      if (!locked) return;
+      locked = false;
+      holdScroll(false);
+    };
+
+    const finish = () => {
+      done = true;
+      at = 1;
+      write();
+    };
+
+    const play = (y: number) => {
+      start = performance.now();
+      locked = true;
+      lockY = Math.max(0, Math.round(y));
+      jumpTo(lockY);
+      holdScroll(true);
+      /* a backstop: whatever happens to the frame loop, the page is never
+         left locked */
+      unlockT = window.setTimeout(unlock, DUR + 1200);
+      wake();
+    };
+
+    const check = () => {
+      if (done || start) return;
+      const vh = window.innerHeight;
+      const r = sec.getBoundingClientRect();
+      const d = r.top - Math.min(0, vh - r.height);
+      if (prev === null && r.bottom <= 0) {
+        finish();
+        return;
+      }
+      /* at the mark, or crossed it since the last look - either way,
+         from above or below */
+      if (Math.abs(d) < 2 || (prev !== null && prev > 0 !== d > 0)) {
+        play(window.scrollY + d);
+        return;
+      }
+      prev = d;
+    };
+
+    const onLockedScroll = () => {
+      if (locked && Math.abs(window.scrollY - lockY) > 1) window.scrollTo(0, lockY);
+    };
+
+    window.addEventListener("wheel", swallow, { passive: false });
+    window.addEventListener("touchmove", swallow, { passive: false });
+    window.addEventListener("keydown", swallowKey);
+    window.addEventListener("scroll", onLockedScroll, { passive: true });
 
     /* ---- the spray ---------------------------------------------- */
 
@@ -312,12 +373,15 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
          thousandths. */
       const b0 = elBox.read();
       const f0 = frameBox.read();
-      aim(b0);
-      /* the follow. exp() rather than a fixed fraction of the gap, so
-         the rate is the same whether the display runs at 60 or at 144 */
-      const gap = want - at;
-      at += gap * (1 - Math.exp(-dt * 11));
-      if (Math.abs(gap) < 0.0004) at = want;
+      /* the clock, not the scroll */
+      if (start && !done) {
+        const k = clamp01((t - start) / DUR);
+        at = FROM + (1 - FROM) * k;
+        if (k >= 1) {
+          done = true;
+          unlock();
+        }
+      }
       write();
 
       /* the frame is translated and scaled, never rotated, so its box
@@ -425,9 +489,8 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = "source-over";
 
-      /* the picture has caught up with the scroll and the last mote has
-         gone: stand down until something moves again */
-      if (!seen || (at === want && burst <= 0.02 && motes.length === 0)) {
+      /* not playing and the last mote has gone: stand down */
+      if (!seen || ((!start || done) && burst <= 0.02 && motes.length === 0)) {
         cancelAnimationFrame(raf);
         raf = 0;
         last = 0;
@@ -449,17 +512,13 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
           seen = e.isIntersecting;
           elBox.active(seen);
           frameBox.active(seen);
-          if (seen && !was) {
-            aim();
-            at = want;
-            write();
-            wake();
-          }
+          if (seen && !was) check();
         }
       },
       { threshold: 0 },
     );
     io.observe(el);
+
 
     /* When the loop is down the scroll still has to move the plates - the
        room goes on handing over long after the last mote - so a scroll
@@ -468,14 +527,21 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
        whole page, and off screen there is nothing to see it - the entry
        above puts the picture where the scroll is the moment it is back. */
     const onScroll = () => {
+      check();
       if (seen) wake();
     };
+    requestAnimationFrame(check);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
 
     return () => {
       io.disconnect();
       ro.disconnect();
+      unlock();
+      window.removeEventListener("wheel", swallow);
+      window.removeEventListener("touchmove", swallow);
+      window.removeEventListener("keydown", swallowKey);
+      window.removeEventListener("scroll", onLockedScroll);
       elBox.release();
       frameBox.release();
       if (raf) cancelAnimationFrame(raf);

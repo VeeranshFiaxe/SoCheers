@@ -94,6 +94,15 @@ export function smoothTo(target: HTMLElement | number, duration = 1.2): void {
   else target.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+/* Stop or restart the smooth scroll, for a section that holds the page
+   still while something plays (components/SeriesPull.tsx). Without
+   Lenis there is nothing to stop; the caller swallows the input itself. */
+export function holdScroll(on: boolean): void {
+  if (!active) return;
+  if (on) active.stop();
+  else active.start();
+}
+
 /* The same, with no travel: the reader is put at `y` as if they had never
    left it. Used to return to the work wall (lib/work-return.ts), which
    has to happen after initSite() has booted - it scrolls every page to
@@ -899,7 +908,11 @@ export function initSite(): () => void {
           caret.removeAttribute("data-typing");
         }
         gsap.set(lines, { "--split": 0 });
-        gsap.set(stage, { autoAlpha: 0, scaleX: 0, scaleY: 0.42, transformOrigin: "50% 50%" });
+        /* it opens the way the words part: sideways on a wide screen, and
+           up and down on a phone, where the lines are stacked */
+        gsap.set(stage, phone.matches
+          ? { autoAlpha: 0, scaleX: 0.42, scaleY: 0, transformOrigin: "50% 50%" }
+          : { autoAlpha: 0, scaleX: 0, scaleY: 0.42, transformOrigin: "50% 50%" });
         gsap.set("[data-hero-cue]", { autoAlpha: 0 });
 
         /* per character, the beat between the sentence finishing and the
@@ -923,7 +936,7 @@ export function initSite(): () => void {
            screen straight afterwards meant the small state - the one
            frame where the sentence and the picture are one composition -
            was never really on screen at all. */
-        const HOLD_OPEN = 1.9;
+        const HOLD_OPEN = 1.4;
 
         /* The scroll cue, and it arrives late on this cut: for the whole
            of the opening there is nothing a scroll would do that the
@@ -1209,7 +1222,7 @@ export function initSite(): () => void {
         tl.fromTo(stage,
           { x: () => box().left, y: () => box().top, width: () => box().w, height: () => box().h },
           { x: () => boxEnd().left, y: () => boxEnd().top, width: () => boxEnd().w, height: () => boxEnd().h,
-            duration: EXPAND, ease: "power2.out" }, 0);
+            duration: EXPAND, ease: "power3.inOut" }, 0);
       } else {
         /* The live grow drives one number and place() turns it into the
            two transforms. A getter/setter rather than an onUpdate, so the
@@ -1477,7 +1490,7 @@ export function initSite(): () => void {
       const STOPS: { name: Stage; t: number; fwd: number; back: number }[] = isTest
         ? [
             { name: "rest", t: REST, fwd: 0, back: 1.5 },
-            { name: "open", t: OPEN, fwd: 2.0, back: 1.3 },
+            { name: "open", t: OPEN, fwd: 1.45, back: 1.3 },
             /* 2.8, not 2.2: the headword's two-move return needs the room */
             { name: "hold", t: HOLD, fwd: 2.8, back: 1.3 },
             { name: "done", t: DONE, fwd: 1.5, back: 0 },
