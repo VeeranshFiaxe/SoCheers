@@ -124,9 +124,14 @@ export default function BlogTabs({
       setPill({ left: btn.offsetLeft, width: btn.offsetWidth });
     };
     place();
-    window.addEventListener("resize", place);
-    return () => window.removeEventListener("resize", place);
-  }, [active]);
+    /* the saved labels, the tab order and the web font all land after the
+       first measure, and each one changes the buttons' widths */
+    const ro = new ResizeObserver(place);
+    if (barRef.current) ro.observe(barRef.current);
+    btnRefs.current.forEach((b) => ro.observe(b));
+    document.fonts?.ready.then(place);
+    return () => ro.disconnect();
+  }, [active, TABS]);
 
   return (
     <section className="bl-tabs" data-reveal ref={sectionRef}>

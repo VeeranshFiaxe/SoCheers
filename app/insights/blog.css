@@ -156,7 +156,7 @@
 }
 @media (hover:none){ .bl-tabs__btn{ cursor:pointer; } }
 .bl-tabs__btn:not(.is-soon):hover{ color:var(--cream); }
-.bl-tabs__btn.is-active{ color:var(--accent-ink); }
+.bl-tabs__btn.is-active, .bl-tabs__btn.is-active:hover{ color:#fff; }
 
 /* ---------- the dead tabs: present, dimmed, unclickable ----------
    Blogs and Reports have nothing in them yet. They stay in the bar so the
