@@ -1859,6 +1859,17 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
   background:var(--brand, var(--accent));
   transform:scale(var(--pop, 1.14)) rotate(var(--tilt, -2deg));
 }
+/* A logo uploaded in the admin panel to be shown in its own colours
+   rather than cut to a mask. Grey like the row at rest, its real colours
+   on hover. */
+.cmarquee__track .bmark--img,
+.cmarquee__track .bmark--img:hover{ background:none; -webkit-mask:none; mask:none; }
+.cmarquee__track .bmark--img img{
+  display:block; width:100%; height:100%; object-fit:contain;
+  filter:grayscale(1) brightness(1.6); opacity:.55;
+  transition:filter .35s, opacity .35s;
+}
+.cmarquee__track .bmark--img:hover img{ filter:none; opacity:1; }
 
 /* ============================================================
    6 · FEATURED WORK

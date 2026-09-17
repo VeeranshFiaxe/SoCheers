@@ -3,26 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "globe": "node scripts/build-globe.mjs",
     "model": "node scripts/build-about-man.mjs",
     "media": "node scripts/upload-r2.mjs",
-    "deploy": "next build && wrangler deploy"
+    "deploy": "next build && wrangler deploy",
+    "admin:migrate": "wrangler d1 migrations apply socheers-admin --remote",
+    "admin:migrate:local": "wrangler d1 migrations apply socheers-admin --local",
+    "admin:create": "node scripts/admin-create.mjs",
+    "admin:key": "node -e \"console.log(require('crypto').randomBytes(32).toString('base64url'))\"",
+    "preview:worker": "next build && wrangler dev --local --port 8787 --local-upstream localhost:8787"
   },
   "dependencies": {
     "@types/three": "^0.185.4",
     "gsap": "^3.13.0",
     "lenis": "^1.1.14",
     "next": "^16.3.0",
+    "pdfjs-dist": "^6.3.289",
+    "qrcode": "^1.5.4",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "three": "^0.185.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "d3-geo": "^3.1.1",

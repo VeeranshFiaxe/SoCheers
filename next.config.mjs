@@ -29,6 +29,20 @@ const nextConfig = {
     return [{ source: "/blogs", destination: "/insights", permanent: true }];
   },
 
+  /* `next dev` only. The admin API and uploaded files come from the
+     Worker, which scripts/dev.mjs runs beside Next on port 8787 - on
+     Cloudflare the Worker answers these paths itself. */
+  async rewrites() {
+    if (process.env.NODE_ENV !== "development") return [];
+    return [
+      { source: "/api/:path*", destination: "http://localhost:8787/api/:path*" },
+      { source: "/media/u/:path*", destination: "http://localhost:8787/media/u/:path*" },
+      /* a blog post: every one is drawn by the same page, which reads the
+         slug out of the address (worker/index.js does this on Cloudflare) */
+      { source: "/insights/:slug([a-z0-9-]+)", destination: "/insights/post" },
+    ];
+  },
+
   /* How long the pictures and the films are allowed to stay put.
 
      Next hashes and fingerprints everything it builds - the JS chunks,

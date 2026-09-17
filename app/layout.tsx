@@ -7,6 +7,7 @@ import Loader from "@/components/Loader";
 import Nav from "@/components/Nav";
 import Overture from "@/components/Overture";
 import RouteTheme from "@/components/RouteTheme";
+import ShellGate from "@/components/ShellGate";
 import JsonLd from "@/components/JsonLd";
 import { SITE_GRAPH } from "@/lib/schema";
 import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
@@ -199,11 +200,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             know where to fly the lamp. */}
         {/* which of the brand's six solids this page leads with - it has to
             come first, because everything under it is drawn in it */}
-        <RouteTheme />
-        <Overlays />
-        <Loader />
-        <Overture />
-        <Nav />
+        {/* none of it on the admin panel - components/ShellGate.tsx */}
+        <ShellGate>
+          <RouteTheme />
+          <Overlays />
+          <Loader />
+          <Overture />
+          <Nav />
+        </ShellGate>
         {children}
       </body>
     </html>

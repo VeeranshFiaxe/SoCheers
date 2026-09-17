@@ -42,3 +42,6 @@ assets/zurich-kotak.src.mp4
 # deploys fine - it just cannot regenerate an asset until somebody puts
 # the delivery folder back beside it.
 assets/SC Website Revamp/
+
+# local secrets (admin guest account, keys) - never committed
+.env

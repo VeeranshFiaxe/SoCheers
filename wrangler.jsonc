@@ -30,6 +30,19 @@
 			"bucket_name": "socheers-media"
 		}
 	],
+	/* The admin panel (worker/api, app/admin). Created with
+	   `npx wrangler d1 create socheers-admin`, which prints the id to paste
+	   here; the tables come from migrations/ via `npm run admin:migrate`.
+	   The panel also needs one secret, for 2FA: `npx wrangler secret put
+	   ADMIN_ENC_KEY` (make one with `npm run admin:key`). */
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "socheers-admin",
+			"database_id": "9579c41a-ea7c-4d27-b1ec-b222ff5024ff",
+			"migrations_dir": "migrations"
+		}
+	],
 	"observability": {
 		"enabled": true
 	}

@@ -2594,17 +2594,33 @@ export function initSite(): () => void {
       const rxTo = ring && gsap.quickTo(ring, "x", { duration: 0.75, ease: "power3" });
       const ryTo = ring && gsap.quickTo(ring, "y", { duration: 0.75, ease: "power3" });
 
-      let mx = 0, my = 0;
+      /* last known pointer, kept across route changes so the dot starts
+         under the pointer instead of gliding in from the top-left */
+      const w = window as unknown as { __scPointer?: { x: number; y: number } };
+      let mx = w.__scPointer?.x ?? 0, my = w.__scPointer?.y ?? 0;
       let shown = false;
-      on(window, "mousemove", ((e: MouseEvent) => {
-        mx = e.clientX; my = e.clientY;
-        xTo(mx); yTo(my);
-        if (rxTo && ryTo) { rxTo(mx); ryTo(my); }
-        /* once - not a class write on every move of the mouse */
-        if (shown) return;
-        shown = true;
+      const place = (x: number, y: number) => {
+        xTo(x, x); yTo(y, y);
+        if (rxTo && ryTo) { rxTo(x, x); ryTo(y, y); }
         cursor.classList.add("is-visible");
         ring?.classList.add("is-visible");
+        shown = true;
+      };
+      if (w.__scPointer) place(mx, my);
+      on(window, "mousemove", ((e: MouseEvent) => {
+        mx = e.clientX; my = e.clientY;
+        w.__scPointer = { x: mx, y: my };
+        /* first sighting: jump there, no ease from (0,0) */
+        if (!shown) { place(mx, my); return; }
+        xTo(mx); yTo(my);
+        if (rxTo && ryTo) { rxTo(mx); ryTo(my); }
+      }) as EventListener);
+      /* mouseover also fires when a new page renders under a still pointer */
+      on(window, "mouseover", ((e: MouseEvent) => {
+        if (shown) return;
+        mx = e.clientX; my = e.clientY;
+        w.__scPointer = { x: mx, y: my };
+        place(mx, my);
       }) as EventListener);
 
       /* Inertia read-out.

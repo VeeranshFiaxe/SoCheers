@@ -1,7 +1,12 @@
 "use client";
 
 import { useLayoutEffect, useRef, useState } from "react";
-import { REPORTS, SOON_LABEL, TABS, WHITEPAPERS, type TabId } from "@/lib/blog-content";
+import type { Entry, InsightsSettings, TabKey } from "@/lib/cms/types";
+import type { PaperView } from "@/lib/cms/insights";
+
+type TabId = TabKey;
+
+const dateFmt = new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
 /* The three-way split the client asked for: Blogs / White Papers / Reports
    under one section instead of a page that's only ever called "Blogs".
@@ -9,8 +14,31 @@ import { REPORTS, SOON_LABEL, TABS, WHITEPAPERS, type TabId } from "@/lib/blog-c
    the other two stay in the bar, dimmed and unclickable, and say "coming
    soon" on hover. A tab that opens onto nothing is worse than a tab that
    plainly isn't ready yet. */
-export default function BlogTabs() {
-  const [active, setActive] = useState<TabId>("whitepapers");
+export default function BlogTabs({
+  settings,
+  whitepapers,
+  reports,
+  blogs,
+}: {
+  settings: InsightsSettings;
+  whitepapers: PaperView[];
+  reports: PaperView[];
+  blogs: Entry[];
+}) {
+  /* Tabs, their labels and which of them are open all come from the admin
+     panel now (lib/cms/insights.ts), as do the entries in each. */
+  const TABS = settings.tabs;
+  const SOON_LABEL = settings.soonLabel;
+  const firstLive = TABS.find((t) => t.id === settings.defaultTab && t.live) ?? TABS.find((t) => t.live);
+  const [active, setActive] = useState<TabId>(firstLive?.id ?? "whitepapers");
+  /* the saved settings arrive after the first render - open the tab they
+     name, and never leave a closed tab showing */
+  useLayoutEffect(() => {
+    if (firstLive) setActive(firstLive.id);
+  }, [settings]); // eslint-disable-line react-hooks/exhaustive-deps
+  useLayoutEffect(() => {
+    if (firstLive && !TABS.find((t) => t.id === active)?.live) setActive(firstLive.id);
+  }, [TABS, active, firstLive]);
 
   /* A phone has no hover to carry the "coming soon" tip, so tapping a dead
      tab shows it above the button for a moment instead. */
@@ -141,13 +169,37 @@ export default function BlogTabs() {
           ))}
         </div>
 
+        {active === "blogs" ? (
+          <div className="bl-tabs__panel bl-posts">
+            {blogs.map((b) => (
+              <a className="bl-post" key={b.slug} href={`/insights/${b.slug}`} data-cursor="Read">
+                {b.cover && (
+                  <span className="bl-post__cover">
+                    <img src={b.cover} alt={b.cover_alt} loading="lazy" decoding="async" />
+                  </span>
+                )}
+                <span className="bl-post__meta">
+                  {b.tags[0] && <span className="tag">{b.tags[0]}</span>}
+                  {b.published_at && <time dateTime={new Date(b.published_at).toISOString()}>{dateFmt.format(b.published_at)}</time>}
+                </span>
+                <span className="bl-post__title">{b.title}</span>
+                {b.excerpt && <span className="bl-post__excerpt">{b.excerpt}</span>}
+                <span className="bl-paper__open"><span>Read</span>
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
+              </a>
+            ))}
+          </div>
+        ) : (
         <div className="bl-tabs__panel bl-paper__list">
           {/* The paper itself, embedded - not a card that sends the
               visitor off to a file. The copy sits on one side and the
               reader on the other, so the pitch and the paper are on
               screen together; the link underneath is for anyone who
               wants the PDF in its own tab instead. */}
-          {(active === "reports" ? REPORTS : WHITEPAPERS).map((wp) => (
+          {(active === "reports" ? reports : whitepapers).map((wp) => (
             <article className="bl-paper__card" key={wp.id}>
               <div className="bl-paper__body">
                 <span className="tag">{wp.tag}</span>
@@ -184,11 +236,11 @@ export default function BlogTabs() {
                       not be scrolled under a covering button. These are on
                       our page, scroll with the wheel, and load lazily. */}
                   <div className="bl-paper__frame" tabIndex={0} aria-label={wp.title} data-lenis-prevent>
-                    {Array.from({ length: wp.pages }, (_, i) => (
+                    {wp.pages.map((src, i) => (
                       <img
                         key={i}
                         className="bl-paper__page"
-                        src={`/assets/whitepapers/${wp.id}/p${String(i + 1).padStart(2, "0")}.jpg`}
+                        src={src}
                         alt={i === 0 ? `${wp.title}, page 1` : ""}
                         width={1240}
                         height={1754}
@@ -228,6 +280,7 @@ export default function BlogTabs() {
             </article>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

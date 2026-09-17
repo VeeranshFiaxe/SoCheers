@@ -3,9 +3,7 @@ import { pageMeta } from "@/lib/seo";
 import JsonLd from "@/components/JsonLd";
 import { pageGraph } from "@/lib/schema";
 import "./blog.css";
-import BlogMotion from "@/components/BlogMotion";
-import BlogTabs from "@/components/BlogTabs";
-import { BLOG_HERO, TOPICS } from "@/lib/blog-content";
+import InsightsPage from "@/components/InsightsPage";
 
 export const metadata: Metadata = pageMeta({
   title: "Insights · SoCheers",
@@ -31,55 +29,8 @@ export default function Blog() {
           header has to draw itself in black ink over it - see readGround()
           in lib/motion.ts. */}
       <main id="top" className="bl-page" data-nav-light>
-        <section className="bl-hero wrap">
-          <div className="bl-hero__copy">
-            <span className="tag" data-reveal>{BLOG_HERO.eyebrow}</span>
-            <h1 className="bl-hero__title" data-split>
-              {BLOG_HERO.lines[0]}
-              <em>{BLOG_HERO.lines[1]}</em>
-            </h1>
-            <p className="bl-hero__lede" data-reveal>{BLOG_HERO.lede}</p>
-          </div>
-
-          {/* The reading visual is parked, not deleted - uncomment to bring it
-              back and the hero returns to two columns on its own (blog.css
-              keys the grid off whether this element is present).
-
-              A transparent-background cutout, so it sits straight on the
-              cream ground with no frame or card around it - the artwork's
-              own edge is the edge. Decorative next to the h1 it illustrates,
-              hence the empty alt.
-
-          <div className="bl-hero__visual" data-reveal>
-            <img
-              src="/assets/art/blog-reading.webp"
-              alt=""
-              width={1536}
-              height={1024}
-              loading="eager"
-              decoding="async"
-            />
-          </div>
-          */}
-        </section>
-
-        <BlogTabs />
-
-        <section className="bl-topics">
-          <div className="wrap">
-            <span className="tag" data-reveal>What we write about</span>
-
-            <div className="bl-topics__grid">
-              {TOPICS.map((t) => (
-                <article className="bl-topic" key={t.idx} data-reveal>
-                  <span className="bl-topic__idx">{t.idx}</span>
-                  <span className="bl-topic__name">{t.name}</span>
-                  <p>{t.copy}</p>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* hero, tabs and topics - edited in the admin panel */}
+        <InsightsPage />
 
         <div className="bl-end">
           <a href="/" className="bl-end__back" data-cursor="Home">
@@ -97,7 +48,6 @@ export default function Blog() {
         </div>
       </main>
 
-      <BlogMotion />
     </>
   );
 }

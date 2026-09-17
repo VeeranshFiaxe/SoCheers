@@ -4,9 +4,26 @@
     {
       "name": "socheers",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "admin-worker",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler",
+        "dev",
+        "--port",
+        "8787",
+        "--local",
+        "--local-upstream",
+        "localhost:8787"
+      ],
+      "port": 8787
     }
   ]
 }

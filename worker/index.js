@@ -24,18 +24,127 @@
 /* A week fresh, a month stale-while-revalidate. The reasoning is in
    next.config.mjs, above headers() - it is the same rule, moved here
    because static-file headers do not apply to what a Worker returns. */
+import { api } from "./api/router.js";
+import { hardenAdmin } from "./api/http.js";
+import { publicInsights, publicPost } from "./api/content.js";
+
 const CACHE = "public, max-age=604800, stale-while-revalidate=2592000";
 
 const MEDIA = /^\/(assets|media)\//;
 
+/* A blog post's address. One level under /insights, no dot (so none of
+   Next's own files under out/insights/ can match). */
+const POST = /^\/insights\/([a-z0-9-]{1,80})\/?$/;
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname.startsWith("/api/")) return api(request, env, url);
+    if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return admin(request, env, url);
     if (MEDIA.test(url.pathname)) return media(request, env, url);
     if (url.searchParams.has("_rsc")) return flight(request, env, url);
+    const post = request.method === "GET" && url.pathname.match(POST);
+    if (post && post[1] !== "post") return blogPost(request, env, url, post[1]);
+    if (request.method === "GET" && url.pathname === "/insights") return linkPreview(await insights(request, env), url);
+    if (request.method === "GET" && url.pathname === "/sitemap.xml") return sitemap(request, env);
     return linkPreview(await env.ASSETS.fetch(request), url);
   },
 };
+
+/* ---- the admin panel ----
+
+   One static page (app/admin), whatever is after /admin/. The page is
+   public markup with nothing in it - every piece of data comes from
+   /api/admin, which checks the session. The headers lock the page down:
+   no framing, no caching, no indexing, no third-party script. */
+async function admin(request, env, url) {
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
+  }
+  const shell = new URL("/admin", url);
+  const res = await env.ASSETS.fetch(new Request(shell, request));
+  const headers = hardenAdmin(new Headers(res.headers));
+  return new Response(res.body, { status: res.status, headers });
+}
+
+/* JSON for a <script type="application/json">: nothing in it can close
+   the tag or start a new one. */
+const inlineJson = (data) =>
+  JSON.stringify(data).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, (c) => "\\u" + c.charCodeAt(0).toString(16));
+
+const appendToHead = (res, html) =>
+  new HTMLRewriter().on("head", { element(el) { el.append(html, { html: true }); } }).transform(res);
+
+/* The Insights page, with what the panel has saved handed over in the
+   document so the page does not wait on a second request for it. If
+   anything here fails the page still goes out, drawing its built-in copy. */
+async function insights(request, env) {
+  const res = await env.ASSETS.fetch(request);
+  if (!env.DB || !res.ok) return res;
+  try {
+    const data = await publicInsights(env);
+    return appendToHead(res, `<script id="sc-insights" type="application/json">${inlineJson(data)}</script>`);
+  } catch (e) {
+    console.error("insights inject", e);
+    return res;
+  }
+}
+
+/* A blog post: the one static shell (app/insights/post), with this post's
+   title, description and share image written into its head and the post
+   itself handed over as JSON for components/BlogPost.tsx to draw. */
+async function blogPost(request, env, url, slug) {
+  let post = null;
+  try { post = env.DB ? await publicPost(env, slug) : null; } catch (e) { console.error("post", e); }
+  if (!post) return env.ASSETS.fetch(new Request(new URL("/__no-such-post__", url), request));
+
+  const shell = await env.ASSETS.fetch(new Request(new URL("/insights/post", url), request));
+  const title = `${post.data?.seoTitle || post.title} · SoCheers`;
+  const description = post.data?.seoDescription || post.excerpt || "";
+  const canonical = `${BUILT_ORIGIN}/insights/${post.slug}`;
+  const image = post.cover ? new URL(post.cover, BUILT_ORIGIN).href : null;
+  const attr = (value) => ({ element(el) { el.setAttribute("content", value); } });
+
+  let rw = new HTMLRewriter()
+    .on("title", { element(el) { el.setInnerContent(title); } })
+    .on('meta[name="description"]', attr(description))
+    .on('meta[property="og:title"]', attr(title))
+    .on('meta[property="og:description"]', attr(description))
+    .on('meta[property="og:url"]', attr(canonical))
+    .on('meta[property="og:type"]', attr("article"))
+    .on('meta[name="twitter:title"]', attr(title))
+    .on('meta[name="twitter:description"]', attr(description))
+    .on('link[rel="canonical"]', { element(el) { el.setAttribute("href", canonical); } })
+    .on('meta[name="robots"]', { element(el) { el.remove(); } });
+  if (image) {
+    rw = rw.on('meta[property="og:image"]', attr(image)).on('meta[name="twitter:image"]', attr(image))
+      .on('meta[property="og:image:width"]', { element(el) { el.remove(); } })
+      .on('meta[property="og:image:height"]', { element(el) { el.remove(); } });
+  }
+  const res = appendToHead(rw.transform(shell), `<script id="sc-post" type="application/json">${inlineJson(post)}</script>`);
+  const headers = new Headers(res.headers);
+  headers.set("cache-control", "public, max-age=0, must-revalidate");
+  return linkPreview(new Response(res.body, { status: 200, headers }), url);
+}
+
+/* The built sitemap, plus every published post. */
+async function sitemap(request, env) {
+  const res = await env.ASSETS.fetch(request);
+  if (!env.DB || !res.ok) return res;
+  try {
+    const { results } = await env.DB.prepare(
+      "SELECT slug, updated_at FROM posts WHERE type = 'blog' AND status = 'published'",
+    ).all();
+    const extra = results.map((r) =>
+      `<url><loc>${BUILT_ORIGIN}/insights/${r.slug}</loc><lastmod>${new Date(r.updated_at).toISOString()}</lastmod><priority>0.6</priority></url>`,
+    ).join("");
+    const xml = (await res.text()).replace("</urlset>", `${extra}</urlset>`);
+    return new Response(xml, { headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  } catch (e) {
+    console.error("sitemap", e);
+    return env.ASSETS.fetch(request);
+  }
+}
 
 /* The share preview. The build bakes https://socheers.net into og:image,
    og:url and twitter:image (metadataBase in app/layout.tsx), and until
@@ -145,6 +254,8 @@ function mediaHeaders(obj) {
   headers.set("etag", obj.httpEtag);
   headers.set("cache-control", CACHE);
   headers.set("accept-ranges", "bytes");
+  /* the stored type is the one the upload was checked as - never guessed */
+  headers.set("x-content-type-options", "nosniff");
   return headers;
 }
 
