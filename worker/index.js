@@ -83,7 +83,17 @@ async function insights(request, env) {
   if (!env.DB || !res.ok) return res;
   try {
     const data = await publicInsights(env);
-    return appendToHead(res, `<script id="sc-insights" type="application/json">${inlineJson(data)}</script>`);
+    const posts = data.entries.filter((e) => e.type === "blog");
+    const list = posts.length
+      ? `<script type="application/ld+json">${inlineJson({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          itemListElement: posts.map((e, i) => ({
+            "@type": "ListItem", position: i + 1, url: `${BUILT_ORIGIN}/insights/${e.slug}`, name: e.title,
+          })),
+        })}</script>`
+      : "";
+    return appendToHead(res, `${list}<script id="sc-insights" type="application/json">${inlineJson(data)}</script>`);
   } catch (e) {
     console.error("insights inject", e);
     return res;
@@ -121,10 +131,74 @@ async function blogPost(request, env, url, slug) {
       .on('meta[property="og:image:width"]', { element(el) { el.remove(); } })
       .on('meta[property="og:image:height"]', { element(el) { el.remove(); } });
   }
-  const res = appendToHead(rw.transform(shell), `<script id="sc-post" type="application/json">${inlineJson(post)}</script>`);
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+  const iso = (t) => (t ? new Date(t).toISOString() : null);
+  const meta = [
+    iso(post.published_at) && `<meta property="article:published_time" content="${iso(post.published_at)}">`,
+    iso(post.updated_at) && `<meta property="article:modified_time" content="${iso(post.updated_at)}">`,
+    post.author && `<meta property="article:author" content="${esc(post.author)}">`,
+    ...(post.tags || []).map((t) => `<meta property="article:tag" content="${esc(t)}">`),
+  ].filter(Boolean).join("");
+  const res = appendToHead(
+    rw.transform(shell),
+    `${meta}<script type="application/ld+json">${inlineJson(postSchema(post, canonical, image, description))}</script>` +
+      `<script id="sc-post" type="application/json">${inlineJson(post)}</script>`,
+  );
   const headers = new Headers(res.headers);
   headers.set("cache-control", "public, max-age=0, must-revalidate");
   return linkPreview(new Response(res.body, { status: 200, headers }), url);
+}
+
+/* What a search engine reads about a post (JSON-LD): the article, with its
+   text as plain words so crawlers that don't run the page's script still
+   get the content, and the breadcrumb back to Insights. Points at the
+   Organization and WebSite nodes the layout already emits (lib/schema.ts). */
+const runs = (rich) => (rich || []).map((r) => r.t).join("");
+function postText(blocks) {
+  return (blocks || []).map((b) => {
+    if (b.type === "ul" || b.type === "ol") return b.items.map(runs).join(" ");
+    if (b.type === "cols") return `${runs(b.left)} ${runs(b.right)}`;
+    if (b.text) return runs(b.text);
+    return "";
+  }).filter(Boolean).join("\n\n");
+}
+function postSchema(post, url, cover, description) {
+  const blocks = post.data?.blocks || [];
+  const body = postText(blocks);
+  const images = [cover, ...blocks.flatMap((b) => (b.type === "gallery" ? b.images : b.src ? [b] : []))
+    .map((i) => (typeof i === "string" ? i : i.src && new URL(i.src, BUILT_ORIGIN).href))].filter(Boolean);
+  const iso = (t) => (t ? new Date(t).toISOString() : undefined);
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        "@id": `${url}#article`,
+        mainEntityOfPage: { "@type": "WebPage", "@id": url },
+        url,
+        headline: post.title.slice(0, 110),
+        description,
+        image: images.length ? [...new Set(images)] : undefined,
+        datePublished: iso(post.published_at),
+        dateModified: iso(post.updated_at || post.published_at),
+        author: post.author ? { "@type": "Person", name: post.author } : { "@id": `${BUILT_ORIGIN}/#organization` },
+        publisher: { "@id": `${BUILT_ORIGIN}/#organization` },
+        isPartOf: { "@id": `${BUILT_ORIGIN}/#website` },
+        keywords: post.tags?.length ? post.tags.join(", ") : undefined,
+        articleBody: body || undefined,
+        wordCount: body ? body.split(/\s+/).filter(Boolean).length : undefined,
+        inLanguage: "en-IN",
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${BUILT_ORIGIN}/` },
+          { "@type": "ListItem", position: 2, name: "Insights", item: `${BUILT_ORIGIN}/insights` },
+          { "@type": "ListItem", position: 3, name: post.title, item: url },
+        ],
+      },
+    ],
+  };
 }
 
 /* The built sitemap, plus every published post. */
