@@ -113,7 +113,7 @@
   margin-top:26px;
   display:inline-flex; align-items:center; gap:11px; padding:13px 26px 13px 13px;
   border-radius:999px; background:var(--accent); color:var(--accent-ink);
-  font-weight:500; font-size:15px;
+  font-family:inherit; font-weight:500; font-size:15px;
 }
 .wk-lede__play{
   display:grid; place-items:center; width:30px; height:30px;
@@ -494,7 +494,7 @@
   position:absolute; z-index:2; top:clamp(90px,13vh,120px); right:var(--pad);
   width:40px; height:40px; display:grid; place-items:center;
   border:1px solid rgba(241,236,225,.3); border-radius:50%;
-  background:rgba(4,4,5,.6); backdrop-filter:blur(6px);
+  background:rgba(4,4,5,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   color:var(--cream); cursor:none;
   transition:border-color .35s var(--ease), background .35s var(--ease);
 }

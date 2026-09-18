@@ -46,7 +46,13 @@ function Bulb() {
 }
 
 export default function NotFound() {
-  const pathname = usePathname();
+  /* The page is prerendered once (out/404.html) and served for every
+     missing path, so the path it was built at is never the one asked
+     for - rendering it straight away was a hydration mismatch. Filled
+     in after mount instead. */
+  const livePath = usePathname();
+  const [pathname, setPathname] = useState("");
+  useEffect(() => setPathname(livePath), [livePath]);
   const [lamp, setLamp] = useState<Lamp>("off");
   const [pulls, setPulls] = useState(0);
   const [drag, setDrag] = useState(0);
@@ -143,7 +149,7 @@ export default function NotFound() {
 
         <h2 className="nf__head">This room&rsquo;s empty.</h2>
         <p className="nf__body">
-          <code className="nf__path">{pathname}</code> moved out, never moved in, or
+          <code className="nf__path">{pathname || "This page"}</code> moved out, never moved in, or
           was a typo. Happens to the best of us. The rest of the house is open.
         </p>
 

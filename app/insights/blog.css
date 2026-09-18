@@ -414,6 +414,16 @@
 
 /* Expand, where the Fullscreen API is not there (iPhone): the reader is
    pinned over the viewport instead - see BlogTabs.tsx. */
+/* The scroll reveal leaves an identity transform inline on .bl-tabs, and
+   any transform makes an ancestor the box position:fixed is measured
+   against - the "full screen" reader ended up pinned inside the tabs, a
+   half-screen panel under the hero. Lifted while the reader is open, and
+   the section raised: it is its own layer at z-index 1, under the hero
+   copy (2), which showed through the paper. */
+.bl-tabs:has(.bl-paper__frameWrap.is-full){ transform:none !important; z-index:1000; }
+/* and the header steps aside: it stacks above <main>, so it sat over
+   the reader's Collapse button and left no way back out on a phone */
+html:has(.bl-paper__frameWrap.is-full) .nav{ visibility:hidden; }
 .bl-paper__frameWrap.is-full{
   position:fixed; inset:0; z-index:1000;
   display:flex; background:#000;

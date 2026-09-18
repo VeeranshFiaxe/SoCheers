@@ -28,8 +28,12 @@ export const OFFICES = [
     address: "16th Floor, Lotus Business Park, Off New Link Road, Andheri West, Mumbai – 400 053",
     embedUrl:
       "https://www.google.com/maps?q=19.1365201,72.8332081&hl=en&z=15&output=embed",
+    /* Google's documented directions link: destination only, so the
+       route starts wherever the visitor is. (The link the client sent
+       had a fixed starting point baked into it - everyone got directions
+       from that one spot.) */
     dirUrl:
-      "https://www.google.com/maps/dir/19.1168512,72.8629248/SoCheers,+16th+Floor,+Lotus+Business+Park,+Off,+New+Link+Rd,+off+New+Link+Road,+Veera+Desai+Industrial+Estate,+Andheri+West,+Mumbai,+Maharashtra+400053/@19.1260471,72.8258738,14z/data=!3m1!4b1!4m9!4m8!1m1!4e1!1m5!1m1!1s0x3be7b63b41f89c51:0x993c1f6d1ce2e486!2m2!1d72.8332081!2d19.1365201?entry=ttu&g_ep=EgoyMDI2MDgxMi4wIKXMDSoASAFQAw%3D%3D",
+      "https://www.google.com/maps/dir/?api=1&destination=SoCheers%2C+16th+Floor%2C+Lotus+Business+Park%2C+New+Link+Road%2C+Andheri+West%2C+Mumbai+400053",
   },
 ] as const;
 

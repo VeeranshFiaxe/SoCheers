@@ -99,8 +99,14 @@ async function listTag(tag: string, kind: "image" | "video"): Promise<WorkAsset[
   return (json.resources ?? []).map((r) => toAsset(r, kind));
 }
 
+/* The live wall: placeholder tiles (pending() in lib/work-content.ts -
+   stock pictures with a PLACEHOLDER badge) stay out of the public site
+   until their work arrives. Every category still has real work without
+   them. */
+const LIVE_ASSETS = WORK_ASSETS.filter((a) => !a.pending);
+
 export async function getWorkAssets(): Promise<WorkAsset[]> {
-  if (!CLOUD) return WORK_ASSETS;
+  if (!CLOUD) return LIVE_ASSETS;
 
   const tags = WORK_CATEGORIES.filter((c) => c.id !== "all").map((c) => c.id);
 
@@ -135,7 +141,7 @@ export async function getWorkAssets(): Promise<WorkAsset[]> {
 
   if (!assets.length) {
     console.warn("[work] cloudinary returned nothing - serving the local manifest instead");
-    return WORK_ASSETS;
+    return LIVE_ASSETS;
   }
   return assets;
 }

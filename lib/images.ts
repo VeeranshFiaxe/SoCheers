@@ -34,3 +34,30 @@ export function pic(src: string, larger?: { src: string }): Pic {
   if (larger && lw) set.push(`${webp(larger.src)} ${lw}w`);
   return { src: webp(src), srcSet: set.length > 1 ? set.join(", ") : undefined };
 }
+
+/* ============================================================
+   THE GRID PICTURES' PHONE COPIES.
+
+   scripts/build-thumbs.mjs writes <name>-600.webp beside the pictures
+   the AI Work wall and the Series page draw small, and records the
+   original's width in thumbs.json. Spread onto the <img> with a `sizes`
+   saying how wide the tile is drawn:
+
+     <img {...thumb(src)} sizes="(max-width: 760px) 50vw, 33vw" />
+
+   A phone then decodes a 600px picture instead of a 2000px one, which
+   is what keeps iPhone Safari from running out of memory and reloading
+   the page. Anything not in the list comes back unchanged.
+   ============================================================ */
+import THUMBS from "./thumbs.json";
+
+const TW = THUMBS as Record<string, number>;
+
+export function thumb(src: string): Pic {
+  const w = TW[src];
+  if (!w) return { src };
+  /* encoded: a srcset is split on spaces, and a few Series files have
+     them in their names */
+  const small = encodeURI(src.replace(/\.(jpe?g|png|webp)$/i, "-600.webp"));
+  return { src, srcSet: `${small} 600w, ${encodeURI(src)} ${w}w` };
+}

@@ -35,6 +35,7 @@ export default function ContactForm() {
   const [sending, setSending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
+  const [fileError, setFileError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   /* The hidden iframe fires `load` once when it is first attached, well
      before anything is sent. Only a load that follows our own submit is
@@ -228,19 +229,23 @@ export default function ContactForm() {
                   onChange={(e) => {
                     const input = e.currentTarget;
                     const f = input.files?.[0];
+                    /* Said on the face rather than through
+                       setCustomValidity: the field is optional, and a
+                       custom error left on the emptied input kept the
+                       whole form from sending until another file was
+                       picked. */
                     if (f && f.size > 5 * 1024 * 1024) {
                       input.value = "";
                       setFileName("");
-                      input.setCustomValidity("That file is over 5 MB.");
-                      input.reportValidity();
+                      setFileError("That file is over 5 MB.");
                       return;
                     }
-                    input.setCustomValidity("");
+                    setFileError("");
                     setFileName(f ? f.name : "");
                   }}
                 />
                 <span className="ctf__file-face" aria-hidden="true">
-                  {fileName || "Choose a PDF"}
+                  {fileError || fileName || "Choose a PDF"}
                 </span>
               </label>
             ) : (

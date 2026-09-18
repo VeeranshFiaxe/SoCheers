@@ -363,6 +363,8 @@ export function initSite(): () => void {
        end of the sequence *is* the intro and a second one would fight it. */
     function runLoader() {
       if (prefersReduced || overture) return;
+      /* only the home page has a hero to introduce */
+      if (!document.querySelector("[data-hero]")) return;
       /* A reload restored below the hero: the intro's from() tweens would
          keep writing the hero's opening values for two seconds over the
          end state heroSkip settles it on, and the photo came back black
@@ -398,12 +400,10 @@ export function initSite(): () => void {
         const push = heroSettle;
         let k = 1.06;
         const settle = { get v() { return k; }, set v(n: number) { k = n; push(n); } };
-        tl.from("[data-frame-img]",
-          { scale: 1.06, autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
         tl.from("[data-stage-img]", { autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
         tl.fromTo(settle, { v: 1.06 }, { v: 1, duration: 2.0, ease: "power2.out" }, 0);
       } else {
-        tl.from("[data-frame-img], [data-stage-img]",
+        tl.from("[data-stage-img]",
           { scale: 1.06, autoAlpha: 0, duration: 2.0, ease: "power2.out" }, 0);
       }
       // the greeting is written on the frame, so it follows the frame in
@@ -444,7 +444,10 @@ export function initSite(): () => void {
     function initHero() {
       const hero = document.querySelector<HTMLElement>("[data-hero]");
       const pin = document.querySelector<HTMLElement>("[data-hero-pin]");
-      const frame = document.querySelector<HTMLElement>("[data-frame]");
+      /* scoped to the hero: the service cards further down carry their own
+         data-frame (one per line), and an unscoped lookup found the first
+         of those and faded "Brand Positioning" out with the artwork */
+      const frame = hero?.querySelector<HTMLElement>("[data-frame]") ?? null;
       const backdrop = document.querySelector<HTMLElement>("[data-hero-backdrop]");
       const stage = document.querySelector<HTMLElement>("[data-hero-stage]");
       const photo = document.querySelector<HTMLElement>("[data-stage-img]");
@@ -751,13 +754,22 @@ export function initSite(): () => void {
       let filmShown = () => true;
       let syncFilm = () => {};
       if (isTest && film) {
-        const src = film.dataset.testFilm;
+        /* A phone gets the 960px cut beside it (vibe-video-sm.mp4, 5MB
+           against 12MB) - same split as components/FilmSources.tsx. */
+        const full = film.dataset.testFilm;
+        const src = full && !matchMedia("(min-width: 768px)").matches
+          ? full.replace(/\.mp4$/, "-sm.mp4")
+          : full;
         const fetchFilm = () => {
           if (ac.signal.aborted || !src || film.src) return;
           note("film src set");
           /* the poster comes with it - see data-test-poster in
              components/Hero.tsx for why it is not written in the markup */
           if (film.dataset.testPoster) film.poster = film.dataset.testPoster;
+          /* the phone cut missing (not uploaded yet) falls back to the full one */
+          if (full && src !== full) {
+            film.addEventListener("error", () => { film.src = full; film.load(); }, { once: true, signal: ac.signal });
+          }
           film.src = src;
           /* an explicit load(): setting .src on an element parsed with
              preload="none" does not always start the fetch on its own */

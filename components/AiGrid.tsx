@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AI_SEGMENTS, AI_WORK, type AiAsset, type SegmentId } from "@/lib/ai-content";
+import { thumb } from "@/lib/images";
 
 /* ============================================================
    THE WORK GRID - four segments, two orientations, one column flow.
@@ -368,7 +369,7 @@ function Tile({
         </>
       ) : (
         <>
-          <img src={a.src} alt={a.title} loading="lazy" decoding="async" width={a.w} height={a.h} />
+          <img {...thumb(a.src)} sizes="(max-width: 760px) 50vw, 33vw" alt={a.title} loading="lazy" decoding="async" width={a.w} height={a.h} />
           {onOpen && (
             <button
               type="button"

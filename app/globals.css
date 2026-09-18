@@ -132,6 +132,16 @@
 
 *{ margin:0; padding:0; box-sizing:border-box; }
 html{ -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; overflow-x:hidden; }
+/* iPhone and iPad only (-webkit-touch-callout exists nowhere else): no
+   rubber-band bounce past the top or bottom of the page. The bounce
+   briefly scrolls the page to a negative or past-the-end position, and
+   the hero lock and the pinned sections read that as a real scroll and
+   put the page back - on iOS that was a visible jump every time a
+   gesture hit an edge. Android has no bounce, and keeps its
+   pull-to-refresh. */
+@supports (-webkit-touch-callout: none){
+  html, body{ overscroll-behavior-y:none; }
+}
 /* iOS inflates the type on any block it decides is too narrow for its
    column - which on a site built out of clamped, deliberately-measured
    headings means an h1 sized to fit a phone comes back a size and a half
@@ -2095,7 +2105,7 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
   display:grid; place-items:center;
   padding:clamp(16px,4vw,40px);
   background:rgba(6,6,7,.72);
-  backdrop-filter:blur(6px);
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   animation:cmodalFade .25s var(--ease);
 }
 @keyframes cmodalFade{ from{ opacity:0; } to{ opacity:1; } }

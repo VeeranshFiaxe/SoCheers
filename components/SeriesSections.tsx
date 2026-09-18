@@ -8,6 +8,7 @@ import {
 } from "@/lib/series-content";
 import SeriesPhones from "@/components/SeriesPhones";
 import SeriesPull from "@/components/SeriesPull";
+import { thumb } from "@/lib/images";
 
 /* ============================================================
    SERIES - the nine sections, staged.
@@ -78,7 +79,7 @@ import SeriesPull from "@/components/SeriesPull";
    JavaScript on this route to attach one. Muted, inline and looping is
    the combination every browser will start unprompted, and preload is
    off so a reader who never reaches the wall never pays for it. */
-function Frame({ file }: { file: string }) {
+function Frame({ file, sizes }: { file: string; sizes?: string }) {
   if (isFilm(file)) {
     return (
       <video
@@ -92,6 +93,8 @@ function Frame({ file }: { file: string }) {
       />
     );
   }
+  /* with a sizes, the phone copy is offered too - see thumb() */
+  if (sizes) return <img {...thumb(ART(file))} sizes={sizes} alt="" loading="lazy" decoding="async" />;
   return <img src={ART(file)} alt="" loading="lazy" decoding="async" />;
 }
 
@@ -237,7 +240,7 @@ function Wall({ frames }: { frames: string[] }) {
     <div className="st-wall">
       {frames.map((f, i) => (
         <span className="st-tile" key={`${f}-${i}`}>
-          <Frame file={f} />
+          <Frame file={f} sizes="(max-width: 760px) 34vw, 25vw" />
         </span>
       ))}
     </div>
@@ -269,7 +272,7 @@ function Reel({ frames }: { frames: string[] }) {
     <div className="st-reelrow">
       {frames.map((f, i) => (
         <span className="st-vert" key={`${f}-${i}`}>
-          <Frame file={f} />
+          <Frame file={f} sizes="(max-width: 760px) 25vw, 12vw" />
           <b className="st-vert__ep">{String(i + 1).padStart(2, "0")}</b>
         </span>
       ))}
@@ -287,7 +290,7 @@ function Steps({ items }: { items: Step[] }) {
       {items.map((s) => (
         <li className="st-step" key={s.no}>
           <span className="st-step__art">
-            <img src={ART(s.art)} alt="" loading="lazy" decoding="async" />
+            <img {...thumb(ART(s.art))} sizes="(max-width: 760px) 50vw, 25vw" alt="" loading="lazy" decoding="async" />
           </span>
           <b className="st-step__no">{s.no}</b>
           <h3 className="st-step__title">{s.title}</h3>

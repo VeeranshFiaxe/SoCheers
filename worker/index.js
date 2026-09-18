@@ -43,13 +43,31 @@ export default {
     if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return admin(request, env, url);
     if (MEDIA.test(url.pathname)) return media(request, env, url);
     if (url.searchParams.has("_rsc")) return flight(request, env, url);
-    const post = request.method === "GET" && url.pathname.match(POST);
-    if (post && post[1] !== "post") return blogPost(request, env, url, post[1]);
-    if (request.method === "GET" && url.pathname === "/insights") return linkPreview(await insights(request, env), url);
+    /* HEAD too: link checkers and some crawlers ask that first, and a
+       post answered 404 to it looks dead to them */
+    const read = request.method === "GET" || request.method === "HEAD";
+    const post = read && url.pathname.match(POST);
+    if (post && post[1] !== "post") return secure(await blogPost(request, env, url, post[1]));
+    if (read && url.pathname === "/insights") return secure(linkPreview(await insights(request, env), url));
     if (request.method === "GET" && url.pathname === "/sitemap.xml") return sitemap(request, env);
-    return linkPreview(await env.ASSETS.fetch(request), url);
+    return secure(linkPreview(await env.ASSETS.fetch(request), url));
   },
 };
+
+/* The baseline every public page goes out with. Static-file headers
+   (public/_headers) do not reach what a Worker returns, so they are set
+   here. SAMEORIGIN rather than DENY: nothing frames the site today, but
+   the site framing itself should stay possible. */
+function secure(res) {
+  if (!(res.headers.get("content-type") || "").includes("text/html")) return res;
+  const headers = new Headers(res.headers);
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("X-Frame-Options", "SAMEORIGIN");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("Strict-Transport-Security", "max-age=31536000");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
 
 /* ---- the admin panel ----
 
@@ -286,7 +304,8 @@ async function media(request, env, url) {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
   }
-  const key = decodeURIComponent(url.pathname.slice(1));
+  let key;
+  try { key = decodeURIComponent(url.pathname.slice(1)); } catch { return new Response("Not found", { status: 404 }); }
 
   /* A byte range: every film on the site is fetched this way (scrubbing,
      and Safari will not play a video without it). Worked out here from

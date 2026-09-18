@@ -1724,7 +1724,7 @@
   /* a chip is only legible if its ground is - at .45 the picture behind
      it was reading straight through eleven pixels of tracked mono */
   background:rgba(11,11,12,.72);
-  backdrop-filter:blur(3px);
+  backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px);
   font-family:var(--f-mono); font-weight:500;
   font-size:11px; letter-spacing:.14em; text-transform:uppercase;
   color:var(--cream);
