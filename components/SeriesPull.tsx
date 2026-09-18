@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { ART } from "@/lib/series-content";
-import { isLite, trackRect } from "@/lib/perf";
+import { isLite } from "@/lib/perf";
 import { holdScroll, jumpTo } from "@/lib/motion";
 
 /* ============================================================
@@ -20,123 +20,79 @@ import { holdScroll, jumpTo } from "@/lib/motion";
 
    So the client shot the frame BEFORE it. Same room, same light, same
    phone in the same place - and an ordinary face on it. That is what is
-   on the screen when the section is met. What the scroll does is take
-   him apart: his face goes into the phone, the light it leaves behind
-   runs in after it, and the frame that lands is the one the deck sent.
+   on the screen when the section is met. What the pull does is take him
+   apart: his face goes into the phone, the light it leaves behind runs
+   in after it, and the frame that lands is the one the deck sent.
 
    ---- the layers ----
-
-   Six, and the order of them is the whole design:
 
      to     the deck's finished frame, underneath everything
      from   the ordinary frame, whole
      hole   the deck's frame cut to the shape of his profile, fading in
             as the profile leaves
-     smear  the deck's frame again, blurred once and screen-blended,
-            stretched off the phone - the band of light, over all three
-     face   the FRONT of his face, on its own layer, scaled ABOUT THE
-            PHONE so that it collapses into it
+     smear  the deck's frame again, blurred and screen-blended,
+            stretched off the phone - the band of light
+     face   the FRONT of his face, scaled ABOUT THE PHONE so that it
+            collapses into it
      wisp   the same profile again, blurred hard and screen-blended,
             thrown further and faster - what is left of him
-
-   `face` and `hole` are cut to the same shape and are exact opposites
-   in time: as one goes the other arrives. At rest the face is the same
-   pixels in the same place as the plate under it, so there is no seam,
-   and at the end the deck's own smear is sitting where the profile was.
+     glow   what the screen throws back into the room
+     motes  the spray, pulled into the phone under a 1/d^2 suction
 
    WHAT LEAVES IS THE PROFILE AND NOT THE HEAD. The brow, the nose, the
-   lips, the line of the jaw. The ear, the hair and the back of his
-   skull stay exactly where they are, because in the deck's own frame
-   they have not moved - only the front of him has been drawn out into
-   the light. A mask that takes the whole head breaks that the moment
-   the two frames meet.
+   lips, the jaw. The ear, the hair and the back of his skull stay where
+   they are, because in the deck's own frame they have not moved.
 
-   And the change does not arrive as a wipe. A hole that opens on its
-   own is a picture changing with nothing in it moving, which is the one
-   thing this section is about.
+   ---- why all of it is one canvas ----
 
-   ---- and why nothing here animates a mask or a filter ----
+   This used to be six <img> layers, each twice the size of the screen,
+   carrying masks, blurs and blend modes. That is a stack of GPU
+   surfaces tens of megapixels each, and what a browser does when it
+   runs out of room for them differs by browser and by machine: some
+   frames it paints them, some it drops a tile (a black block over the
+   picture), some it drops a layer (the whole face gone for a frame).
+   That was the flicker, and why it came and went.
 
-   Every value the scroll drives is an OPACITY or a TRANSFORM, and
-   nothing else. Both are handled on the compositor: a layer is
-   rasterised once and then moved and faded, so a frame of this costs
-   nothing to paint.
+   So every layer is now prepared ONCE, when the two files arrive - the
+   grade, the blurs and the masks are baked into small offscreen
+   canvases, cropped to the part of the picture they cover - and each
+   frame is a handful of drawImage calls into one canvas the size of the
+   section. Nothing is left for the compositor to decide, so it looks
+   the same on every browser, every time.
 
-   The pass before this one grew a mask radius and a blur radius as the
-   scroll moved. Both are paint rather than composite, and both were
-   being re-run every frame over a picture the size of two screens,
-   which is what made it judder. The masks here are fixed. The blurs
-   here are fixed. What moves is where a layer is and how much of it you
-   can see.
-
-   ---- the spray ----
-
-   The canvas, and the part of this that is neither photograph: motes
-   lifting off his face and accelerating into the phone under a real
-   1/d^2 suction. Aimed at the FRAME rather than at the window, so both
-   ends of the stream sit where they belong at every viewport.
-
-   Drawn as one stretched sprite per mote rather than as a stroked path
-   plus a dot - half the calls, and the streak comes out soft at both
-   ends instead of needing a round cap. The backing store is capped
-   below the device's own pixel ratio: these are soft glows with no edge
-   in them, nobody can see the difference, and what this layer costs per
-   frame is the pixels it clears and composites rather than the number
-   of motes in it. It is hidden outright while it is empty.
+   The DOM frame underneath is only the fallback: it is what a reader
+   without JavaScript, or with reduced motion, sees - the deck's
+   finished frame - and it is hidden the moment the canvas has drawn.
 
    ---- the frame, and why any of it can be aimed ----
 
-   Every other picture on the page is object-fit:cover, which crops by
-   an amount that depends on the shape of the reader's window. Nothing
-   can be positioned against the CONTENT of a frame cropped that way - a
-   mask over the man's face at 16:9 is over his shoulder at 21:9.
+   The picture is not cropped by object-fit. The frame carries the
+   files' own 2.39:1, sized to twice what it takes to cover the section
+   (a little under twice the width on a phone), so a fraction inside the
+   frame is a fraction of the PHOTOGRAPH at every window. geometry()
+   below is the same box the stylesheet builds for .st-pull__frame.
 
-   So this one is not cropped by object-fit. .st-pull__frame is a box
-   carrying the files' own 2.39:1, sized in container units to twice
-   what it takes to cover the section, and both plates fill it exactly.
-   A percentage inside the frame is a percentage of the PHOTOGRAPH, at
-   every window.
+   Two points, measured off the files: THE PHONE at 39.8% 55.2%, where
+   both plates go over 235 luma, and THE PROFILE at 50.3% 49.5%. Every
+   layer is scaled about the phone and every mote is pulled to it.
 
-   Sized to twice it, rather than sized to cover it and then scaled by
-   two, which is what this used to do. The box is now the size it is
-   shown at, so the layers inside it rasterise at 1:1 and the only scale
-   left on them is the tenth the frame closes in by across the pull.
+   ---- the numbers ----
 
-   Two numbers, measured off the files rather than guessed: THE PHONE at
-   39.8% 55.2%, where both plates go over 235 luma, and THE PROFILE at
-   50.3% 49.5%, the front of the lit face in the ordinary one. The phone
-   is the point every layer in the stylesheet is scaled about and the
-   point every mote here is pulled to, so it has to agree across the two
-   files. The profile is where the motes come off, and it is the centre
-   of the one mask in the stylesheet.
-
-   ---- the numbers the scroll writes ----
-
-     --p   how far the pull has played, on a clock rather than on the
+     at    how far the pull has played, on a clock rather than on the
            scroll - see the hold below. It plays once and never goes
-           back. Scrolling up does not put him together again.
-     --s   his face going into the phone
-     --fa  how much of it you can still see, which holds high and then
-           drops - a face that fades as fast as it travels has gone
-           before it has gone anywhere
-     --g   the handover of the rest of the room, last and separately
-     --b   the burst: 0 up to 1 and back to 0 across the middle of all
-           of it. The spray, the smear, the wisp and the glow are on
-           this, because they are things that HAPPEN.
-
-   Nothing moves for the first fifth of --p. The section has to be
-   looked at before the picture in it changes: run any earlier and the
-   whole thing happens in the corner of the reader's eye on the way up
-   the screen, which is what the first pass of this did.
-
-   They rest FINISHED in the stylesheet - --p, --s and --g at 1, --fa
-   and --b at 0 - so a reader whose JavaScript never runs, and one who
-   has asked for reduced motion, get the deck's photograph rather than a
-   man stuck halfway out of his own face.
+           back.
+     s     his face going into the phone
+     fa    how much of it you can still see, which holds high and then
+           drops
+     g     the handover of the rest of the room, last and separately
+     b     the burst: 0 up to 1 and back to 0 across the middle. The
+           spray, the smear, the wisp and the glow are on this.
    ============================================================ */
 
 const PHONE = { x: 0.398, y: 0.552 };
 const FACE = { x: 0.503, y: 0.495, rx: 0.045, ry: 0.105 };
+/* the files' own 2200/920 */
+const RATIO = 2.3913;
 
 type Mote = {
   x: number;
@@ -151,16 +107,204 @@ type Mote = {
   warm: number;
 };
 
+/* a piece of the photograph, prepared once. x/y/w/h are where it sits,
+   as fractions of the frame. */
+type Sprite = { c: HTMLCanvasElement; x: number; y: number; w: number; h: number };
+type Box = { x: number; y: number; w: number; h: number };
+type Tone = { contrast?: number; bright?: number; saturate?: number };
+type Oval = { x: number; y: number; rx: number; ry: number; stops: [number, string][] };
+
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n);
 /* 3t^2-2t^3 */
 const ease = (t: number) => t * t * (3 - 2 * t);
 
-/* the sprite every mote is drawn with. One soft dot, made once and
-   stretched along its own heading at draw time - a gradient built per
-   mote per frame is the only thing here that would cost anything. */
-function makeDot() {
+/* ---- the shapes, as fractions of the frame ---- */
+
+/* the front of his face: solid over the lit profile, stopping short of
+   the ear, soft past it - a face that detaches on a hard edge is a
+   cut-out, not a face coming apart */
+const CUT: Oval = {
+  x: 0.503,
+  y: 0.495,
+  rx: 0.065,
+  ry: 0.155,
+  stops: [
+    [0, "rgba(0,0,0,1)"],
+    [0.5, "rgba(0,0,0,1)"],
+    [0.76, "rgba(0,0,0,.5)"],
+    [1, "rgba(0,0,0,0)"],
+  ],
+};
+const CUT_BOX: Box = { x: 0.428, y: 0.33, w: 0.15, h: 0.33 };
+
+/* the band of light: only the phone and what comes off it */
+const BEAM: Oval = {
+  x: 0.45,
+  y: 0.51,
+  rx: 0.24,
+  ry: 0.34,
+  stops: [
+    [0, "rgba(0,0,0,1)"],
+    [0.34, "rgba(0,0,0,1)"],
+    [0.88, "rgba(0,0,0,0)"],
+  ],
+};
+const BEAM_BOX: Box = { x: 0.2, y: 0.16, w: 0.5, h: 0.7 };
+
+const GLOW_BOX: Box = { x: 0.288, y: 0.289, w: 0.22, h: 0.526 };
+
+/* the grade the three-band poster runs, so this section still belongs
+   to the page rather than to its own effect */
+const GRADE: Tone = { contrast: 1.09, saturate: 0.88 };
+
+/* ---- preparing the sprites ---- */
+
+function sheet(w: number, h: number) {
   const c = document.createElement("canvas");
-  c.width = c.height = 64;
+  c.width = Math.max(1, Math.round(w));
+  c.height = Math.max(1, Math.round(h));
+  return c;
+}
+
+/* contrast, then brightness, then saturation - the order the CSS filters
+   they replace ran in. Skipped (the picture is left ungraded) if the
+   pixels cannot be read, e.g. a file served from another origin. */
+function tone(c: HTMLCanvasElement, t: Tone) {
+  const g = c.getContext("2d");
+  if (!g) return;
+  let img: ImageData;
+  try {
+    img = g.getImageData(0, 0, c.width, c.height);
+  } catch {
+    return;
+  }
+  const d = img.data;
+  const C = t.contrast ?? 1;
+  const off = 127.5 * (1 - C);
+  const B = t.bright ?? 1;
+  const S = t.saturate ?? 1;
+  const cl = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : v);
+  for (let i = 0; i < d.length; i += 4) {
+    const r = cl(cl(d[i] * C + off) * B);
+    const gg = cl(cl(d[i + 1] * C + off) * B);
+    const b = cl(cl(d[i + 2] * C + off) * B);
+    d[i] = (0.213 + 0.787 * S) * r + (0.715 - 0.715 * S) * gg + (0.072 - 0.072 * S) * b;
+    d[i + 1] = (0.213 - 0.213 * S) * r + (0.715 + 0.285 * S) * gg + (0.072 - 0.072 * S) * b;
+    d[i + 2] = (0.213 - 0.213 * S) * r + (0.715 - 0.715 * S) * gg + (0.072 + 0.928 * S) * b;
+  }
+  g.putImageData(img, 0, 0);
+}
+
+/* a soft blur of roughly `f` pixels: halve it down, double it back up.
+   Done once, so the cost is nothing; it only has to look like a glow. */
+function soften(c: HTMLCanvasElement, f: number) {
+  const steps = [c];
+  let cur = c;
+  for (let s = 1; s < f; s *= 2) {
+    const n = sheet(cur.width / 2, cur.height / 2);
+    const g = n.getContext("2d");
+    if (!g) return;
+    g.imageSmoothingQuality = "high";
+    g.drawImage(cur, 0, 0, n.width, n.height);
+    steps.push(n);
+    cur = n;
+  }
+  for (let i = steps.length - 2; i >= 0; i--) {
+    const t = steps[i];
+    const g = t.getContext("2d");
+    if (!g) return;
+    g.clearRect(0, 0, t.width, t.height);
+    g.imageSmoothingQuality = "high";
+    g.drawImage(cur, 0, 0, t.width, t.height);
+    cur = t;
+  }
+}
+
+/* an elliptical radial gradient, which canvas does not have: a circular
+   one drawn under a scale */
+function oval(
+  g: CanvasRenderingContext2D,
+  w: number,
+  h: number,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  stops: [number, string][],
+) {
+  g.save();
+  g.setTransform(rx, 0, 0, ry, cx, cy);
+  const grad = g.createRadialGradient(0, 0, 0, 0, 0, 1);
+  for (const [at, col] of stops) grad.addColorStop(at, col);
+  g.fillStyle = grad;
+  g.fillRect(-cx / rx, -cy / ry, w / rx, h / ry);
+  g.restore();
+}
+
+function sprite(
+  src: CanvasImageSource,
+  iw: number,
+  ih: number,
+  box: Box,
+  opt: { tone?: Tone; soft?: number; mask?: Oval } = {},
+): Sprite {
+  const c = sheet(box.w * iw, box.h * ih);
+  const g = c.getContext("2d");
+  if (g) {
+    g.drawImage(src, box.x * iw, box.y * ih, box.w * iw, box.h * ih, 0, 0, c.width, c.height);
+    if (opt.tone) tone(c, opt.tone);
+    if (opt.soft) soften(c, opt.soft);
+    if (opt.mask) {
+      const m = opt.mask;
+      g.globalCompositeOperation = "destination-in";
+      oval(g, c.width, c.height, (m.x - box.x) * iw, (m.y - box.y) * ih, m.rx * iw, m.ry * ih, m.stops);
+      g.globalCompositeOperation = "source-over";
+    }
+  }
+  return { c, ...box };
+}
+
+function glowSprite(): Sprite {
+  const px = 480;
+  const c = sheet(px, px);
+  const g = c.getContext("2d");
+  if (g) {
+    const sx = px / GLOW_BOX.w;
+    const sy = px / GLOW_BOX.h;
+    const cx = (PHONE.x - GLOW_BOX.x) * sx;
+    const cy = (PHONE.y - GLOW_BOX.y) * sy;
+    /* the wide one under, the hot one over - the order the stylesheet
+       stacked them in */
+    oval(g, px, px, cx, cy, 0.11 * sx, 0.263 * sy, [
+      [0, "rgba(206,228,255,.5)"],
+      [0.45, "rgba(150,190,255,.18)"],
+      [0.84, "rgba(120,170,255,0)"],
+      [1, "rgba(120,170,255,0)"],
+    ]);
+    oval(g, px, px, cx, cy, 0.04 * sx, 0.096 * sy, [
+      [0, "rgba(255,255,255,.5)"],
+      [0.6, "rgba(220,236,255,.12)"],
+      [1, "rgba(180,214,255,0)"],
+    ]);
+  }
+  return { c, ...GLOW_BOX };
+}
+
+function load(src: string): Promise<HTMLImageElement> {
+  return new Promise((res, rej) => {
+    const i = new Image();
+    if (/^https?:/.test(src)) i.crossOrigin = "anonymous";
+    i.decoding = "async";
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = src;
+  });
+}
+
+/* the sprite every mote is drawn with. One soft dot, made once and
+   stretched along its own heading at draw time. */
+function makeDot() {
+  const c = sheet(64, 64);
   const g = c.getContext("2d");
   if (!g) return c;
   const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
@@ -175,58 +319,152 @@ function makeDot() {
 
 export default function SeriesPull({ frames }: { frames: string[] }) {
   const box = useRef<HTMLDivElement>(null);
-  const plate = useRef<HTMLDivElement>(null);
   const sky = useRef<HTMLCanvasElement>(null);
+
+  /* [0] the ordinary photograph, [1] the deck's finished one */
+  const from = ART(frames[0]);
+  const to = ART(frames[1] ?? frames[0]);
 
   useEffect(() => {
     const el = box.current;
-    const frame = plate.current;
     const cv = sky.current;
-    if (!el || !frame || !cv) return;
+    if (!el || !cv) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const ctx = cv.getContext("2d");
+    const ctx = cv.getContext("2d", { alpha: false });
     if (!ctx) return;
 
-    const narrow = window.matchMedia("(max-width:900px)").matches;
+    const narrowQ = window.matchMedia("(max-width:900px)");
+    let dead = false;
 
     /* ---- the numbers -------------------------------------------- */
 
     let at = 0; /* how far the pull has played, 0 .. 1 */
+    let s = 0;
+    let fa = 1;
+    let g = 0;
     let burst = 0;
 
-    const write = () => {
+    const compute = () => {
       /* the face goes first and fastest; the rest of the room hands over
          well behind it */
-      const s = ease(clamp01((at - 0.2) / 0.42));
-      const g = ease(clamp01((at - 0.52) / 0.42));
+      s = ease(clamp01((at - 0.2) / 0.42));
+      g = ease(clamp01((at - 0.52) / 0.42));
       burst = Math.sin(Math.PI * clamp01((at - 0.16) / 0.58));
-      const st = el.style;
-      st.setProperty("--p", at.toFixed(4));
-      st.setProperty("--s", s.toFixed(4));
-      st.setProperty("--fa", (1 - Math.pow(s, 2.6)).toFixed(4));
-      st.setProperty("--g", g.toFixed(4));
-      st.setProperty("--b", burst.toFixed(4));
+      fa = 1 - Math.pow(s, 2.6);
     };
-    write();
+    compute();
 
-    const elBox = trackRect(el);
-    const frameBox = trackRect(frame);
+    /* ---- the pictures ------------------------------------------- */
+
+    type Kit = {
+      to: Sprite;
+      from: Sprite;
+      hole: Sprite;
+      smear: Sprite;
+      face: Sprite;
+      wisp: Sprite;
+      glow: Sprite;
+    };
+    let kit: Kit | null = null;
+
+    /* ---- the box ------------------------------------------------ */
+
+    let dpr = 1;
+    let cw = 0;
+    let ch = 0;
+    const size = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, isLite() ? 1 : 1.5);
+      cw = el.clientWidth;
+      ch = el.clientHeight;
+      const w = Math.max(1, Math.round(cw * dpr));
+      const h = Math.max(1, Math.round(ch * dpr));
+      if (cv.width !== w || cv.height !== h) {
+        cv.width = w;
+        cv.height = h;
+      }
+    };
+    size();
+
+    /* where the photograph sits in the section this frame - the same box
+       the stylesheet builds for .st-pull__frame, closing in by a twentieth
+       across the pull */
+    let fx = 0;
+    let fy = 0;
+    let fw = 0;
+    let fh = 0;
+    const geometry = () => {
+      const k = 1 + at * 0.05;
+      let FW: number;
+      let FH: number;
+      let lift = 0;
+      if (narrowQ.matches) {
+        FW = cw * 1.9;
+        FH = FW / RATIO;
+      } else {
+        FW = Math.max(cw * 2, ch * 2 * RATIO);
+        FH = Math.max(ch * 2, (cw * 2) / RATIO);
+        /* keeps the bottom of the phone inside the frame */
+        lift = 0.02;
+      }
+      fw = FW * k;
+      fh = FH * k;
+      fx = cw / 2 - fw / 2;
+      fy = ch / 2 - k * (FH / 2 + lift * FH);
+    };
+
+    /* one layer: scaled about the phone, stretched and shifted along x */
+    const layer = (
+      sp: Sprite,
+      alpha: number,
+      op: GlobalCompositeOperation,
+      sx = 1,
+      sy = 1,
+      tx = 0,
+    ) => {
+      if (alpha <= 0.003) return;
+      const a = fw * sx;
+      const d = fh * sy;
+      const e = fx + fw * (PHONE.x + tx - sx * PHONE.x);
+      const f = fy + fh * (PHONE.y - sy * PHONE.y);
+      ctx.setTransform(a * dpr, 0, 0, d * dpr, e * dpr, f * dpr);
+      ctx.globalAlpha = alpha > 1 ? 1 : alpha;
+      ctx.globalCompositeOperation = op;
+      ctx.drawImage(sp.c, sp.x, sp.y, sp.w, sp.h);
+    };
+
+    const paint = () => {
+      if (!kit) return;
+      geometry();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = "#0b0b0c";
+      ctx.fillRect(0, 0, cv.width, cv.height);
+
+      layer(kit.to, 1, "source-over");
+      layer(kit.from, 1 - g, "source-over");
+      layer(kit.hole, 1 - fa, "source-over");
+      layer(kit.smear, burst * 0.85 + g * 0.12, "screen", 1 + burst * 0.55, 1, burst * -0.03);
+      layer(kit.face, fa, "source-over", 1 - s * 0.6, 1 - s * 0.9);
+      layer(kit.wisp, burst * 0.8, "screen", 1 - s * 0.35, 1 - s * 0.95);
+      layer(kit.glow, burst * 0.85 + g * 0.2, "screen");
+    };
 
     /* ---- the hold -----------------------------------------------
 
        The pull PLAYS - on a clock, at the same speed however the reader
-       scrolls - and the page is held still while it does. It used to be
-       driven by the scroll, and a fast scroll tore through it.
+       scrolls - and the page is held still while it does.
 
        When the section reaches the screen (a section taller than the
        screen with its bottom at the screen's bottom), the scroll is put
        exactly there and locked: Lenis is stopped, wheel, touch and
        scroll keys are swallowed, and anything that still moves the page
-       (a fling already in flight, the scrollbar) is put straight back.
-       The lock lifts the moment the pull has finished and is never set
-       again - no spacer, no sticky, nothing left in the page to catch
-       the scroll on the way back up.
+       is put straight back. The lock lifts the moment the pull has
+       finished and is never set again.
+
+       The clock does not start until both pictures are ready, so the
+       first thing the reader sees is always the first frame of it.
 
        A reader who lands below the section (a restored scroll) never
        sees it play; the picture is simply the finished frame. */
@@ -234,6 +472,7 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     const FROM = 0.12; /* nothing happens in the first stretch of `at` */
     const sec = el.closest<HTMLElement>(".st-beat") ?? el;
 
+    let armed = false;
     let start = 0;
     let done = false;
     let locked = false;
@@ -259,27 +498,40 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     const finish = () => {
       done = true;
       at = 1;
-      write();
+      compute();
+      unlock();
+      paint();
     };
 
     const play = (y: number) => {
-      start = performance.now();
+      armed = true;
       locked = true;
       lockY = Math.max(0, Math.round(y));
       jumpTo(lockY);
       holdScroll(true);
-      /* a backstop: whatever happens to the frame loop, the page is never
-         left locked */
-      unlockT = window.setTimeout(unlock, DUR + 1200);
+      /* a backstop: if the pictures never arrive, the page is never left
+         locked. Replaced by a tighter one when the clock starts. */
+      unlockT = window.setTimeout(finish, DUR + 4000);
       wake();
     };
 
     const check = () => {
-      if (done || start) return;
+      if (done || armed) return;
       const vh = window.innerHeight;
       const r = sec.getBoundingClientRect();
       const d = r.top - Math.min(0, vh - r.height);
-      if (prev === null && r.bottom <= 0) {
+      /* Already wholly above the screen: landed below it (a restored
+         reload, which arrives a few frames after the first look and so
+         reads as a crossing) or jumped clean past it. Pulling the reader
+         back up a screen to play it would be the page moving on its own. */
+      if (r.bottom <= 0) {
+        finish();
+        return;
+      }
+      /* Same for a crossing made in one jump of more than a screen - a
+         restore landing part way into the section. Nobody scrolls that far
+         between two looks, so it was not read and is not played. */
+      if (prev !== null && prev > 0 && d < 0 && prev - d > vh) {
         finish();
         return;
       }
@@ -306,21 +558,6 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
     const dot = makeDot();
     const motes: Mote[] = [];
 
-    let dpr = 1;
-    let cw = 0;
-    let ch = 0;
-    const size = () => {
-      /* below the device's own ratio on purpose - see the note above */
-      dpr = Math.min(window.devicePixelRatio || 1, isLite() ? 1 : 1.3);
-      cw = el.clientWidth;
-      ch = el.clientHeight;
-      cv.width = Math.round(cw * dpr);
-      cv.height = Math.round(ch * dpr);
-    };
-    size();
-    const ro = new ResizeObserver(size);
-    ro.observe(el);
-
     const spawn = () => {
       /* uniform inside the ellipse over his face */
       const a = Math.random() * Math.PI * 2;
@@ -343,69 +580,18 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       });
     };
 
-    let last = 0;
-    let raf = 0;
-    let seen = false;
-    let lit = true;
-
-    const show = (on: boolean) => {
-      if (on === lit) return;
-      lit = on;
-      cv.style.visibility = on ? "visible" : "hidden";
-    };
-    show(false);
-
-    const tick = (t: number) => {
-      raf = requestAnimationFrame(tick);
-      /* capped, so a tab coming back from the background does not
-         resume with one enormous step */
-      const dt = last ? Math.min((t - last) / 1000, 0.05) : 0.016;
-      last = t;
-
-      /* Every read, then every write. write() changes the custom
-         properties the frame's transform is built from, and a box asked
-         for after it is a style recalc forced in the middle of the frame -
-         every frame. Nor are the reads asked for here: this loop runs
-         after GSAP has written its own styles for the frame, so even
-         reading first was a forced layout. Both come off the start-of-
-         frame read (trackRect, lib/perf.ts), a frame behind the scroll
-         and behind the frame's own scale, both of which move by
-         thousandths. */
-      const b0 = elBox.read();
-      const f0 = frameBox.read();
-      /* the clock, not the scroll */
-      if (start && !done) {
-        const k = clamp01((t - start) / DUR);
-        at = FROM + (1 - FROM) * k;
-        if (k >= 1) {
-          done = true;
-          unlock();
-        }
-      }
-      write();
-
-      /* the frame is translated and scaled, never rotated, so its box
-         IS the picture and a percentage of it is a percentage of the
-         photograph */
-      const fx = f0.left - b0.left;
-      const fy = f0.top - b0.top;
-      const fw = f0.width;
-      const fh = f0.height;
-
+    const spray = (dt: number) => {
       /* a phone, or a lite machine (lib/perf.ts), gets the thinner spray */
-      const thin = narrow || isLite();
+      const thin = narrowQ.matches || isLite();
       const cap = thin ? 80 : 200;
       if (burst > 0.02 && motes.length < cap) {
         const rate = burst * burst * (thin ? 2.6 : 5.5);
         let n = Math.floor(rate) + (Math.random() < rate % 1 ? 1 : 0);
         while (n-- > 0 && motes.length < cap) spawn();
       }
+      if (!motes.length) return;
 
-      show(motes.length > 0);
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.clearRect(0, 0, cv.width, cv.height);
       ctx.globalCompositeOperation = "lighter";
-
       const step = dt * 60;
       for (let i = motes.length - 1; i >= 0; i--) {
         const m = motes[i];
@@ -415,14 +601,11 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
         const dx = PHONE.x - m.x;
         const dy = PHONE.y - m.y;
         const d = Math.hypot(dx, dy) || 1e-4;
-        /* the suction: harder the closer he gets, which is the shape of
-           the thing the section is naming. The softening term is what
-           stops it being a singularity - without it the last two frames
-           of a mote's life are a streak across the screen, and what the
-           reader sees is a flicker rather than a stream. */
-        const g = 0.000045 / (d * d + 0.05);
-        m.vx += (dx / d) * g * step;
-        m.vy += (dy / d) * g * step;
+        /* the suction: harder the closer he gets. The softening term
+           stops it being a singularity. */
+        const pull = 0.000045 / (d * d + 0.05);
+        m.vx += (dx / d) * pull * step;
+        m.vy += (dy / d) * pull * step;
         /* a little curl, so a hundred motes on the same errand do not
            arrive as one straight line */
         m.vx += (Math.random() - 0.5) * 0.00008 * step;
@@ -445,15 +628,9 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
           continue;
         }
 
-        /* in over the first sixth of its life, out over the last third
-           of it, out again over the last of the DISTANCE - almost all
-           of them die at the phone rather than of old age, and a mote
-           that vanishes at full brightness pops. This is it going into
-           the light rather than being switched off.
-
-           The burst floors at .35 rather than reaching 0, because a
-           mote still in the air when the burst has passed should finish
-           its journey rather than blink out where it stands. */
+        /* in over the first sixth of its life, out over the last third,
+           out again over the last of the distance - a mote that vanishes
+           at full brightness pops */
         const t0 = m.life / m.ttl;
         const a =
           Math.max(burst, 0.35) *
@@ -467,34 +644,62 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
         const x1 = fx + m.x * fw;
         const y1 = fy + m.y * fh;
 
-        /* sized off the frame rather than off the window: the picture
-           is twice the size of the screen, so a mote in fixed pixels is
-           a different thing against a face 500px wide than against one
-           that is 200 */
+        /* sized off the frame rather than off the window */
         const head = m.size * (fw / 1900) * 9;
         const ax = x1 - x0;
         const ay = y1 - y0;
         const len = Math.hypot(ax, ay);
         const cs = len > 1e-4 ? ax / len : 1;
         const sn = len > 1e-4 ? ay / len : 0;
-        /* one stretched sprite, laid along the way it came: the head
-           where it is, the tail where it was */
+        /* one stretched sprite, laid along the way it came */
         const long = len * 2.2 + head;
         ctx.setTransform(cs * dpr, sn * dpr, -sn * dpr, cs * dpr, x1 * dpr, y1 * dpr);
         ctx.globalAlpha = m.warm ? a : a * 0.92;
         ctx.drawImage(dot, -long + head * 0.5, -head / 2, long, head);
       }
-
       ctx.globalAlpha = 1;
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = "source-over";
+    };
 
-      /* not playing and the last mote has gone: stand down */
-      if (!seen || ((!start || done) && burst <= 0.02 && motes.length === 0)) {
+    /* ---- the loop ----------------------------------------------- */
+
+    let last = 0;
+    let raf = 0;
+    let seen = false;
+
+    const tick = (t: number) => {
+      raf = requestAnimationFrame(tick);
+      /* capped, so a tab coming back from the background does not resume
+         with one enormous step */
+      const dt = last ? Math.min((t - last) / 1000, 0.05) : 0.016;
+      last = t;
+
+      /* the clock, not the scroll - and only once there is something to
+         show */
+      if (armed && !done && kit) {
+        if (!start) {
+          start = t;
+          window.clearTimeout(unlockT);
+          unlockT = window.setTimeout(unlock, DUR + 1200);
+        }
+        const k = clamp01((t - start) / DUR);
+        at = FROM + (1 - FROM) * k;
+        if (k >= 1) {
+          done = true;
+          unlock();
+        }
+        compute();
+      }
+
+      paint();
+      if (kit) spray(dt);
+
+      const playing = armed && !done;
+      if (!seen || (!playing && burst <= 0.02 && motes.length === 0)) {
         cancelAnimationFrame(raf);
         raf = 0;
         last = 0;
-        show(false);
       }
     };
 
@@ -502,39 +707,72 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       if (!raf && seen) raf = requestAnimationFrame(tick);
     };
 
-    /* the loop only exists while the section is on the screen. Coming
-       back to it, the picture is PUT where the scroll already is rather
-       than animated there from wherever it was left. */
+    const ro = new ResizeObserver(() => {
+      size();
+      paint();
+    });
+    ro.observe(el);
+
+    /* the loop only exists while the section is on the screen */
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
           const was = seen;
           seen = e.isIntersecting;
-          elBox.active(seen);
-          frameBox.active(seen);
-          if (seen && !was) check();
+          if (seen && !was) {
+            check();
+            wake();
+          }
         }
       },
       { threshold: 0 },
     );
     io.observe(el);
 
-
-    /* When the loop is down the scroll still has to move the plates - the
-       room goes on handing over long after the last mote - so a scroll
-       wakes it. Only while the section is on screen: this used to measure
-       the section and restyle its six plates on every scroll frame of the
-       whole page, and off screen there is nothing to see it - the entry
-       above puts the picture where the scroll is the moment it is back. */
-    const onScroll = () => {
-      check();
-      if (seen) wake();
-    };
+    const onScroll = () => check();
     requestAnimationFrame(check);
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
 
+    /* ---- the prep ----------------------------------------------- */
+
+    Promise.all([load(from), load(to)])
+      .then(([a, b]) => {
+        if (dead) return;
+        const iw = b.naturalWidth;
+        const ih = b.naturalHeight;
+        const aw = a.naturalWidth;
+        const ah = a.naturalHeight;
+        const whole: Box = { x: 0, y: 0, w: 1, h: 1 };
+        const toS = sprite(b, iw, ih, whole, { tone: GRADE });
+        const fromS = sprite(a, aw, ah, whole, { tone: GRADE });
+        kit = {
+          to: toS,
+          from: fromS,
+          hole: sprite(toS.c, iw, ih, CUT_BOX, { mask: CUT }),
+          smear: sprite(b, iw, ih, BEAM_BOX, { tone: { bright: 1.12 }, soft: 4, mask: BEAM }),
+          face: sprite(fromS.c, aw, ah, CUT_BOX, { mask: CUT }),
+          wisp: sprite(a, aw, ah, CUT_BOX, {
+            tone: { bright: 1.45, saturate: 0.8 },
+            soft: 8,
+            mask: CUT,
+          }),
+          glow: glowSprite(),
+        };
+        size();
+        paint();
+        /* the canvas has drawn: the fallback frame can go */
+        el.classList.add("is-live");
+        wake();
+      })
+      .catch(() => {
+        /* the fallback frame stays, and the page is never left held */
+        if (armed) finish();
+        done = true;
+      });
+
     return () => {
+      dead = true;
       io.disconnect();
       ro.disconnect();
       unlock();
@@ -542,48 +780,23 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       window.removeEventListener("touchmove", swallow);
       window.removeEventListener("keydown", swallowKey);
       window.removeEventListener("scroll", onLockedScroll);
-      elBox.release();
-      frameBox.release();
       if (raf) cancelAnimationFrame(raf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      el.classList.remove("is-live");
     };
-  }, []);
-
-  /* [0] the ordinary photograph, [1] the deck's finished one */
-  const from = ART(frames[0]);
-  const to = ART(frames[1] ?? frames[0]);
+  }, [from, to]);
 
   return (
     <div className="st-pull" ref={box} aria-hidden="true">
-      <div className="st-pull__frame" ref={plate}>
-        {/* the deck's frame, underneath everything */}
+      {/* the fallback: the deck's finished frame, framed the way the
+          canvas frames it. What no-JS and reduced motion get. */}
+      <div className="st-pull__frame">
         <img className="st-pull__to" src={to} alt="" decoding="async" />
-
-        {/* the ordinary frame, whole */}
-        <img className="st-pull__from" src={from} alt="" decoding="async" />
-
-        {/* and the deck's own smear, cut to the shape of his profile,
-            arriving at exactly the rate the profile leaves */}
-        <img className="st-pull__hole" src={to} alt="" decoding="async" />
-
-        {/* the band of light, over both, stretched off the phone */}
-        <img className="st-pull__smear" src={to} alt="" decoding="async" />
-
-        {/* the front of his face, going in */}
-        <img className="st-pull__face" src={from} alt="" decoding="async" />
-
-        {/* and what is left of it, thrown further and faster */}
-        <img className="st-pull__wisp" src={from} alt="" decoding="async" />
-
-        {/* what the screen throws back into the room as it takes him */}
-        <span className="st-pull__glow" />
       </div>
 
-      {/* outside the frame and over it. Hidden outright while there is
-          nothing in it, so an idle section is not compositing a
-          full-screen layer for no reason. */}
-      <canvas className="st-pull__spray" ref={sky} />
+      {/* everything the pull draws, in one surface */}
+      <canvas className="st-pull__canvas" ref={sky} />
     </div>
   );
 }

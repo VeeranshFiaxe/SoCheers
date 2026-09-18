@@ -2,6 +2,7 @@
 
 import { CSSProperties, Fragment, useEffect, useState } from "react";
 import { DEFAULT_AWARDS, awardColour } from "@/lib/cms/defaults";
+import type { AwardItem } from "@/lib/cms/types";
 
 export default function Awards() {
   /* One row, going past. This spent a while as a catalogue - an index on
@@ -55,53 +56,7 @@ export default function Awards() {
           least two screens wide or the tail runs out mid-viewport and
           the whole strip appears to stop and jump back. Six names is
           about one screen; twelve is not, whatever the window. */}
-      <div className="awards__rows" aria-hidden="true">
-        <div className="amarquee">
-          {/* Slower than the client wall's 34, and by more than the gap
-              between the numbers looks: this track's half is the wider of
-              the two, so the same base buys it more speed. See initMarquees
-              in lib/motion.ts.
-
-              Which is why this number moves whenever the type does. It
-              was 42, then 60 when the names went up half again, and it is
-              44 now that they have come back down to clamp(28px,4vw,56px)
-              (.amarquee__show b in globals.css): a narrower track covered
-              in the same seconds is a faster row, so holding the base
-              would have handed the size reduction back as speed. Re-time
-              this alongside any further change to the size. */}
-          <div className="amarquee__track" data-marquee="left" data-marquee-base="44">
-            {[0, 1, 2, 3].map((copy) =>
-              items.map((a, i) => (
-                <Fragment key={`${copy}-${a.id}`}>
-                  <span
-                    className="amarquee__show"
-                    style={{ "--swipe": awardColour(a.color) } as CSSProperties}
-                  >
-                    <b>{a.name}</b>
-                    {/* What was actually won there, under the name of the
-                        body that gave it - the show alone says we were in
-                        the room, not what for. It arrives with the swipe
-                        on hover and is absolutely positioned so it costs
-                        the track no width: the ticker wraps on half of
-                        that width (initMarquees, lib/motion.ts) and a line
-                        that changed it on hover would move the whole row.
-
-                        Edited in the admin panel. */}
-                    <i className="amarquee__cat">{a.category}</i>
-                  </span>
-                  {/* the dot takes the *next* name's colour, so it reads as
-                      the hinge between two shows rather than as a full stop
-                      on the one behind it */}
-                  <span
-                    className="amarquee__dot"
-                    style={{ "--swipe": awardColour(items[(i + 1) % items.length].color) } as CSSProperties}
-                  />
-                </Fragment>
-              )),
-            )}
-          </div>
-        </div>
-      </div>
+      <AwardsRow items={items} />
 
       {/* the same six, once and in order, for anything that cannot read a
           moving row - carrying what the row carries and no more */}
@@ -111,5 +66,59 @@ export default function Awards() {
         ))}
       </ul>
     </section>
+  );
+}
+
+/* The row on its own, so the admin panel's preview (/admin, Awards) draws
+   exactly what the page draws. */
+export function AwardsRow({ items }: { items: AwardItem[] }) {
+  return (
+    <div className="awards__rows" aria-hidden="true">
+      <div className="amarquee">
+        {/* Slower than the client wall's 34, and by more than the gap
+            between the numbers looks: this track's half is the wider of
+            the two, so the same base buys it more speed. See initMarquees
+            in lib/motion.ts.
+
+            Which is why this number moves whenever the type does. It
+            was 42, then 60 when the names went up half again, and it is
+            44 now that they have come back down to clamp(28px,4vw,56px)
+            (.amarquee__show b in globals.css): a narrower track covered
+            in the same seconds is a faster row, so holding the base
+            would have handed the size reduction back as speed. Re-time
+            this alongside any further change to the size. */}
+        <div className="amarquee__track" data-marquee="left" data-marquee-base="44" style={{ "--marquee-dur": "44s" } as CSSProperties}>
+          {[0, 1, 2, 3].map((copy) =>
+            items.map((a, i) => (
+              <Fragment key={`${copy}-${a.id}`}>
+                <span
+                  className="amarquee__show"
+                  style={{ "--swipe": awardColour(a.color) } as CSSProperties}
+                >
+                  <b>{a.name}</b>
+                  {/* What was actually won there, under the name of the
+                      body that gave it - the show alone says we were in
+                      the room, not what for. It arrives with the swipe
+                      on hover and is absolutely positioned so it costs
+                      the track no width: the ticker wraps on half of
+                      that width (initMarquees, lib/motion.ts) and a line
+                      that changed it on hover would move the whole row.
+
+                      Edited in the admin panel. */}
+                  <i className="amarquee__cat">{a.category}</i>
+                </span>
+                {/* the dot takes the *next* name's colour, so it reads as
+                    the hinge between two shows rather than as a full stop
+                    on the one behind it */}
+                <span
+                  className="amarquee__dot"
+                  style={{ "--swipe": awardColour(items[(i + 1) % items.length].color) } as CSSProperties}
+                />
+              </Fragment>
+            )),
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

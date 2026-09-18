@@ -16,6 +16,7 @@ import {
   hashPassword, verifyPassword, burnPasswordTime, randomToken, sha256,
   seal, open, hasEncKey, base32, randomBytes, checkTotp, safeEqual,
 } from "./crypto.js";
+import { hasMail, sendMail } from "./mail.js";
 
 const COOKIE = "__Host-sc_adm";
 const IDLE = 2 * 60 * 60 * 1000;
@@ -192,7 +193,7 @@ export async function me(env, request) {
   const admin = await currentAdmin(env, request);
   if (!admin) return error(401, "Not signed in");
   const { sessionHash, ...pub } = admin;
-  return json({ admin: pub, twoFactorAvailable: hasEncKey(env) });
+  return json({ admin: pub, twoFactorAvailable: hasEncKey(env), mailAvailable: hasMail(env) });
 }
 
 export function checkPasswordStrength(pw, email) {
@@ -221,6 +222,7 @@ export async function changePassword(env, request) {
     env.DB.prepare("DELETE FROM sessions WHERE admin_id = ? AND token_hash != ?").bind(admin.id, admin.sessionHash),
   ]);
   await audit(env, request, admin.id, "password.change");
+  await passwordChangedNotice(env, admin);
   return json({ ok: true });
 }
 
@@ -266,10 +268,101 @@ export async function signOutEverywhere(env, request) {
   return json({ ok: true }, 200, { "set-cookie": setCookie("", 0) });
 }
 
+/* ---- password links by email ----
+
+   "Forgot password" and the welcome link for a new person. The token
+   goes in the link's # part (/admin#/reset/<token>), which browsers never
+   send to a server or in a Referer. One use, then gone; asking again
+   replaces any older link. Two-step sign-in still applies afterwards. */
+const RESET_TTL = 60 * 60 * 1000;
+const WELCOME_TTL = 3 * 24 * 60 * 60 * 1000;
+
+/* where the panel lives, as the person clicking the button sees it -
+   under `npm run dev` that is the Next port, not the Worker's */
+const panelOrigin = (request) => request.headers.get("origin") || new URL(request.url).origin;
+
+async function issueLink(env, adminId, kind) {
+  const token = randomToken(32);
+  const t = now();
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM password_links WHERE admin_id = ? OR expires_at < ?").bind(adminId, t),
+    env.DB.prepare("INSERT INTO password_links (token_hash, admin_id, kind, created_at, expires_at) VALUES (?, ?, ?, ?, ?)")
+      .bind(await sha256(token), adminId, kind, t, t + (kind === "welcome" ? WELCOME_TTL : RESET_TTL)),
+  ]);
+  return token;
+}
+
+export async function forgotPassword(env, request) {
+  if (!hasMail(env)) return error(503, "Email isn't set up yet. Ask an owner to reset your password.");
+  const body = await readJson(request, 1000);
+  const email = String(body.email || "").trim().toLowerCase().slice(0, 254);
+  const ip = clientIp(request);
+  /* counted as tries, so the link can't be used to flood someone's inbox */
+  if ((await failures(env, `reset-ip:${ip}`)) >= 10 || (await failures(env, `reset:${email}`)) >= 3) {
+    return error(429, "Too many requests. Try again in 15 minutes.");
+  }
+  await recordFailure(env, `reset-ip:${ip}`);
+  await recordFailure(env, `reset:${email}`);
+  const admin = await env.DB.prepare("SELECT id, name, email FROM admins WHERE email = ? AND disabled = 0").bind(email).first();
+  /* the same answer either way - it must not tell anyone which emails have accounts */
+  if (admin) {
+    const token = await issueLink(env, admin.id, "reset");
+    await sendMail(env, {
+      to: admin.email,
+      subject: "Reset your SoCheers Admin password",
+      lines: [`Hi ${admin.name},`, "Someone asked to reset the password for your SoCheers Admin account. The link below works once, for the next hour."],
+      button: { label: "Choose a new password", href: `${panelOrigin(request)}/admin#/reset/${token}` },
+    });
+    await audit(env, request, admin.id, "password.resetAsked");
+  }
+  return json({ ok: true });
+}
+
+export async function checkLink(env, request) {
+  const body = await readJson(request, 1000);
+  const row = await linkRow(env, body.token);
+  if (!row) return error(400, "This link has expired or was already used. Ask for a new one.");
+  return json({ ok: true, kind: row.kind, name: row.name, email: row.email });
+}
+
+async function linkRow(env, token) {
+  if (typeof token !== "string" || !/^[A-Za-z0-9_-]{20,100}$/.test(token)) return null;
+  return env.DB.prepare(
+    `SELECT l.token_hash, l.kind, a.id, a.name, a.email FROM password_links l JOIN admins a ON a.id = l.admin_id
+      WHERE l.token_hash = ? AND l.expires_at > ? AND a.disabled = 0`,
+  ).bind(await sha256(token), now()).first();
+}
+
+export async function resetPassword(env, request) {
+  const body = await readJson(request, 2000);
+  const row = await linkRow(env, body.token);
+  if (!row) return error(400, "This link has expired or was already used. Ask for a new one.");
+  const weak = checkPasswordStrength(body.password, row.email);
+  if (weak) return error(400, weak);
+  await env.DB.batch([
+    env.DB.prepare("UPDATE admins SET password_hash = ?, must_change = 0, updated_at = ? WHERE id = ?")
+      .bind(await hashPassword(body.password), now(), row.id),
+    env.DB.prepare("DELETE FROM password_links WHERE admin_id = ?").bind(row.id),
+    env.DB.prepare("DELETE FROM sessions WHERE admin_id = ?").bind(row.id),
+    env.DB.prepare("DELETE FROM login_attempts WHERE key = ?").bind(`email:${row.email}`),
+  ]);
+  await audit(env, request, row.id, row.kind === "welcome" ? "password.set" : "password.reset");
+  await passwordChangedNotice(env, row);
+  return json({ ok: true });
+}
+
+const passwordChangedNotice = (env, admin) =>
+  sendMail(env, {
+    to: admin.email,
+    subject: "Your SoCheers Admin password was changed",
+    lines: [`Hi ${admin.name},`, "The password for your SoCheers Admin account was just changed. If that was you, there's nothing to do.", "If it wasn't, tell an owner on the team straight away so they can block the account."],
+  });
+
 /* ---- accounts (owners only) ---- */
 
 export async function listAdmins(env, request) {
-  await requireAdmin(env, request, { owner: true });
+  /* everyone signed in can see the team; only owners can change it */
+  await requireAdmin(env, request);
   const { results } = await env.DB.prepare(
     "SELECT id, email, name, role, disabled, must_change, totp_secret IS NOT NULL AS totp, created_at FROM admins ORDER BY created_at",
   ).all();
@@ -295,7 +388,18 @@ export async function createAdmin(env, request) {
     return error(409, "An account with that email already exists.");
   }
   await audit(env, request, owner.id, "admin.create", `${email} (${role})`);
-  return json({ ok: true });
+  let emailed = false;
+  if (hasMail(env)) {
+    const added = await env.DB.prepare("SELECT id FROM admins WHERE email = ?").bind(email).first();
+    const token = await issueLink(env, added.id, "welcome");
+    emailed = await sendMail(env, {
+      to: email,
+      subject: "You've been added to SoCheers Admin",
+      lines: [`Hi ${name},`, `${owner.name} added you to the SoCheers admin panel as ${role === "owner" ? "an owner" : "an editor"}. Choose your password to get in. The link works once, for the next 3 days.`],
+      button: { label: "Choose your password", href: `${panelOrigin(request)}/admin#/reset/${token}` },
+    });
+  }
+  return json({ ok: true, emailed });
 }
 
 export async function updateAdmin(env, request, id) {

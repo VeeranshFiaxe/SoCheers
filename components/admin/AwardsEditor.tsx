@@ -3,6 +3,8 @@
 /* The awards strip on the home page ("Every win counts."): each show,
    what was won there, and the colour of the marker swipe through it. */
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
+import { AwardsRow } from "@/components/Awards";
+import SitePreview from "./SitePreview";
 import { AWARD_COLOURS, DEFAULT_AWARDS, awardColour } from "@/lib/cms/defaults";
 import type { AwardColour, AwardItem, AwardsData } from "@/lib/cms/types";
 import { api, uid } from "./api";
@@ -14,6 +16,7 @@ export default function AwardsEditor() {
   const toast = useToast();
   const confirm = useConfirm();
   const [items, setItems] = useState<AwardItem[] | null>(null);
+  const [previewing, setPreviewing] = useState(false);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -64,21 +67,33 @@ export default function AwardsEditor() {
           <Button variant="ghost" onClick={async () => {
             if (await confirm({ title: "Start again from the original awards?", body: "Nothing changes on the site until you save.", action: "Reset" })) set(DEFAULT_AWARDS.items);
           }}>Reset to original</Button>
+          <Button onClick={() => setPreviewing(true)}>Preview</Button>
           {dirty && <Button variant="ghost" onClick={load}>Discard changes</Button>}
           <Button variant="primary" onClick={save} busy={busy} disabled={!dirty}>Save</Button>
         </div>
       </header>
 
+      {previewing && (
+        <SitePreview title="Every win counts." className="awards" onClose={() => setPreviewing(false)}>
+          <AwardsRow items={items} />
+        </SitePreview>
+      )}
+
       <div className="aw-preview" aria-label="Preview">
-        {items.map((a, i) => (
-          <span key={a.id} className="aw-preview__item">
-            <span className="amarquee__show" style={{ "--swipe": awardColour(a.color) } as CSSProperties}>
-              <b>{a.name || "Award name"}</b>
-              <i className="amarquee__cat">{a.category}</i>
+        {/* Each dot leads the show it points at, so a wrapped line starts
+            with its dot; the row is pulled left by one dot + gap and the
+            box clips it, so no line shows a leading dot. */}
+        <div className="aw-preview__row">
+          {items.map((a) => (
+            <span key={a.id} className="aw-preview__item">
+              <span className="amarquee__dot" style={{ "--swipe": awardColour(a.color) } as CSSProperties} />
+              <span className="amarquee__show" style={{ "--swipe": awardColour(a.color) } as CSSProperties}>
+                <b>{a.name || "Award name"}</b>
+                <i className="amarquee__cat">{a.category}</i>
+              </span>
             </span>
-            {i < items.length - 1 && <span className="amarquee__dot" style={{ "--swipe": awardColour(items[i + 1].color) } as CSSProperties} />}
-          </span>
-        ))}
+          ))}
+        </div>
       </div>
 
       <div className="adm-card aw-table">

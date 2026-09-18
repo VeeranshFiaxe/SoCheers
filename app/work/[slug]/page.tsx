@@ -18,7 +18,8 @@ import { CASES, caseBlocks, caseHasFilm, caseHeadings, caseIsVisual, findCase } 
    to honour that rule for a case that does not exist is not to render
    one. */
 export function generateStaticParams() {
-  return CASES.map((c) => ({ slug: c.slug }));
+  /* The pending cases are lorem-ipsum templates - dev only, never shipped. */
+  return CASES.filter((c) => !c.pending || process.env.NODE_ENV !== "production").map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata({

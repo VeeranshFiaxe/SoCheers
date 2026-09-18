@@ -86,6 +86,7 @@ const TILES = [
     file: "FMCG/Havmor/Thumbnail.jpg",
     pad: { ratio: 4 / 3, paper: { left: 0, top: 0, width: 190, height: 750 } },
   },
+  { slug: "bingo-korean", file: "FMCG/Bingo Korean/Thumbnail.png" },
   /* Entertainment */
   /* Both of these were stand-ins until the second drop - a frame out of the
      case film, and the series thumbnail off the Series page - and both now
@@ -101,9 +102,15 @@ const TILES = [
   { slug: "netflix-mi-srh", file: "Entertainment/Netflix x MI x SRH/Thumbnail for Case work.jpg" },
   { slug: "made-in-titan", master: "made-in-titan.src.mp4", at: 45 },
   { slug: "special-ops-2", master: "special-ops-2.src.mp4", at: 70 },
+  /* Both used to be pending() tiles; each came with its own thumbnail. */
+  { slug: "prime-video-alexa", file: "Entertainment/Prime Video x Alexa/Thumbnail.png" },
+  { slug: "glory", file: "Entertainment/Glory/Thumbnail.png" },
   /* Fashion & Beauty */
   { slug: "superdry", file: "Fashion-Beauty-Luxury/SuperDry-Superdry Sport/Thumbnail.png" },
-  { slug: "wacoal", file: "Fashion-Beauty-Luxury/Wacoal.png" },
+  /* Wacoal used to be tiled with its board; it has its own thumbnail now
+     and the board moved to cases/wacoal/board. */
+  { slug: "wacoal", file: "Fashion-Beauty-Luxury/Wacoal Thumbnail.png" },
+  { slug: "carlton", file: "Fashion-Beauty-Luxury/Carlton-Chandon/Thumbnail.png" },
   /* Others */
   { slug: "boat", file: "B2B + Others/Boat.jpg" },
   { slug: "croma", file: "B2B + Others/Croma.jpg" },
@@ -161,7 +168,7 @@ const CASE_SHOTS = [
   /* The cases that are only a board. The page draws the board across the
      full width and links it out to be zoomed, so each gets a 2400 cut
      beside its 1600 tile - the page serves whichever the screen needs.
-     Wacoal's master is 1672 wide, so its tile already is the board. */
+     Wacoal's master is 1672 wide, so its 1600 board (wacoal/board) is all it needs. */
   { slug: "boat-marvel/board", file: "B2B + Others/Boat.jpg", width: 2400 },
   { slug: "croma-ac/board", file: "B2B + Others/Croma.jpg", width: 2400 },
   { slug: "croma-dreams/board", file: "B2B + Others/FLIPKART-MOODBOARD-4.jpg", width: 2400 },
@@ -169,6 +176,10 @@ const CASE_SHOTS = [
   /* Superdry Sport's hoarding, and IndusInd's before and after feed
      grabs as two files - the page draws each in its own phone frame
      now, so they are no longer composited into one picture. */
+  { slug: "wacoal/board", file: "Fashion-Beauty-Luxury/Wacoal.png" },
+  { slug: "carlton/board", file: "Fashion-Beauty-Luxury/Carlton-Chandon/Caseboard.png" },
+  /* the CGI teaser's poster, so the frame is not black before play */
+  { slug: "carlton/cgi", master: "carlton-cgi.src.mp4", at: 4 },
   { slug: "superdry/hoarding", file: "Fashion-Beauty-Luxury/SuperDry-Superdry Sport/Hoarding.jpg" },
   { slug: "indusind/before", file: "BFSI/IGI/RGI before.png" },
   { slug: "indusind/after", file: "BFSI/IGI/IGI after.png" },
@@ -187,6 +198,9 @@ const CASE_SHOTS = [
   { slug: "itc/board", file: "FMCG/ITC/Caseboard.jpg" },
   { slug: "itc/board-large", file: "FMCG/ITC/Caseboard.jpg", width: 2400 },
   { slug: "havmor/board", file: "FMCG/Havmor/Caseboard.jpg" },
+  /* Bingo! Korean's board - a dense 6000-wide slide, so the 1600 / 2400 pair. */
+  { slug: "bingo-korean/board", file: "FMCG/Bingo Korean/Bingo-Caseboard.jpg (1).jpeg" },
+  { slug: "bingo-korean/board-large", file: "FMCG/Bingo Korean/Bingo-Caseboard.jpg (1).jpeg", width: 2400 },
   { slug: "dhurandhar-2/teaser", file: "Entertainment/Dhurandhar 2/Teaser 1.png" },
   { slug: "dhurandhar-2/poster", file: "Entertainment/Dhurandhar 2/add (1).png" },
   { slug: "dhurandhar-2/launch", file: "Entertainment/Dhurandhar 2/Lauch 2.png" },
@@ -196,6 +210,10 @@ const CASE_SHOTS = [
   },
   { slug: "mandala-murders/entrance", file: "Entertainment/Mandala Murders/MM.png" },
   { slug: "mandala-murders/props", file: "Entertainment/Mandala Murders/MM(1).png" },
+  /* Prime Video x Alexa's board - a dense 4800-wide slide, so the same
+     1600 / 2400 pair as ITC's. */
+  { slug: "prime-video-alexa/board", file: "Entertainment/Prime Video x Alexa/WPVLogo_21.02.JPG" },
+  { slug: "prime-video-alexa/board-large", file: "Entertainment/Prime Video x Alexa/WPVLogo_21.02.JPG", width: 2400 },
 ];
 
 /* ------------------------------------------------------------------

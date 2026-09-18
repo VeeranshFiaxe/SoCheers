@@ -29,6 +29,9 @@ export async function api(request, env, url) {
     let seg;
 
     if (m === "POST" && r === "/login") return await auth.login(env, request);
+    if (m === "POST" && r === "/forgot") return await auth.forgotPassword(env, request);
+    if (m === "POST" && r === "/reset/check") return await auth.checkLink(env, request);
+    if (m === "POST" && r === "/reset") return await auth.resetPassword(env, request);
     if (m === "POST" && r === "/logout") return await auth.logout(env, request);
     if (m === "GET" && r === "/me") return await auth.me(env, request);
     if (m === "POST" && r === "/password") return await auth.changePassword(env, request);

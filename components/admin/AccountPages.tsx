@@ -154,11 +154,12 @@ export function Account({ me, twoFactorAvailable, refresh }: { me: Me; twoFactor
 type AdminRow = { id: number; email: string; name: string; role: "owner" | "editor"; disabled: number; must_change: number; totp: number; created_at: number };
 
 export function Team({ me }: { me: Me }) {
+  const owner = me.role === "owner";
   const toast = useToast();
   const confirm = useConfirm();
   const [rows, setRows] = useState<AdminRow[] | null>(null);
   const [adding, setAdding] = useState(false);
-  const [issued, setIssued] = useState<{ email: string; password: string } | null>(null);
+  const [issued, setIssued] = useState<{ email: string; password: string; emailed?: boolean } | null>(null);
 
   const load = useCallback(() => {
     api<{ admins: AdminRow[] }>("GET", "/admins").then((d) => setRows(d.admins)).catch((e) => toast((e as Error).message, "error"));
@@ -174,7 +175,7 @@ export function Team({ me }: { me: Me }) {
     <div className="adm-page">
       <header className="adm-head">
         <div><h1>Team</h1><p className="adm-muted">Who can sign in to this panel. Owners can manage the team; editors can edit content.</p></div>
-        <Button variant="primary" onClick={() => setAdding(true)}>+ Add a person</Button>
+        {owner && <Button variant="primary" onClick={() => setAdding(true)}>+ Add a person</Button>}
       </header>
       {!rows ? <Spinner /> : (
         <ul className="adm-list">
@@ -185,7 +186,7 @@ export function Team({ me }: { me: Me }) {
                 <span className="adm-muted adm-small">{r.email} · {r.role === "owner" ? "Owner" : "Editor"}{r.totp ? " · 2-step on" : ""}{r.must_change ? " · hasn't signed in yet" : ""}</span>
               </div>
               {r.disabled ? <span className="adm-pill">Blocked</span> : null}
-              {r.id !== me.id && (
+              {owner && r.id !== me.id && (
                 <div className="adm-row adm-row--wrap">
                   <Button variant="ghost" onClick={() => patch(r, { role: r.role === "owner" ? "editor" : "owner" }, "Role changed.")}>
                     Make {r.role === "owner" ? "editor" : "owner"}
@@ -208,10 +209,14 @@ export function Team({ me }: { me: Me }) {
           ))}
         </ul>
       )}
-      {adding && <AddPerson onClose={() => setAdding(false)} onAdded={(email, password) => { setAdding(false); setIssued({ email, password }); load(); }} />}
+      {adding && <AddPerson onClose={() => setAdding(false)} onAdded={(email, password, emailed) => { setAdding(false); setIssued({ email, password, emailed }); load(); }} />}
       {issued && (
         <Modal title="Send them these details" onClose={() => setIssued(null)} small>
-          <p className="adm-muted">Share this privately (not by email in the same message as the link). It is shown only once, and they&rsquo;ll be asked to choose their own password when they sign in.</p>
+          {issued.emailed ? (
+            <p className="adm-muted">We emailed <strong>{issued.email}</strong> a link to choose their password. If it doesn&rsquo;t arrive, share the details below privately instead. They&rsquo;re shown only once.</p>
+          ) : (
+            <p className="adm-muted">Share this privately (not by email in the same message as the link). It is shown only once, and they&rsquo;ll be asked to choose their own password when they sign in.</p>
+          )}
           <div className="adm-issued">
             <div><span className="adm-small adm-muted">Sign in at</span><code className="adm-code">{typeof location !== "undefined" ? `${location.origin}/admin` : "/admin"}</code></div>
             <div><span className="adm-small adm-muted">Email</span><code className="adm-code">{issued.email}</code></div>
@@ -227,7 +232,7 @@ export function Team({ me }: { me: Me }) {
   );
 }
 
-function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: (email: string, password: string) => void }) {
+function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: (email: string, password: string, emailed: boolean) => void }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"editor" | "owner">("editor");
@@ -239,7 +244,10 @@ function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: (email:
         e.preventDefault();
         setBusy(true); setErr("");
         const password = makePassword();
-        try { await api("POST", "/admins", { name, email, role, password }); onAdded(email.trim().toLowerCase(), password); }
+        try {
+          const r = await api<{ emailed?: boolean }>("POST", "/admins", { name, email, role, password });
+          onAdded(email.trim().toLowerCase(), password, !!r.emailed);
+        }
         catch (ex) { setErr((ex as Error).message); }
         finally { setBusy(false); }
       }}>
@@ -267,7 +275,8 @@ const ACTIONS: Record<string, string> = {
   "2fa.off": "Turned off 2-step", "sessions.revoke": "Signed out everywhere", "admin.create": "Added a person", "admin.update": "Changed a person",
   "admin.delete": "Removed a person", upload: "Uploaded a file", "upload.delete": "Deleted a file", "upload.rename": "Renamed a file",
   "settings.logoWall": "Saved the logo wall", "settings.awards": "Saved the awards", "settings.insights": "Saved Insights page text", "insights.seed": "Set up Insights",
-  "insights.reorder": "Reordered Insights", "template.create": "Saved a template", "template.delete": "Deleted a template",
+  "insights.reorder": "Reordered Insights", "password.resetAsked": "Asked for a reset link", "password.reset": "Reset password by email",
+  "password.set": "Set first password from email", "template.create": "Saved a template", "template.delete": "Deleted a template",
 };
 
 export function Activity() {

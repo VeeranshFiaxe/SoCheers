@@ -518,7 +518,7 @@
    PHONE
    The stage holds one height whatever the headline, so changing piece
    no longer moves the page; the pinned wall is one swiped row; the copy
-   sits on a real scrim; the column lines behind the grid go.
+   sits on a real scrim; the column lines drop to the outer two.
    ============================================================ */
 @media (max-width:700px){
   .wk-page{ --muted:rgba(241,236,225,.8); --dim:rgba(241,236,225,.82); }
@@ -557,7 +557,11 @@
   .wk-poster{ scroll-snap-align:start; }
   .wk-poster__name{ font-size:13px; color:var(--cream); }
 
-  .wk-browse .grid-lines{ display:none; }
+  /* Four columns of hairlines read as calm on a desktop and as bars on
+     a phone. Keep the two outer ones - the frame - and drop the inner
+     two, here and on every case page. */
+  .grid-lines--mark i:nth-child(2),
+  .grid-lines--mark i:nth-child(3){ display:none; }
   .wk-tab{ font-size:15px; }
   .wk-count{ font-size:12px; }
   .wk-tile__cap b{ font-size:19px; }

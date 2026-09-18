@@ -420,22 +420,19 @@ export const WORK_ASSETS: WorkAsset[] = [
   real("zurich-kotak", "Zurich Kotak", "Game of Dares", "bfsi", "video", 1376, 768, "zurich-kotak-game-of-dares"),
 
   /* ---- FMCG ----
-     Belgian Waffle, ITC and Havmor are real - every folder under FMCG/ in
-     the client's drive used to be empty. The other three brands are still
-     holding their places. */
+     All real now. Prava, Tata Soulfull and Yippee held places here as
+     pending() tiles and were taken off at the client's request. */
   real("belgian-waffle", "The Belgian Waffle Co.", "Everyone Knows", "fmcg", "video", 1600, 1200, "belgian-waffle"),
-  pending(5, "Prava", "fmcg"),
   real("itc", "ITC Store", "Naa Ready", "fmcg", "image", 1376, 768, "itc-naa-ready"),
   real("havmor", "Havmor", "#80YearsOfHappyMemories", "fmcg", "image", 1600, 1200, "havmor-80-years"),
-  pending(8, "Tata Soulfull", "fmcg"),
-  pending(9, "Yippee", "fmcg"),
+  real("bingo-korean", "Bingo!", "Jinjja", "fmcg", "video", 1600, 750, "bingo-korean"),
 
   /* ---- Fashion / Beauty / Luxury ---- */
   real("superdry", "Superdry Sport", "Chase What Drives You", "fashion", "image", 1376, 768, "superdry"),
-  real("wacoal", "Wacoal", "#WacoalKnowsBreast", "fashion", "image", 1600, 900, "wacoal"),
+  real("wacoal", "Wacoal", "#WacoalKnowsBreast", "fashion", "image", 1536, 1024, "wacoal"),
+  real("carlton", "Carlton", "Find. Explore. Pack.", "fashion", "video", 1440, 1092, "carlton"),
   pending(11, "Raymond", "fashion", "video"),
   pending(13, "Nykaa", "fashion"),
-  pending(21, "Carlton", "fashion"),
 
   /* ---- Entertainment ----
      The Netflix x MI case study film in this folder is the same file as
@@ -450,8 +447,8 @@ export const WORK_ASSETS: WorkAsset[] = [
   real("special-ops-2", "JioHotstar · Special Ops 2", "Leaked", "entertainment", "video", 1600, 900, "special-ops-2"),
   real("made-in-titan", "Titan", "Made in India - A Titan Story", "entertainment", "video", 1600, 900, "made-in-titan"),
   real("mandala-murders", "Netflix · Mandala Murders", "The World of Mandala Murders", "entertainment", "image", 960, 540, "mandala-murders"),
-  pending(15, "Ab Hoga Hissab", "entertainment"),
-  pending(17, "Family Man × Alexa", "entertainment"),
+  real("prime-video-alexa", "Prime Video × Alexa", "Prime Video X Alexa", "entertainment", "image", 1600, 900, "prime-video-alexa"),
+  real("glory", "Netflix · GLORY", "The Glory", "entertainment", "video", 1600, 900, "glory"),
 
   /* ---- Others ----
      Two Croma pieces, which is correct and looks like a mistake, so:
@@ -894,6 +891,82 @@ export const CASES: CaseStudy[] = [
     hero: "/assets/work/wall/special-ops-2.jpg",
     film: "/assets/work/cases/special-ops-2/film.mp4",
     blocks: [],
+  },
+
+  /* ------------------------------------------------------------------
+     PRIME VIDEO × ALEXA and NETFLIX · GLORY - the client's own write-ups,
+     verbatim, and their thumbnails as the heroes. Alexa's case board
+     closes its page; GLORY's case video opens its own.
+     ------------------------------------------------------------------ */
+  {
+    slug: "prime-video-alexa",
+    brand: "Prime Video × Alexa",
+    title: "Prime Video X Alexa",
+    meta: ["Entertainment", "Voice · Film · Outdoor · Social"],
+    intro:
+      "Indians find it really hard to say no. We'd rather have a reason.",
+    hero: "/assets/work/wall/prime-video-alexa.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "A plan we don't want to make, a favour we'd rather not do, an awkward conversation we need to escape. Somehow, “I can't” feels a lot easier when there’s a bahana attached to it. And we’ve become very good at making them. That gave us a rather interesting thought: what if the country’s most entertaining excuse maker could lend everyone a hand?",
+      },
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "For the return of The Family Man after three years, there was already one thing audiences knew about Srikant Tiwari: give him a difficult situation and he’ll find a way to talk himself out of it.\n\nHis bahane have become as recognisable as the character himself, whether he’s dodging suspicion, wriggling out of trouble at home or covering up a mission.\n\nThe opportunity was sitting right there. Take that very Srikant trait out of the show and let people use it themselves.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We put an Excuse Generator inside Alexa. All people had to do was ask, “Alexa, make an excuse.”\n\nWhat came back depended on how much trouble they were in. Something filmy. Something quirky. Maybe a little poetic. Or, if things were really bad, they could always blame the stars.\n\nPeople started experiencing this across India : Srikant asking Alexa for help in the campaign film, large outdoor takeovers across Mumbai, Delhi and Bengaluru, and creators and meme pages putting the excuses to use in situations of their own.",
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/prime-video-alexa/board.jpg",
+        w: 1600, h: 900,
+        large: { src: "/assets/work/cases/prime-video-alexa/board-large.jpg", w: 2400 },
+        caption: "The case board",
+      },
+    ],
+  },
+
+  {
+    slug: "glory",
+    brand: "Netflix · GLORY",
+    title: "The Glory",
+    meta: ["Entertainment", "Social · Experiential"],
+    intro:
+      "The internet asks for a lot of things it doesn't actually expect to get. This time, it kept asking for a fight.",
+    hero: "/assets/work/wall/glory.jpg",
+    film: "/assets/work/cases/glory/film.mp4",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "After days of Neeraj Goyat and Pulkit Samrat going at each other online, fans had started picking sides and asking when the two were actually going to get in the ring.\n\nSo instead of creating an event and then finding a reason for people to care, we had the reason first.",
+      },
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "GLORY was a boxing thriller, so a trailer launch could have been any standard piece of launch cycles.\n\nBut there was already a real rivalry taking shape around the show, between professional boxer Neeraj Goyat and Pulkit Samrat, who plays a boxer in GLORY. We decided to see how far we could take it.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We let the internet have its fight. For days, Neeraj and Pulkit kept the rivalry going across social. Then, instead of letting the comments remain comments, we built a GLORY boxing arena in Mumbai and put the two of them in an actual ring.\n\nThe fight was the first thing people came for. The GLORY trailer premiered immediately after. The cast came out next.\n\nA custom-built arena became the physical payoff to a rivalry that had started online, with the entire experience amplified through Netflix social, creators and live coverage.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "56.85M", label: "Views" },
+          { figure: "1.91M", label: "Likes" },
+          { figure: "22K+", label: "Comments" },
+          { figure: "100.9K+", label: "Shares" },
+        ],
+      },
+    ],
   },
 
   /* ------------------------------------------------------------------
@@ -1341,6 +1414,54 @@ export const CASES: CaseStudy[] = [
   },
 
   /* ------------------------------------------------------------------
+     BINGO! KOREAN - the client's own write-up, verbatim, their launch
+     film on YouTube, and the case board.
+     ------------------------------------------------------------------ */
+  {
+    slug: "bingo-korean",
+    brand: "Bingo!",
+    title: "Bingo Korean",
+    meta: ["FMCG", "Film · Social · Influencer"],
+    intro:
+      "Indian youth have gone far beyond liking Korean culture. They know it.",
+    hero: "/assets/work/wall/bingo-korean.jpg",
+    film: "https://www.youtube.com/watch?v=7LJJCpCK7JI",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "They know the language, the food, the music, the moves. Which also means they can tell when a brand is genuinely part of that world and when it’s simply borrowing from it.\n\nFor Bingo!, authenticity had to come through in the language, the flavour and the way people could participate in the idea.",
+      },
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "Bingo! was launching its Korean Style Chips into a market already riding the K-wave.\n\nThe opportunity was bigger than putting a Korean flavour on a pack. We had to build enough credibility around the launch for a young, culturally aware audience to see Bingo! as a real choice in the category.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "We found our word for it: Jinjja. Korean for “real”.\n\nWe used it as the first clue. A cryptic viral moment featuring Dhanashree got people curious before the launch film finally revealed what was behind it: Bingo!’s Korean Style Chips, truly Korean in taste.\n\nOnce the product was out, we gave people their own way into the idea through the #JinjjaHookstepChallenge, taking it across Instagram, WhatsApp and a microsite, with trips to Korea and a lifetime supply of chips up for grabs.\n\nKorean and Indo-Korean creators added another layer of credibility, helping the campaign stay close to the culture it was drawing from.",
+      },
+      {
+        type: "stats",
+        items: [
+          { figure: "63.64M+", label: "Views" },
+          { figure: "400K+", label: "People talked about it" },
+          { figure: "70K+", label: "Challenge entries" },
+          { figure: "4–5%", label: "Sales uplift for Bingo! Korean Style Chips in Q3 FY 2025–26" },
+        ],
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/bingo-korean/board.jpg",
+        w: 1600, h: 900,
+        large: { src: "/assets/work/cases/bingo-korean/board-large.jpg", w: 2400 },
+        caption: "The case board",
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
      THE CASE BOARDS - campaigns the client sent as a finished case
      study image and no write-up. The board is the write-up, so the page
      shows the board and does not retell it in paragraphs: the hero, the
@@ -1349,7 +1470,7 @@ export const CASES: CaseStudy[] = [
 
      `large` is the 2400 cut from scripts/build-wall.mjs, served to
      screens that can use it. Wacoal has none - its master is 1672 wide,
-     so the tile is already the largest there is. The intros are kept
+     so its 1600 board is already the largest there is. The intros are kept
      for the page description and are not drawn.
      ------------------------------------------------------------------ */
   {
@@ -1465,8 +1586,50 @@ export const CASES: CaseStudy[] = [
     blocks: [
       {
         type: "board",
-        src: "/assets/work/wall/wacoal.jpg",
+        src: "/assets/work/cases/wacoal/board.jpg",
         w: 1600, h: 900,
+        caption: "The case board",
+      },
+    ],
+  },
+
+  /* ------------------------------------------------------------------
+     CARLTON - the client's own write-up, verbatim, the CGI teaser that
+     was the "find" leg, and the case board.
+     ------------------------------------------------------------------ */
+  {
+    slug: "carlton",
+    brand: "Carlton",
+    title: "Find. Explore. Pack.",
+    meta: ["Fashion / Beauty / Luxury", "CGI · Influencer · Social"],
+    intro: "Carlton was opening its largest store in Mumbai, in Colaba.",
+    hero: "/assets/work/wall/carlton.jpg",
+    blocks: [
+      {
+        type: "copy",
+        heading: "The brief",
+        body: "For a brand built around travel, opening on one of the city's most recognisable shopping streets gave us a very specific starting point: people already come to Colaba to browse, buy and see what's around.",
+      },
+      {
+        type: "copy",
+        heading: "The insight",
+        body: "In Colaba, you rarely walk in knowing exactly what you’ll find.\n\nThere’s always another shop, another window, another street to explore.\n\nThat gave us a simple way to build the launch around Carlton’s new address:\n\nFind. Explore. Pack.",
+      },
+      {
+        type: "copy",
+        heading: "What we did",
+        body: "First, we gave people something to find, using CGI-led content to tease the store across feeds.\n\nThen we gave them a reason to explore, sending influencers through Colaba and into Carlton, with their journeys moving from the street into the store.\n\nAnd once they were inside, we shifted the story to pack, using social content to show Carlton as the destination for premium travel essentials.",
+      },
+      {
+        type: "video",
+        src: "/assets/work/cases/carlton/cgi.mp4",
+        poster: "/assets/work/cases/carlton/cgi.jpg",
+        ratio: "tall",
+      },
+      {
+        type: "board",
+        src: "/assets/work/cases/carlton/board.jpg",
+        w: 1536, h: 864,
         caption: "The case board",
       },
     ],

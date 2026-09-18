@@ -103,6 +103,10 @@ const FILMS = [
      whole case page. Same treatment as BHIM, for the same reason. */
   { src: "assets/made-in-titan.src.mp4", out: "public/assets/work/cases/made-in-titan/film.mp4", long: 1280, maxrate: "2M" },
   { src: "assets/special-ops-2.src.mp4", out: "public/assets/work/cases/special-ops-2/film.mp4", long: 1280, maxrate: "2M" },
+  /* The GLORY case video. 159MB, 10 Mbps 1080p - same treatment again. */
+  /* Carlton's CGI teaser - 22s, 9:16, a 47MB 17 Mbps master. */
+  { src: "assets/carlton-cgi.src.mp4", out: "public/assets/work/cases/carlton/cgi.mp4", long: 1280, maxrate: "2M" },
+  { src: "assets/glory.src.mp4", out: "public/assets/work/cases/glory/film.mp4", long: 1280, maxrate: "2M" },
 ];
 
 /* Both cuts of every film. See "two cuts of every film" above. */

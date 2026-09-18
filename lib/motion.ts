@@ -225,6 +225,10 @@ export function initSite(): () => void {
        is inside the pin, where the hero at rest is already the right frame.
        Null off the home page. */
     let heroSkip: ((y: number) => boolean) | null = null;
+    /* The same question without the side effects: would a reload to `y`
+       skip the hero. Asked by runLoader, which must not start the intro
+       under a hero that is about to be settled as played. */
+    let heroBeyond: ((y: number) => boolean) | null = null;
 
     /* -------------------------------------------------- Lenis */
     function initLenis() {
@@ -359,6 +363,11 @@ export function initSite(): () => void {
        end of the sequence *is* the intro and a second one would fight it. */
     function runLoader() {
       if (prefersReduced || overture) return;
+      /* A reload restored below the hero: the intro's from() tweens would
+         keep writing the hero's opening values for two seconds over the
+         end state heroSkip settles it on, and the photo came back black
+         when the reader scrolled up into it. */
+      if (restoreY !== null && heroBeyond?.(restoreY)) return;
       heroIntro();
     }
 
@@ -859,6 +868,10 @@ export function initSite(): () => void {
       };
 
       let introRunning = false;
+      /* The opening's own timeline, so a reload that lands below the hero
+         can finish it on the spot (heroSkip) instead of leaving it to play
+         on under the spent hero and overwrite what the sequence left. */
+      let openingT: gsap.core.Timeline | null = null;
       const lines = greet?.querySelector<HTMLElement>("[data-test-lines]") ?? null;
       if (isTest && greet && lines) {
         /* The row, which is what the shutter runs across. Not the two
@@ -976,8 +989,9 @@ export function initSite(): () => void {
              reaches the screen. */
           const t = gsap.timeline({
             paused: true,
-            onComplete: () => { introRunning = false; gsap.ticker.remove(drive); },
+            onComplete: () => { introRunning = false; openingT = null; gsap.ticker.remove(drive); },
           });
+          openingT = t;
           const drive = (_time: number, dt: number) => {
             t.time(t.time() + Math.min(dt, 50) / 1000, false);
           };
@@ -1752,10 +1766,15 @@ export function initSite(): () => void {
         if (!locked) return true;
         note("reload restore -> done");
         gsap.killTweensOf(tl);
-        tl.time(DONE);
         phase = "done";
         busy = false;
         locked = false;
+        /* the opening is run to its last frame first, so what it leaves on
+           the stage is under tl's end state rather than written over it
+           for the next few seconds - its closing advance() is a no-op now
+           that phase is done and the lock is off */
+        openingT?.progress(1);
+        tl.time(DONE);
         freeze(false);
         handoff = performance.now() + 300;
         hero.classList.add("is-spent");
@@ -1763,7 +1782,8 @@ export function initSite(): () => void {
         lenis?.start();
         return true;
       };
-      cleanups.push(() => { heroSkip = null; });
+      heroBeyond = (y) => y >= st.end + 2;
+      cleanups.push(() => { heroSkip = null; heroBeyond = null; });
 
       /* And the geometry is the other half of it. `grow` carries the stage's
          rectangle as function-based values, which GSAP evaluates once and

@@ -150,44 +150,52 @@ export default function Clients() {
       <div className="wrap">
         <h2 className="sec__title" data-split>Who do we do it with.</h2>
       </div>
-      <div className="clients__rows">
-        {wall.rows.map((row, r) => {
-          const names = row.items.map((it) => it.name);
-          const ink = scatter(names, SOLIDS.length, "");
-          const lean = scatter(names, TILTS.length, "·tilt");
-          const star = scatter(names, SOLIDS.length, "·star");
-          return (
-            <div className="cmarquee" key={r} aria-hidden="true">
-              {/* the track is duplicated so the loop can wrap on half its width */}
-              {/* see the note over initMarquees in lib/motion.ts for what
-                  the speed number actually means */}
-              <div
-                className="cmarquee__track"
-                data-marquee={row.dir}
-                data-marquee-base={row.speed}
-                style={{ "--marquee-dur": `${row.speed}s` } as CSSProperties}
-              >
-                {[0, 1].map((copy) =>
-                  row.items.map((it, i) => (
-                    <Fragment key={`${copy}-${it.id}`}>
-                      <WallName
-                        item={it}
-                        hover={{
-                          "--brand": SOLIDS[ink[i]],
-                          "--tilt": TILTS[lean[i]].deg,
-                          "--pop": TILTS[lean[i]].pop,
-                        }}
-                      />
-                      <span className="s" style={{ "--star": SOLIDS[star[i]] } as CSSProperties}>✦</span>
-                    </Fragment>
-                  )),
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <ClientRows wall={wall} />
     </section>
+  );
+}
+
+/* The rows on their own, so the admin panel's preview (/admin, Logo wall)
+   draws exactly what the page draws. */
+export function ClientRows({ wall }: { wall: LogoWall }) {
+  return (
+    <div className="clients__rows">
+      {wall.rows.map((row, r) => {
+        const names = row.items.map((it) => it.name);
+        const ink = scatter(names, SOLIDS.length, "");
+        const lean = scatter(names, TILTS.length, "·tilt");
+        const star = scatter(names, SOLIDS.length, "·star");
+        return (
+          <div className="cmarquee" key={r} aria-hidden="true">
+            {/* the track is duplicated so the loop can wrap on half its width */}
+            {/* see the note over initMarquees in lib/motion.ts for what
+                the speed number actually means */}
+            <div
+              className="cmarquee__track"
+              data-marquee={row.dir}
+              data-marquee-base={row.speed}
+              style={{ "--marquee-dur": `${row.speed}s` } as CSSProperties}
+            >
+              {[0, 1].map((copy) =>
+                row.items.map((it, i) => (
+                  <Fragment key={`${copy}-${it.id}`}>
+                    <WallName
+                      item={it}
+                      hover={{
+                        "--brand": SOLIDS[ink[i]],
+                        "--tilt": TILTS[lean[i]].deg,
+                        "--pop": TILTS[lean[i]].pop,
+                      }}
+                    />
+                    <span className="s" style={{ "--star": SOLIDS[star[i]] } as CSSProperties}>✦</span>
+                  </Fragment>
+                )),
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

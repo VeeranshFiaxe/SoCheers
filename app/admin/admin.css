@@ -16,6 +16,19 @@ html:has(.adm)::-webkit-scrollbar, body:has(.adm)::-webkit-scrollbar{ width:auto
   color:var(--adm-text); background:var(--adm-bg); min-height:100vh;
   font-family:var(--f-body); font-size:14.5px; line-height:1.5;
 }
+/* light panel - the switch is in the sidebar (ThemeSwitch, AdminApp.tsx) */
+html[data-adm-theme="light"] .adm{
+  --adm-bg:#f4f2ec; --adm-panel:#ffffff; --adm-panel-2:#ebe8e0; --adm-line:rgba(11,11,12,.1); --adm-line-2:rgba(11,11,12,.18);
+  --adm-text:#0b0b0c; --adm-muted:rgba(11,11,12,.6); --adm-accent:#0e7ea8; --adm-accent-ink:#ffffff;
+  --adm-danger:#c21d52; --adm-ok:#4a8a1c; --adm-warn:#a87900;
+  color-scheme:light;
+}
+html[data-adm-theme="light"] body:has(.adm){ background:#f4f2ec; }
+html[data-adm-theme="light"] .adm-btn:hover:not(:disabled){ border-color:rgba(11,11,12,.35); }
+html[data-adm-theme="light"] .adm-btn.is-primary:hover:not(:disabled){ background:#0b6d92; }
+html[data-adm-theme="light"] .adm-toast{ background:#fff; box-shadow:0 10px 30px rgba(0,0,0,.12); }
+html[data-adm-theme="light"] .adm-modal__box{ box-shadow:0 30px 80px rgba(0,0,0,.18); }
+html[data-adm-theme="light"] .adm-library__item img{ background:repeating-conic-gradient(#e4e1d9 0 25%, #f4f2ec 0 50%) 0 0/16px 16px; }
 .adm, .adm *{ cursor:auto; }
 /* globals.css stretches every img to fill its box (img{width:100%;height:100%}).
    Zero specificity here, so any class rule below still wins. */
@@ -412,10 +425,16 @@ html.sc-intro .adm .cmarquee__track .bmark:not(.bmark--img){ -webkit-mask:var(--
 
 /* ---- awards ---- */
 .aw-preview{
-  display:flex; flex-wrap:wrap; align-items:center; gap:18px 0; padding:28px 22px 40px;
-  border-radius:14px; border:1px solid var(--adm-line); background:var(--adm-bg); overflow:hidden;
+  padding:28px 22px 40px;
+  border-radius:14px; border:1px solid var(--adm-line); background:#0b0b0c;
 }
-.aw-preview__item{ display:inline-flex; align-items:center; }
+.aw-preview__row{
+  --aw-dot:clamp(8px,.85vw,13px);
+  display:flex; flex-wrap:wrap; align-items:center; gap:30px 18px;
+  margin-left:calc(-1 * (var(--aw-dot) + 18px));
+  clip-path:inset(-100px -100px -100px calc(var(--aw-dot) + 18px));
+}
+.aw-preview__item{ display:inline-flex; align-items:center; gap:18px; }
 .aw-table{ display:flex; flex-direction:column; gap:8px; }
 .aw-row{ display:grid; grid-template-columns:14px minmax(0,1fr) minmax(0,1.2fr) 230px 112px; gap:10px; align-items:center; }
 .aw-row--head > span{ padding-left:2px; }
@@ -430,3 +449,16 @@ html.sc-intro .adm .cmarquee__track .bmark:not(.bmark--img){ -webkit-mask:var(--
   .aw-row > :nth-child(n+3){ grid-column:2; }
   .aw-row--head{ display:none; }
 }
+
+/* full-screen section preview (SitePreview.tsx) - the site's own dark page */
+.adm-sitepreview{
+  position:fixed; inset:0; z-index:10000; overflow:auto; min-height:0;
+  background:var(--bg); color:var(--cream);
+  display:flex; flex-direction:column; justify-content:center;
+}
+.adm-sitepreview__bar{
+  position:fixed; top:0; left:0; right:0; z-index:1; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:12px 16px; color:rgba(241,236,225,.7); background:linear-gradient(#0b0b0c, rgba(11,11,12,0));
+}
+.adm-sitepreview__bar .adm-btn{ color:#f1ece1; background:#1b1b20; border-color:rgba(241,236,225,.18); }
+.adm-sitepreview > .sec{ border-top:none; }

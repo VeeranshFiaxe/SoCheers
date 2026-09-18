@@ -6,6 +6,8 @@
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { BUILT_IN_FONTS, DEFAULT_WALL, fontFamily, loadFonts } from "@/lib/cms/defaults";
 import type { FontFile, LogoWall, WallItem, WallRow } from "@/lib/cms/types";
+import { ClientRows } from "@/components/Clients";
+import SitePreview from "./SitePreview";
 import { api, uid, upload, type Upload } from "./api";
 import { Button, DropZone, Field, IMAGE_ACCEPT, ImageLibrary, Input, Modal, Spinner, Toggle, useConfirm, useToast, useUnsavedWarning, useUploads } from "./ui";
 
@@ -18,6 +20,7 @@ export default function LogoWallEditor() {
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
   const [editing, setEditing] = useState<{ row: number; index: number | null } | null>(null);
   const fonts = useUploads("font");
   useUnsavedWarning(dirty);
@@ -83,10 +86,17 @@ export default function LogoWallEditor() {
         </div>
         <div className="adm-row">
           <Button variant="ghost" onClick={reset}>Reset to original</Button>
+          <Button onClick={() => setPreviewing(true)}>Preview</Button>
           {dirty && <Button variant="ghost" onClick={load}>Discard changes</Button>}
           <Button variant="primary" onClick={save} busy={busy} disabled={!dirty}>Save</Button>
         </div>
       </header>
+
+      {previewing && (
+        <SitePreview title="Who do we do it with." className="clients" onClose={() => setPreviewing(false)}>
+          <ClientRows wall={wall} />
+        </SitePreview>
+      )}
 
       {wall.rows.map((row, r) => (
         <section key={r} className="adm-card lw-row">

@@ -206,6 +206,10 @@ body{
      sit here, with the rest of the touch baseline, to be findable. */
   .contact__social.contact__social a,
   .foot__social.foot__social a{ width:44px; height:44px; }
+  /* The back links and the paper's download - 15px tall as drawn. The
+     negative margin hands the padding straight back, so nothing moves. */
+  .cs-back, .sv-back, .ab-end__back, .ct-end__back, .bl-end__back{ padding:12px 0; margin:-12px 0; }
+  .bl-paper__file{ padding:12px 0; }
 
   /* 3. The double-tap.
 

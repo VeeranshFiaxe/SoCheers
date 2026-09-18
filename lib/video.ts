@@ -83,6 +83,8 @@ const PHONE_CUTS = new Set([
   "/assets/work/cases/bhim-upi/film.mp4",
   "/assets/work/cases/made-in-titan/film.mp4",
   "/assets/work/cases/special-ops-2/film.mp4",
+  "/assets/work/cases/glory/film.mp4",
+  "/assets/work/cases/carlton/cgi.mp4",
 ]);
 
 export const phoneCut = (src: string) =>

@@ -22,6 +22,17 @@ npm run admin:create
 
 `admin:key` prints a random key; paste it when `secret put` asks. It encrypts two-step sign-in secrets. Keep it safe: if it changes, everyone's two-step sign-in has to be set up again.
 
+### Email (optional, via Resend)
+
+Sends "forgot password" links, a welcome link to new people, and a notice when a password changes. Without it, owners hand out temporary passwords by hand.
+
+1. Verify `send.fiaxe.in` in Resend (Domains) and add its DNS records in Cloudflare.
+2. Make a Resend API key with sending access.
+3. `npx wrangler secret put RESEND_API_KEY` and paste it. For local, add `RESEND_API_KEY=...` to `.env`.
+4. `npm run admin:migrate` (and `admin:migrate:local`) for the `password_links` table.
+
+Mail goes out from `notifications@send.fiaxe.in` (worker/api/mail.js); set a `MAIL_FROM` variable to change it.
+
 `admin:create` makes the first owner account. Everyone else is added from the panel (Team).
 
 ## Running it locally
