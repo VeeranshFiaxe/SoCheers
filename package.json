@@ -11,7 +11,7 @@
     "model": "node scripts/build-about-man.mjs",
     "thumbs": "node scripts/build-thumbs.mjs",
     "media": "node scripts/upload-r2.mjs",
-    "deploy": "node scripts/upload-r2.mjs && next build && wrangler deploy",
+    "deploy": "next build && wrangler deploy",
     "admin:migrate": "wrangler d1 migrations apply socheers-admin --remote",
     "admin:migrate:local": "wrangler d1 migrations apply socheers-admin --local",
     "admin:create": "node scripts/admin-create.mjs",
