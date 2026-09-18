@@ -57,7 +57,7 @@ writeFileSync(file,
   `INSERT INTO admins (email, name, role, password_hash, must_change, created_at, updated_at)
    VALUES (${sql(email)}, ${sql(name)}, ${sql(role)}, ${sql(stored)}, 0, ${t}, ${t})
    ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash, role = excluded.role,
-     name = excluded.name, disabled = 0, updated_at = excluded.updated_at;
+     name = excluded.name, disabled = 0, locked = 0, failed_logins = 0, updated_at = excluded.updated_at;
    DELETE FROM sessions WHERE admin_id = (SELECT id FROM admins WHERE email = ${sql(email)});`);
 
 const wrangler = path.join("node_modules", "wrangler", "bin", "wrangler.js");

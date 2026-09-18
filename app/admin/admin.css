@@ -21,14 +21,17 @@ html[data-adm-theme="light"] .adm{
   --adm-bg:#f4f2ec; --adm-panel:#ffffff; --adm-panel-2:#ebe8e0; --adm-line:rgba(11,11,12,.1); --adm-line-2:rgba(11,11,12,.18);
   --adm-text:#0b0b0c; --adm-muted:rgba(11,11,12,.6); --adm-accent:#0e7ea8; --adm-accent-ink:#ffffff;
   --adm-danger:#c21d52; --adm-ok:#4a8a1c; --adm-warn:#a87900;
-  color-scheme:light;
 }
 html[data-adm-theme="light"] body:has(.adm){ background:#f4f2ec; }
 html[data-adm-theme="light"] .adm-btn:hover:not(:disabled){ border-color:rgba(11,11,12,.35); }
 html[data-adm-theme="light"] .adm-btn.is-primary:hover:not(:disabled){ background:#0b6d92; }
 html[data-adm-theme="light"] .adm-toast{ background:#fff; box-shadow:0 10px 30px rgba(0,0,0,.12); }
 html[data-adm-theme="light"] .adm-modal__box{ box-shadow:0 30px 80px rgba(0,0,0,.18); }
-html[data-adm-theme="light"] .adm-library__item img{ background:repeating-conic-gradient(#e4e1d9 0 25%, #f4f2ec 0 50%) 0 0/16px 16px; }
+/* the page behind the panel, and native controls (selects, scrollbars) */
+html:has(.adm){ background:#0b0b0c; }
+html[data-adm-theme="light"]:has(.adm){ background:#f4f2ec; }
+.adm{ color-scheme:dark; }
+html[data-adm-theme="light"] .adm:not(.adm-sitepreview){ color-scheme:light; }
 .adm, .adm *{ cursor:auto; }
 /* globals.css stretches every img to fill its box (img{width:100%;height:100%}).
    Zero specificity here, so any class rule below still wins. */
@@ -108,6 +111,7 @@ select.adm-input{ appearance:auto; }
 .adm-seg > button.is-on{ background:var(--adm-panel-2); color:var(--adm-text); box-shadow:0 0 0 1px var(--adm-line-2); }
 
 .adm-pill{ font:500 11px/1 var(--f-body); letter-spacing:.06em; text-transform:uppercase; padding:5px 8px; border-radius:20px; background:var(--adm-panel-2); color:var(--adm-muted); white-space:nowrap; }
+.adm-pill.is-warn{ background:color-mix(in srgb, var(--adm-danger) 16%, transparent); color:var(--adm-danger); }
 .adm-pill.is-live{ background:color-mix(in srgb, var(--adm-ok) 18%, transparent); color:var(--adm-ok); }
 .adm-count{ margin-left:6px; font-size:11px; padding:2px 6px; border-radius:10px; background:var(--adm-panel-2); color:var(--adm-muted); }
 
@@ -155,10 +159,10 @@ select.adm-input{ appearance:auto; }
 .adm-side{ position:sticky; top:0; height:100vh; display:flex; flex-direction:column; gap:20px; padding:20px 14px; border-right:1px solid var(--adm-line); background:var(--adm-panel); }
 .adm-side__toggle{ display:none; }
 .adm-nav, .adm-side__foot{ display:flex; flex-direction:column; gap:2px; }
-.adm-nav__group{ font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--adm-muted); padding:12px 10px 6px; }
-.adm-nav a, .adm-side__foot a, .adm-side__foot .adm-link{ display:block; padding:9px 10px; border-radius:8px; color:var(--adm-muted); text-decoration:none; font-size:14px; text-align:left; }
+.adm-nav__group{ font-size:11px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--adm-muted); padding:12px 10px 6px; }
+.adm-nav a, .adm-side__foot a, .adm-side__foot .adm-link{ display:block; padding:9px 10px; border-radius:8px; color:color-mix(in srgb, var(--adm-text) 78%, transparent); text-decoration:none; font-size:14px; font-weight:500; text-align:left; }
 .adm-nav a:hover, .adm-side__foot a:hover, .adm-side__foot .adm-link:hover{ background:var(--adm-panel-2); color:var(--adm-text); }
-.adm-nav a.is-on, .adm-side__foot a.is-on{ background:var(--adm-panel-2); color:var(--adm-text); box-shadow:inset 3px 0 0 var(--adm-accent); }
+.adm-nav a.is-on, .adm-side__foot a.is-on{ background:var(--adm-panel-2); color:var(--adm-text); font-weight:600; box-shadow:inset 3px 0 0 var(--adm-accent); }
 .adm-side__foot{ margin-top:auto; border-top:1px solid var(--adm-line); padding-top:12px; }
 .adm-nudge{ font-size:12.5px !important; color:var(--adm-warn) !important; }
 .adm-main{ min-width:0; padding:clamp(18px,3vw,36px); }
@@ -371,7 +375,9 @@ button.adm-library__item:hover{ border-color:var(--adm-accent); }
 .lw-row__head{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
 .lw-row__head .adm-h3{ margin-right:auto; }
 .lw-speed{ display:flex; align-items:center; gap:8px; width:180px; }
-.lw-preview{ overflow-x:auto; padding:18px 12px; border-radius:10px; background:var(--adm-bg); border:1px solid var(--adm-line); }
+/* the previews stay on the site's dark ground in either theme - the logos
+   are drawn in the site's cream, like the awards preview */
+.lw-preview{ overflow-x:auto; padding:18px 12px; border-radius:10px; background:#0b0b0c; border:1px solid var(--adm-line); }
 .lw-preview__track{ --muted:rgba(241,236,225,.5); --accent:#38c6f0; flex-wrap:nowrap; }
 /* the head script hides the wall's masks while the site's opening plays;
    there is no opening in here */
@@ -381,13 +387,15 @@ html.sc-intro .adm .cmarquee__track .bmark:not(.bmark--img){ -webkit-mask:var(--
 .lw-item.is-over{ border-color:var(--adm-accent); box-shadow:-3px 0 0 var(--adm-accent); }
 .lw-item__main{ display:flex; align-items:center; gap:8px; border:0; background:none; color:var(--adm-text); font:500 13.5px var(--f-body); padding:4px; }
 .lw-item__main img{ height:22px; width:auto; max-width:90px; object-fit:contain; filter:brightness(0) invert(.9); }
+html[data-adm-theme="light"] .lw-item__main img{ filter:brightness(0); opacity:.8; }
 .lw-item__aa{ font-size:16px; width:24px; text-align:center; }
 .lw-add{ padding:8px 14px; border-radius:10px; border:1.5px dashed var(--adm-line-2); background:none; color:var(--adm-muted); font:500 13.5px var(--f-body); }
 .lw-add:hover{ border-color:var(--adm-accent); color:var(--adm-text); }
 .lw-editor{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; }
-.lw-editor__logo{ max-height:90px; max-width:100%; object-fit:contain; }
+/* logos are drawn light for the site's dark ground - shown on it in either theme */
+.lw-editor__logo{ max-height:90px; max-width:100%; object-fit:contain; background:#0b0b0c; padding:10px; border-radius:8px; }
 .lw-editor__preview{ display:flex; flex-direction:column; gap:10px; }
-.lw-editor__preview .cmarquee__track{ min-height:180px; justify-content:center; width:100%; padding:30px 16px; border-radius:12px; background:var(--adm-bg); border:1px solid var(--adm-line); overflow:hidden; }
+.lw-editor__preview .cmarquee__track{ min-height:180px; justify-content:center; width:100%; padding:30px 16px; border-radius:12px; background:#0b0b0c; border:1px solid var(--adm-line); overflow:hidden; }
 @media (max-width:760px){ .lw-editor{ grid-template-columns:1fr; } }
 
 /* ---- alignment pass ---- */

@@ -3,7 +3,7 @@
 /* Your account (password, two-step sign-in), the team (owners only)
    and the activity log (owners only). */
 import QRCode from "qrcode";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { api } from "./api";
 import { Button, Empty, Field, Input, Modal, Spinner, useConfirm, useToast } from "./ui";
 
@@ -62,38 +62,62 @@ export function PasswordForm({ forced, onDone }: { forced?: boolean; onDone: () 
   );
 }
 
-export function Account({ me, twoFactorAvailable, refresh }: { me: Me; twoFactorAvailable: boolean; refresh: () => void }) {
+/* Scan the QR code, type a code, done. Used on Your account and on the
+   screen every new account has to pass before the panel opens. */
+export function TwoFactorSetup({ onDone, onCancel }: { onDone: () => void; onCancel?: () => void }) {
   const toast = useToast();
-  const confirm = useConfirm();
   const [setup, setSetup] = useState<{ secret: string; qr: string } | null>(null);
   const [code, setCode] = useState("");
-  const [disabling, setDisabling] = useState(false);
-  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const begin = async () => {
+  const begin = useCallback(async () => {
     try {
       const d = await api<{ secret: string; uri: string }>("POST", "/2fa/begin");
       setSetup({ secret: d.secret, qr: await QRCode.toDataURL(d.uri, { margin: 1, width: 220 }) });
     } catch (e) {
       toast((e as Error).message, "error");
     }
-  };
+  }, [toast]);
+  /* once only - a second start would replace the secret behind the QR code on screen */
+  const started = useRef(false);
+  useEffect(() => { if (!onCancel && !started.current) { started.current = true; begin(); } }, [begin, onCancel]);
 
-  const confirmCode = async (e: FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      await api("POST", "/2fa/confirm", { code });
-      toast("Two-step sign-in is on.");
-      setSetup(null); setCode("");
-      refresh();
-    } catch (ex) {
-      toast((ex as Error).message, "error");
-    } finally {
-      setBusy(false);
-    }
-  };
+  if (!setup) return onCancel ? <div><Button variant="primary" onClick={begin}>Set up two-step sign-in</Button></div> : <Spinner />;
+
+  return (
+    <form className="adm-stack" onSubmit={async (e) => {
+      e.preventDefault();
+      setBusy(true);
+      try {
+        await api("POST", "/2fa/confirm", { code });
+        toast("Two-step sign-in is on.");
+        setSetup(null); setCode("");
+        onDone();
+      } catch (ex) {
+        toast((ex as Error).message, "error");
+      } finally {
+        setBusy(false);
+      }
+    }}>
+      <ol className="adm-steps">
+        <li>Install an authenticator app on your phone (Google Authenticator, Microsoft Authenticator, 1Password…).</li>
+        <li>Open it and scan this code.</li>
+      </ol>
+      <img className="adm-qr" src={setup.qr} alt="QR code for your authenticator app" width={220} height={220} />
+      <p className="adm-small adm-muted">Can&rsquo;t scan? Enter this key instead: <code className="adm-code">{setup.secret.match(/.{1,4}/g)?.join(" ")}</code></p>
+      <Field label="Then type the 6-digit code it shows">
+        <Input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" maxLength={7} value={code} onChange={(e) => setCode(e.target.value)} required />
+      </Field>
+      <div className="adm-row">
+        {onCancel && <Button variant="ghost" onClick={() => { setSetup(null); onCancel(); }}>Cancel</Button>}
+        <Button variant="primary" type="submit" busy={busy}>Turn on</Button>
+      </div>
+    </form>
+  );
+}
+
+export function Account({ me, twoFactorAvailable, refresh }: { me: Me; twoFactorAvailable: boolean; refresh: () => void }) {
+  const confirm = useConfirm();
 
   return (
     <div className="adm-page">
@@ -105,36 +129,12 @@ export function Account({ me, twoFactorAvailable, refresh }: { me: Me; twoFactor
         </section>
         <section className="adm-card adm-stack">
           <h2 className="adm-h3">Two-step sign-in</h2>
-          <p className="adm-muted">Asks for a 6-digit code from an app on your phone (Google Authenticator, Microsoft Authenticator, 1Password…) as well as your password. Strongly recommended.</p>
+          <p className="adm-muted">Asks for a 6-digit code from an app on your phone as well as your password. Required for every account.</p>
           {!twoFactorAvailable ? (
             <p className="adm-notice">Not available yet - the server needs its ADMIN_ENC_KEY secret set.</p>
           ) : me.totp ? (
-            <>
-              <p className="adm-ok">On.</p>
-              {disabling ? (
-                <form className="adm-stack" onSubmit={async (e) => {
-                  e.preventDefault();
-                  try { await api("POST", "/2fa/disable", { password }); toast("Two-step sign-in is off."); setDisabling(false); setPassword(""); refresh(); }
-                  catch (ex) { toast((ex as Error).message, "error"); }
-                }}>
-                  <Field label="Your password"><Input type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></Field>
-                  <div className="adm-row"><Button variant="ghost" onClick={() => setDisabling(false)}>Cancel</Button><Button variant="danger" type="submit">Turn off</Button></div>
-                </form>
-              ) : <div><Button variant="ghost" onClick={() => setDisabling(true)}>Turn off</Button></div>}
-            </>
-          ) : setup ? (
-            <form className="adm-stack" onSubmit={confirmCode}>
-              <ol className="adm-steps">
-                <li>Open your authenticator app and scan this code.</li>
-              </ol>
-              <img className="adm-qr" src={setup.qr} alt="QR code for your authenticator app" width={220} height={220} />
-              <p className="adm-small adm-muted">Can&rsquo;t scan? Enter this key instead: <code className="adm-code">{setup.secret.match(/.{1,4}/g)?.join(" ")}</code></p>
-              <Field label="Then type the 6-digit code it shows">
-                <Input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9 ]{6,7}" maxLength={7} value={code} onChange={(e) => setCode(e.target.value)} required />
-              </Field>
-              <div className="adm-row"><Button variant="ghost" onClick={() => setSetup(null)}>Cancel</Button><Button variant="primary" type="submit" busy={busy}>Turn on</Button></div>
-            </form>
-          ) : <div><Button variant="primary" onClick={begin}>Set up two-step sign-in</Button></div>}
+            <p className="adm-ok">On. Lost your phone? Ask an owner to reset it from Team, then set it up again.</p>
+          ) : <TwoFactorSetup onDone={refresh} onCancel={() => {}} />}
 
           <h2 className="adm-h3 adm-mt">Signed-in devices</h2>
           <p className="adm-muted">Sessions end after 2 hours without use, and after 12 hours at most.</p>
@@ -151,7 +151,7 @@ export function Account({ me, twoFactorAvailable, refresh }: { me: Me; twoFactor
   );
 }
 
-type AdminRow = { id: number; email: string; name: string; role: "owner" | "editor"; disabled: number; must_change: number; totp: number; created_at: number };
+type AdminRow = { id: number; email: string; name: string; role: "owner" | "editor"; disabled: number; locked?: number; must_change: number; totp: number; created_at: number };
 
 export function Team({ me }: { me: Me }) {
   const owner = me.role === "owner";
@@ -185,7 +185,7 @@ export function Team({ me }: { me: Me }) {
                 <strong>{r.name}{r.id === me.id && " (you)"}</strong>
                 <span className="adm-muted adm-small">{r.email} · {r.role === "owner" ? "Owner" : "Editor"}{r.totp ? " · 2-step on" : ""}{r.must_change ? " · hasn't signed in yet" : ""}</span>
               </div>
-              {r.disabled ? <span className="adm-pill">Blocked</span> : null}
+              {r.locked ? <span className="adm-pill is-warn">Locked · wrong passwords</span> : r.disabled ? <span className="adm-pill">Blocked</span> : null}
               {owner && r.id !== me.id && (
                 <div className="adm-row adm-row--wrap">
                   <Button variant="ghost" onClick={() => patch(r, { role: r.role === "owner" ? "editor" : "owner" }, "Role changed.")}>
@@ -198,7 +198,7 @@ export function Team({ me }: { me: Me }) {
                     setIssued({ email: r.email, password });
                   }}>Reset password</Button>
                   {r.totp ? <Button variant="ghost" onClick={() => patch(r, { resetTwoFactor: true }, "Two-step sign-in reset.")}>Reset 2-step</Button> : null}
-                  <Button variant="ghost" onClick={() => patch(r, { disabled: !r.disabled }, r.disabled ? "Unblocked." : "Blocked and signed out.")}>{r.disabled ? "Unblock" : "Block"}</Button>
+                  <Button variant="ghost" onClick={() => patch(r, { disabled: !r.disabled }, r.disabled ? (r.locked ? "Unlocked. They can sign in again." : "Unblocked.") : "Blocked and signed out.")}>{r.locked ? "Unlock" : r.disabled ? "Unblock" : "Block"}</Button>
                   <Button variant="ghost" onClick={async () => {
                     if (!(await confirm({ title: `Remove ${r.name}?`, body: "Their account is deleted. What they made stays.", action: "Remove", danger: true }))) return;
                     await api("DELETE", `/admins/${r.id}`).then(() => { toast("Removed."); load(); }).catch((e) => toast((e as Error).message, "error"));
@@ -270,7 +270,8 @@ function AddPerson({ onClose, onAdded }: { onClose: () => void; onAdded: (email:
 }
 
 const ACTIONS: Record<string, string> = {
-  "login.ok": "Signed in", "login.fail": "Failed sign-in", "login.fail.2fa": "Wrong 2-step code", "login.locked": "Sign-in blocked (too many tries)",
+  "login.ok": "Signed in", "login.fail": "Failed sign-in", "login.fail.2fa": "Wrong 2-step code", "login.locked": "Sign-in blocked (too many tries)", "login.lockedOut": "Account locked (3 wrong passwords)",
+  "login.whileLocked": "Tried to sign in while locked",
   logout: "Signed out", "password.change": "Changed password", "password.fail": "Wrong current password", "2fa.on": "Turned on 2-step",
   "2fa.off": "Turned off 2-step", "sessions.revoke": "Signed out everywhere", "admin.create": "Added a person", "admin.update": "Changed a person",
   "admin.delete": "Removed a person", upload: "Uploaded a file", "upload.delete": "Deleted a file", "upload.rename": "Renamed a file",

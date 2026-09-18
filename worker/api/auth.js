@@ -24,6 +24,8 @@ const ABSOLUTE = 12 * 60 * 60 * 1000;
 const WINDOW = 15 * 60 * 1000;
 const MAX_EMAIL_FAILS = 5;
 const MAX_IP_FAILS = 25;
+/* wrong passwords in a row before the account itself is locked */
+const LOCK_AFTER = 3;
 export const MIN_PASSWORD = 12;
 
 export async function audit(env, request, adminId, action, detail) {
@@ -79,10 +81,14 @@ export async function currentAdmin(env, request) {
   };
 }
 
-export async function requireAdmin(env, request, { allowMustChange = false, owner = false } = {}) {
+/* Two-step sign-in is required: until it is on, an account can only
+   set it up (and change its password, sign out). Only enforced once the
+   server can store the secrets (ADMIN_ENC_KEY). */
+export async function requireAdmin(env, request, { allowMustChange = false, allowNo2fa = false, owner = false } = {}) {
   const admin = await currentAdmin(env, request);
   if (!admin) throw new HttpError(401, "Not signed in");
   if (admin.mustChange && !allowMustChange) throw new HttpError(403, "Password change required");
+  if (!admin.totp && hasEncKey(env) && !allowNo2fa) throw new HttpError(403, "Set up two-step sign-in first");
   if (owner && admin.role !== "owner") throw new HttpError(403, "Owners only");
   return admin;
 }
@@ -144,13 +150,29 @@ export async function login(env, request) {
   }
 
   await ensureGuest(env, request, email, password);
-  const admin = await env.DB.prepare("SELECT * FROM admins WHERE email = ? AND disabled = 0").bind(email).first();
+  const found = await env.DB.prepare("SELECT * FROM admins WHERE email = ?").bind(email).first();
+  if (found?.locked) {
+    await burnPasswordTime(password);
+    await audit(env, request, found.id, "login.whileLocked", email);
+    return error(403, LOCKED_MESSAGE);
+  }
+  const admin = found && !found.disabled ? found : null;
   const ok = admin ? await verifyPassword(password, admin.password_hash) : (await burnPasswordTime(password), false);
 
   if (!ok) {
     await recordFailure(env, `ip:${ip}`);
     await recordFailure(env, `email:${email}`);
     await audit(env, request, admin?.id, "login.fail", email);
+    if (admin) {
+      const fails = (admin.failed_logins || 0) + 1;
+      if (fails >= LOCK_AFTER) {
+        await lockAccount(env, request, admin);
+        return error(403, LOCKED_MESSAGE);
+      }
+      await env.DB.prepare("UPDATE admins SET failed_logins = ? WHERE id = ?").bind(fails, admin.id).run();
+      const left = LOCK_AFTER - fails;
+      return error(401, `Wrong email or password. ${left} more wrong ${left === 1 ? "try locks" : "tries lock"} this account.`);
+    }
     return error(401, "Wrong email or password.");
   }
 
@@ -166,7 +188,10 @@ export async function login(env, request) {
     await env.DB.prepare("UPDATE admins SET totp_last = ? WHERE id = ?").bind(step, admin.id).run();
   }
 
-  await env.DB.prepare("DELETE FROM login_attempts WHERE key = ?").bind(`email:${email}`).run();
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM login_attempts WHERE key = ?").bind(`email:${email}`),
+    env.DB.prepare("UPDATE admins SET failed_logins = 0 WHERE id = ?").bind(admin.id),
+  ]);
   const token = randomToken(32);
   const t = now();
   await env.DB.batch([
@@ -178,6 +203,28 @@ export async function login(env, request) {
   ]);
   await audit(env, request, admin.id, "login.ok");
   return json({ ok: true }, 200, { "set-cookie": setCookie(token, ABSOLUTE / 1000) });
+}
+
+const LOCKED_MESSAGE = "This account is locked after too many wrong passwords. Ask an owner to unlock it.";
+
+/* Locked = disabled until an owner unlocks it. Signed out everywhere, any
+   emailed password link voided, and the owners told. */
+async function lockAccount(env, request, admin) {
+  await env.DB.batch([
+    env.DB.prepare("UPDATE admins SET locked = 1, disabled = 1, failed_logins = 0, updated_at = ? WHERE id = ?").bind(now(), admin.id),
+    env.DB.prepare("DELETE FROM sessions WHERE admin_id = ?").bind(admin.id),
+    env.DB.prepare("DELETE FROM password_links WHERE admin_id = ?").bind(admin.id),
+  ]);
+  await audit(env, request, admin.id, "login.lockedOut", admin.email);
+  if (!hasMail(env)) return;
+  const { results } = await env.DB.prepare("SELECT email, name FROM admins WHERE role = 'owner' AND disabled = 0 AND id != ?").bind(admin.id).all();
+  for (const o of results) {
+    await sendMail(env, {
+      to: o.email,
+      subject: `${admin.name}'s SoCheers Admin account was locked`,
+      lines: [`Hi ${o.name},`, `${admin.name} (${admin.email}) was locked out after ${LOCK_AFTER} wrong passwords in a row.`, "If it was them, unlock the account from Team in the admin panel. If not, leave it locked and let them know."],
+    });
+  }
 }
 
 export async function logout(env, request) {
@@ -205,7 +252,7 @@ export function checkPasswordStrength(pw, email) {
 }
 
 export async function changePassword(env, request) {
-  const admin = await requireAdmin(env, request, { allowMustChange: true });
+  const admin = await requireAdmin(env, request, { allowMustChange: true, allowNo2fa: true });
   const body = await readJson(request, 4000);
   const row = await env.DB.prepare("SELECT password_hash FROM admins WHERE id = ?").bind(admin.id).first();
   if (!(await verifyPassword(String(body.current || ""), row.password_hash))) {
@@ -229,7 +276,7 @@ export async function changePassword(env, request) {
 /* ---- 2FA ---- */
 
 export async function totpBegin(env, request) {
-  const admin = await requireAdmin(env, request);
+  const admin = await requireAdmin(env, request, { allowNo2fa: true });
   if (!hasEncKey(env)) return error(503, "2FA is not configured on the server (ADMIN_ENC_KEY).");
   const secret = base32(randomBytes(20));
   await env.DB.prepare("UPDATE admins SET totp_pending = ? WHERE id = ?").bind(await seal(env, secret), admin.id).run();
@@ -238,7 +285,7 @@ export async function totpBegin(env, request) {
 }
 
 export async function totpConfirm(env, request) {
-  const admin = await requireAdmin(env, request);
+  const admin = await requireAdmin(env, request, { allowNo2fa: true });
   const body = await readJson(request, 1000);
   const row = await env.DB.prepare("SELECT totp_pending FROM admins WHERE id = ?").bind(admin.id).first();
   if (!row?.totp_pending) return error(400, "Start 2FA setup first.");
@@ -252,6 +299,9 @@ export async function totpConfirm(env, request) {
 
 export async function totpDisable(env, request) {
   const admin = await requireAdmin(env, request);
+  /* required for everyone - an owner can reset it (Team), which sends
+     the person back through setup on their next sign-in */
+  if (hasEncKey(env)) return error(400, "Two-step sign-in is required and can't be turned off.");
   const body = await readJson(request, 2000);
   const row = await env.DB.prepare("SELECT password_hash FROM admins WHERE id = ?").bind(admin.id).first();
   if (!(await verifyPassword(String(body.password || ""), row.password_hash))) return error(401, "Password is wrong.");
@@ -262,7 +312,7 @@ export async function totpDisable(env, request) {
 }
 
 export async function signOutEverywhere(env, request) {
-  const admin = await requireAdmin(env, request, { allowMustChange: true });
+  const admin = await requireAdmin(env, request, { allowMustChange: true, allowNo2fa: true });
   await env.DB.prepare("DELETE FROM sessions WHERE admin_id = ?").bind(admin.id).run();
   await audit(env, request, admin.id, "sessions.revoke");
   return json({ ok: true }, 200, { "set-cookie": setCookie("", 0) });
@@ -340,7 +390,7 @@ export async function resetPassword(env, request) {
   const weak = checkPasswordStrength(body.password, row.email);
   if (weak) return error(400, weak);
   await env.DB.batch([
-    env.DB.prepare("UPDATE admins SET password_hash = ?, must_change = 0, updated_at = ? WHERE id = ?")
+    env.DB.prepare("UPDATE admins SET password_hash = ?, must_change = 0, failed_logins = 0, updated_at = ? WHERE id = ?")
       .bind(await hashPassword(body.password), now(), row.id),
     env.DB.prepare("DELETE FROM password_links WHERE admin_id = ?").bind(row.id),
     env.DB.prepare("DELETE FROM sessions WHERE admin_id = ?").bind(row.id),
@@ -364,7 +414,7 @@ export async function listAdmins(env, request) {
   /* everyone signed in can see the team; only owners can change it */
   await requireAdmin(env, request);
   const { results } = await env.DB.prepare(
-    "SELECT id, email, name, role, disabled, must_change, totp_secret IS NOT NULL AS totp, created_at FROM admins ORDER BY created_at",
+    "SELECT id, email, name, role, disabled, locked, must_change, totp_secret IS NOT NULL AS totp, created_at FROM admins ORDER BY created_at",
   ).all();
   return json({ admins: results });
 }
@@ -416,18 +466,21 @@ export async function updateAdmin(env, request, id) {
     stmts.push(env.DB.prepare("UPDATE admins SET role = ?, updated_at = ? WHERE id = ?").bind(body.role, t, id));
   }
   if (typeof body.disabled === "boolean") {
-    stmts.push(env.DB.prepare("UPDATE admins SET disabled = ?, updated_at = ? WHERE id = ?").bind(body.disabled ? 1 : 0, t, id));
+    stmts.push(body.disabled
+      ? env.DB.prepare("UPDATE admins SET disabled = 1, updated_at = ? WHERE id = ?").bind(t, id)
+      : env.DB.prepare("UPDATE admins SET disabled = 0, locked = 0, failed_logins = 0, updated_at = ? WHERE id = ?").bind(t, id));
     if (body.disabled) stmts.push(env.DB.prepare("DELETE FROM sessions WHERE admin_id = ?").bind(id));
   }
   if (body.password) {
     const weak = checkPasswordStrength(body.password, target.email);
     if (weak) return error(400, weak);
-    stmts.push(env.DB.prepare("UPDATE admins SET password_hash = ?, must_change = 1, updated_at = ? WHERE id = ?")
+    stmts.push(env.DB.prepare("UPDATE admins SET password_hash = ?, must_change = 1, failed_logins = 0, updated_at = ? WHERE id = ?")
       .bind(await hashPassword(body.password), t, id));
     stmts.push(env.DB.prepare("DELETE FROM sessions WHERE admin_id = ?").bind(id));
   }
   if (body.resetTwoFactor) {
     stmts.push(env.DB.prepare("UPDATE admins SET totp_secret = NULL, totp_pending = NULL, totp_last = 0 WHERE id = ?").bind(id));
+    stmts.push(env.DB.prepare("DELETE FROM sessions WHERE admin_id = ?").bind(id));
   }
   if (stmts.length) await env.DB.batch(stmts);
   const owners = await env.DB.prepare("SELECT COUNT(*) AS n FROM admins WHERE role = 'owner' AND disabled = 0").first();

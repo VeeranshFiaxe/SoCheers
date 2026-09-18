@@ -9,7 +9,7 @@
    ============================================================ */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { api, ApiError } from "./api";
-import { Account, Activity, PasswordForm, Team, type Me } from "./AccountPages";
+import { Account, Activity, PasswordForm, Team, TwoFactorSetup, type Me } from "./AccountPages";
 import AwardsEditor from "./AwardsEditor";
 import InsightsAdmin, { type InsightsTab } from "./InsightsAdmin";
 import LogoWallEditor from "./LogoWallEditor";
@@ -86,6 +86,21 @@ function Panel() {
           <Brand />
           <h1>Welcome, {session.admin.name}</h1>
           <PasswordForm forced onDone={refresh} />
+        </div>
+      </div>
+    );
+  }
+  /* required before the panel opens - the server refuses everything else
+     until it's on (requireAdmin, worker/api/auth.js) */
+  if (session.twoFactorAvailable && !session.admin.totp) {
+    return (
+      <div className="adm adm-center">
+        <div className="adm-login">
+          <Brand />
+          <h1>Set up two-step sign-in</h1>
+          <p className="adm-muted">Every account needs it. From now on you&rsquo;ll sign in with your password and a code from your phone.</p>
+          <TwoFactorSetup onDone={refresh} />
+          <button type="button" className="adm-link adm-small" onClick={async () => { await api("POST", "/logout").catch(() => {}); refresh(); }}>Sign out</button>
         </div>
       </div>
     );
@@ -326,7 +341,6 @@ function Shell({ session, refresh }: { session: NonNullable<Session>; refresh: (
           {owner && link("#/activity", "Activity", "activity")}
         </nav>
         <div className="adm-side__foot">
-          {!me.totp && session.twoFactorAvailable && <a className="adm-nudge" href="#/account">Turn on two-step sign-in →</a>}
           {link("#/account", me.name, "account")}
           <a href="/" target="_blank" rel="noopener">View site ↗</a>
           <ThemeSwitch />
