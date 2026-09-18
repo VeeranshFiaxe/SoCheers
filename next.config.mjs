@@ -26,7 +26,16 @@ const nextConfig = {
      was behind - but it is the URL anything outside this repo would have
      of it, so it redirects rather than 404s. Permanent, because it is. */
   async redirects() {
-    return [{ source: "/blogs", destination: "/insights", permanent: true }];
+    return [
+      { source: "/blogs", destination: "/insights", permanent: true },
+      /* the old WordPress site's pages - see public/_redirects */
+      { source: "/contact-us", destination: "/contact", permanent: true },
+      { source: "/about-us", destination: "/about", permanent: true },
+      { source: "/our-work", destination: "/work", permanent: true },
+      { source: "/services", destination: "/services/strategy", permanent: true },
+      { source: "/blog", destination: "/insights", permanent: true },
+      { source: "/parasocial-marketing-whitepaper", destination: "/insights", permanent: true },
+    ];
   },
 
   /* `next dev` only. The admin API and uploaded files come from the

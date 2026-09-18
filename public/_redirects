@@ -1,3 +1,19 @@
 # Cloudflare redirects. Mirrors redirects() in next.config.mjs, which
 # only runs under `next dev` now that the site is a static export.
 /blogs /insights 301
+
+# The old WordPress site's pages, so links and search results pointing at
+# them land on the new equivalent instead of a 404 after the domain moves.
+# Both spellings, with and without the trailing slash.
+/contact-us /contact 301
+/contact-us/ /contact 301
+/about-us /about 301
+/about-us/ /about 301
+/our-work /work 301
+/our-work/ /work 301
+/services /services/strategy 301
+/services/ /services/strategy 301
+/blog /insights 301
+/blog/ /insights 301
+/parasocial-marketing-whitepaper /insights 301
+/parasocial-marketing-whitepaper/ /insights 301
