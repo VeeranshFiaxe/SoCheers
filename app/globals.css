@@ -3086,6 +3086,10 @@ html.is-foot .progress{ opacity:0; pointer-events:none; }
   .foot__ends-meta{ display:none; }
 
   .foot__where{ justify-content:center; }
+  /* Stacked, the accounts sit right above the globe, so the headroom the
+     row hands back at desktop would put the signpost over the icons.
+     Keep it here. */
+  .foot__globe{ margin-top:0; }
   .foot__legal{ justify-content:center; text-align:center; font-size:9.5px; }
 }
 

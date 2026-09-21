@@ -63,6 +63,11 @@ export default function AboutStage({
      rail, and moving the frame under them is a different problem. */
   const [focused, setFocused] = useState(false);
   const [onScreen, setOnScreen] = useState(false);
+  /* The symbol field is looser than the autoplay: it runs whenever any
+     sliver of the space section is on screen, so hovering the last few
+     pixels of the frame, or the heading from the section above, still
+     gets waves. */
+  const [inSection, setInSection] = useState(false);
   /* Read in an effect, not at render: matchMedia does not exist on the
      server, and reading it during render would hand back a first paint
      that disagrees with the markup Next sent. */
@@ -103,7 +108,13 @@ export default function AboutStage({
       { threshold: 0.4 },
     );
     io.observe(el);
-    return () => io.disconnect();
+    const sec = el.closest("section") ?? el;
+    const near = new IntersectionObserver(
+      ([e]) => setInSection(e.isIntersecting),
+      { threshold: 0 },
+    );
+    near.observe(sec);
+    return () => { io.disconnect(); near.disconnect(); };
   }, []);
 
   const paused = focused || !onScreen || reduced;
@@ -207,7 +218,7 @@ export default function AboutStage({
           Fed the same `i` as everything else, and told when the section is
           on screen so it can keep its loop stopped the rest of the time.
           Everything else about it is in lib/ascii-field.ts. */}
-      <StageAscii src={shot.src} active={onScreen} still={reduced} />
+      <StageAscii src={shot.src} active={inSection} still={reduced} />
 
       {/* Every photo is mounted and stacked; only one is at full opacity.
           Cross-fading between two elements that are already decoded is

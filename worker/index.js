@@ -38,21 +38,51 @@ const POST = /^\/insights\/([a-z0-9-]{1,80})\/?$/;
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-    if (url.pathname.startsWith("/api/")) return api(request, env, url);
-    if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return admin(request, env, url);
-    if (MEDIA.test(url.pathname)) return media(request, env, url);
-    if (url.searchParams.has("_rsc")) return flight(request, env, url);
-    /* HEAD too: link checkers and some crawlers ask that first, and a
-       post answered 404 to it looks dead to them */
-    const read = request.method === "GET" || request.method === "HEAD";
-    const post = read && url.pathname.match(POST);
-    if (post && post[1] !== "post") return secure(await blogPost(request, env, url, post[1]));
-    if (read && url.pathname === "/insights") return secure(linkPreview(await insights(request, env), url));
-    if (request.method === "GET" && url.pathname === "/sitemap.xml") return sitemap(request, env);
-    return secure(linkPreview(await env.ASSETS.fetch(request), url));
+    if (env.CRAWLERS === "on") return route(request, env);
+    return closed(await route(request, env));
   },
 };
+
+/* Staging: keep every crawler out, search and AI alike (the CRAWLERS var
+   in wrangler.jsonc). robots.txt says no to all, the sitemap and any
+   llms.txt are gone, and every response says noindex in case a bot
+   ignores robots.txt. */
+const BOT_FILES = /^\/(sitemap\.xml|llms(-full)?\.txt|ai\.txt)$/;
+const NO_BOTS = "noindex, nofollow, noarchive, nosnippet, noimageindex, noai, noimageai";
+
+async function route(request, env) {
+  const url = new URL(request.url);
+  if (env.CRAWLERS !== "on") {
+    if (url.pathname === "/robots.txt") {
+      return new Response("User-agent: *\nDisallow: /\n", {
+        headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+      });
+    }
+    if (BOT_FILES.test(url.pathname)) return new Response("Not found", { status: 404 });
+  }
+  return serve(request, env, url);
+}
+
+function closed(res) {
+  const headers = new Headers(res.headers);
+  headers.set("X-Robots-Tag", NO_BOTS);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+}
+
+async function serve(request, env, url) {
+  if (url.pathname.startsWith("/api/")) return api(request, env, url);
+  if (url.pathname === "/admin" || url.pathname.startsWith("/admin/")) return admin(request, env, url);
+  if (MEDIA.test(url.pathname)) return media(request, env, url);
+  if (url.searchParams.has("_rsc")) return flight(request, env, url);
+  /* HEAD too: link checkers and some crawlers ask that first, and a
+     post answered 404 to it looks dead to them */
+  const read = request.method === "GET" || request.method === "HEAD";
+  const post = read && url.pathname.match(POST);
+  if (post && post[1] !== "post") return secure(await blogPost(request, env, url, post[1]));
+  if (read && url.pathname === "/insights") return secure(linkPreview(await insights(request, env), url));
+  if (request.method === "GET" && url.pathname === "/sitemap.xml") return sitemap(request, env);
+  return secure(linkPreview(await env.ASSETS.fetch(request), url));
+}
 
 /* The baseline every public page goes out with. Static-file headers
    (public/_headers) do not reach what a Worker returns, so they are set
@@ -243,7 +273,7 @@ async function sitemap(request, env) {
    the domain points here that host is the old site - so WhatsApp,
    LinkedIn and the rest fetched an image that is not there and fell back
    to a bare link. Swapped to whatever host the page was asked on, so the
-   preview works on socheers.fiaxe.in today and on socheers.net once it
+   preview works on socheers.in today and on socheers.net once it
    moves.
    The canonical is left alone: that one should name the real domain. */
 const BUILT_ORIGIN = "https://socheers.net";

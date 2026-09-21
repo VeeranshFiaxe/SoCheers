@@ -6,12 +6,17 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "socheers",
+	"account_id": "d0bb02d418363ff5f77783b07de0572b",
 	"main": "worker/index.js",
 	"compatibility_date": "2026-06-01",
 	"workers_dev": false,
 	"routes": [
 		{
-			"pattern": "socheers.fiaxe.in",
+			"pattern": "socheers.in",
+			"custom_domain": true
+		},
+		{
+			"pattern": "www.socheers.in",
 			"custom_domain": true
 		}
 	],
@@ -39,10 +44,17 @@
 		{
 			"binding": "DB",
 			"database_name": "socheers-admin",
-			"database_id": "9579c41a-ea7c-4d27-b1ec-b222ff5024ff",
+			"database_id": "2147b456-c7c7-4505-aa2d-5c5fdb978ba7",
 			"migrations_dir": "migrations"
 		}
 	],
+	/* Staging switch. "off": every search engine and AI bot is told to stay
+	   out - robots.txt disallows everything, sitemap.xml and llms.txt 404,
+	   and every response carries X-Robots-Tag noindex (worker/index.js).
+	   Set to "on" once socheers.net is live and the redirects are settled. */
+	"vars": {
+		"CRAWLERS": "off"
+	},
 	"observability": {
 		"enabled": true
 	}

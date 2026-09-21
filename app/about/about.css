@@ -1312,8 +1312,12 @@
 .ab-people__notes{ grid-row:2; }
 .ab-people__title{
   margin-top:clamp(14px,2vh,24px);
-  font-size:clamp(28px,3.6vw,54px);
-  white-space:nowrap;
+  /* sized to fit the left column on one line - any bigger and it ran
+     under the drivers column, and [data-split]'s overflow:hidden line mask
+     (width of this element) clipped the end off. max-content keeps the
+     mask as wide as the line. */
+  font-size:clamp(26px,2.9vw,50px);
+  white-space:nowrap; width:max-content; max-width:none;
 }
 .ab-people__title em{
   color:var(--accent); font-weight:400; font-style:italic;
@@ -1454,7 +1458,7 @@
   .ab-drives{ max-width:560px; }
 }
 @media (max-width:860px){
-  .ab-people__title{ white-space:normal; text-wrap:balance; }
+  .ab-people__title{ white-space:normal; text-wrap:balance; width:auto; max-width:100%; }
   .ab-people__notes{ grid-template-columns:1fr; }
   /* on a phone nothing competes for the height, so the crop opens back
      out towards the source */

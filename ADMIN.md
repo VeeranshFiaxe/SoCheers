@@ -45,7 +45,7 @@ npm run admin:create -- --local
 npm run preview:worker
 ```
 
-Local secrets live in `.env` (gitignored): `ADMIN_ENC_KEY`, and optionally `ADMIN_GUEST_EMAIL` / `ADMIN_GUEST_PASSWORD` for a guest owner account. The guest account only works on localhost.
+Local secrets live in `.env` (gitignored): `ADMIN_ENC_KEY`.
 
 ## Security
 

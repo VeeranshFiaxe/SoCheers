@@ -14,7 +14,7 @@
 import { json, error, readJson, clientIp, now, HttpError } from "./http.js";
 import {
   hashPassword, verifyPassword, burnPasswordTime, randomToken, sha256,
-  seal, open, hasEncKey, base32, randomBytes, checkTotp, safeEqual,
+  seal, open, hasEncKey, base32, randomBytes, checkTotp,
 } from "./crypto.js";
 import { hasMail, sendMail } from "./mail.js";
 
@@ -35,6 +35,8 @@ export async function audit(env, request, adminId, action, detail) {
 }
 
 /* ---- the gate every /api/admin write passes ---- */
+
+const isLocal = (request) => ["localhost", "127.0.0.1", "[::1]"].includes(new URL(request.url).hostname);
 
 export function checkCsrf(request) {
   if (request.method === "GET" || request.method === "HEAD") return;
@@ -111,30 +113,6 @@ async function recordFailure(env, key) {
   ).bind(key, t, t, WINDOW, t, WINDOW, t).run();
 }
 
-/* ---- the local guest account ----
-
-   For previewing the panel under `wrangler dev`: ADMIN_GUEST_EMAIL and
-   ADMIN_GUEST_PASSWORD come from .env (gitignored, never in the repo).
-   Only honoured on localhost, so the same variables set on the live
-   Worker open nothing. The account is written on the fly with the
-   password hashed like any other. */
-const isLocal = (request) => ["localhost", "127.0.0.1", "[::1]"].includes(new URL(request.url).hostname);
-
-async function ensureGuest(env, request, email, password) {
-  const guestEmail = String(env.ADMIN_GUEST_EMAIL || "").trim().toLowerCase();
-  const guestPassword = String(env.ADMIN_GUEST_PASSWORD || "");
-  if (!guestEmail || guestPassword.length < 12 || !isLocal(request)) return;
-  if (email !== guestEmail || !safeEqual(password, guestPassword)) return;
-  const row = await env.DB.prepare("SELECT password_hash FROM admins WHERE email = ?").bind(guestEmail).first();
-  if (row && (await verifyPassword(guestPassword, row.password_hash))) return;
-  const t = now();
-  await env.DB.prepare(
-    `INSERT INTO admins (email, name, role, password_hash, must_change, created_at, updated_at)
-     VALUES (?, 'Guest', 'owner', ?, 0, ?, ?)
-     ON CONFLICT(email) DO UPDATE SET password_hash = excluded.password_hash, disabled = 0, must_change = 0, updated_at = excluded.updated_at`,
-  ).bind(guestEmail, await hashPassword(guestPassword), t, t).run();
-}
-
 /* ---- routes ---- */
 
 export async function login(env, request) {
@@ -149,7 +127,6 @@ export async function login(env, request) {
     return error(429, "Too many attempts. Try again in 15 minutes.");
   }
 
-  await ensureGuest(env, request, email, password);
   const found = await env.DB.prepare("SELECT * FROM admins WHERE email = ?").bind(email).first();
   if (found?.locked) {
     await burnPasswordTime(password);
