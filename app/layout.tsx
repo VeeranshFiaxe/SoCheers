@@ -11,6 +11,8 @@ import ShellGate from "@/components/ShellGate";
 import JsonLd from "@/components/JsonLd";
 import { SITE_GRAPH } from "@/lib/schema";
 import { OG_IMAGE, SITE_NAME } from "@/lib/seo";
+import Analytics from "@/components/Analytics";
+import { ANALYTICS } from "@/lib/analytics";
 
 /* One face for the whole site. The weight does the talking:
    700 for headings, 500 for accents (the uppercase, letter-spaced
@@ -85,7 +87,7 @@ export const metadata: Metadata = {
      service pages under /services declare canonicals (app/services/
      [service]/page.tsx) and a canonical has to be absolute to mean
      anything - without this Next either drops it or warns and guesses. */
-  metadataBase: new URL("https://socheers.net"),
+  metadataBase: new URL("https://socheers.in"),
   title: "SoCheers. Making more happen.",
   description:
     "SoCheers is an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",
@@ -107,6 +109,10 @@ export const metadata: Metadata = {
     images: [{ url: OG_IMAGE, width: 1200, height: 630, alt: "SoCheers" }],
   },
   twitter: { card: "summary_large_image", images: [OG_IMAGE] },
+  /* Search Console's HTML-tag check - see lib/analytics.ts */
+  ...(ANALYTICS.googleSiteVerification && {
+    verification: { google: ANALYTICS.googleSiteVerification },
+  }),
 };
 
 /* The browser chrome around the page - the address bar on Android, the
@@ -137,6 +143,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
+        {/* Google Tag Manager, first in the head as Google asks. Skipped on
+            /admin for the same reason components/Analytics.tsx is. */}
+        {ANALYTICS.gtm && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html:
+                "if(location.pathname.indexOf('/admin')!==0)" +
+                "(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':" +
+                "new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0]," +
+                "j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=" +
+                "'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);" +
+                `})(window,document,'script','dataLayer','${ANALYTICS.gtm}');`,
+            }}
+          />
+        )}
         {/* The door, decided before anything paints.
 
             The loader is markup in <body> and it covers the screen, so
@@ -184,6 +205,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <JsonLd data={SITE_GRAPH} />
       </head>
       <body>
+        {ANALYTICS.gtm && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${ANALYTICS.gtm}`}
+              height="0"
+              width="0"
+              style={{ display: "none", visibility: "hidden" }}
+            />
+          </noscript>
+        )}
         {/* The shell, and it is outside the route on purpose.
 
             Everything below survives a navigation: the header keeps its
@@ -209,6 +240,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Nav />
         </ShellGate>
         {children}
+        <Analytics />
       </body>
     </html>
   );

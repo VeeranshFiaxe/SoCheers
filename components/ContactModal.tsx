@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { IMG, TEAM_SIZES, TEAM_SRCSET } from "@/lib/content";
 import { EMAIL_PATTERN, INTENTS, ZOHO_ACTION, ZOHO_TARGET_MODAL } from "@/lib/zoho-form";
 import { ZohoHidden, ZohoPhone } from "./ZohoFields";
+import { trackLead } from "@/lib/analytics";
 
 /* The footer's contact popup - the small, fast version of the front door
    at /contact. It posts to the same Zoho form the full page does (see
@@ -108,6 +109,7 @@ export default function ContactModal() {
                 awaiting.current = false;
                 setSending(false);
                 setSent(true);
+                trackLead("contact-modal");
               }}
             />
 

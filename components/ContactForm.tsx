@@ -5,6 +5,7 @@ import ContactBulb from "./ContactBulb";
 import { CONTACT_FORM } from "@/lib/contact-content";
 import { EMAIL_PATTERN, INTENTS, ZOHO_ACTION, ZOHO_TARGET } from "@/lib/zoho-form";
 import { ZohoHidden, ZohoPhone } from "./ZohoFields";
+import { trackLead } from "@/lib/analytics";
 
 /* The dedicated page's own form, and now a live one: it posts to the
    client's Zoho form (see lib/zoho-form.ts) rather than handing straight
@@ -85,6 +86,7 @@ export default function ContactForm() {
               .split(/\s+/)[0] ?? "";
           setSending(false);
           setSentTo(first);
+          trackLead("contact-page");
         }}
       />
 
