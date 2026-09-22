@@ -8,16 +8,19 @@ body:has(.adm){ cursor:auto; background:#0b0b0c; overflow-x:hidden; }
 html:has(.adm){ scrollbar-width:auto; }
 html:has(.adm)::-webkit-scrollbar, body:has(.adm)::-webkit-scrollbar{ width:auto; height:auto; display:block; }
 
-.adm{
+/* The confirm dialog and the toasts are drawn by providers that sit
+   outside .adm (components/admin/ui.tsx), so they take the palette from
+   here too - without it the dialog had no background at all. */
+.adm, .adm-modal, .adm-toasts{
   --adm-bg:#0b0b0c; --adm-panel:#141417; --adm-panel-2:#1b1b20; --adm-line:rgba(241,236,225,.1); --adm-line-2:rgba(241,236,225,.18);
   --adm-text:#f1ece1; --adm-muted:rgba(241,236,225,.58); --adm-accent:#38c6f0; --adm-accent-ink:#04161d;
   --adm-danger:#ee346e; --adm-ok:#8cc752; --adm-warn:#ffcb0c;
   --accent:var(--adm-accent); --accent-ink:var(--adm-accent-ink);
-  color:var(--adm-text); background:var(--adm-bg); min-height:100vh;
-  font-family:var(--f-body); font-size:14.5px; line-height:1.5;
+  color:var(--adm-text); font-family:var(--f-body); font-size:14.5px; line-height:1.5;
 }
+.adm{ background:var(--adm-bg); min-height:100vh; }
 /* light panel - the switch is in the sidebar (ThemeSwitch, AdminApp.tsx) */
-html[data-adm-theme="light"] .adm{
+html[data-adm-theme="light"] :is(.adm, .adm-modal, .adm-toasts){
   --adm-bg:#f4f2ec; --adm-panel:#ffffff; --adm-panel-2:#ebe8e0; --adm-line:rgba(11,11,12,.1); --adm-line-2:rgba(11,11,12,.18);
   --adm-text:#0b0b0c; --adm-muted:rgba(11,11,12,.6); --adm-accent:#0e7ea8; --adm-accent-ink:#ffffff;
   --adm-danger:#c21d52; --adm-ok:#4a8a1c; --adm-warn:#a87900;
