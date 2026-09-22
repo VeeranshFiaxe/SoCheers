@@ -35,21 +35,27 @@ export class BackupWorkflow extends WorkflowEntrypoint {
     const when = new Date(event.schedule?.scheduledTime ?? event.timestamp);
     const key = `${when.toISOString().slice(0, 10)}.sql`;
 
-    const bookmark = await step.do("start export", async () => {
-      const result = await exportCall({ output_format: "polling" });
-      if (!result?.at_bookmark) throw new Error("Missing at_bookmark");
-      return result.at_bookmark;
-    });
-
-    // Throwing retries the step, so this polls until the dump is ready.
+    /* Polled the way wrangler's own `d1 export` does it: straight away,
+       each time handing back the bookmark the last reply gave. Reusing
+       the first bookmark with long gaps in between left the export
+       stuck at "not ready" for good. A failure retries the whole step,
+       which starts a fresh export. */
     await step.do(
-      "save dump to R2",
-      { retries: { limit: 20, delay: "15 seconds", backoff: "linear" }, timeout: "10 minutes" },
+      "export and save to R2",
+      { retries: { limit: 3, delay: "1 minute", backoff: "linear" }, timeout: "10 minutes" },
       async () => {
-        const result = await exportCall({ output_format: "polling", current_bookmark: bookmark });
-        if (result?.status === "error") throw new Error(`Export failed: ${result.error}`);
+        let bookmark;
+        let result;
+        for (let i = 0; i < 120; i++) {
+          result = await exportCall({ output_format: "polling", current_bookmark: bookmark });
+          if (!result) throw new Error("Export request failed");
+          if (result.status === "complete") break;
+          if (result.status === "error") throw new Error(`Export failed: ${result.error}`);
+          bookmark = result.at_bookmark;
+          await new Promise((r) => setTimeout(r, 1000));
+        }
         const signedUrl = result?.result?.signed_url;
-        if (!signedUrl) throw new Error("Export not ready");
+        if (result?.status !== "complete" || !signedUrl) throw new Error("Export did not finish");
         const dump = await fetch(signedUrl);
         if (!dump.ok) throw new Error("Failed to fetch dump");
         await this.env.BACKUPS.put(key, dump.body, {
