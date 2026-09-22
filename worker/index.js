@@ -28,6 +28,8 @@ import { api } from "./api/router.js";
 import { hardenAdmin } from "./api/http.js";
 import { publicInsights, publicPost } from "./api/content.js";
 
+export { BackupWorkflow } from "./backup.js";
+
 const CACHE = "public, max-age=604800, stale-while-revalidate=2592000";
 
 const MEDIA = /^\/(assets|media)\//;
@@ -38,6 +40,12 @@ const POST = /^\/insights\/([a-z0-9-]{1,80})\/?$/;
 
 export default {
   async fetch(request, env) {
+    /* one address for search engines: www goes to the bare domain */
+    const url = new URL(request.url);
+    if (url.hostname === "www.socheers.in") {
+      url.hostname = "socheers.in";
+      return Response.redirect(url.toString(), 301);
+    }
     if (env.CRAWLERS === "on") return route(request, env);
     return closed(await route(request, env));
   },
@@ -273,10 +281,9 @@ async function sitemap(request, env) {
    the domain points here that host is the old site - so WhatsApp,
    LinkedIn and the rest fetched an image that is not there and fell back
    to a bare link. Swapped to whatever host the page was asked on, so the
-   preview works on socheers.in today and on socheers.net once it
-   moves.
+   preview works on any host that serves the site (staging included).
    The canonical is left alone: that one should name the real domain. */
-const BUILT_ORIGIN = "https://socheers.net";
+const BUILT_ORIGIN = "https://socheers.in";
 
 function linkPreview(res, url) {
   if (url.origin === BUILT_ORIGIN) return res;

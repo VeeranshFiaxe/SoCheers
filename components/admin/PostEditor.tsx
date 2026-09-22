@@ -239,7 +239,7 @@ export default function PostEditor({ id, template, go }: { id: number | null; te
             </>
           ) : (
             <div className="adm-stack">
-              <Field label="Web address" hint={<>socheers.net/insights/<strong>{post.slug || "…"}</strong></>}>
+              <Field label="Web address" hint={<>socheers.in/insights/<strong>{post.slug || "…"}</strong></>}>
                 <Input
                   value={post.slug}
                   maxLength={80}

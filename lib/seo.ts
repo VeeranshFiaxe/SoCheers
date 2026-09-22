@@ -13,7 +13,7 @@ import type { Metadata } from "next";
    Relative paths resolve against metadataBase in app/layout.tsx.
    ============================================================ */
 
-export const SITE_URL = "https://socheers.net";
+export const SITE_URL = "https://socheers.in";
 export const SITE_NAME = "SoCheers";
 
 /* 1200x630, cut from public/assets/socheers-frame-n-T4ylIx.jpg */

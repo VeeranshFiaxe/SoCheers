@@ -33,6 +33,21 @@
 		{
 			"binding": "MEDIA",
 			"bucket_name": "socheers-media"
+		},
+		/* Nightly D1 dumps, kept 14 days (worker/backup.js). */
+		{
+			"binding": "BACKUPS",
+			"bucket_name": "socheers-backups"
+		}
+	],
+	/* Backs up the DB below to BACKUPS every day at 00:00 UTC.
+	   Needs the D1_REST_API_TOKEN secret - see worker/backup.js. */
+	"workflows": [
+		{
+			"name": "socheers-d1-backup",
+			"binding": "BACKUP_WORKFLOW",
+			"class_name": "BackupWorkflow",
+			"schedules": ["0 0 * * *"]
 		}
 	],
 	/* The admin panel (worker/api, app/admin). Created with
@@ -51,9 +66,12 @@
 	/* Staging switch. "off": every search engine and AI bot is told to stay
 	   out - robots.txt disallows everything, sitemap.xml and llms.txt 404,
 	   and every response carries X-Robots-Tag noindex (worker/index.js).
-	   Set to "on" once socheers.net is live and the redirects are settled. */
+	   Set to "on" once socheers.in is live and the redirects are settled. */
 	"vars": {
-		"CRAWLERS": "off"
+		"CRAWLERS": "off",
+		/* For the D1 export API in worker/backup.js. */
+		"ACCOUNT_ID": "d0bb02d418363ff5f77783b07de0572b",
+		"DATABASE_ID": "2147b456-c7c7-4505-aa2d-5c5fdb978ba7"
 	},
 	"observability": {
 		"enabled": true
