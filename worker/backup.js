@@ -47,8 +47,10 @@ export class BackupWorkflow extends WorkflowEntrypoint {
       { retries: { limit: 20, delay: "15 seconds", backoff: "linear" }, timeout: "10 minutes" },
       async () => {
         const result = await exportCall({ output_format: "polling", current_bookmark: bookmark });
-        if (!result?.signed_url) throw new Error("Export not ready");
-        const dump = await fetch(result.signed_url);
+        if (result?.status === "error") throw new Error(`Export failed: ${result.error}`);
+        const signedUrl = result?.result?.signed_url;
+        if (!signedUrl) throw new Error("Export not ready");
+        const dump = await fetch(signedUrl);
         if (!dump.ok) throw new Error("Failed to fetch dump");
         await this.env.BACKUPS.put(key, dump.body, {
           httpMetadata: { contentType: "application/sql" },
