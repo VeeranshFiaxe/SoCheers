@@ -471,6 +471,15 @@ export function initSite(): () => void {
          there is one more resting frame between the first and the last. */
       const isTest = hero.hasAttribute("data-hero-test");
       const film = document.querySelector<HTMLVideoElement>("[data-test-film]");
+      /* the reader's pause / play, riding the film's corner */
+      const filmBtn = hero.querySelector<HTMLElement>("[data-film-toggle]");
+      /* and its big twin in the middle of the film, up while the mouse moves */
+      const filmBig = hero.querySelector<HTMLElement>("[data-film-big]");
+      /* whether the opening has put the film's controls on screen yet */
+      let ctlReady = false;
+      let syncCenter = () => {};
+      /* the reader's pause, read by the idle fade below */
+      let filmPaused = false;
       const greet = document.querySelector<HTMLElement>("[data-test-intro]");
       if (!isTest && !frame) return;
 
@@ -786,13 +795,77 @@ export function initSite(): () => void {
            relent on the reader's first gesture. */
         const keeper = keepPlaying(film);
         cleanups.push(() => keeper.destroy());
-        syncFilm = () => keeper.want(heroOnScreen && filmShown());
+        syncFilm = () => { keeper.want(heroOnScreen && filmShown()); syncCenter(); };
         const transport = new IntersectionObserver((entries) => {
           for (const e of entries) heroOnScreen = e.isIntersecting;
           syncFilm();
         }, { rootMargin: "10% 0px", threshold: 0 });
         transport.observe(hero);
         observers.push(transport);
+
+        /* The reader's own stop. Through keeper.hold rather than
+           film.pause(), which lib/autoplay.ts would undo within the
+           second - see hold() there. It outlives the hero, same as the
+           reel's: scroll into the definition and back and the film is
+           still paused. */
+        if (filmBtn) {
+          let paused = false;
+          const btns = filmBig ? [filmBtn, filmBig] : [filmBtn];
+          const toggle = (e: MouseEvent) => {
+            paused = !paused;
+            filmPaused = paused;
+            keeper.hold(paused);
+            const word = paused ? "Play" : "Pause";
+            for (const b of btns) {
+              b.toggleAttribute("data-paused", paused);
+              b.setAttribute("data-cursor", word);
+            }
+            filmBtn.setAttribute("aria-label", `${word} the film`);
+            /* a mouse click leaves no focus behind: the arrow keys and the
+               space bar skip a focused button (onKey), and they are how
+               the next beat of the hero is asked for */
+            if (e.detail > 0) (e.currentTarget as HTMLElement).blur();
+            syncCenter();
+          };
+          for (const b of btns) on(b, "click", toggle as EventListener);
+
+          /* The big one: up while the mouse is moving over the film and
+             for a moment after it stops (longer if it is resting on the
+             button itself), and held up while the film is paused - but
+             only while the film is actually what is on screen: after the
+             opening, before the hand-over to the photo, and not once the
+             hero is spent. Called on every move of tl too (syncFilm), so
+             it goes the moment the film does. */
+          if (filmBig && canHover) {
+            let moving = false;
+            let idle = 0;
+            syncCenter = () => {
+              const t = tl.time();
+              /* a reload restored past the hero never ran the opening */
+              if (t > 0) ctlReady = true;
+              filmBig.classList.toggle("is-live",
+                ctlReady && locked && t < AT && (moving || paused));
+            };
+            const rest = () => {
+              if (filmBig.matches(":hover")) { idle = window.setTimeout(rest, 1600); return; }
+              moving = false;
+              syncCenter();
+            };
+            on(stage, "pointermove", ((e: PointerEvent) => {
+              if (e.pointerType === "touch") return;
+              moving = true;
+              window.clearTimeout(idle);
+              idle = window.setTimeout(rest, 1600);
+              syncCenter();
+            }) as EventListener);
+            on(stage, "pointerleave", () => {
+              window.clearTimeout(idle);
+              moving = false;
+              syncCenter();
+            });
+            cleanups.push(() => window.clearTimeout(idle));
+          }
+        }
       }
 
       /* -------------------------------------------------- the opening
@@ -898,10 +971,13 @@ export function initSite(): () => void {
         /* every character of it, which is how many steps the shutter
            takes - "We are" + a space + "SoCheers" */
         const CHARS = 15;
-        /* "SoCheers" in both faces, letter by letter, for the re-lettering */
+        /* "SoCheers", both copies (components/Hero.tsx): the top one is
+           what is typed and shown, the one under it only holds the width */
         const sansChs = greet.querySelectorAll<HTMLElement>("[data-name-sans-ch]");
         const playChs = greet.querySelectorAll<HTMLElement>("[data-name-play-ch]");
-        const MORPH = 0.95;
+        /* how long the finished sentence is left to be read before it
+           parts */
+        const READ = 0.6;
 
         gsap.set(greet, { autoAlpha: 1 });
         /* The line, shut.
@@ -963,21 +1039,12 @@ export function initSite(): () => void {
            was never really on screen at all. */
         const HOLD_OPEN = 1.4;
 
-        /* The scroll cue, and it arrives late on this cut: for the whole
-           of the opening there is nothing a scroll would do that the
-           page is not already doing for itself. It is shown once the
-           film has taken the screen on its own, which is the first
-           moment the reader is actually holding the next move. */
-        const showCue = () => {
-          gsap.to("[data-hero-cue]", { autoAlpha: 1, duration: 0.5, overwrite: true });
-        };
-
         const opening = () => {
           if (introRunning) return;
           introRunning = true;
           note("opening starts");
-          gsap.set(sansChs, { autoAlpha: 1, yPercent: 0, filter: "blur(0px)" });
-          gsap.set(playChs, { autoAlpha: 0, y: 0, rotation: 0 });
+          gsap.set(sansChs, { autoAlpha: 0 });
+          gsap.set(playChs, { autoAlpha: 1, y: 0, rotation: 0 });
           if (weAre) gsap.set(weAre, { x: 0, skewX: 0 });
           nameRise?.kill();
           nameRise = null;
@@ -1162,25 +1229,15 @@ export function initSite(): () => void {
             t.set(caret, { opacity: 0 }, at);
           }
 
-          /* "SoCheers" turns playful: each display letter lifts off and
-             blurs away as its playful twin pops up into its place, the
-             two waves running left to right a beat apart. */
-          if (sansChs.length && playChs.length) {
-            t.to(sansChs, {
-              autoAlpha: 0, yPercent: -35, filter: "blur(6px)",
-              duration: 0.32, stagger: 0.045, ease: "power2.in",
-            }, at);
-            t.fromTo(playChs,
-              { autoAlpha: 0, yPercent: 45, rotation: -14, scale: 0.6 },
-              { autoAlpha: 1, yPercent: 0, rotation: 0, scale: 1,
-                duration: 0.55, stagger: 0.045, ease: "back.out(2.2)" },
-              at + 0.14);
-            at += MORPH;
-          }
+          at += READ;
 
           t.to(lines, { "--split": 1, duration: PART, ease: "power3.inOut" }, at);
           t.to(stage, { autoAlpha: 1, duration: 0.24, ease: "power1.out" }, at + PART * 0.08);
           t.to(stage, { scaleX: 1, scaleY: 1, duration: PART, ease: "power3.inOut" }, at);
+          /* the pause button once the film is (all but) open - any
+             earlier and it would be squashed by the stage's own scale */
+          if (filmBtn) t.to(filmBtn, { autoAlpha: 1, duration: 0.45, ease: "power2.out" }, at + PART * 0.85);
+          t.add(() => { ctlReady = true; syncCenter(); }, at + PART * 0.85);
 
           /* And then it does not stop and wait to be scrolled.
 
@@ -1203,7 +1260,7 @@ export function initSite(): () => void {
              dropName). It comes back up as the definition's headword. */
           t.add(dropName, expandAt - NAME_LEAD);
 
-          t.add(() => advance(showCue), expandAt);
+          t.add(() => advance(), expandAt);
         };
 
         /* The room owns the screen until it says otherwise. With no room
@@ -1305,7 +1362,8 @@ export function initSite(): () => void {
       // the blurred backdrop arrives on the same beat, so the letterboxed
       // margin never reads as an empty gap once the photo takes over
       tl.to(backdrop, { autoAlpha: 1, duration: EXPAND * 0.42, ease: "power1.inOut" }, EXPAND * 0.22);
-      tl.to("[data-hero-cue]", { autoAlpha: 0, duration: 0.04 }, 0.02);
+      /* the test cut's cue is not on tl - see cue() below */
+      if (!isTest) tl.to("[data-hero-cue]", { autoAlpha: 0, duration: 0.04 }, 0.02);
       // only once the stage is done growing - the small window never gets it
       tl.to(vignette, { autoAlpha: 1, duration: EXPAND * 0.25, ease: "power1.out" }, EXPAND * 0.8);
 
@@ -1353,6 +1411,14 @@ export function initSite(): () => void {
         tl.fromTo(photo,
           { autoAlpha: 0 },
           { autoAlpha: 1, duration: ENTRY * 0.34, ease: "power1.inOut" }, AT);
+        /* and the pause button goes ahead of the film: nothing to pause
+           once it is gone. immediateRender:false - it is shown by the
+           opening, not by tl, until the playhead first gets here. */
+        if (filmBtn) {
+          tl.fromTo(filmBtn,
+            { autoAlpha: 1 },
+            { autoAlpha: 0, duration: ENTRY * 0.12, ease: "power1.in", immediateRender: false }, AT);
+        }
 
         /* FILM_OUT. Once the film has faded out, it stops. The transport
            above only asks whether the hero is on screen, and the hero is on
@@ -1826,6 +1892,47 @@ export function initSite(): () => void {
       ScrollTrigger.addEventListener("refresh", remeasure);
       cleanups.push(() => ScrollTrigger.removeEventListener("refresh", remeasure));
 
+      /* The scroll cue on the test cut. Shown on the frames the reader is
+         holding the next move - the film full screen, the definition
+         written - and gone at the start (the opening plays itself) and on
+         the way out. Once shown it is left alone while it is still true,
+         so the pulse in it keeps running across the move between the two. */
+      const cue = (show: boolean) => {
+        if (!isTest) return;
+        gsap.to("[data-hero-cue]", {
+          autoAlpha: show ? 1 : 0, duration: show ? 0.5 : 0.25,
+          ease: "power1.out", overwrite: true,
+        });
+      };
+
+      /* Idle over the film. Left alone on the full-screen film - no mouse,
+         no key, no touch - for IDLE_MS, the page's furniture (the header,
+         the progress bar, the scroll cue, the film's button, the cursor)
+         fades away slowly and leaves just the film playing
+         (html.is-film-idle, app/hero.css). Anything the reader does brings
+         it all straight back and starts the count again. Not while the
+         film is paused: then the controls are the point. */
+      const IDLE_MS = 7500;
+      let idleT = 0;
+      const root = document.documentElement;
+      const armIdle = () => {
+        if (!isTest) return;
+        window.clearTimeout(idleT);
+        if (root.classList.contains("is-film-idle")) root.classList.remove("is-film-idle");
+        idleT = window.setTimeout(() => {
+          if (phase === "open" && !busy && locked && !filmPaused) root.classList.add("is-film-idle");
+        }, IDLE_MS);
+      };
+      if (isTest) {
+        for (const ev of ["pointermove", "pointerdown", "wheel", "keydown", "touchstart"]) {
+          window.addEventListener(ev, armIdle, { signal: ac.signal, passive: true });
+        }
+        cleanups.push(() => {
+          window.clearTimeout(idleT);
+          root.classList.remove("is-film-idle");
+        });
+      }
+
       const play = (time: number, duration: number, onDone?: () => void) => {
         // one clock on this timeline, ever. Two overlapping tweens on
         // tl.time fight, and the loser's onComplete never runs - which left
@@ -1835,7 +1942,13 @@ export function initSite(): () => void {
         gsap.to(tl, {
           time, duration, ease: "none", overwrite: true,
           onInterrupt: () => { busy = false; },
-          onComplete: () => { busy = false; cooldown = performance.now() + 420; onDone?.(); },
+          onComplete: () => {
+            busy = false;
+            cooldown = performance.now() + 420;
+            if (phase === "open" || phase === "hold") cue(true);
+            armIdle();
+            onDone?.();
+          },
         });
       };
 
@@ -1870,6 +1983,7 @@ export function initSite(): () => void {
         note(`advance ${phase}->${next?.name ?? "-"}${onArrive ? " (auto)" : ""}`);
         if (next) {
           phase = next.name;
+          if (next.name === "done") cue(false);
           const go = () => play(next.t, next.fwd, next.name === "done" ? release : onArrive);
           /* Leaving the start with "SoCheers" still in the line - the reader
              scrolled back up to it - so it drops first and the film grows
@@ -1899,6 +2013,7 @@ export function initSite(): () => void {
         const prev = STOPS[stopAt(phase) - 1];
         if (prev) {
           phase = prev.name;
+          if (prev.name === "rest") cue(false);
           play(prev.t, prev.back);
           /* back at the start: "SoCheers" comes back up into the line once
              the film has shrunk far enough not to cover it */

@@ -81,6 +81,23 @@ const SPIN = [-24, 16, -10, 28, -18, 12, -30, 20];
    read in both places, rather than a card and a hole kept the same size
    by hand.
    ============================================================ */
+/* pause and play, drawn on top of each other and crossed over by
+   [data-paused] (app/hero.css) */
+function FilmIcons() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <g className="hero__film-icon hero__film-icon--pause">
+        <rect x="6.2" y="5" width="3.8" height="14" rx="1.3" />
+        <rect x="14" y="5" width="3.8" height="14" rx="1.3" />
+      </g>
+      <path
+        className="hero__film-icon hero__film-icon--play"
+        d="M8.2 5.6v12.8c0 .9 1 1.4 1.7.9l9.6-6.4c.6-.4.6-1.4 0-1.8L9.9 4.7c-.7-.5-1.7 0-1.7.9z"
+      />
+    </svg>
+  );
+}
+
 export default function Hero() {
   return (
     <section className="hero hero--test" data-hero data-hero-test data-sec="0">
@@ -130,10 +147,10 @@ export default function Hero() {
                   two halves of the line are where they are */}
               <span className="hero__gap" aria-hidden="true" />
               <span className="hero__side hero__side--r">
-                {/* Typed in the display face, then re-lettered in the
-                    playful one on top of it (initHero, lib/motion.ts).
-                    The display copy stays in the layout so the line
-                    never changes width under the swap. */}
+                {/* Typed in Satoshi italic. Two copies: the italic one on
+                    top is what shows, falls and rises again as the
+                    headword (initHero, lib/motion.ts); the one under it
+                    only holds the line's width. */}
                 <span className="hero__type hero__type--name" data-test-type={2}>
                   <span className="hero__name-sans" data-name-sans>
                     {NAME.split("").map((ch, i) => (
@@ -232,6 +249,34 @@ export default function Hero() {
           />
 
           <div className="hero__stage-vignette" data-stage-vignette aria-hidden="true" />
+
+          {/* Pause / play for the film. Rides the stage's corner, so it
+              follows the film as it grows and shrinks; faded in and out
+              by initHero (lib/motion.ts). */}
+          <button
+            type="button"
+            className="hero__film-toggle"
+            data-film-toggle
+            data-cursor="Pause"
+            aria-label="Pause the film"
+          >
+            <FilmIcons />
+          </button>
+
+          {/* The same control, big and in the middle of the film, shown
+              while the mouse is moving over it and a moment after
+              (initHero). A second way to the same button, so it is kept
+              out of the tab order and away from screen readers. */}
+          <button
+            type="button"
+            className="hero__film-big"
+            data-film-big
+            data-cursor="Pause"
+            aria-hidden="true"
+            tabIndex={-1}
+          >
+            <FilmIcons />
+          </button>
         </div>
 
         {/* The dictionary entry, unchanged from the live hero: same words,
@@ -292,9 +337,9 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="hero__scroll" data-hero-cue>
+        <div className="hero__scroll" data-hero-cue aria-hidden="true">
+          <span className="hero__scroll-mouse"><i /></span>
           <span>SCROLL</span>
-          <span className="hero__scroll-line" />
         </div>
       </div>
     </section>

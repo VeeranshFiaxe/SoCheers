@@ -1084,15 +1084,51 @@ html.sc-intro .cmarquee__track .bmark{ -webkit-mask:none; mask:none; }
     radial-gradient(ellipse at center, transparent 78%, rgba(0,0,0,.6) 100%);
 }
 
+/* The scroll cue, bottom centre. It sits over the film and the crowd
+   shot, whose frames run from black to near white, so it carries its own
+   ground: a pill of the nav capsule's dark glass, cream type on it and a
+   hairline edge - legible on any frame without being a slab. The mark in
+   it is a mouse with its wheel rolling down, which says "scroll" before
+   the word is read. */
 .hero__scroll{
-  position:absolute; left:50%; bottom:26px; z-index:8; transform:translateX(-50%);
-  display:flex; flex-direction:column; align-items:center; gap:10px;
-  font-family:var(--f-mono); font-weight:500; font-size:10px; letter-spacing:.4em; color:rgba(255,255,255,.7);
+  position:absolute; left:50%; z-index:8; transform:translateX(-50%);
+  bottom:calc(clamp(18px,3.4vh,32px) + env(safe-area-inset-bottom, 0px));
+  display:flex; align-items:center; gap:11px;
+  padding:9px 18px 9px 14px; border-radius:999px;
+  background:rgba(12,12,14,.5);
+  border:1px solid rgba(241,236,225,.2);
+  backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  font-family:var(--f-mono); font-weight:500; font-size:11px; line-height:1;
+  letter-spacing:.24em; color:var(--cream);
+  pointer-events:none; white-space:nowrap;
+  /* the way back from the idle fade (app/hero.css) */
+  transition:filter .35s var(--ease);
 }
-.hero__scroll-line{ width:1px; height:38px; background:rgba(255,255,255,.35); position:relative; overflow:hidden; }
-/* moved with transform, not top, so the loop stays on the compositor */
-.hero__scroll-line::after{ content:""; position:absolute; top:0; left:0; width:100%; height:50%; background:var(--accent); transform:translateY(-100%); animation:scrolldn 1.8s var(--ease) infinite; }
-@keyframes scrolldn{ to{ transform:translateY(200%); } }
+/* the tracking hangs off the last letter; take it back so the word sits
+   centred in the pill */
+.hero__scroll > span:last-child{ margin-right:-.24em; }
+.hero__scroll-mouse{
+  position:relative; flex:none;
+  width:14px; height:21px; border-radius:7px;
+  border:1.5px solid rgba(241,236,225,.85);
+}
+/* the wheel: drops, fades, starts again. Transform and opacity only, so
+   the loop stays on the compositor */
+.hero__scroll-mouse i{
+  position:absolute; left:50%; top:4px;
+  width:2px; height:5px; margin-left:-1px; border-radius:1px;
+  background:var(--accent);
+  animation:scrollwheel 1.7s var(--ease) infinite;
+}
+@keyframes scrollwheel{
+  0%{ transform:translateY(0); opacity:0; }
+  20%{ opacity:1; }
+  70%{ transform:translateY(6px); opacity:0; }
+  100%{ transform:translateY(6px); opacity:0; }
+}
+@media (prefers-reduced-motion:reduce){ .hero__scroll-mouse i{ animation:none; } }
+html.sc-lite .hero__scroll{ backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(12,12,14,.74); }
 
 /* ============================================================
    2 · THE MEANING - a dictionary entry, written over the crowd shot
@@ -1141,12 +1177,11 @@ html.no-js .meaning{ visibility:visible; }
    So every size below is capped against viewport height as well as width,
    otherwise a short landscape window pushes the last sense off the bottom. */
 .meaning__word{
-  font-family:var(--f-playful); font-weight:700;
-  font-size:clamp(52px, min(10.5vw, 17vh), 168px); line-height:.9; letter-spacing:-.01em;
+  font-family:var(--f-display); font-weight:700; font-style:italic;
+  font-size:clamp(44px, min(8.4vw, 14vh), 136px); line-height:.95; letter-spacing:-.03em;
   color:var(--cream);
-  /* the script face carries real left-side bearing before the "S" starts -
-     without this the word sits visibly right of /soh-cheers/ below it */
-  margin-left:-0.14em;
+  /* the italic's slant starts the "S" a touch right of its box */
+  margin-left:-0.03em;
 }
 /* Each letter is its own inline node so GSAP can pop them in one at a time
    (typewriter stagger, see lib/motion.ts) rather than fading the word in
@@ -2626,7 +2661,9 @@ html.is-overture body{ touch-action:none; }
 html.is-overture .nav,
 html.is-overture .progress,
 html.is-overture .hero__scroll{ opacity:0 !important; pointer-events:none; }
-.nav,.progress,.hero__scroll{ transition:opacity .7s var(--ease); }
+/* not .hero__scroll: GSAP fades that one, and a CSS transition on the
+   same opacity would trail every frame of it */
+.nav,.progress{ transition:opacity .7s var(--ease); }
 
 /* ============================================================
    THE FOOTER

@@ -112,26 +112,23 @@
    to right, and neither box ever changes size. */
 .hero--test .hero__type{ display:inline-block; white-space:nowrap; }
 
-/* "SoCheers", twice: the display face it is typed in, and the playful
-   face it turns into (initHero swaps them letter by letter). The playful
-   copy sits over the start of the display one without a transform, so
-   initHero can find it by offsets alone. */
-.hero--test .hero__type--name{ position:relative; }
+/* "SoCheers", twice, both in Satoshi italic: the copy on top is the one
+   that shows, falls off the line and rises again as the headword
+   (initHero); the one under it only holds the line's width while the
+   top copy's letters are off being thrown around. It sits exactly over
+   the other without a transform, so initHero can find it by offsets
+   alone. */
+.hero--test .hero__type--name{ position:relative; font-style:italic; }
 .hero--test .hero__ch{ display:inline-block; }
-.hero--test .hero__name-play{
-  position:absolute; left:0; top:50%;
-  font-family:var(--f-playful); font-weight:700;
-  font-size:1.3em; line-height:.9; letter-spacing:-.01em;
-  margin-top:-.45em;
-}
-.hero--test .hero__name-play .hero__ch{ opacity:0; }
+.hero--test .hero__name-play{ position:absolute; left:0; top:0; }
+.hero--test .hero__name-sans{ visibility:hidden; }
 
 /* The headword's letters, and they come back the way they went, in two
    moves (initHero walks both 1 to 0):
      --up    straight back up out of the bottom of the screen into the spot
              the greeting's letters fell from, untumbling as they come
              (--spin, components/Hero.tsx) - so "SoCheers" re-forms, small
-             and playful, exactly where it was
+             and italic, exactly where it was
      --home  and then the re-formed word glides from there into the
              headword's place, growing to its size (--dx/--dy/--s0, measured
              by initHero)
@@ -206,6 +203,79 @@
   pointer-events:none;
 }
 
+/* Pause / play, in the film's bottom-right corner. It is a child of the
+   stage, so it rides the corner as the film grows and shrinks rather
+   than being tweened after it. The same dark glass as the nav's capsule
+   and the scroll cue, so it holds up over any frame of the footage; the
+   accent fills it on hover, like the nav's CTA. initHero fades it in once
+   the film has opened and out as the film hands over to the photo. */
+.hero--test .hero__film-toggle,
+.hero--test .hero__film-big{
+  position:absolute; z-index:2;
+  padding:0; border-radius:50%;
+  display:grid; place-items:center;
+  color:var(--cream);
+  background:rgba(12,12,14,.5);
+  border:1px solid rgba(241,236,225,.22);
+  backdrop-filter:blur(14px) saturate(1.2); -webkit-backdrop-filter:blur(14px) saturate(1.2);
+  box-shadow:0 10px 30px rgba(0,0,0,.32);
+}
+.hero--test .hero__film-toggle{
+  right:clamp(12px,1.4vw,24px); bottom:clamp(12px,1.4vw,24px);
+  width:48px; height:48px;
+  opacity:0; visibility:hidden;
+  /* `scale`, not transform, same as the entry's speaker */
+  transition:background .3s var(--ease), color .3s var(--ease),
+             border-color .3s var(--ease), scale .3s var(--ease),
+             filter .35s var(--ease);
+}
+.hero--test .hero__film-toggle svg{ width:19px; height:19px; }
+
+/* The big one, dead centre of the film. Shown by initHero (.is-live)
+   while the mouse moves over the film and for a moment after it stops,
+   and held on while the film is paused. Pops up from a touch smaller,
+   and settles back down as it goes. */
+.hero--test .hero__film-big{
+  left:50%; top:50%;
+  width:clamp(64px,6vw,88px); height:clamp(64px,6vw,88px);
+  margin:calc(clamp(64px,6vw,88px) / -2) 0 0 calc(clamp(64px,6vw,88px) / -2);
+  opacity:0; visibility:hidden; scale:.82;
+  transition:opacity .28s var(--ease), scale .38s var(--ease), visibility 0s linear .38s,
+             background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+}
+.hero--test .hero__film-big svg{ width:38%; height:38%; }
+.hero--test .hero__film-big.is-live{
+  opacity:1; visibility:visible; scale:1;
+  transition:opacity .22s var(--ease), scale .34s cubic-bezier(.2,1.5,.4,1), visibility 0s,
+             background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+}
+
+.hero--test .hero__film-toggle:hover,
+.hero--test .hero__film-big.is-live:hover{
+  background:var(--accent); color:var(--accent-ink); border-color:var(--accent); scale:1.06;
+}
+.hero--test .hero__film-toggle:active,
+.hero--test .hero__film-big.is-live:active{ scale:.92; }
+.hero--test .hero__film-toggle:focus-visible{ outline:2px solid var(--accent); outline-offset:3px; }
+@media (hover:none){ .hero--test .hero__film-toggle{ cursor:pointer; } }
+/* the two icons cross over in place: the outgoing one turns and shrinks
+   away as the other turns in */
+.hero--test .hero__film-icon{
+  transform-box:fill-box; transform-origin:50% 50%;
+  transition:opacity .22s var(--ease), transform .34s var(--ease);
+}
+.hero--test .hero__film-icon--play{ opacity:0; transform:scale(.55) rotate(-40deg); }
+.hero--test [data-paused] .hero__film-icon--pause{ opacity:0; transform:scale(.55) rotate(40deg); }
+.hero--test [data-paused] .hero__film-icon--play{ opacity:1; transform:none; }
+html.sc-lite .hero--test .hero__film-toggle,
+html.sc-lite .hero--test .hero__film-big{
+  backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(12,12,14,.74);
+}
+@media (max-width:700px){
+  .hero--test .hero__film-toggle{ width:42px; height:42px; }
+  .hero--test .hero__film-toggle svg{ width:17px; height:17px; }
+}
+
 /* The film. cover rather than contain: the box is the film's own aspect
    at rest, so the two are identical there and the whole picture is on
    screen, and cover is what carries it the rest of the way once the box
@@ -264,4 +334,25 @@
   /* the film fits the width when it takes the screen, rather than
      cropping a 16:9 picture down to a tall sliver of its middle */
   .hero--test .hero__film{ object-fit:contain; }
+}
+
+/* Idle over the full-screen film (initHero, lib/motion.ts): everything
+   but the film fades away, slowly, and comes back quickly the moment the
+   reader does anything - the return uses each element's own transition.
+   The cue and the film's button are faded with filter:opacity() rather
+   than opacity, because GSAP owns their opacity for their own fades and
+   the two would fight. */
+html.is-film-idle .nav,
+html.is-film-idle .progress{
+  opacity:0 !important; pointer-events:none;
+  transition:opacity 1.6s var(--ease) !important;
+}
+html.is-film-idle .hero__scroll,
+html.is-film-idle .hero--test .hero__film-toggle{
+  filter:opacity(0); pointer-events:none;
+  transition:filter 1.6s var(--ease);
+}
+html.is-film-idle .cursor.is-visible,
+html.is-film-idle .cursor-ring.is-visible{
+  opacity:0; transition:opacity 1.6s var(--ease);
 }
