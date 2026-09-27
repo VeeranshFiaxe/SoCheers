@@ -21,8 +21,14 @@ export default function Home() {
      only attached by script once the loader lets go (boot() in
      lib/overture-motion.ts). Named in the head as well, so the bytes are
      already here by then rather than requested at that moment. */
+  /* A wall with a phone cut is preloaded per width - the same split the
+     <picture> in components/Overture.tsx makes - so a phone never fetches
+     the desktop picture it is not going to draw. */
   OVERTURE_WALLS.slice(0, OVERTURE_HELD).forEach((w, i) => {
-    preload(w.img, i === 0 ? { as: "image", fetchPriority: "high" } : { as: "image" });
+    const pri = i === 0 ? { fetchPriority: "high" as const } : {};
+    if (!w.m) return preload(w.img, { as: "image", ...pri });
+    preload(w.img, { as: "image", media: "(min-width:701px)", ...pri });
+    preload(encodeURI(w.m), { as: "image", media: "(max-width:700px)", ...pri });
   });
 
   return (

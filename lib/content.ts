@@ -68,9 +68,9 @@ export const TEAM_SIZES = "100vw";
 
      m     a stand-in for the phone, and it is only ever here because the
            landscape original has nothing left once it is cut to a column.
-           Every one of them is a 9:16 asset already in the same folder
-           and on the same subject as the wall it replaces, so this is the
-           same running order shot portrait, not a different sequence.
+           Each one is a portrait cut of the same photograph as its wall,
+           so this is the same running order shot portrait, not a
+           different sequence.
      mpos  object-position for the phone's crop, for the pictures that do
            survive the cut but only if it is taken off centre - a subject
            sitting high in a landscape frame is the usual reason.
@@ -89,89 +89,19 @@ type Wall = {
 };
 
 export const OVERTURE_WALLS: readonly Wall[] = [
-  /* 1920x680 - the widest thing in the run. It holds up in a column
-     because it is a poster of stacked faces rather than one wide scene:
-     the cut loses the outer faces and keeps three of them, which is a
-     composition. Nudged up off centre so it keeps whole heads rather
-     than a band of shoulders. */
-  { img: "/assets/art/crowd-wall.webp", label: "The room", mpos: "50% 42%" },
-  /* already near-portrait at 0.80, and the camera is high in the frame -
-     the operator's shoulder is what goes, which is what should go */
-  { img: IMG.camera, label: "Production", mpos: "50% 34%" },
-  /* Horizontal on purpose: this wall is held long enough to be read as a
-     picture, and the tall 9:16 art that used to sit here (creativity 7,
-     now down in the fast tail) lost most of itself to the crop on a wide
-     screen. Wall 3 - the cat - came out of this slot; Wall 2 is promoted
-     up from the fast tail to take it, being the strongest of the three
-     landscape walls and one that survives being looked at rather than
-     glimpsed.
-
-     Walls 4-7 were delivered as landscape art saved rotated into a
-     portrait box, and have been turned 90deg back the right way up in
-     the asset folder itself rather than with a CSS transform - a wall is
-     a textured plane in a 3D stack (lib/overture-motion.ts) and rotating
-     the picture on it would rotate the plane. They read as landscape from
-     here on, so this slot has more than three candidates now if the
-     running order is ever re-cut. */
-  /* the one landscape wall at the front that survives the column intact:
-     the crowd is stacked in depth, so cutting the width just makes it a
-     taller crowd */
-  { img: "/assets/home/wall-2.webp", label: "Attention" },
-  /* Wall 6 - the engraved ship - used to hold a fourth slot here, as the
-     second of the two walls the sequence was still slow enough to look
-     at. It is out, and nothing is promoted up to replace it: cutting a
-     beat out of the front of the run is the point, so what follows just
-     moves one place forward and arrives one notch faster off the ramp in
-     lib/overture-motion.ts. */
-  /* The puppeteer's hand is above the brain and the strings run the height
-     of the frame, so a column cuts the hand off the top and leaves a brain
-     with strings going nowhere. "Strategy 10" is out of the same set -
-     same rust red, same halftone, same hand on the same strings - drawn
-     for a 9:16 box, so the phone gets the identical beat rather than a
-     substitute for it. It is also 46KB against the 1.4MB of the other
-     brain in the folder, which on the wall that a phone preloads is not a
-     small thing. */
-  {
-    img: IMG.brain,
-    label: "Strategy",
-    m: "/assets/home/strategy-10.webp",
-  },
-  { img: IMG.bootPhone, label: "Content" },
-  /* the real team, square, and the group is banked up the middle of it -
-     lifted a little so the cut takes floor rather than faces */
-  { img: "/assets/art/who-culture.webp", label: "Us", mpos: "50% 44%" },
-  /* extra beats, tacked on the back where the falls are already fastest and
-     the images are only ever read as texture, not pictures - see FALL/
-     OVERLAP in lib/overture-motion.ts. Past SOUND_WALLS (same file) these
-     stop getting their own impact thud: at this speed a sound per wall
-     started reading as more walls than were actually on screen. */
-  /* A table seen from above with people round all four edges: the column
-     keeps the empty white table and cuts the heads in half at the top and
-     the bottom of it, which is the worst crop in the run. "Strategy 8" -
-     a man over a chessboard - is planning drawn upright, and it is one of
-     the pictures the tail is already made of. */
-  {
-    img: "/assets/home/wall-1.webp",
-    label: "Planning",
-    m: "/assets/home/strategy-8.webp",
-  },
-  /* Wall 5, into the slot Wall 2 left on its way up the stack. It is the
-     last of the eight walls that wasn't already in here - which is why
-     the beat Wall 8 (the op-art) used to hold is simply gone rather than
-     refilled: there was one spare wall for two slots, and repeating an
-     image inside one sequence is worse than one fewer beat in a tail
-     that is texture anyway. FALL/OVERLAP in lib/overture-motion.ts index
-     by position and clamp, so a shorter list just ends sooner. */
-  { img: "/assets/home/wall-5.webp", label: "Focus" },
-  { img: IMG.photoshop, label: "Retouch" },
-  /* the horizon is a thin band across the bottom of a wide frame, and a
-     column of it is mostly empty sky. "Production 9" keeps the horizon
-     and stands something on it. */
-  {
-    img: "/assets/home/wall-7.webp",
-    label: "Horizon",
-    m: "/assets/home/production-9.webp",
-  },
+  /* The 12th anniversary, out of the carousel on SoCheers' own Instagram
+     (see scripts/build-overture-walls.mjs, which cuts both versions of
+     each and says where the crops sit and why). */
+  { img: "/assets/home/room/01.webp", label: "The room", m: "/assets/home/room/01-m.webp" },
+  { img: "/assets/home/room/03.webp", label: "Dance", m: "/assets/home/room/03-m.webp" },
+  { img: "/assets/home/room/05.webp", label: "Splash", m: "/assets/home/room/05-m.webp" },
+  { img: "/assets/home/room/04.webp", label: "Noise", m: "/assets/home/room/04-m.webp" },
+  { img: "/assets/home/room/08.webp", label: "Stage", m: "/assets/home/room/08-m.webp" },
+  { img: "/assets/home/room/12.webp", label: "Audience", m: "/assets/home/room/12-m.webp" },
+  { img: "/assets/home/room/14.webp", label: "Laughs", m: "/assets/home/room/14-m.webp" },
+  { img: "/assets/home/room/17.webp", label: "Crew", m: "/assets/home/room/17-m.webp" },
+  { img: "/assets/home/room/15.webp", label: "Award", m: "/assets/home/room/15-m.webp" },
+  { img: "/assets/home/room/19.webp", label: "Night", m: "/assets/home/room/19-m.webp" },
 ];
 
 /* How many walls, from the front, have to be here before the room is shown:
