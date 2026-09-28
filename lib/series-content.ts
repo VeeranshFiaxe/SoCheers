@@ -126,7 +126,7 @@ export const HERO = {
    for a search result rather than lifted off a section - and it is the
    page's own claim, in the client's words, out of sections 7 and 6. */
 export const META_DESCRIPTION =
-  "We don't make more content. We design reasons to come back. The micro-series: 20-60 second episodes built around one recurring world, from the agency that builds campaigns for the platforms that taught the world how to binge.";
+  "We don't make more content. We design reasons to come back. The micro-series: 20-60 second episodes built around one recurring world.";
 
 /* ------------------------------------------------------------------
    THE TEXTURE PLATES.
@@ -1062,7 +1062,9 @@ export const SECTIONS: Section[] = [
        anything. series-end-exit.jpg (Unsplash qR7XWhuTag0) is a red EXIT
        sign alone in the dark with two red eyes watching over it - the
        way out, in the page's own grade. ending.jpg stays in the tree. */
-    frames: ["Rewiring last frame.png"],
+    /* a WebP of "Rewiring last frame.png" - 28KB against the PNG's 1.4MB,
+       and nothing between them at the size it is drawn */
+    frames: ["rewiring-last-frame.webp"],
     cta: { label: "Now, let's make yours ?", href: "/contact" },
   },
 ];
@@ -1114,3 +1116,59 @@ export const ART = (file: string) =>
   file.startsWith("/") || file.startsWith("http") ? file : `/assets/series/${file}`;
 
 export const isFilm = (file: string) => file.endsWith(".mp4") || file.endsWith(".webm");
+
+/* What each picture on the page shows, for its alt text. Keyed on the
+   file's own name, so a frame that moves between sections keeps its
+   words. A file with no line here falls back to its name. */
+const ALT: Record<string, string> = {
+  "The Re-Wiring. .jpg": "A man in a glowing headset standing in a dark, ruined room",
+  "rewiring-last-frame.webp": "A man in a glowing visor standing in a dark room",
+  "kink.jpg": "Film grain texture",
+  "streaming.jpg": "Warm orange light leak",
+  "peak-content.jpg": "Close-up of a woman's eye",
+  "episodes.jpg": "A woman lying in bed at night, lit by her phone",
+  "tmtw-3.jpg": "A face covered in social media app icons",
+  "wardrobe.jpg": "A person with curly hair seen from behind in a dim room",
+  "consumer-attached-to-images.jpg": "A girl on her phone, wired to a wall of pictures",
+  "series-screen-wall.jpg": "A wall of stacked vintage television sets",
+  "tmtw-1.jpg": "A woman in headphones surrounded by floating photos",
+  "tmtw-4.jpg": "A woman with a phone strapped over her eyes",
+  "series-feed-grid.jpg": "A wall of glowing social media pictures",
+  "behind-screen.jpg": "A person scrolling a phone on a balcony at night",
+  "micro-series.jpg": "Two people on their screens in separate rooms at night",
+  "too-much-to-watch.jpg": "A woman sitting inside a wall of glowing screens",
+  "series-mandala-murders.jpg": "The World of Mandala Murders on Netflix",
+  "special-ops-2.jpg": "A still from Special Ops 2 on JioHotstar",
+  "series-breathe.jpg": "Breathe: Into the Shadows on Prime Video - What is C-16?",
+  "made-in-titan.jpg": "A still from Made in India - A Titan Story",
+  "filler-l.jpg": "Share the Cheer - a SoCheers reel",
+  "prava.jpg": "Prava micro-series - We Need to Talk, episode 7",
+  "pantaloons.jpg": "Pantaloons micro-series - Serving Desi",
+  "socheers.jpg": "SoCheers micro-series - Every platform has a different mood",
+  "filler-r.jpg": "SoCheers reel - Preference is personal, strategy is intentional",
+  "night-01.jpg": "A man on his phone in bed, late evening",
+  "night-02.jpg": "A man on his phone in bed at night",
+  "night-03.jpg": "A man still on his phone in bed at 4:30 am",
+  "night-04.jpg": "A man asleep beside his phone as morning comes in",
+  "person-sucked-into-phone-wide-start.jpg": "A man lit blue by his phone in the dark",
+  "person-sucked-into-phone-wide.jpg": "A man's face being pulled into his phone screen",
+  "job-1-feed.jpg": "A crowded street full of neon signs at night",
+  "job-2-reel.jpg": "A wall of old televisions showing static",
+  "job-3-zero.jpg": "A lone figure sitting on steps in a pool of light",
+  "job-4-slow.jpg": "People walking through a long covered walkway, in black and white",
+  "mokai-1.jpg": "A man in a red shirt standing at a cafe door",
+  "reel-1.jpg": "Overhead shot of a woman lying on the floor beside her phone",
+  "format-ep-3.jpg": "A phone on a tripod, recording",
+  "reel-2.jpg": "Overhead shot of a man on the floor beside his phone",
+  "mokai-3.jpg": "Friends around a table in a decorated cafe",
+  "reel-3.jpg": "Overhead shot of a woman on the floor with her phone",
+  "series-brand.webp": "Poster: How do you market a story that already belongs to India?",
+  "series-strategy.webp": "The SoCheers team going over a script on set",
+  "series-films.webp": "A camera operator on a SoCheers film set",
+  "series-together.webp": "The SoCheers team in a meeting",
+};
+
+export const altOf = (file: string) => {
+  const name = file.split("/").pop()!;
+  return ALT[name] ?? name.replace(/\.\w+$/, "").replace(/[-_]+/g, " ").trim();
+};

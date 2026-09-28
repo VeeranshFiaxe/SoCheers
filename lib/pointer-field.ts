@@ -141,9 +141,23 @@ function build(): Field {
     window.addEventListener("touchcancel", end, opts);
   }
 
+  /* The viewport, kept rather than asked for. read() runs every frame for
+     every consumer, usually straight after gsap has written that frame's
+     styles - and window.innerWidth/innerHeight is a layout read, so asking
+     for it there forced a full synchronous layout per call. On a phone
+     that was the largest single cost on the home page's main thread. The
+     resize event fires whenever either number changes (the URL bar
+     showing and hiding included), so the copy is never stale. */
+  let vw = window.innerWidth;
+  let vh = window.innerHeight;
+  window.addEventListener("resize", () => {
+    vw = window.innerWidth;
+    vh = window.innerHeight;
+  }, opts);
+
   function anchor(now: number): [number, number] {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+    const w = vw;
+    const h = vh;
     if (reduced) return [w * ANCHOR_X, h * ANCHOR_Y];
     const t = now - start;
     return [

@@ -314,7 +314,7 @@ export default function AboutStage({
           >
             <img
               src={s.src}
-              alt=""
+              alt={s.alt}
               style={s.pos ? { objectPosition: s.pos } : undefined}
               loading="lazy"
               draggable={false}

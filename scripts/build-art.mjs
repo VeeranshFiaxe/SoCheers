@@ -251,12 +251,27 @@ const buckets = content.slice(content.indexOf("export const BUCKETS"));
 const frames = new Set(
   buckets.slice(0, buckets.indexOf("\nexport ")).match(/\/assets\/(?:home|services)\/[^"]+\.webp/g) ?? [],
 );
+/* 68, and lower for the few busy frames that still come out over 100KB -
+   the line page-weight audits draw. Quality steps down to 52 first, then
+   the cut shrinks a tenth at a time; at 28% opacity neither shows. */
+const CARD_BYTES = 100 * 1024;
 for (const frame of frames) {
-  const info = await sharp(path.join(ROOT, "public", frame))
-    .resize({ width: 660, height: 990, fit: "outside", withoutEnlargement: true })
-    .webp({ quality: 68, effort: 6 })
-    .toFile(path.join(CARDS_OUT, path.basename(frame)));
-  console.log(`· card ${path.basename(frame).padEnd(28)} ${info.width}x${info.height}  ${kb(info.size)}`);
+  let quality = 68;
+  let scale = 1;
+  const cut = () =>
+    sharp(path.join(ROOT, "public", frame))
+      .resize({ width: Math.round(660 * scale), height: Math.round(990 * scale), fit: "outside", withoutEnlargement: true })
+      .webp({ quality, effort: 6 })
+      .toBuffer({ resolveWithObject: true });
+  let out = await cut();
+  while (out.info.size > CARD_BYTES && scale > 0.6) {
+    if (quality > 52) quality -= 4;
+    else scale -= 0.1;
+    out = await cut();
+  }
+  fs.writeFileSync(path.join(CARDS_OUT, path.basename(frame)), out.data);
+  const info = out.info;
+  console.log(`· card ${path.basename(frame).padEnd(28)} ${info.width}x${info.height}  ${kb(info.size)}  q${quality}`);
 }
 
 console.log(`\n${(saved / 1048576).toFixed(1)}MB off the wire.`);

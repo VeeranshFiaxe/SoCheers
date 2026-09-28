@@ -187,7 +187,7 @@ export default function WorkGrid({ assets }: { assets: WorkAsset[] }) {
                   <img
                     {...pic(a.thumb)}
                     sizes="(max-width: 760px) 100vw, 50vw"
-                    alt={`${a.brand} - ${a.title}`}
+                    alt={a.title && a.title !== a.brand ? `${a.brand} - ${a.title}` : a.brand}
                     loading="lazy"
                   />
                 </span>

@@ -143,18 +143,33 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <head>
-        {/* Google Tag Manager, first in the head as Google asks. Skipped on
-            /admin for the same reason components/Analytics.tsx is. */}
+        {/* Google Tag Manager. Skipped on /admin for the same reason
+            components/Analytics.tsx is.
+
+            The dataLayer and its start time are set here, first in the
+            head as Google asks, so nothing pushed early is lost - but
+            gtm.js itself, and everything it pulls in (Clarity, the Meta
+            pixel, GA - ~600KB and about a second of a phone's main
+            thread), waits for the reader's first touch, scroll or key, or
+            for eight seconds after the page has loaded, whichever comes
+            first. Loaded at once, it was fighting the opening sequence for
+            the main thread on exactly the frames that sequence is built
+            on, and it was the largest single cost in the PageSpeed report.
+            The trade: a visit that leaves inside those seconds without
+            touching anything is not counted. */}
         {ANALYTICS.gtm && (
           <script
             dangerouslySetInnerHTML={{
               __html:
-                "if(location.pathname.indexOf('/admin')!==0)" +
-                "(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':" +
-                "new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0]," +
-                "j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=" +
-                "'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);" +
-                `})(window,document,'script','dataLayer','${ANALYTICS.gtm}');`,
+                "if(location.pathname.indexOf('/admin')!==0)(function(w,d,i){" +
+                "w.dataLayer=w.dataLayer||[];w.dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});" +
+                "var on=['pointerdown','keydown','touchstart','wheel','scroll'],done=0;" +
+                "function go(){if(done)return;done=1;on.forEach(function(e){w.removeEventListener(e,go,true)});" +
+                "var j=d.createElement('script');j.async=true;" +
+                "j.src='https://www.googletagmanager.com/gtm.js?id='+i;d.head.appendChild(j)}" +
+                "on.forEach(function(e){w.addEventListener(e,go,{capture:true,passive:true})});" +
+                "w.addEventListener('load',function(){setTimeout(go,8000)})" +
+                `})(window,document,'${ANALYTICS.gtm}');`,
             }}
           />
         )}

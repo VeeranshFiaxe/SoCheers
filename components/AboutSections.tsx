@@ -179,7 +179,7 @@ export function AboutFounders() {
                 data-founders-half={side}
                 key={side}
               >
-                <img src={ABOUT_IMG.foundersDuo} alt="" />
+                <img src={ABOUT_IMG.foundersDuo} alt="SoCheers founders Siddharth Devnani and Mehul Gupta" />
               </span>
             ))}
 
@@ -192,7 +192,7 @@ export function AboutFounders() {
                 this on top and it is that single element that moves. Same
                 src as the halves, so it is the same decoded image and not
                 a second download. */}
-            <img className="founders__whole" src={ABOUT_IMG.foundersDuo} alt="" />
+            <img className="founders__whole" src={ABOUT_IMG.foundersDuo} alt="SoCheers founders Siddharth Devnani and Mehul Gupta" />
           </div>
 
           {FOUNDERS.map((f, i) => (
@@ -400,7 +400,7 @@ export function AboutCrowd() {
   return (
     <div className="ab-crowd" aria-hidden="true">
       <div className="ab-crowd__art" data-ab-crowd>
-        <img src={ABOUT_IMG.crowd} alt="" />
+        <img src={ABOUT_IMG.crowd} alt="Pop-art collage of a crowd of faces" />
       </div>
     </div>
   );

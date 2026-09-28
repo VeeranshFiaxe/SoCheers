@@ -401,11 +401,18 @@ export function initAbout(): () => void {
        Each length of thread draws down from its knot to the next one as
        the run scrolls in. One transform per length, scrubbed. */
     if (!prefersReduced) {
+      /* On a phone the run is read low on the screen - a length that only
+         finished at 62% was still short of its next knot while the copy
+         beside it was being read. There each one is done by the time its
+         foot is a little way up from the bottom edge. */
+      const phoneRun = window.matchMedia("(max-width:700px)").matches;
       document.querySelectorAll<HTMLElement>(".driver__thread").forEach((el) => {
         gsap.fromTo(el, { scaleY: 0 }, {
           scaleY: 1, ease: "none",
           scrollTrigger: {
-            trigger: el, start: "top 88%", end: "bottom 62%",
+            trigger: el,
+            start: phoneRun ? "top 96%" : "top 88%",
+            end: phoneRun ? "bottom 88%" : "bottom 62%",
             scrub: 0.8, invalidateOnRefresh: true,
           },
         });

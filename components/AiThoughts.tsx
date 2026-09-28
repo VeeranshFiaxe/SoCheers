@@ -163,7 +163,7 @@ export default function AiThoughts() {
         <img
           className="ai-figure"
           src={AI_HERO.figure.src}
-          alt=""
+          alt="A person under a stack of CRT screens"
           width={AI_HERO.figure.w}
           height={AI_HERO.figure.h}
           decoding="async"

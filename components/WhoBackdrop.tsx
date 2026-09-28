@@ -136,7 +136,7 @@ export default function WhoBackdrop() {
 
   return (
     <div className="who-bg" ref={ref} aria-hidden="true">
-      <img ref={img} src="/assets/art/team-960.jpg" alt="" loading="lazy" decoding="async" />
+      <img ref={img} src="/assets/art/team-960.jpg" alt="The SoCheers team" loading="lazy" decoding="async" />
     </div>
   );
 }

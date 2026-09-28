@@ -104,11 +104,14 @@ export function What() {
                   pictures. Each is the card's small cut (cardCut above),
                   not the file the service page draws. */}
               <div className="wcard__img">
+                {/* keyed on the card cut too: the key is written into the
+                    page's data, and a crawler reading it finds the large
+                    service-page file there and counts it as loaded */}
                 {b.images.map((src, i) => (
                   <img
-                    key={src}
+                    key={cardCut(src)}
                     src={cardCut(src)}
-                    alt=""
+                    alt={b.items.find((it) => it.img === src)?.label ?? `${b.name} work by SoCheers`}
                     className={i === 0 ? "is-active" : undefined}
                     loading="lazy"
                     decoding="async"

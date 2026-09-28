@@ -1414,7 +1414,7 @@
 /* the one written word per driver, and the only colour on it */
 .driver__head{
   display:block;
-  font-family:var(--f-playful); font-weight:700;
+  font-family:var(--f-display); font-weight:700; font-style:italic;
   font-size:var(--name); line-height:1.05; letter-spacing:0;
   color:var(--c);
 }

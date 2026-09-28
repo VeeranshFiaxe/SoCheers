@@ -558,7 +558,11 @@ export function initSite(): () => void {
            around a picture that is not where the gap is. Skip it, and
            let the refresh below bring the real numbers. */
         if (b.w < 1 || b.h < 1) return;
-        const st = document.documentElement.style;
+        /* on the hero, not <html>: only the hero's own sentence reads
+           them, and a custom property changed on the root is a style
+           recalculation of the whole document - at build and again on
+           every refresh */
+        const st = hero.style;
         st.setProperty("--film-w", `${b.w.toFixed(1)}px`);
         st.setProperty("--film-h", `${b.h.toFixed(1)}px`);
       };
@@ -4078,16 +4082,19 @@ export function initSite(): () => void {
       try { fn(); } catch (err) { console.error(`[socheers] ${name} failed`, err); }
     };
 
-    step("readGrids", readGrids);
-    step("initLenis", initLenis);
-    step("initOvertureBridge", initOvertureBridge);   // must follow initLenis: it stops it
-    step("initCursor", initCursor);
-    step("initSpotlight", initSpotlight);
-    step("initTilt", initTilt);
-    step("initSplash", initSplash);
-    step("initMagnetic", initMagnetic);
+    /* The build, in order. It is one list rather than a run of calls so
+       it can be spread out: see `build` below. */
+    const queue: [string, () => void][] = [
+      ["readGrids", readGrids],
+      ["initLenis", initLenis],
+      ["initOvertureBridge", initOvertureBridge],   // must follow initLenis: it stops it
+      ["initCursor", initCursor],
+      ["initSpotlight", initSpotlight],
+      ["initTilt", initTilt],
+      ["initSplash", initSplash],
+      ["initMagnetic", initMagnetic],
 
-    step("initHero", initHero);
+      ["initHero", initHero],
     /* Straight after the hero and before everything else, and the order
        is load-bearing rather than tidy. ScrollTrigger refreshes triggers
        in the order they were created, and both of these pin - which
@@ -4103,19 +4110,63 @@ export function initSite(): () => void {
        before the reader arrived. The two pins therefore go first, in
        document order: the hero is above the reel, so it settles the
        page's height first, and the reel settles the rest. */
-    step("initReel", initReel);
-    step("initMeaning", initMeaning);
-    step("initSplits", initSplits);
-    step("initReveals", initReveals);
-    step("initTiles", initTiles);
-    step("initWCardCycle", initWCardCycle);
-    step("initCounters", initCounters);
-    step("initNav", initNav);
-    step("initTopLinks", initTopLinks);
-    step("initMarquees", initMarquees);
-    step("initFooter", initFooter);
+      ["initReel", initReel],
+      ["initMeaning", initMeaning],
+      ["initSplits", initSplits],
+      ["initReveals", initReveals],
+      ["initTiles", initTiles],
+      ["initWCardCycle", initWCardCycle],
+      ["initCounters", initCounters],
+      ["initNav", initNav],
+      ["initTopLinks", initTopLinks],
+      ["initMarquees", initMarquees],
+      ["initFooter", initFooter],
 
-    step("runLoader", runLoader);
+      ["runLoader", runLoader],
+    ];
+
+    /* Run in one go, the build was a single task of several hundred
+       milliseconds on a mid-range phone - the longest thing on the home
+       page's main thread, with every tap, every frame of the loader and
+       the overture's first frame queued behind it.
+
+       On a visit the overture opens, none of the page can be seen until it
+       hands back - it covers the screen and has stopped the scroll - so
+       there is no frame in which a half-built page could show. There the
+       list is spread over tasks: steps in their order, as many to a task as
+       fit in a few milliseconds, and the browser gets the thread back in
+       between. The first three always go together and at once, because the
+       overture's start and hand-off events are only heard once
+       initOvertureBridge has run. Everywhere else the page is on screen
+       the moment it is built, and it is built in one go exactly as before.
+
+       The later steps run through ctx.add(), so whatever they create still
+       belongs to this context and is reverted with it. */
+    const BUDGET = 8;
+    let at = 0;
+    const pump = (first: boolean) => {
+      if (ac.signal.aborted) return;
+      const t0 = performance.now();
+      const run = () => {
+        while (at < queue.length) {
+          const [name, fn] = queue[at++];
+          step(name, fn);
+          if (overture && at >= 3 && performance.now() - t0 > BUDGET) break;
+        }
+      };
+      if (first) run();
+      else ctx.add(run);
+      if (at < queue.length) {
+        const id = window.setTimeout(() => pump(false), 0);
+        cleanups.push(() => window.clearTimeout(id));
+      } else if (!first) {
+        /* built after fonts.ready or window load may already have taken
+           their refresh - measure everything once more, now that it all
+           exists */
+        ScrollTrigger.refresh();
+      }
+    };
+    pump(true);
 
     /* The backstop, for the copy that a stylesheet hides and a script is
        supposed to bring back. [data-split] waits on document.fonts.ready and

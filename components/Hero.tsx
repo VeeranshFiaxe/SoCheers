@@ -76,7 +76,7 @@ const SPIN = [-24, 16, -10, 28, -18, 12, -30, 20];
    here, in front of you, out of a blank screen.
 
    The film's rectangle is measured once by initHero and published on
-   <html> as --film-w / --film-h. The stage is drawn at those numbers and
+   the hero section as --film-w / --film-h. The stage is drawn at those numbers and
    so is the gap the words open to make room for it - one measurement,
    read in both places, rather than a card and a hole kept the same size
    by hand.

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
-import { OVERTURE_HELD, OVERTURE_WALLS } from "@/lib/content";
+import { OVERTURE_HELD, OVERTURE_WALLS, OVERTURE_LOADER_ON_PHONE, overturePhoneNoLoader } from "@/lib/content";
 import { cueOverture, shouldRunOverture } from "@/lib/overture";
 import SoCheersLockup from "./SoCheersLockup";
 
@@ -62,7 +62,11 @@ export default function Loader() {
        server-rendered so there is nothing to flash, and the overture is
        told to build straight away (it will dock the mark and hand back on
        the same frame). */
-    if (!shouldRunOverture()) {
+    /* ...and a phone gets none while the count is off there
+       (OVERTURE_LOADER_ON_PHONE, lib/content.ts): the room is cued at
+       once and boot() waits for its first walls itself. The stylesheet
+       has already kept this from painting (see [data-phone-noloader]). */
+    if (!shouldRunOverture() || overturePhoneNoLoader()) {
       el.style.display = "none";
       cueOverture();
       return;
@@ -131,7 +135,13 @@ export default function Loader() {
   }, []);
 
   return (
-    <div className="loader" id="loader" ref={root} aria-hidden="true">
+    <div
+      className="loader"
+      id="loader"
+      ref={root}
+      aria-hidden="true"
+      data-phone-noloader={OVERTURE_LOADER_ON_PHONE ? undefined : ""}
+    >
       <div className="loader__inner">
         <SoCheersLockup className="loader__mark" />
         <div className="loader__count">

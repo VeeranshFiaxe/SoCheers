@@ -216,7 +216,7 @@ function WallName({ item, hover }: { item: WallItem; hover: Record<string, strin
         data-name={item.name}
         style={{ ...hover, "--ar": item.ar, "--k": item.k } as CSSProperties}
       >
-        <img src={item.src} alt="" loading="lazy" decoding="async" />
+        <img src={item.src} alt={item.name} loading="lazy" decoding="async" />
       </span>
     );
   }

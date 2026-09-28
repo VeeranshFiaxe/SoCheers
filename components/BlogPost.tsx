@@ -76,7 +76,7 @@ export default function BlogPost() {
       </header>
       {post.cover && (
         <figure className="bp-cover wrap">
-          <img src={post.cover} alt={post.cover_alt} decoding="async" />
+          <img src={post.cover} alt={post.cover_alt || post.title} decoding="async" />
         </figure>
       )}
       <div className="bp-body wrap">

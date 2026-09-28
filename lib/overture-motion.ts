@@ -42,7 +42,7 @@ import {
   markOvertureSeen,
 } from "./overture";
 import { ROPE, ropePath } from "./logo-paths";
-import { OVERTURE_HELD, OVERTURE_SFX } from "./content";
+import { OVERTURE_HELD, OVERTURE_SFX, overturePhoneNoWalls } from "./content";
 
 /* The gap between one wall and the next, and therefore how far away the
    standing wall always is. Against the 1400px perspective on .ovt__stage
@@ -120,6 +120,8 @@ export function initOverture(
   opts: { instant?: boolean } = {},
 ): () => void {
   const ac = new AbortController();
+  /* the phone cut: bulb, pull, light, hero - see OVERTURE_WALLS_ON_PHONE */
+  const lite = overturePhoneNoWalls();
   const tickers: gsap.TickerCallback[] = [];
   const timers: number[] = [];
 
@@ -258,6 +260,11 @@ export function initOverture(
     const bead = q("[data-ovt-bead]")!;
     const dockMark = q("[data-ovt-dock]")!;
     const skip = q<HTMLButtonElement>("[data-ovt-skip]")!;
+    /* --guide and --pilot are written here and not on the root. Only the
+       guide reads them, and a custom property changed on the root is a
+       style recalculation for everything under it - every wall, the whole
+       fixture - on every frame of the pilot's endless breath. */
+    const guide = q("[data-ovt-guide]")!;
 
     if (!walls.length) return;
 
@@ -273,7 +280,8 @@ export function initOverture(
        has to put back everything the previous run moved rather than assume
        a fresh DOM. */
     root.classList.remove("is-done", "is-gone");
-    gsap.set(root, { "--lit": 0, "--guide": 0, "--pilot": 0.35, backgroundColor: "#000" });
+    gsap.set(root, { "--lit": 0, backgroundColor: "#000" });
+    gsap.set(guide, { "--guide": 0, "--pilot": 0.35 });
     gsap.set([stage, vignette], { autoAlpha: 1 });
     gsap.set(flash, { autoAlpha: 1, opacity: 0 });
     gsap.set(rig, { x: 0, y: 0, scale: 1, autoAlpha: 0, transformOrigin: "50% 50%" });
@@ -313,6 +321,15 @@ export function initOverture(
        door, so it is capped short: there is no visible progress to hide
        a long wait behind any more. */
     function boot(next: () => void) {
+      /* A phone, while the wall run is off there (OVERTURE_WALLS_ON_PHONE,
+         lib/content.ts): no pictures to wait for and none to attach. The
+         sound cues are still wanted - the pull and the light. */
+      if (lite) {
+        warmClips();
+        next();
+        return;
+      }
+
       /* The walls get their srcs here, and this is the only place they
          ever get them.
 
@@ -359,14 +376,24 @@ export function initOverture(
            build belong to a sequence that no longer exists */
         if (done || ac.signal.aborted) return;
         done = true;
-        /* The fast tail, two frames on - after the room has painted, so
-           those downloads are not standing in front of its first picture.
-           Several seconds pass before the first of them can be seen. */
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-          if (ac.signal.aborted) return;
-          attach(OVERTURE_HELD, walls.length);
-          warmClips();
-        }));
+        /* The fast tail, two frames after the room's own pictures have
+           decoded - so after they have painted, and those downloads are
+           not standing in front of the first one. Two frames after
+           `loaded` was not enough: the preload cache answers at once, but
+           the <img> still has a 960x1920 decode ahead of it, and the tail
+           and the sound cues went out before the room's first picture was
+           on screen. Several seconds pass before the first of them can be
+           seen. */
+        const faces = walls.slice(0, OVERTURE_HELD)
+          .map((wall) => wall.querySelector<HTMLImageElement>("img.ovt__face"))
+          .filter((img): img is HTMLImageElement => !!img);
+        void Promise.all(faces.map((img) => img.decode().catch(() => {}))).then(() =>
+          requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (ac.signal.aborted) return;
+            attach(OVERTURE_HELD, walls.length);
+            warmClips();
+          })),
+        );
         next();
       };
 
@@ -529,8 +556,8 @@ export function initOverture(
         if (fired) return;
         fired = true;
         ropeLive = false;
-        gsap.killTweensOf(root);
-        gsap.to(root, { "--guide": 0, duration: 0.25 });
+        gsap.killTweensOf([root, guide]);
+        gsap.to(guide, { "--guide": 0, duration: 0.25 });
         sfx("pull");
         jolt();
         fire();
@@ -590,10 +617,10 @@ export function initOverture(
 
       after(Math.max(0.2, GUIDE_AT - since), () => {
         if (fired) return;
-        gsap.to(root, { "--guide": 1, duration: 0.6, ease: "power2.out" });
+        gsap.to(guide, { "--guide": 1, duration: 0.6, ease: "power2.out" });
         /* it breathes rather than blinks - it has to be findable in a black
            room without becoming the loudest thing in it */
-        gsap.fromTo(root,
+        gsap.fromTo(guide,
           { "--pilot": 0.7 },
           { "--pilot": 1, duration: 1.2, ease: "sine.inOut", repeat: -1, yoyo: true });
       });
@@ -829,12 +856,13 @@ export function initOverture(
       running.length = 0;
       ropeLive = false;
       ropeMode = "idle";
-      gsap.killTweensOf([root, ropeState, pull, svg, dockMark, rig, ...slabs]);
+      gsap.killTweensOf([root, guide, ropeState, pull, svg, dockMark, rig, ...slabs]);
       timers.forEach(clearTimeout);
       timers.length = 0;
 
       /* the end state: every wall down, the room dark */
-      gsap.set(root, { "--lit": 0.12, "--guide": 0 });
+      gsap.set(root, { "--lit": 0.12 });
+      gsap.set(guide, { "--guide": 0 });
       gsap.set(slabs, { autoAlpha: 0 });
 
       const t = dockTarget();
@@ -864,7 +892,13 @@ export function initOverture(
     if (opts.instant) {
       bail(true);
     } else {
-      boot(() => bulb(() => arm(() => ignite(() => { dock(); falls(arrive); }))));
+      boot(() => bulb(() => arm(() => ignite(() => {
+        dock();
+        /* no walls to knock over: the mark docks, and the page is handed
+           the screen as it lands */
+        if (lite) after(1.3, arrive);
+        else falls(arrive);
+      }))));
     }
   }, root);
 
@@ -884,6 +918,9 @@ export function initOverture(
     running.forEach((tl) => tl.kill());
     running.length = 0;
     gsap.killTweensOf(root);
+    /* the guide's breath lives on the guide now, and it repeats forever */
+    const guideEl = root.querySelector("[data-ovt-guide]");
+    if (guideEl) gsap.killTweensOf(guideEl);
     ctx.revert();
     // a replay starts the room again from black - anything still sounding
     // from the last run belongs to a sequence that no longer exists

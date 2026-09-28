@@ -113,7 +113,11 @@
   margin-top:26px;
   display:inline-flex; align-items:center; gap:11px; padding:13px 26px 13px 13px;
   border-radius:999px; background:var(--accent); color:var(--accent-ink);
-  font-family:inherit; font-weight:500; font-size:15px;
+  font-family:inherit; font-weight:500; font-size:15px; line-height:1.2;
+  /* the film's is a <button>, the rest are links: its default border
+     and margins taken off so all five are the same pill */
+  border:0; margin-left:0; margin-right:0; margin-bottom:0;
+  text-decoration:none; vertical-align:top;
 }
 .wk-lede__play{
   display:grid; place-items:center; width:30px; height:30px;

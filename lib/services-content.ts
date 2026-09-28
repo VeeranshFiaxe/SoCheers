@@ -56,7 +56,7 @@ export const SERVICE_COPY: Record<string, ServiceCopy> = {
       "Strategy at SoCheers is the work that happens before anything is made: deciding what a brand is for, who it is talking to, and which platforms are worth showing up on.",
     metaTitle: "Brand & Digital Strategy · SoCheers",
     metaDescription:
-      "Brand positioning, digital strategy, content planning, consumer insights and media planning from SoCheers - an independent, integrated creative agency in Mumbai.",
+      "Brand positioning, digital strategy, content planning, insights and media planning from SoCheers - an independent, integrated creative agency in Mumbai.",
     capabilities: {
       "Brand Positioning":
         "What the brand stands for, said in a way the rest of the work can be built on.",

@@ -141,7 +141,7 @@ export default async function ServicePage({ params }: Params) {
             copy set over it. Decorative: the sentence carries the meaning. */}
         <section className="sec sv-top no-border">
           <div className="sv-top__bg" aria-hidden="true">
-            <img src={bucket.img} alt="" fetchPriority="high" decoding="async" />
+            <img src={bucket.img} alt={`${bucket.name} at SoCheers`} fetchPriority="high" decoding="async" />
           </div>
           <div className="wrap">
             <Link className="sv-back" href="/#what">
@@ -174,7 +174,7 @@ export default async function ServicePage({ params }: Params) {
                   {/* the frame this line already owns - see the header
                       note, and `items` in lib/content.ts */}
                   <div className="sv-plate__img">
-                    <img src={it.img} alt="" loading="lazy" decoding="async" />
+                    <img src={it.img} alt={`${bucket.name} - ${it.label}`} loading="lazy" decoding="async" />
                   </div>
                   <div className="sv-plate__body">
                     <h3 className="sv-plate__name">{it.label}</h3>
@@ -200,7 +200,7 @@ export default async function ServicePage({ params }: Params) {
               {others.map((o) => (
                 <Link className="sv-next__card" key={o.slug} href={`/services/${o.slug}`}>
                   <div className="sv-next__img">
-                    <img src={o.img} alt="" loading="lazy" decoding="async" />
+                    <img src={o.img} alt={`${o.name} at SoCheers`} loading="lazy" decoding="async" />
                   </div>
                   <span className="sv-next__name">{o.name}</span>
                   <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

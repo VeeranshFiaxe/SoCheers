@@ -412,6 +412,60 @@ const real = (
   ...(slug ? { slug } : {}),
 });
 
+/* ------------------------------------------------------------------
+   THE CASE FILMS OFF THE OLD SITE.
+
+   The "latest work" gallery on the old site: one case study film each,
+   on YouTube, and nothing else - no board, no write-up. Each becomes the
+   same film-only case as Titan and Special Ops 2 (a hero, the title on
+   it, "Watch the film" and the film under it) and a tile on the wall
+   that opens it. Both are made from this one list.
+
+   The hero and tile are our own copy of the film's YouTube still, under
+   /assets/work/wall/, pulled by scripts/build-yt-thumbs.mjs - so the page
+   loads from our storage and asks YouTube for nothing until play.
+   Listed mixed rather than by category, because they follow the named
+   tiles in this order - see WALL_ORDER. The intros are only the page
+   descriptions.
+   ------------------------------------------------------------------ */
+type Film = { id: string; youtube: string; brand: string; title: string; tag: string };
+
+const film = (id: string, youtube: string, brand: string, title: string, tag: string): Film =>
+  ({ id, youtube, brand, title, tag });
+
+const FILMS: Film[] = [
+  film("panchayat-s3", "KQ1SplG4BiQ", "Prime Video · Panchayat", "Panchayat Season 3", "entertainment"),
+  film("godrej-interio", "Z8N4_wUEIuY", "Godrej Interio", "Godrej Interio", "others"),
+  film("family-man-s2", "D8R4amcpcic", "Prime Video · The Family Man S2", "#MemeTheFamilyMan", "entertainment"),
+  film("rivali-park", "tJiaz1Hca9c", "Rivali Park", "#ItsGoodToBeHome", "others"),
+  film("spider-verse", "5V2ESaYCjNw", "Spider-Man", "Spider-Man: Across the Spider-Verse", "entertainment"),
+  film("cipla-innoventia", "nZh8-m0wjJY", "Cipla Innoventia", "Cipla Innoventia", "others"),
+  film("mirzapur-2", "ykok2zlCIXs", "Prime Video · Mirzapur 2", "Purvanchal Ke Samachar", "entertainment"),
+  film("pensol", "g87J7Ma1sRc", "Pensol", "Brand Lift", "others"),
+  film("comicstaan-2", "9ZGDDQfVvus", "Prime Video · Comicstaan", "Comicstaan Season 2", "entertainment"),
+  film("study-in-india", "OYRzRQtWbEU", "Study in India", "The Launch", "others"),
+  film("bandish-bandits", "IYnrgCXNPuY", "Prime Video · Bandish Bandits", "Bandish Bandits", "entertainment"),
+  film("amazon-mx-player", "vqrDDzv8gRs", "Amazon MX Player", "Amazon MX Player", "entertainment"),
+  film("modern-love-mumbai", "XYVxqrReg7c", "Prime Video · Modern Love Mumbai", "Modern Love Mumbai", "entertainment"),
+  film("prime-video-mobile", "JJIEW-jgBEc", "Prime Video Mobile Edition", "Service Launch", "entertainment"),
+  film("four-more-shots-2", "t_vbJOLqnOM", "Prime Video · Four More Shots Please! 2", "Kareena Kapoor", "entertainment"),
+  film("jamnapaar", "7Kq9-xPsMRI", "Amazon miniTV · Jamnapaar", "Jamnapaar", "entertainment"),
+  film("minitv-taxes", "tgMUwmYpH48", "Amazon miniTV", "8M Indians, One Tax Deadline", "entertainment"),
+  film("karan-badtameezi", "N1GyX4VbUCM", "Karan", "1 Common Name, 1 Big Accusation", "entertainment"),
+];
+
+const FILM_TILES: WorkAsset[] = FILMS.map((f) => ({
+  publicId: `work/${f.tag}/${f.id}`,
+  brand: f.brand,
+  title: f.title,
+  kind: "video",
+  thumb: `/assets/work/wall/${f.id}.jpg`,
+  w: 1280,
+  h: 720,
+  tags: [f.tag],
+  slug: f.id,
+}));
+
 export const WORK_ASSETS: WorkAsset[] = [
   /* ---- BFSI ---- */
   real("yes-bank", "Yes Bank", "Life Ko Banao Rich", "bfsi", "image", 1376, 768, "yes-bank"),
@@ -460,8 +514,9 @@ export const WORK_ASSETS: WorkAsset[] = [
   real("croma-dreams", "Croma", "Flipping the Carts on the Competitors", "others", "image", 1600, 900, "croma-festival-of-dreams"),
   real("bgmi", "BGMI", "Update Podcast", "others", "image", 1600, 1135, "bgmi-update-podcast"),
   pending(18, "TCS", "others"),
-  pending(19, "Cipla Innoventia", "others"),
   pending(22, "Cordelia Cruises", "others"),
+
+  ...FILM_TILES,
 ];
 
 /* ------------------------------------------------------------------
@@ -594,6 +649,14 @@ export type CaseStudy = {
   slug: string;
   brand: string;
   title: string;
+  /* The campaign's short name, for the browser tab and search results
+     when the brand alone would name two pages the same - Croma has two
+     cases. Left off, a brand shared with another case falls back to
+     `title`. */
+  short?: string;
+  /* The search-result line, when `intro` runs past the 160 characters a
+     search engine shows. Left off, `intro` is used as it is. */
+  description?: string;
   /* the row under the title - same idea as PinnedCase.meta */
   meta: string[];
   intro: string;
@@ -983,6 +1046,8 @@ export const CASES: CaseStudy[] = [
     meta: ["Fashion / Beauty / Luxury", "Film · Social · Outdoor · Print"],
     intro:
       "Superdry Sport was launching in India, and the launch needed a communication that could define what the brand stood for in sport and establish the thought that would sit behind it.",
+    description:
+      "Superdry Sport was launching in India, and the launch needed a communication that could define what the brand stood for in sport.",
     hero: "/assets/work/wall/superdry.jpg",
     blocks: [
       {
@@ -1373,6 +1438,8 @@ export const CASES: CaseStudy[] = [
     meta: ["FMCG", "Packaging · Out of Home · Social"],
     intro:
       "Havmor was turning 80. And while an anniversary is usually a chance for a brand to look back at everything it has achieved, we had a much bigger archive to work with: 80 years of Havmor in people’s lives.",
+    description:
+      "Havmor was turning 80, and we had a much bigger archive to work with than the brand’s own: 80 years of Havmor in people’s lives.",
     hero: "/assets/work/wall/havmor.jpg",
     blocks: [
       {
@@ -1499,6 +1566,7 @@ export const CASES: CaseStudy[] = [
     slug: "croma-ac-badhau-ya-ghatau",
     brand: "Croma",
     title: "Settling the Debate for Once - AC Badhau Ya Ghatau?",
+    short: "AC Badhau Ya Ghatau",
     meta: ["Others", "Social · Influencer"],
     intro:
       "There’s one AC instruction that has probably caused more arguments in Indian homes than it deserves: “AC badha do.”",
@@ -1541,6 +1609,7 @@ export const CASES: CaseStudy[] = [
     slug: "croma-festival-of-dreams",
     brand: "Croma",
     title: "Flipping the Carts on the Competitors",
+    short: "Festival of Dreams",
     meta: ["Others", "Festival of Dreams", "Out of Home · Social"],
     intro:
       "When a competitor's billboard started a trend, Croma's Festival of Dreams answered overnight - with a bigger billboard and a free iPhone.",
@@ -1563,6 +1632,8 @@ export const CASES: CaseStudy[] = [
     meta: ["Others", "Influencer · Video"],
     intro:
       "Gamers rely on trusted sources for complex game updates. Teaming up with esports celebrities for a fun explainer campaign bypasses unreliable information and delivers clear, engaging content.",
+    description:
+      "Gamers rely on trusted sources for complex game updates. A fun explainer campaign with esports celebrities delivers them clearly.",
     hero: "/assets/work/cases/bgmi/hero.jpg",
     blocks: [
       {
@@ -1582,6 +1653,8 @@ export const CASES: CaseStudy[] = [
     meta: ["Fashion / Beauty / Luxury", "Breast Cancer Awareness", "Influencer · CGI"],
     intro:
       "Advancing breast cancer awareness with 3 simple steps - Wacoal, a premium Japanese lingerie brand, ventured into the second year of the campaign #WacoalKnowsBreast, solidifying itself as an intellectual property for breast cancer awareness.",
+    description:
+      "Advancing breast cancer awareness with 3 simple steps - Wacoal, the premium Japanese lingerie brand, in year two of #WacoalKnowsBreast.",
     hero: "/assets/work/cases/wacoal/hero.jpg",
     blocks: [
       {
@@ -1752,6 +1825,18 @@ export const CASES: CaseStudy[] = [
       { type: "quote", text: "PENDING - a line from the client or the press.", who: "PENDING - attribution" },
     ],
   },
+
+  /* The case films off the old site - see FILMS. */
+  ...FILMS.map((f): CaseStudy => ({
+    slug: f.id,
+    brand: f.brand,
+    title: f.title,
+    meta: [catLabel(f.tag), "Film"],
+    intro: `${f.brand} - ${f.title}.`,
+    hero: `/assets/work/wall/${f.id}.jpg`,
+    film: `https://www.youtube.com/watch?v=${f.youtube}`,
+    blocks: [],
+  })),
 ];
 
 /* The sidebar that rides alongside a case, and the only two lines on it

@@ -1,6 +1,7 @@
 import {
   ART,
   SECTIONS,
+  altOf,
   TEXTURE,
   isFilm,
   type Section,
@@ -94,8 +95,8 @@ function Frame({ file, sizes }: { file: string; sizes?: string }) {
     );
   }
   /* with a sizes, the phone copy is offered too - see thumb() */
-  if (sizes) return <img {...thumb(ART(file))} sizes={sizes} alt="" loading="lazy" decoding="async" />;
-  return <img src={ART(file)} alt="" loading="lazy" decoding="async" />;
+  if (sizes) return <img {...thumb(ART(file))} sizes={sizes} alt={altOf(file)} loading="lazy" decoding="async" />;
+  return <img src={ART(file)} alt={altOf(file)} loading="lazy" decoding="async" />;
 }
 
 /* ------------------------------------------------------------------
@@ -222,7 +223,7 @@ function Strip({ frames }: { frames: string[] }) {
       <span className="st-strip__rail" aria-hidden="true">
         {frames.map((f, i) => (
           <span className="st-strip__tick" key={`${f}-${i}`} style={{ "--i": i } as React.CSSProperties}>
-            {!isFilm(f) && <img src={ART(f)} alt="" loading="lazy" decoding="async" />}
+            {!isFilm(f) && <img src={ART(f)} alt={altOf(f)} loading="lazy" decoding="async" />}
           </span>
         ))}
       </span>
@@ -290,7 +291,7 @@ function Steps({ items }: { items: Step[] }) {
       {items.map((s) => (
         <li className="st-step" key={s.no}>
           <span className="st-step__art">
-            <img {...thumb(ART(s.art))} sizes="(max-width: 760px) 50vw, 25vw" alt="" loading="lazy" decoding="async" />
+            <img {...thumb(ART(s.art))} sizes="(max-width: 760px) 50vw, 25vw" alt={altOf(s.art)} loading="lazy" decoding="async" />
           </span>
           <b className="st-step__no">{s.no}</b>
           <h3 className="st-step__title">{s.title}</h3>
@@ -381,7 +382,7 @@ export default function SeriesSections() {
               <img
                 className="st-fill st-bg"
                 src={ART(groundOf(s))}
-                alt=""
+                alt={altOf(groundOf(s))}
                 aria-hidden="true"
                 loading="lazy"
                 decoding="async"
@@ -398,7 +399,7 @@ export default function SeriesSections() {
               <img
                 className="st-grain"
                 src={ART(TEXTURE.grain)}
-                alt=""
+                alt={altOf(TEXTURE.grain)}
                 aria-hidden="true"
                 loading="lazy"
                 decoding="async"
@@ -407,7 +408,7 @@ export default function SeriesSections() {
                 <img
                   className="st-leak"
                   src={ART(TEXTURE.leak)}
-                  alt=""
+                  alt={altOf(TEXTURE.leak)}
                   aria-hidden="true"
                   loading="lazy"
                   decoding="async"

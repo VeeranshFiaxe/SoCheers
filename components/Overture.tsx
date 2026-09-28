@@ -9,7 +9,7 @@ import {
   shouldRunOverture,
 } from "@/lib/overture";
 import { initOverture } from "@/lib/overture-motion";
-import { OVERTURE_WALLS } from "@/lib/content";
+import { OVERTURE_LOADER_ON_PHONE, OVERTURE_WALLS, OVERTURE_WALLS_ON_PHONE } from "@/lib/content";
 import {
   BARS,
   BAR_STROKE,
@@ -465,7 +465,13 @@ export default function Overture() {
        two things you can do to it - pull the rope, skip out - have to be
        real, labelled, focusable controls. Everything else in here is
        scenery and says so individually. */
-    <div className="overture" data-overture data-idle>
+    <div
+      className="overture"
+      data-overture
+      data-idle
+      data-phone-noloader={OVERTURE_LOADER_ON_PHONE ? undefined : ""}
+      data-phone-nowalls={OVERTURE_WALLS_ON_PHONE ? undefined : ""}
+    >
       {/* --- the room ------------------------------------------------- */}
       <div className="ovt__stage" data-ovt-stage aria-hidden="true">
         <div className="ovt__dolly" data-ovt-dolly>
@@ -512,7 +518,7 @@ export default function Overture() {
                   <img
                     className="ovt__face"
                     data-ovt-src={w.img}
-                    alt=""
+                    alt={`SoCheers - ${w.label}`}
                     fetchPriority={i === 0 ? "high" : undefined}
                   />
                 </picture>

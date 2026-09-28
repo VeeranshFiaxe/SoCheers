@@ -23,16 +23,23 @@ const webp = (src: string) => src.replace(/\.jpe?g$/i, ".webp");
 export type Pic = { src: string; srcSet?: string };
 
 /* `larger` is a second, bigger cut of the same picture - a case board's
-   2400 - offered to the screens that can use it. */
+   2400 - offered to the screens that can use it.
+
+   The `src` is the smallest cut. Every browser the site supports picks
+   from the srcset, so the src is only read by things that do not -
+   crawlers and page-weight audits, which add up every src on a page as
+   if it were downloaded. Pointing it at the 800 keeps them from counting
+   the full-size file for a picture a phone never asks for. */
 export function pic(src: string, larger?: { src: string }): Pic {
   const w = W[src];
   if (!w) return { src };
   const set: string[] = [];
-  if (w > SMALL) set.push(`${src.replace(/\.jpe?g$/i, `-${SMALL}.webp`)} ${SMALL}w`);
+  const small = w > SMALL ? src.replace(/\.jpe?g$/i, `-${SMALL}.webp`) : webp(src);
+  if (w > SMALL) set.push(`${small} ${SMALL}w`);
   set.push(`${webp(src)} ${w}w`);
   const lw = larger && W[larger.src];
   if (larger && lw) set.push(`${webp(larger.src)} ${lw}w`);
-  return { src: webp(src), srcSet: set.length > 1 ? set.join(", ") : undefined };
+  return { src: small, srcSet: set.length > 1 ? set.join(", ") : undefined };
 }
 
 /* ============================================================
@@ -59,5 +66,6 @@ export function thumb(src: string): Pic {
   /* encoded: a srcset is split on spaces, and a few Series files have
      them in their names */
   const small = encodeURI(src.replace(/\.(jpe?g|png|webp)$/i, "-600.webp"));
-  return { src, srcSet: `${small} 600w, ${encodeURI(src)} ${w}w` };
+  /* the small copy is the src too - see the note over pic() */
+  return { src: small, srcSet: `${small} 600w, ${encodeURI(src)} ${w}w` };
 }

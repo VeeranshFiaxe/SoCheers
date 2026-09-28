@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import Hero from "@/components/Hero";
 import { Awards, Clients, What, Who } from "@/components/Sections";
 import SiteMotion from "@/components/SiteMotion";
-import { OVERTURE_HELD, OVERTURE_WALLS } from "@/lib/content";
+import { OVERTURE_HELD, OVERTURE_WALLS, OVERTURE_WALLS_ON_PHONE } from "@/lib/content";
 import JsonLd from "@/components/JsonLd";
 import { ORG_ID, pageGraph } from "@/lib/schema";
 import { pageMeta } from "@/lib/seo";
@@ -28,7 +28,8 @@ export default function Home() {
     const pri = i === 0 ? { fetchPriority: "high" as const } : {};
     if (!w.m) return preload(w.img, { as: "image", ...pri });
     preload(w.img, { as: "image", media: "(min-width:701px)", ...pri });
-    preload(encodeURI(w.m), { as: "image", media: "(max-width:700px)", ...pri });
+    /* a phone draws no walls while they are off there */
+    if (OVERTURE_WALLS_ON_PHONE) preload(encodeURI(w.m), { as: "image", media: "(max-width:700px)", ...pri });
   });
 
   return (

@@ -190,7 +190,7 @@ export default function WorkPinned() {
           data-on={n === i ? "" : undefined}
           aria-hidden={n === i ? undefined : "true"}
         >
-          <img {...pic(c.hero)} sizes="100vw" alt="" fetchPriority={n === 0 ? "high" : undefined} />
+          <img {...pic(c.hero)} sizes="100vw" alt={`${c.brand} - ${c.tags[c.tags.length - 1]}`} fetchPriority={n === 0 ? "high" : undefined} />
         </div>
       ))}
 
@@ -263,9 +263,8 @@ export default function WorkPinned() {
               PinnedLink in lib/work-content.ts. What they have in
               common is that there is exactly one of them, and the
               client wants it reading the same way on every frame: the
-              film button said "Play the film" and says "View case"
-              now, beside "View" on the pieces that leave for
-              Instagram. The play glyph is still on it, which is the
+              film button says "Watch case", and every other piece
+              says "View case". The play glyph is still on it, which is the
               only thing left telling the reader the film opens in
               place rather than on another page. */}
           {active.link.kind === "film" && (
@@ -279,7 +278,7 @@ export default function WorkPinned() {
               <span className="wk-lede__play" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
               </span>
-              View case
+              Watch case
             </button>
           )}
 
@@ -298,7 +297,7 @@ export default function WorkPinned() {
               <span className="wk-lede__play" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M7 17L17 7M9 7h8v8" /></svg>
               </span>
-              View
+              View case
             </a>
           )}
 
@@ -364,7 +363,7 @@ export default function WorkPinned() {
                 data-cursor={n === i ? (c.link.kind === "film" ? "Play" : "View") : c.brand}
               >
                 <span className="wk-poster__shot">
-                  <img {...pic(c.thumb)} sizes="(max-width: 760px) 50vw, 360px" alt="" loading="lazy" />
+                  <img {...pic(c.thumb)} sizes="(max-width: 760px) 50vw, 360px" alt={`${c.brand} - ${c.tags[c.tags.length - 1]}`} loading="lazy" />
                   {/* The turn left on this frame. Keyed on `i` so React
                       replaces the node on every change and the animation
                       runs from zero - restarting a CSS animation on a

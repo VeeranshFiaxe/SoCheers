@@ -13,7 +13,10 @@ export const IMG = {
      today draws it no bigger than the screen, and 33 megapixels is about
      130MB of bitmap to decode for that - so the set below stops at the
      3840 (components/Hero.tsx, components/ContactModal.tsx). */
-  team: "/assets/team-group-uhd.jpg",
+  /* only ever drawn with TEAM_SRCSET below, which the browser picks
+     from - so the plain src is the smallest cut, not the 7680 master
+     (page-weight audits count the src as if it were downloaded) */
+  team: "/assets/art/team-960.jpg",
   camera: "/assets/arri-camera-DX29MVBW.jpg",
   brain: "/assets/art/brain.webp",
   creativity: "/assets/home/creativity-7.webp",
@@ -118,6 +121,28 @@ export const OVERTURE_WALLS: readonly Wall[] = [
    added to it is added to the wait. It was the whole list (~700KB), then
    three. */
 export const OVERTURE_HELD = 2;
+
+/* Two switches for phones, each only turning something off - nothing is
+   removed. "Phone" is the same (max-width:700px) line as PHONE in
+   components/Overture.tsx.
+
+   OVERTURE_LOADER_ON_PHONE - the 0-100 count. Off (28 Sep 2026): a phone
+   opens on the black room from its first paint instead, and boot() does
+   the waiting for the first walls the count used to do. The CSS half is
+   the [data-phone-noloader] block at the end of the OVERTURE section in
+   app/globals.css.
+
+   OVERTURE_WALLS_ON_PHONE - the wall run. Off, a phone gets the bulb, the
+   pull, the light and the dock, then goes straight to the hero; its CSS
+   half is [data-phone-nowalls]. Back on since 28 Sep 2026. */
+export const OVERTURE_LOADER_ON_PHONE = false;
+export const OVERTURE_WALLS_ON_PHONE = true;
+export const OVERTURE_PHONE = "(max-width:700px)";
+const onPhone = () => typeof window !== "undefined" && window.matchMedia(OVERTURE_PHONE).matches;
+/* true on a phone while the count is switched off there */
+export const overturePhoneNoLoader = () => !OVERTURE_LOADER_ON_PHONE && onPhone();
+/* true on a phone while the walls are switched off there */
+export const overturePhoneNoWalls = () => !OVERTURE_WALLS_ON_PHONE && onPhone();
 
 
 /* the three cues, one per beat: the rope going over, the filament

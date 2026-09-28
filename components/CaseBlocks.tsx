@@ -31,7 +31,13 @@ import CaseVideo from "./CaseVideo";
    roughly how wide that block is drawn - it only has to be close enough
    for the browser to pick the right file.
    ============================================================ */
-export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
+/* A picture's alt text when the writer gave it no caption: the brand and
+   the file's own name, which the case folders keep to a plain word or two
+   (hoarding, deck-fan, renders) - enough to say what the frame is. */
+const altFor = (src: string, name: string) =>
+  `${name} - ${src.split("/").pop()!.replace(/\.\w+$/, "").replace(/[-_]+/g, " ")}`;
+
+export default function CaseBlocks({ blocks, name }: { blocks: CaseBlock[]; name: string }) {
   return (
     <>
       {blocks.map((b, i) => {
@@ -77,7 +83,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                 data-reveal
               >
                 <div className="cs-shot__in" style={{ aspectRatio: `${b.w} / ${b.h}` }}>
-                  <img {...pic(b.src)} sizes="(max-width: 980px) 100vw, 1100px" alt={b.caption ?? ""} loading="lazy" />
+                  <img {...pic(b.src)} sizes="(max-width: 980px) 100vw, 1100px" alt={b.caption ?? altFor(b.src, name)} loading="lazy" />
                 </div>
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
@@ -87,8 +93,8 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
             return (
               <figure className="cs-duo" key={key} data-reveal>
                 <div className="cs-duo__in">
-                  <img {...pic(b.a)} sizes="(max-width: 640px) 100vw, 50vw" alt="" loading="lazy" />
-                  <img {...pic(b.b)} sizes="(max-width: 640px) 100vw, 50vw" alt="" loading="lazy" />
+                  <img {...pic(b.a)} sizes="(max-width: 640px) 100vw, 50vw" alt={altFor(b.a, name)} loading="lazy" />
+                  <img {...pic(b.b)} sizes="(max-width: 640px) 100vw, 50vw" alt={altFor(b.b, name)} loading="lazy" />
                 </div>
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
@@ -111,7 +117,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                 id={blocks.findIndex((o) => o.type === "video") === i ? "film" : undefined}
                 data-reveal
               >
-                <CaseVideo src={b.src} poster={b.poster} ratio={b.ratio} label={b.caption} />
+                <CaseVideo src={b.src} poster={b.poster} ratio={b.ratio} label={b.caption ?? `${name} film`} />
                 {b.caption && <figcaption>{b.caption}</figcaption>}
               </figure>
             );
@@ -126,7 +132,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                 <div className="cs-reel__in">
                   {b.items.map((it, j) => (
                     <div className="cs-reel__cell" key={`${it.src}-${j}`}>
-                      <CaseVideo src={it.src} poster={it.poster} ratio={b.ratio ?? "tall"} label={it.label} />
+                      <CaseVideo src={it.src} poster={it.poster} ratio={b.ratio ?? "tall"} label={it.label ?? `${name} film`} />
                       {it.label && <span className="cs-reel__label">{it.label}</span>}
                     </div>
                   ))}
@@ -147,7 +153,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                       {it.label && <span className="cs-phone__label">{it.label}</span>}
                       <span className="cs-phone__body">
                         <span className="cs-phone__screen" style={{ aspectRatio: `${it.w} / ${it.h}` }}>
-                          <img {...pic(it.src)} sizes="(max-width: 560px) 50vw, 320px" alt={it.label ?? ""} loading="lazy" />
+                          <img {...pic(it.src)} sizes="(max-width: 560px) 50vw, 320px" alt={it.label ?? altFor(it.src, name)} loading="lazy" />
                         </span>
                       </span>
                     </div>
@@ -175,7 +181,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                           key={it.src}
                           style={{ flexGrow: it.w / it.h, aspectRatio: `${it.w} / ${it.h}` }}
                         >
-                          <img {...pic(it.src)} sizes={`(max-width: 760px) ${Math.round(100 / row.length)}vw, ${Math.round(66 / row.length)}vw`} alt="" loading="lazy" />
+                          <img {...pic(it.src)} sizes={`(max-width: 760px) ${Math.round(100 / row.length)}vw, ${Math.round(66 / row.length)}vw`} alt={altFor(it.src, name)} loading="lazy" />
                         </div>
                       ))}
                     </div>
@@ -198,7 +204,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                       key={`${it.src}-${j}`}
                       {...pic(it.src)}
                       sizes="(max-width: 760px) 100vw, 33vw"
-                      alt={it.caption ?? ""}
+                      alt={it.caption ?? altFor(it.src, name)}
                       loading="lazy"
                     />
                   ))}
@@ -237,7 +243,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                     <li className="cs-step" key={it.title}>
                       {it.src && (
                         <span className="cs-step__shot">
-                          <img {...pic(it.src)} sizes="(max-width: 760px) 100vw, 33vw" alt="" loading="lazy" />
+                          <img {...pic(it.src)} sizes="(max-width: 760px) 100vw, 33vw" alt={`${name} - ${it.title}`} loading="lazy" />
                         </span>
                       )}
                       <span className="cs-step__no">{String(j + 1).padStart(2, "0")}</span>
@@ -284,13 +290,13 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                   target="_blank"
                   rel="noopener"
                   style={{ aspectRatio: `${b.w} / ${b.h}` }}
-                  aria-label={`${b.caption ?? "Case board"} - open full size`}
+                  aria-label={`${b.caption ?? `${name} case board`} - open full size`}
                   data-cursor="Zoom"
                 >
                   <img
                     {...pic(b.src, b.large)}
                     sizes="100vw"
-                    alt={b.caption ?? "Case board"}
+                    alt={b.caption ?? `${name} case board`}
                     loading="lazy"
                   />
                   <span className="cs-board__zoom" aria-hidden="true">
@@ -331,7 +337,7 @@ export default function CaseBlocks({ blocks }: { blocks: CaseBlock[] }) {
                 <footer className="cs-quote__by">
                   {b.avatar && (
                     <span className="cs-quote__face">
-                      <img src={b.avatar} alt="" loading="lazy" />
+                      <img src={b.avatar} alt={b.who} loading="lazy" />
                     </span>
                   )}
                   <cite>

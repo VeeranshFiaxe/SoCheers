@@ -472,6 +472,12 @@ html.sc-intro .hero__stage-img,
 html.sc-intro .who-bg img,
 html.sc-intro .wcard__img img{ display:none; }
 html.sc-intro .cmarquee__track .bmark{ -webkit-mask:none; mask:none; }
+/* The footer's mark too - the room under the page, and the furthest thing
+   from the opening there is. Hidden rather than removed, so the footer's
+   own layout never moves: painted unseen under the room, it was the
+   largest thing on a phone's first screen as far as PageSpeed could
+   tell, and its two mask files were on that screen's critical path. */
+html.sc-intro .foot__lockup{ visibility:hidden; }
 .loader{ position:fixed; inset:0; z-index:9992; background:var(--bg); display:grid; place-items:center; }
 .loader__inner{ text-align:center; position:relative; z-index:2; }
 /* The mark itself rather than the name set in a typeface: this is the same
@@ -501,15 +507,17 @@ html.sc-intro .cmarquee__track .bmark{ -webkit-mask:none; mask:none; }
   -webkit-mask-position:center; mask-position:center;
   -webkit-mask-size:contain; mask-size:contain;
 }
+/* lossless WebP cuts of the two PNG masks (same pixels, 37KB against
+   84KB); the PNGs stay for scripts/build-og.mjs */
 .sc-lockup__blob{
   background:var(--logo);
-  -webkit-mask-image:url(/assets/logo/lockup-blob.png);
-  mask-image:url(/assets/logo/lockup-blob.png);
+  -webkit-mask-image:url(/assets/logo/lockup-blob.webp);
+  mask-image:url(/assets/logo/lockup-blob.webp);
 }
 .sc-lockup__ink{
   background:currentColor;
-  -webkit-mask-image:url(/assets/logo/lockup-ink.png);
-  mask-image:url(/assets/logo/lockup-ink.png);
+  -webkit-mask-image:url(/assets/logo/lockup-ink.webp);
+  mask-image:url(/assets/logo/lockup-ink.webp);
 }
 .loader__count{ font-family:var(--f-mono); font-weight:500; font-size:14px; color:var(--accent); margin-top:14px; letter-spacing:.2em; }
 .loader__count i{ opacity:.6; font-style:normal; }
@@ -2353,6 +2361,29 @@ html.sc-lite .who-bg img{ image-rendering:auto; filter:brightness(.3) saturate(.
    stays on and none of this ever exists. lib/overture.ts owns that call;
    components/Overture.tsx takes the attribute off when the answer is yes. */
 .overture[data-idle]{ display:none; }
+/* Phones - the two switches in lib/content.ts; each attribute is only
+   rendered while its switch is off.
+
+   [data-phone-noloader] (OVERTURE_LOADER_ON_PHONE): no count. The room
+   is the first frame instead, black from the first paint so the page
+   never shows before the engine has built it, with its contents held
+   back until then (the engine takes data-idle off in the same task it
+   sets their first frame).
+
+   [data-phone-nowalls] (OVERTURE_WALLS_ON_PHONE): the stage is never
+   shown, and boot() never gives the walls a src. */
+@media (max-width:700px){
+  .loader[data-phone-noloader]{ display:none; }
+  html.sc-intro .overture[data-phone-noloader][data-idle]{ display:block; }
+  .overture[data-phone-noloader][data-idle] > *{ visibility:hidden; }
+  .overture[data-phone-nowalls] .ovt__stage{ display:none; }
+  /* The hero's sentence is under the room until the hand-off, where it is
+     typed in (initHero). Held transparent until then rather than painted
+     unseen beneath it. !important because the engine's own tweens write
+     inline opacity on the way in; sc-intro comes off at OVERTURE_DONE,
+     before the typing starts. */
+  html.sc-intro .overture[data-phone-noloader] ~ main .hero__lines{ opacity:0 !important; }
+}
 /* Handed over. The layer stops taking pointers, and the fixture it flew
    into the corner goes with it: the nav's own lockup is fading up in
    exactly that spot at exactly that size (see .nav__logo above), so the

@@ -13,6 +13,7 @@ import {
   META_DESCRIPTION,
   SERIES_CTA,
   TEXTURE,
+  altOf,
 } from "@/lib/series-content";
 
 export const metadata: Metadata = pageMeta({
@@ -75,7 +76,7 @@ export default function Series() {
             <img
               className="st-fill st-hero__plate"
               src={ART(HERO.still)}
-              alt=""
+              alt={altOf(HERO.still)}
               fetchPriority="high"
             />
 
@@ -83,7 +84,7 @@ export default function Series() {
             <span className="st-hero__scrim" />
 
             {/* 2 - the grade */}
-            <img className="st-grain" src={ART(TEXTURE.grain)} alt="" decoding="async" />
+            <img className="st-grain" src={ART(TEXTURE.grain)} alt={altOf(TEXTURE.grain)} decoding="async" />
 
             {/* 3 - the letterbox */}
             <span className="st-gate st-gate--t" />

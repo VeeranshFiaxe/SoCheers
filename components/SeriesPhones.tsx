@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { PHONES, type Phone } from "@/lib/series-content";
+import { PHONES, altOf, type Phone } from "@/lib/series-content";
 
 /* ============================================================
    THE FIVE HANDSETS - section 9 of /series.
@@ -238,14 +238,14 @@ function Handset({ phone }: { phone: Phone }) {
             <img
               className="st-ph__fill"
               src={phone.poster}
-              alt=""
+              alt={altOf(phone.poster)}
               loading="lazy"
               decoding="async"
             />
             <img
               className="st-ph__media st-ph__media--fit"
               src={phone.poster}
-              alt=""
+              alt={altOf(phone.poster)}
               loading="lazy"
               decoding="async"
             />

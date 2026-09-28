@@ -66,9 +66,10 @@
 	/* Staging switch. "off": every search engine and AI bot is told to stay
 	   out - robots.txt disallows everything, sitemap.xml and llms.txt 404,
 	   and every response carries X-Robots-Tag noindex (worker/index.js).
-	   Set to "on" once socheers.in is live and the redirects are settled. */
+	   "on" since the 24 Sep 2026 SEO audit: socheers.in is the live site,
+	   so it serves app/robots.ts and the sitemap as built. */
 	"vars": {
-		"CRAWLERS": "off",
+		"CRAWLERS": "on",
 		/* For the D1 export API in worker/backup.js. */
 		"ACCOUNT_ID": "d0bb02d418363ff5f77783b07de0572b",
 		"DATABASE_ID": "2147b456-c7c7-4505-aa2d-5c5fdb978ba7"

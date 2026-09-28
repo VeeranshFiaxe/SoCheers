@@ -172,7 +172,7 @@ function Viewer({ asset: a, onClose }: { asset: AiAsset; onClose: () => void }) 
           preload="auto"
         />
       ) : (
-        <img className="ai-view__media" src={a.src} alt={a.title} />
+        <img className="ai-view__media" src={a.src} alt={altOf(a)} />
       )}
       <div className="ai-view__cap">
         {a.brand && <b>{a.brand}</b>}
@@ -192,6 +192,10 @@ function Viewer({ asset: a, onClose }: { asset: AiAsset; onClose: () => void }) 
    "Untitled film" / "Untitled still". That is a placeholder, not a title,
    so it is never printed over the work. */
 const titleOf = (a: AiAsset) => (/^untitled\b/i.test(a.title) ? "" : a.title);
+
+/* what a picture of it is called when it has to be named: brand and
+   title, whichever of the two it has */
+const altOf = (a: AiAsset) => [a.brand, titleOf(a)].filter(Boolean).join(" - ") || "AI work by SoCheers";
 
 const KIND_LABEL: Record<string, string> = { video: "Film", cgi: "CGI", static: "Still" };
 
@@ -316,7 +320,7 @@ function Tile({
               ref={posterImg}
               className="ai-tile__film"
               src={a.poster}
-              alt=""
+              alt={altOf(a)}
               loading="lazy"
               decoding="async"
               onLoad={() => setReady(true)}
@@ -369,7 +373,7 @@ function Tile({
         </>
       ) : (
         <>
-          <img {...thumb(a.src)} sizes="(max-width: 760px) 50vw, 33vw" alt={a.title} loading="lazy" decoding="async" width={a.w} height={a.h} />
+          <img {...thumb(a.src)} sizes="(max-width: 760px) 50vw, 33vw" alt={altOf(a)} loading="lazy" decoding="async" width={a.w} height={a.h} />
           {onOpen && (
             <button
               type="button"

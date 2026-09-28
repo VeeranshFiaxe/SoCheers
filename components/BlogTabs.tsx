@@ -180,7 +180,7 @@ export default function BlogTabs({
               <a className="bl-post" key={b.slug} href={`/insights/${b.slug}`} data-cursor="Read">
                 {b.cover && (
                   <span className="bl-post__cover">
-                    <img src={b.cover} alt={b.cover_alt} loading="lazy" decoding="async" />
+                    <img src={b.cover} alt={b.cover_alt || b.title} loading="lazy" decoding="async" />
                   </span>
                 )}
                 <span className="bl-post__meta">
@@ -246,7 +246,7 @@ export default function BlogTabs({
                         key={i}
                         className="bl-paper__page"
                         src={src}
-                        alt={i === 0 ? `${wp.title}, page 1` : ""}
+                        alt={`${wp.title}, page ${i + 1}`}
                         width={1240}
                         height={1754}
                         loading="lazy"

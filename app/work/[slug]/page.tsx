@@ -30,9 +30,13 @@ export async function generateMetadata({
   const { slug } = await params;
   const c = findCase(slug);
   if (!c) return { title: "Work · SoCheers" };
+  /* the brand alone, unless another case has the same one - two pages
+     with one title read to a search engine as one page */
+  const shared = CASES.some((o) => o.slug !== c.slug && o.brand === c.brand);
+  const name = c.short ?? (shared ? c.title : undefined);
   return pageMeta({
-    title: `${c.brand} · SoCheers`,
-    description: c.intro,
+    title: name ? `${c.brand}: ${name} · SoCheers` : `${c.brand} · SoCheers`,
+    description: c.description ?? c.intro,
     path: `/work/${c.slug}`,
     /* webp previews are hit and miss across WhatsApp and LinkedIn */
     image: /\.(jpe?g|png)$/i.test(c.hero) ? c.hero : undefined,
@@ -95,7 +99,7 @@ export default async function Case({
     {
       path,
       name: `${c.brand} · SoCheers`,
-      description: c.intro,
+      description: c.description ?? c.intro,
       crumbs: [
         { name: "Work", path: "/work" },
         { name: c.brand, path },
@@ -133,7 +137,7 @@ export default async function Case({
         <header className="cs-hero">
           <div className="cs-hero__frame">
             {/* the first thing on the page, so it is asked for first */}
-            <img {...pic(c.hero)} sizes="100vw" alt="" fetchPriority="high" />
+            <img {...pic(c.hero)} sizes="100vw" alt={`${c.brand} - ${c.title}`} fetchPriority="high" />
           </div>
           <span className="cs-hero__scrim" aria-hidden="true" />
 
@@ -172,7 +176,7 @@ export default async function Case({
               {/* The lede is writing, and a visual case has none. Its
                   intro still stands as the page's description. */}
               {!visual && <p className="cs-lede" data-reveal>{c.intro}</p>}
-              <CaseBlocks blocks={blocks} />
+              <CaseBlocks blocks={blocks} name={c.brand} />
             </article>
           </div>
         </div>
@@ -191,7 +195,7 @@ export default async function Case({
               {CASES.filter((o) => o.slug !== c.slug).slice(0, 3).map((o) => (
                 <a className="cs-next__card" key={o.slug} href={`/work/${o.slug}`} data-cursor={o.brand}>
                   <span className="cs-next__shot">
-                    <img {...pic(o.hero)} sizes="(max-width: 760px) 100vw, 33vw" alt="" loading="lazy" />
+                    <img {...pic(o.hero)} sizes="(max-width: 760px) 100vw, 33vw" alt={`${o.brand} - ${o.title}`} loading="lazy" />
                   </span>
                   <span className="cs-next__cap">
                     <b>{o.brand}</b>

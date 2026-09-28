@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ART } from "@/lib/series-content";
+import { ART, altOf } from "@/lib/series-content";
 import { isLite } from "@/lib/perf";
 import { holdScroll, jumpTo } from "@/lib/motion";
 
@@ -792,7 +792,7 @@ export default function SeriesPull({ frames }: { frames: string[] }) {
       {/* the fallback: the deck's finished frame, framed the way the
           canvas frames it. What no-JS and reduced motion get. */}
       <div className="st-pull__frame">
-        <img className="st-pull__to" src={to} alt="" decoding="async" />
+        <img className="st-pull__to" src={to} alt={altOf(to)} decoding="async" />
       </div>
 
       {/* everything the pull draws, in one surface */}

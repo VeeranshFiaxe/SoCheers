@@ -228,7 +228,7 @@ export default function CaseVideo({
             <img
               {...pic(still)}
               sizes="(max-width: 980px) 100vw, 1100px"
-              alt=""
+              alt={label ?? "Video still"}
               loading="lazy"
               onError={() =>
                 setStill(v.kind === "youtube" ? `https://i.ytimg.com/vi/${v.id}/hqdefault.jpg` : undefined)
