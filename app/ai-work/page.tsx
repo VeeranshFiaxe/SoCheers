@@ -9,7 +9,7 @@ import AiGrid from "@/components/AiGrid";
 import { AI_HERO } from "@/lib/ai-content";
 
 export const metadata: Metadata = pageMeta({
-  title: "AI Work · SoCheers",
+  title: "AI Work · Films, Statics & CGI Made with AI · SoCheers",
   description:
     "Films, statics and CGI made with AI at SoCheers - and the argument for why the strategy in front of the tool is still the part that decides anything.",
   path: "/ai-work",

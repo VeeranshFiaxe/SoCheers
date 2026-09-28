@@ -93,7 +93,7 @@ export const SERVICE_COPY: Record<string, ServiceCopy> = {
       "Creative at SoCheers is the idea and everything that carries it: campaigns, content, words, identity and the day-to-day work that keeps a brand present between campaigns.",
     metaTitle: "Creative & Content Development · SoCheers",
     metaDescription:
-      "Integrated campaigns, content development, copywriting, branding and tactical execution from SoCheers - an independent, integrated creative agency in Mumbai.",
+      "Integrated campaigns, content development, copywriting, branding and tactical execution from SoCheers - an integrated creative agency in Mumbai.",
     capabilities: {
       "Integrated Campaigns":
         "One idea built to hold up across film, social, print and everything after.",

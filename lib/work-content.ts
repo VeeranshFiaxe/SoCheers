@@ -1629,6 +1629,7 @@ export const CASES: CaseStudy[] = [
     slug: "bgmi-update-podcast",
     brand: "BGMI",
     title: "Update Podcast - BGMI Gives a Spin to the Updates",
+    short: "Update Podcast",
     meta: ["Others", "Influencer · Video"],
     intro:
       "Gamers rely on trusted sources for complex game updates. Teaming up with esports celebrities for a fun explainer campaign bypasses unreliable information and delivers clear, engaging content.",

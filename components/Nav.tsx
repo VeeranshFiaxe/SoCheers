@@ -148,8 +148,10 @@ export default function Nav() {
         className="nav__logo"
         onClick={relight}
         data-cursor="Light it"
-        aria-label="SoCheers - home, from the top"
       >
+        {/* real text rather than aria-label: crawlers read a link's name
+            from its content, and an svg-only link has none */}
+        <span className="sr-only">SoCheers - home, from the top</span>
         <SoCheersLockup className="nav__logo-mark" />
       </a>
 

@@ -11,7 +11,7 @@ import WorkGrid from "@/components/WorkGrid";
 import { getWorkAssets } from "@/lib/work-data";
 
 export const metadata: Metadata = pageMeta({
-  title: "Work · SoCheers",
+  title: "Work · Campaigns, Films & Content by SoCheers",
   description:
     "Campaigns, films and content from SoCheers - the five we'd lead with, and the rest by category.",
   path: "/work",

@@ -6,3 +6,14 @@
 # visit re-asks for all of it. `next start` already does the same on its own.
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
+
+# /_next skips the Worker (wrangler.jsonc), so it gets the same security
+# headers here that secure() in worker/index.js puts on everything else.
+# Change one, change both.
+/_next/*
+  Content-Security-Policy: upgrade-insecure-requests; frame-ancestors 'self'; base-uri 'self'; object-src 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()

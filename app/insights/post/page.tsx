@@ -10,8 +10,8 @@ import BlogPost from "@/components/BlogPost";
    the placeholders below and takes the noindex off. Opened directly, as
    /insights/post, it is an empty shell - hence noindex here. */
 export const metadata: Metadata = pageMeta({
-  title: "Insights · SoCheers",
-  description: "Writing from the SoCheers team.",
+  title: "Insights · Writing from the SoCheers Team",
+  description: "Writing from the SoCheers team - blogs, white papers and reports on brands, content and culture.",
   path: "/insights",
   noindex: true,
 });

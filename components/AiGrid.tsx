@@ -101,7 +101,7 @@ export default function AiGrid() {
   return (
     <section className="ai-work" id="ai-grid">
       <div className="wrap">
-        <span className="tag" data-reveal>The work</span>
+        <h2 className="tag" data-reveal>The work</h2>
 
         <div className="ai-tabs" role="tablist" aria-label="Filter work by type">
           {AI_SEGMENTS.map((s) => (

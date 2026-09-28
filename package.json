@@ -10,7 +10,7 @@
     "globe": "node scripts/build-globe.mjs",
     "model": "node scripts/build-about-man.mjs",
     "thumbs": "node scripts/build-thumbs.mjs",
-    "media": "node scripts/upload-r2.mjs",
+    "media": "node scripts/build-image-sizes.mjs && node scripts/upload-r2.mjs",
     "deploy": "next build && wrangler deploy",
     "admin:migrate": "wrangler d1 migrations apply socheers-admin --remote",
     "admin:migrate:local": "wrangler d1 migrations apply socheers-admin --local",

@@ -10,7 +10,7 @@ import { ORG_ID, pageGraph } from "@/lib/schema";
 import { pageMeta } from "@/lib/seo";
 
 export const metadata = pageMeta({
-  title: "SoCheers. Making more happen.",
+  title: "SoCheers. Making more happen. | Creative Agency, Mumbai",
   description:
     "SoCheers is an independent, integrated creative agency. Content, campaigns and culture for brands that want to lead, not lag.",
   path: "/",

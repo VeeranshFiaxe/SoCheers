@@ -12,7 +12,7 @@ import ContactForm from "@/components/ContactForm";
 import { CONTACT_HERO, OFFICES } from "@/lib/contact-content";
 
 export const metadata: Metadata = pageMeta({
-  title: "Contact · SoCheers",
+  title: "Contact SoCheers · Creative Agency in Mumbai",
   description:
     "Got a brief, a partnership, or just want to say hi? Here's every way to reach SoCheers.",
   path: "/contact",
@@ -66,11 +66,11 @@ export default function Contact() {
                     href="https://www.instagram.com/thesocheers/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="SoCheers on Instagram"
                     data-magnetic
                     data-cursor="Follow"
                   >
-                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <span className="sr-only">SoCheers on Instagram</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="2" width="20" height="20" rx="5.5" />
                       <circle cx="12" cy="12" r="4.2" />
                       <circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none" />
@@ -80,11 +80,11 @@ export default function Contact() {
                     href="https://in.linkedin.com/company/socheers"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="SoCheers on LinkedIn"
                     data-magnetic
                     data-cursor="Follow"
                   >
-                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <span className="sr-only">SoCheers on LinkedIn</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z" />
                       <rect x="2" y="9" width="4" height="12" />
                       <circle cx="4" cy="4" r="2" />
@@ -94,11 +94,11 @@ export default function Contact() {
                     href="https://www.youtube.com/@ThisIsSoCheers"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="SoCheers on YouTube"
                     data-magnetic
                     data-cursor="Follow"
                   >
-                    <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <span className="sr-only">SoCheers on YouTube</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 8.5a3 3 0 0 0-2.1-2.1C18.1 6 12 6 12 6s-6.1 0-7.9.4A3 3 0 0 0 2 8.5 31 31 0 0 0 1.6 13a31 31 0 0 0 .4 4.5A3 3 0 0 0 4.1 19.6C5.9 20 12 20 12 20s6.1 0 7.9-.4a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .4-4.5 31 31 0 0 0-.4-4.5z" />
                       <path d="M10 10.2v5.6l5-2.8-5-2.8z" fill="currentColor" stroke="none" />
                     </svg>
@@ -107,11 +107,11 @@ export default function Contact() {
                     href="https://www.facebook.com/TheSoCheers"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="SoCheers on Facebook"
                     data-magnetic
                     data-cursor="Follow"
                   >
-                    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <span className="sr-only">SoCheers on Facebook</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="2" y="2" width="20" height="20" rx="5.5" />
                       <path d="M14.4 8.4h-1.6a1.8 1.8 0 0 0-1.8 1.8V12h3.3l-.45 3h-2.85v6.9" />
                     </svg>
@@ -120,11 +120,11 @@ export default function Contact() {
                     href="https://x.com/TheSoCheers"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="SoCheers on X"
                     data-magnetic
                     data-cursor="Follow"
                   >
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <span className="sr-only">SoCheers on X</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 4l16 16M20 4L4 20" />
                     </svg>
                   </a>
@@ -151,7 +151,7 @@ export default function Contact() {
                 {OFFICES.map((o) => (
                   <div className="ct-office" key={o.city}>
                     <span className="ct-office__tag">{o.tag}</span>
-                    <span className="ct-office__city">{o.city}</span>
+                    <h2 className="ct-office__city">{o.city}</h2>
                     <p className="ct-office__addr">{o.address}</p>
 
                     {/* Inert on purpose (pointer-events are off in CSS):
@@ -199,7 +199,7 @@ export default function Contact() {
               </div>
 
               <div className="ct-tip" data-reveal>
-                <span className="ct-tip__label">Before you hit send</span>
+                <h2 className="ct-tip__label">Before you hit send</h2>
                 <p className="ct-tip__copy">
                   The briefs we answer fastest tell us three things: what you want
                   to move, by when, and roughly what you have to spend on it. A

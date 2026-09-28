@@ -11,7 +11,7 @@ import {
 } from "@/components/AboutSections";
 
 export const metadata: Metadata = pageMeta({
-  title: "About · SoCheers",
+  title: "About SoCheers · Independent Creative Agency, Mumbai",
   description:
     "One team, many disciplines. The people, the founders and the office behind SoCheers - an independent, integrated creative agency.",
   path: "/about",

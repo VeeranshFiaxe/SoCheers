@@ -6,7 +6,7 @@ import "./blog.css";
 import InsightsPage from "@/components/InsightsPage";
 
 export const metadata: Metadata = pageMeta({
-  title: "Insights · SoCheers",
+  title: "Insights · Blogs, Whitepapers & Reports · SoCheers",
   description:
     "Blogs, white papers and reports from the SoCheers team - starting with the Parasocial Marketing whitepaper.",
   path: "/insights",

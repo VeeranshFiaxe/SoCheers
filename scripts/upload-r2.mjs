@@ -35,7 +35,7 @@ const TYPES = {
   ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".wav": "audio/wav", ".ogg": "audio/ogg",
   ".glb": "model/gltf-binary", ".gltf": "model/gltf+json", ".bin": "application/octet-stream",
   ".json": "application/json", ".vtt": "text/vtt", ".txt": "text/plain; charset=utf-8",
-  ".woff2": "font/woff2", ".ktx2": "image/ktx2",
+  ".woff2": "font/woff2", ".ktx2": "image/ktx2", ".pdf": "application/pdf",
 };
 
 const walk = (dir) =>

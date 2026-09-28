@@ -79,8 +79,8 @@ export default function CaseNav({ items }: { items: CaseNavItem[] }) {
             list of one is furniture. Below two it simply is not there -
             the same absence rule the block list follows. */}
         {items.length > 1 && (
-          <nav className="cs-toc">
-            <h2 className="cs-toc__h">{CASE_NAV.contents}</h2>
+          <nav className="cs-toc" aria-label={CASE_NAV.contents}>
+            <p className="cs-toc__h" aria-hidden="true">{CASE_NAV.contents}</p>
             <ul>
               {items.map((it) => (
                 <li key={it.id}>

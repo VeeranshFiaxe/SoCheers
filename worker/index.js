@@ -27,6 +27,7 @@
 import { api } from "./api/router.js";
 import { hardenAdmin } from "./api/http.js";
 import { publicInsights, publicPost } from "./api/content.js";
+import SIZES from "./image-sizes.json";
 
 export { BackupWorkflow } from "./backup.js";
 
@@ -44,10 +45,13 @@ export default {
     const url = new URL(request.url);
     if (url.hostname === "www.socheers.in") {
       url.hostname = "socheers.in";
-      return Response.redirect(url.toString(), 301);
+      return secure(Response.redirect(url.toString(), 301));
     }
-    if (env.CRAWLERS === "on") return route(request, env);
-    return closed(await route(request, env));
+    const res = await route(request, env);
+    /* the panel and its API set their own, stricter headers */
+    const own = /^\/(api|admin)(\/|$)/.test(url.pathname);
+    const out = own ? res : secure(sized(res));
+    return env.CRAWLERS === "on" ? out : closed(out);
   },
 };
 
@@ -86,19 +90,51 @@ async function serve(request, env, url) {
      post answered 404 to it looks dead to them */
   const read = request.method === "GET" || request.method === "HEAD";
   const post = read && url.pathname.match(POST);
-  if (post && post[1] !== "post") return secure(await blogPost(request, env, url, post[1]));
-  if (read && url.pathname === "/insights") return secure(linkPreview(await insights(request, env), url));
+  if (post && post[1] !== "post") return blogPost(request, env, url, post[1]);
+  if (read && url.pathname === "/insights") return linkPreview(await insights(request, env), url);
   if (request.method === "GET" && url.pathname === "/sitemap.xml") return sitemap(request, env);
-  return secure(linkPreview(await env.ASSETS.fetch(request), url));
+  return linkPreview(await env.ASSETS.fetch(request), url);
 }
 
-/* The baseline every public page goes out with. Static-file headers
-   (public/_headers) do not reach what a Worker returns, so they are set
-   here. SAMEORIGIN rather than DENY: nothing frames the site today, but
-   the site framing itself should stay possible. */
-function secure(res) {
+/* width and height on every <img> in a page that has neither, from
+   worker/image-sizes.json (scripts/build-image-sizes.mjs). The CSS sizes
+   every picture, so this changes nothing on screen - it is the aspect
+   ratio, said before the file arrives. The overture's walls name their
+   file in data-ovt-src until they are shown. */
+const IMG_SIZE = {
+  element(el) {
+    if (el.hasAttribute("width") || el.hasAttribute("height")) return;
+    const src = el.getAttribute("data-ovt-src") || el.getAttribute("src") || "";
+    let key;
+    try { key = decodeURI(src.split(/[?#]/)[0]); } catch { return; }
+    const size = SIZES[key];
+    if (!size) return;
+    el.setAttribute("width", String(size[0]));
+    el.setAttribute("height", String(size[1]));
+  },
+};
+
+function sized(res) {
   if (!(res.headers.get("content-type") || "").includes("text/html")) return res;
+  return new HTMLRewriter().on("img", IMG_SIZE).transform(res);
+}
+
+/* The baseline every public response goes out with - pages, pictures,
+   films, robots.txt, redirects. Static-file headers (public/_headers) do
+   not reach what a Worker returns, so they are set here; /_next skips
+   the Worker and gets the same set from public/_headers. Change one,
+   change both. SAMEORIGIN rather than DENY: nothing frames the site
+   today, but the site framing itself should stay possible.
+
+   The policy limits what can frame the page, where a <base> can point
+   and plugins - not where scripts come from. GTM, the pixel and the
+   YouTube and Maps embeds pull from enough hosts that a script
+   allowlist would break something the first time one of them moves. */
+const CSP = "upgrade-insecure-requests; frame-ancestors 'self'; base-uri 'self'; object-src 'none'";
+
+function secure(res) {
   const headers = new Headers(res.headers);
+  headers.set("Content-Security-Policy", CSP);
   headers.set("X-Content-Type-Options", "nosniff");
   headers.set("X-Frame-Options", "SAMEORIGIN");
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -381,6 +417,12 @@ async function media(request, env, url) {
 function mediaHeaders(obj) {
   const headers = new Headers();
   obj.writeHttpMetadata(headers);
+  /* The whitepaper PDF went up before scripts/upload-r2.mjs knew the
+     type and is stored as octet-stream - which, under nosniff, is a
+     download rather than a document. Named from the extension instead. */
+  if (/\.pdf$/i.test(obj.key) && headers.get("content-type") !== "application/pdf") {
+    headers.set("content-type", "application/pdf");
+  }
   headers.set("etag", obj.httpEtag);
   headers.set("cache-control", CACHE);
   headers.set("accept-ranges", "bytes");

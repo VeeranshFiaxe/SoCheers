@@ -15,8 +15,8 @@ import "./not-found.css";
    a good result.
    ============================================================ */
 export const metadata: Metadata = {
-  title: "Lights out · SoCheers",
-  description: "This page doesn't exist. The rest of SoCheers does.",
+  title: "Lights out · Page Not Found · SoCheers",
+  description: "This page doesn't exist. The rest of SoCheers does - the work, the services, the team and every way to get in touch.",
   robots: { index: false, follow: false },
 };
 

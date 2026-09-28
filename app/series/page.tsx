@@ -17,7 +17,7 @@ import {
 } from "@/lib/series-content";
 
 export const metadata: Metadata = pageMeta({
-  title: `${CONCEPT.title} · SoCheers`,
+  title: `${CONCEPT.title} · Micro-Series by SoCheers`,
   description: META_DESCRIPTION,
   path: "/series",
 });

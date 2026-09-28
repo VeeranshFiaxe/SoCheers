@@ -30,13 +30,43 @@ export async function generateMetadata({
   const { slug } = await params;
   const c = findCase(slug);
   if (!c) return { title: "Work · SoCheers" };
-  /* the brand alone, unless another case has the same one - two pages
-     with one title read to a search engine as one page */
+  /* two cases for one brand (Croma) must never fall back to the brand
+     alone - two pages with one title read to a search engine as one */
   const shared = CASES.some((o) => o.slug !== c.slug && o.brand === c.brand);
-  const name = c.short ?? (shared ? c.title : undefined);
+  /* The campaign's name goes in too when there is room, and "Case Study"
+     after it - a brand name alone left most of these under 30 characters,
+     which reads to a search engine as a page with little to say. Held to
+     60 so nothing is cut off in the result. */
+  const norm = (t: string) => t.toLowerCase().replace(/^the /, "");
+  const brand = norm(c.brand);
+  const title = norm(c.title);
+  /* a title that opens on the brand stands alone; one the brand
+     already contains adds nothing */
+  const named = c.short
+    ? `${c.brand}: ${c.short}`
+    : title.startsWith(brand) ? c.title
+    : brand.includes(title) ? undefined
+    : `${c.brand}: ${c.title}`;
+  const heads = [named, c.brand].filter(Boolean) as string[];
+  const tails = [" · SoCheers Case Study", " · SoCheers"];
+  const pageTitle =
+    heads.flatMap((h) => tails.map((t) => h + t)).find((t) => t.length <= 60) ??
+    `${shared && named ? named : c.brand} · SoCheers`;
+  /* Same for the search-result line: a one-sentence intro gets who made
+     it added, the longest version that still fits in 155 characters. */
+  const lead = c.description ?? c.intro;
+  const description =
+    lead.length >= 110
+      ? lead
+      : [
+          ` ${c.brand} case study by SoCheers, an integrated creative agency in Mumbai.`,
+          " A case study by SoCheers, a creative agency in Mumbai.",
+          " A SoCheers case study.",
+          "",
+        ].map((tail) => lead + tail).find((d) => d.length <= 155)!;
   return pageMeta({
-    title: name ? `${c.brand}: ${name} · SoCheers` : `${c.brand} · SoCheers`,
-    description: c.description ?? c.intro,
+    title: pageTitle,
+    description,
     path: `/work/${c.slug}`,
     /* webp previews are hit and miss across WhatsApp and LinkedIn */
     image: /\.(jpe?g|png)$/i.test(c.hero) ? c.hero : undefined,

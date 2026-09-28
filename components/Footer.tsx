@@ -480,7 +480,7 @@ export default function Footer() {
             under the bulb: the room is uncovered, the light dies, the mark
             turns over, and the question is already waiting there. */}
         <div className="foot__ask" data-foot-part>
-          <h2 className="foot__ask-title">Let&rsquo;s make more&nbsp;happen.</h2>
+          <p className="foot__ask-title">Let&rsquo;s make more&nbsp;happen.</p>
           <ContactModal />
         </div>
 
@@ -512,9 +512,9 @@ export default function Footer() {
                   href={s.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={s.label}
                 >
-                  <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <span className="sr-only">{s.label}</span>
+                  <svg aria-hidden="true" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     {s.path}
                   </svg>
                 </a>
