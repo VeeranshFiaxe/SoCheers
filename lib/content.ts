@@ -89,19 +89,21 @@ type Wall = {
 };
 
 export const OVERTURE_WALLS: readonly Wall[] = [
-  /* The 12th anniversary, out of the carousel on SoCheers' own Instagram
-     (see scripts/build-overture-walls.mjs, which cuts both versions of
-     each and says where the crops sit and why). */
-  { img: "/assets/home/room/01.webp", label: "The room", m: "/assets/home/room/01-m.webp" },
-  { img: "/assets/home/room/03.webp", label: "Dance", m: "/assets/home/room/03-m.webp" },
-  { img: "/assets/home/room/05.webp", label: "Splash", m: "/assets/home/room/05-m.webp" },
-  { img: "/assets/home/room/04.webp", label: "Noise", m: "/assets/home/room/04-m.webp" },
+  /* The 12th anniversary, out of the carousel on SoCheers' own Instagram,
+     except the three after the first: camera originals from the About
+     page's space shots, because those are held long enough to be looked
+     at and a 1080 square blown up shows it - and the tent, the office's
+     own ceiling (see
+     scripts/build-overture-walls.mjs, which cuts both versions of each and
+     says where the crops sit and why). */
+  { img: "/assets/home/room/crowd.webp", label: "The room", m: "/assets/home/room/01-m.webp" },
+  { img: "/assets/home/room/run.webp", label: "The run", m: "/assets/home/room/run-m.webp" },
+  { img: "/assets/home/room/cake.webp", label: "Birthday", m: "/assets/home/room/cake-m.webp" },
+  { img: "/assets/home/room/khaugalli.webp", label: "Khaugalli", m: "/assets/home/room/khaugalli-m.webp" },
+  { img: "/assets/home/room/tent.webp", label: "The tent", m: "/assets/home/room/tent-m.webp" },
   { img: "/assets/home/room/08.webp", label: "Stage", m: "/assets/home/room/08-m.webp" },
-  { img: "/assets/home/room/12.webp", label: "Audience", m: "/assets/home/room/12-m.webp" },
-  { img: "/assets/home/room/14.webp", label: "Laughs", m: "/assets/home/room/14-m.webp" },
   { img: "/assets/home/room/17.webp", label: "Crew", m: "/assets/home/room/17-m.webp" },
   { img: "/assets/home/room/15.webp", label: "Award", m: "/assets/home/room/15-m.webp" },
-  { img: "/assets/home/room/19.webp", label: "Night", m: "/assets/home/room/19-m.webp" },
 ];
 
 /* How many walls, from the front, have to be here before the room is shown:
